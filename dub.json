@@ -1,0 +1,6 @@
+{
+    "name": "sundown_standoff",
+	"dependencies": {
+		"derelict-sdl2": "~>1.9.2"
+	}
+}

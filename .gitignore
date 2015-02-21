@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+*.o
+*.obj
+.*.s??
+tankrank
+node_modules/
+css/
+js/
+.sass-cache/
+appconf.py
+.pycache/
+__pycache__
+*.pyc
+*.lua
+./sundown_standoff
