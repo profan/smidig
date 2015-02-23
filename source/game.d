@@ -21,6 +21,12 @@ struct Game {
 
 	}
 
+	void draw() {
+
+		//such draw
+
+	}
+
 	void run() {
 	
 		while(window.alive) {
@@ -29,6 +35,7 @@ struct Game {
 
 			evhan.handle_events();
 			update();
+			draw();
 
 			window.render_present();
 
