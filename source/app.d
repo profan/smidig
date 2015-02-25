@@ -25,7 +25,7 @@ void main() {
 	auto event_handler = EventHandler();
 	auto window = Window("Sundown Standoff", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 	event_handler.add_listener(&window.handle_events);
-	auto game = Game(window, event_handler);
+	auto game = Game(&window, &event_handler);
 	game.run();
 
 }

@@ -7,10 +7,10 @@ import sundownstandoff.eventhandler;
 
 struct Game {
 
-	Window window;
-	EventHandler evhan;
+	Window* window;
+	EventHandler* evhan;
 
-	this(ref Window window, ref EventHandler evhan) {
+	this(Window* window, EventHandler* evhan) {
 		this.window = window;
 		this.evhan = evhan;
 	}
