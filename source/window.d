@@ -37,7 +37,7 @@ struct Window {
 	}
 
 	@property const(char*) title() { return c_title; }
-	@trusted @property void title(in char[] new_title) { c_title = toUTFz!(char*)(new_title); SDL_SetWindowTitle(window, c_title); }
+	@property void title(in char[] new_title) { c_title = toUTFz!(char*)(new_title); SDL_SetWindowTitle(window, c_title); }
 
 	void render_clear() {
 		SDL_RenderClear(renderer);
