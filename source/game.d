@@ -17,17 +17,20 @@ struct Game {
 	this(Window* window, EventHandler* evhan) {
 		this.window = window;
 		this.evhan = evhan;
+		this.state = new MenuState();
 	}
 
 	void update(double dt) {
 
 		//wow
+		state.update(dt);
 
 	}
 
 	void draw() {
 
 		//such draw
+		state.draw(window);
 
 	}
 
