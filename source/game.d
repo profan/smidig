@@ -31,9 +31,9 @@ struct Game {
 	
 		while(window.alive) {
 
-			window.render_clear();
-
 			evhan.handle_events();
+
+			window.render_clear();
 			update();
 			draw();
 
