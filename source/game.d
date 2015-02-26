@@ -17,7 +17,7 @@ struct Game {
 	this(Window* window, EventHandler* evhan) {
 		this.window = window;
 		this.evhan = evhan;
-		this.state = new MenuState();
+		this.state = new MenuState(evhan);
 	}
 
 	void update(double dt) {

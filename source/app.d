@@ -22,7 +22,7 @@ void initialize_systems() {
 void main() {
 
 	initialize_systems();
-	auto event_handler = EventHandler();
+	auto event_handler = EventHandler(SDL_GetKeyboardState(null));
 	auto window = Window("Sundown Standoff", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 	event_handler.add_listener(&window.handle_events);
 	auto game = Game(&window, &event_handler);

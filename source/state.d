@@ -1,7 +1,10 @@
 module sundownstandoff.state;
 
+import std.stdio : writefln;
+
 import derelict.sdl2.sdl;
 
+import sundownstandoff.eventhandler;
 import sundownstandoff.window;
 
 abstract class GameState {
@@ -12,6 +15,16 @@ abstract class GameState {
 } //GameState
 
 class MenuState : GameState {
+
+	this(EventHandler* evhan) {
+
+		evhan.bind_mousebtn(1, &print_something, KeyState.DOWN);
+
+	}
+
+	void print_something(int x, int y) {
+		writefln("Clicked something.. %d, %d", x, y);
+	}
 
 	final override void update(double dt) {
 		//do menu stuff
