@@ -12,12 +12,14 @@ struct Game {
 
 	Window* window;
 	EventHandler* evhan;
-	GameState state;
+	GameStateHandler state;
 
 	this(Window* window, EventHandler* evhan) {
 		this.window = window;
 		this.evhan = evhan;
-		this.state = new MenuState(evhan);
+		this.state = new GameStateHandler();
+		this.state.add_state(new MenuState(evhan), State.MENU);
+		this.state.push_state(State.MENU);
 	}
 
 	void update(double dt) {

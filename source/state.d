@@ -7,6 +7,48 @@ import derelict.sdl2.sdl;
 import sundownstandoff.eventhandler;
 import sundownstandoff.window;
 
+alias StateID = ulong;
+
+enum State {
+
+	MENU = 0,
+	GAME = 1
+
+} //State
+
+class GameStateHandler {
+
+	GameState[] stack;
+	GameState[StateID] states;
+
+	this() {
+		//asd
+	}
+
+	void add_state(GameState state, State type) {
+		states[type] = state;
+	}
+
+	void push_state(State state) {
+		stack ~= states[state];
+	}
+
+	GameState pop_state() {
+		GameState st = stack[$-1];
+		stack = stack[0..$-2];
+		return st;
+	}
+
+	void update(double dt) {
+		stack[$-1].update(dt);
+	}
+
+	void draw(Window* window) {
+		stack[$-1].draw(window);
+	}
+
+} //GameStateHandler
+
 abstract class GameState {
 
 	void update(double dt);
