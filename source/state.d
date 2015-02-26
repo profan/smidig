@@ -19,11 +19,16 @@ final class MenuState : GameState {
 	this(EventHandler* evhan) {
 
 		evhan.bind_mousebtn(1, &print_something, KeyState.DOWN);
+		evhan.bind_mousemov(&move_something);
 
 	}
 
 	void print_something(int x, int y) {
 		writefln("Clicked something.. %d, %d", x, y);
+	}
+
+	void move_something(int x, int y) {
+		writefln("Moved to x: %d y: %d", x, y);
 	}
 
 	override void update(double dt) {

@@ -41,6 +41,9 @@ struct EventHandler {
 	//mutated by SDL2
 	const Uint8* pressed_keys;
 
+	//mouse pos
+	int last_x, last_y;
+
 	this(in Uint8* keys) {
 		this.pressed_keys = keys;
 	}
@@ -99,7 +102,11 @@ struct EventHandler {
 		int m_x, m_y;
 		SDL_GetMouseState(&m_x, &m_y);
 		foreach (ref bind; motion_events) {
-			bind.func(m_x, m_y);
+			if (last_x != m_x || last_y != m_y) {
+				bind.func(m_x, m_y);
+				last_x = m_x;
+				last_y = m_y;
+			}
 		}
 
 	}
