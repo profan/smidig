@@ -35,7 +35,7 @@ class GameStateHandler {
 
 	GameState pop_state() {
 		GameState st = stack[$-1];
-		stack = stack[0..$-2];
+		stack = stack[0..$-1];
 		return st;
 	}
 
@@ -88,6 +88,10 @@ final class MenuState : GameState {
 } //MenuState
 
 final class MatchState : GameState {
+
+	this(EventHandler* evhan) {
+		
+	}
 
 	override void update(double dt) {
 
