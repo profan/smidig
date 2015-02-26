@@ -14,7 +14,7 @@ abstract class GameState {
 
 } //GameState
 
-class MenuState : GameState {
+final class MenuState : GameState {
 
 	this(EventHandler* evhan) {
 
@@ -26,11 +26,11 @@ class MenuState : GameState {
 		writefln("Clicked something.. %d, %d", x, y);
 	}
 
-	final override void update(double dt) {
+	override void update(double dt) {
 		//do menu stuff
 	}
 
-	final override void draw(Window* window) {
+	override void draw(Window* window) {
 
 		uint width = 512, height = 384;
 		SDL_Rect rect = {x: 640/2-width/2, y: 480/2-height/2, w: width, h: height};
@@ -40,13 +40,13 @@ class MenuState : GameState {
 
 } //MenuState
 
-class MatchState : GameState {
+final class MatchState : GameState {
 
-	final override void update(double dt) {
+	override void update(double dt) {
 
 	}
 
-	final override void draw(Window* window) {
+	override void draw(Window* window) {
 
 	}
 
