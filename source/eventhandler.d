@@ -39,9 +39,9 @@ struct EventHandler {
 	KeyBind[] key_events;
 
 	//mutated by SDL2
-	Uint8* pressed_keys;
+	const Uint8* pressed_keys;
 
-	this(Uint8* keys) {
+	this(in Uint8* keys) {
 		this.pressed_keys = keys;
 	}
 
