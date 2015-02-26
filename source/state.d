@@ -38,7 +38,7 @@ final class MenuState : GameState {
 	override void draw(Window* window) {
 
 		uint width = 512, height = 384;
-		SDL_Rect rect = {x: 640/2-width/2, y: 480/2-height/2, w: width, h: height};
+		SDL_Rect rect = {x: window.width/2-width/2, y: window.height/2-height/2, w: width, h: height};
 		SDL_RenderDrawRect(window.renderer, &rect);
 
 	}

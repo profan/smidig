@@ -24,10 +24,12 @@ struct Window {
 			width, height,
 			0);
 		
+		window_width = width;
+		window_height = height;
+
 		assert(window != null);
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 		assert(renderer != null);
-
 		alive = true;	
 
 	}
