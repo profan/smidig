@@ -10,8 +10,8 @@ alias void delegate(int, int) MouseDelegate;
 
 enum KeyState {
 
-	UP = false,
-	DOWN = true
+	UP = SDL_MOUSEBUTTONUP,
+	DOWN = SDL_MOUSEBUTTONDOWN
 
 } //KeyState
 
@@ -69,19 +69,10 @@ struct EventHandler {
 		while(SDL_PollEvent(&ev)) {
 		
 			switch (ev.type ) {
-				case SDL_MOUSEBUTTONDOWN:
+				case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
 					foreach (ref bind; mouse_events) {
 						if (ev.button.button == bind.mousebtn) {
-							if (bind.state == KeyState.DOWN) {
-								bind.func(ev.motion.x, ev.motion.y);
-							}
-						}
-					}
-					break;
-				case SDL_MOUSEBUTTONUP:
-					foreach (ref bind; mouse_events) {
-						if (ev.button.button == bind.mousebtn) {
-							if (bind.state == KeyState.UP) {
+							if (bind.state == ev.type) {
 								bind.func(ev.motion.x, ev.motion.y);
 							}
 						}
