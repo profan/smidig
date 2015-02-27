@@ -81,7 +81,7 @@ final class MenuState : GameState {
 	override void draw(Window* window) {
 
 		uint width = 512, height = 384;
-		draw_rectangle(window, window.width/2-width/2, window.height/2-height/2, width, height, 0x428bca);
+		draw_rectangle(window, false, window.width/2-width/2, window.height/2-height/2, width, height, 0x428bca);
 
 	}
 
