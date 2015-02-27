@@ -10,10 +10,10 @@ void draw_rectangle(Window* window, bool filled, int x, int y, int width, int he
 	SDL_Rect rect = {x: x, y: y, w: width, h: height};
 
 	//save draw color
-	Uint8 r,g,b,a;
+	ubyte r,g,b,a;
 	SDL_GetRenderDrawColor(window.renderer, &r, &g, &b, &a);
 
-	SDL_SetRenderDrawColor(window.renderer, cast(Uint8)(color>>16), cast(Uint8)(color>>8), cast(Uint8)(color), alpha);
+	SDL_SetRenderDrawColor(window.renderer, cast(ubyte)(color>>16), cast(ubyte)(color>>8), cast(ubyte)(color), alpha);
 	(filled) ? SDL_RenderFillRect(window.renderer, &rect) : SDL_RenderDrawRect(window.renderer, &rect);
 
 	//reset draw color
