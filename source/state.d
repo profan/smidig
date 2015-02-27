@@ -80,8 +80,12 @@ final class MenuState : GameState {
 
 	override void draw(Window* window) {
 
+		int bgcolor = 0xca8142;
+		int menucolor = 0x428bca;
+
 		uint width = 512, height = 384;
-		draw_rectangle(window, false, window.width/2-width/2, window.height/2-height/2, width, height, 0x428bca);
+		draw_rectangle(window, true, 0, 0, window.width, window.height, bgcolor);
+		draw_rectangle(window, true, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
 	}
 
