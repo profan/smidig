@@ -6,6 +6,7 @@ import derelict.sdl2.sdl;
 
 import sundownstandoff.eventhandler;
 import sundownstandoff.window;
+import sundownstandoff.ui;
 
 alias StateID = ulong;
 
