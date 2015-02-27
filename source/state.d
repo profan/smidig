@@ -82,10 +82,15 @@ final class MenuState : GameState {
 
 		int bgcolor = 0xca8142;
 		int menucolor = 0x428bca;
+		int itemcolor = 0x8bca42;
 
 		uint width = 512, height = 384;
 		draw_rectangle(window, true, 0, 0, window.width, window.height, bgcolor);
 		draw_rectangle(window, true, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
+
+		uint item_width = height / 2, item_height = 32;
+		draw_rectangle(window, true, window.width/2-item_width/2, window.height/2-item_height/2 - item_height, item_width, item_height, itemcolor);
+		draw_rectangle(window, true, window.width/2-item_width/2, window.height/2-item_height/2 + item_height/2, item_width, item_height, itemcolor);
 
 	}
 
