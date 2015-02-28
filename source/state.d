@@ -58,9 +58,12 @@ abstract class GameState {
 } //GameState
 
 final class MenuState : GameState {
+	
+	GameStateHandler statehan;
 
-	this(EventHandler* evhan) {
+	this(GameStateHandler statehan, EventHandler* evhan) {
 
+		this.statehan = statehan;
 		evhan.bind_mousebtn(1, &print_something, KeyState.DOWN);
 		evhan.bind_mousemov(&move_something);
 
@@ -91,7 +94,10 @@ final class MenuState : GameState {
 		uint item_width = height / 2, item_height = 32;
 		do_button(window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor);
 		if(do_button(window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor)) {
-			writefln("wut");
+			GameState current_state = statehan.pop_state();
+			GameState last_state = statehan.pop_state();
+			statehan.push_state(State.MENU);
+			statehan.push_state(State.GAME);
 		}
 
 	}
@@ -100,8 +106,10 @@ final class MenuState : GameState {
 
 final class MatchState : GameState {
 
-	this(EventHandler* evhan) {
-		
+	GameStateHandler statehan;
+
+	this(GameStateHandler statehan, EventHandler* evhan) {
+		this.statehan = statehan;
 	}
 
 	override void update(double dt) {
@@ -109,6 +117,15 @@ final class MatchState : GameState {
 	}
 
 	override void draw(Window* window) {
+
+		int itemcolor = 0x8bca42;
+		uint item_width = window.width / 2, item_height = 32;
+		if(do_button(window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+			GameState current_state = statehan.pop_state();
+			GameState last_state = statehan.pop_state();
+			statehan.push_state(State.GAME);
+			statehan.push_state(State.MENU);
+		}
 
 	}
 
