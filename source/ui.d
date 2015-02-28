@@ -21,6 +21,10 @@ struct PushColor {
 
 } //PushColor
 
+struct UIState {
+
+} //UIState
+
 //Immediate Mode GUI (IMGUI, see Muratori)
 void draw_rectangle(Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255) {
 
