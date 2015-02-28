@@ -39,7 +39,7 @@ bool do_button(Window* window, bool filled, int x, int y, int width, int height,
 
 	int m_x, m_y;
 	SDL_GetMouseState(&m_x, &m_y);
-	draw_rectangle(window, filled, x, y, width, height, color, alpha);
+	draw_rectangle(window, filled, x - width/2, y - height/2, width, height, color, alpha);
 	return point_in_rect(m_x, m_y, x, y, width, height);
 
 }
