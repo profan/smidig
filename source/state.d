@@ -130,3 +130,23 @@ final class MatchState : GameState {
 	}
 
 } //MatchState
+
+
+//when waiting for another player to connect?
+final class WaitingState : GameState {
+
+	GameStateHandler statehan;
+
+	this(GameStateHandler statehan, EventHandler* evhan) {
+		this.statehan = statehan;
+	}
+	
+	override void update(double dt) {
+		//...
+	}
+
+	override void draw(Window* window) {
+		//...
+	}
+
+} //WaitingState
