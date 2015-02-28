@@ -6,8 +6,8 @@ import sundownstandoff.window;
 
 struct PushColor {
 
-	ubyte r, g, b, a;
 	Window* window;
+	ubyte r, g, b, a;
 
 	this(Window* window, ubyte r, ubyte g, ubyte b, ubyte a) {
 		this.window = window;
@@ -19,7 +19,7 @@ struct PushColor {
 		SDL_SetRenderDrawColor(window.renderer, r, g, b, a);
 	}
 
-} //DrawColor
+} //PushColor
 
 //Immediate Mode GUI (IMGUI, see Muratori)
 void draw_rectangle(Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255) {
