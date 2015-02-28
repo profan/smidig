@@ -3,6 +3,7 @@ module sundownstandoff.ui;
 import derelict.sdl2.sdl;
 
 import sundownstandoff.window;
+import sundownstandoff.util;
 
 struct PushColor {
 
@@ -31,5 +32,14 @@ void draw_rectangle(Window* window, bool filled, int x, int y, int width, int he
 	SDL_Rect rect = {x: x, y: y, w: width, h: height};
 	auto p = PushColor(window, cast(ubyte)(color>>16), cast(ubyte)(color>>8), cast(ubyte)(color), alpha);
 	(filled) ? SDL_RenderFillRect(window.renderer, &rect) : SDL_RenderDrawRect(window.renderer, &rect);
+
+}
+
+bool do_button(Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255) {
+
+	int m_x, m_y;
+	SDL_GetMouseState(&m_x, &m_y);
+	draw_rectangle(window, filled, x, y, width, height, color, alpha);
+	return point_in_rect(m_x, m_y, x, y, width, height);
 
 }

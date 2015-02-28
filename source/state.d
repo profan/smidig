@@ -90,7 +90,9 @@ final class MenuState : GameState {
 
 		uint item_width = height / 2, item_height = 32;
 		draw_rectangle(window, true, window.width/2-item_width/2, window.height/2-item_height/2 - item_height, item_width, item_height, itemcolor);
-		draw_rectangle(window, true, window.width/2-item_width/2, window.height/2-item_height/2 + item_height/2, item_width, item_height, itemcolor);
+		if(do_button(window, true, window.width/2-item_width/2, window.height/2-item_height/2 + item_height/2, item_width, item_height, itemcolor)) {
+			writefln("wut");
+		}
 
 	}
 
