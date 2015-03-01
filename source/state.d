@@ -59,6 +59,7 @@ abstract class GameState {
 
 final class MenuState : GameState {
 	
+	UIState state;
 	GameStateHandler statehan;
 
 	this(GameStateHandler statehan, EventHandler* evhan) {
@@ -92,8 +93,8 @@ final class MenuState : GameState {
 		draw_rectangle(window, true, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
 		uint item_width = height / 2, item_height = 32;
-		do_button(window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor);
-		if(do_button(window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor)) {
+		do_button(&state, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor);
+		if(do_button(&state, window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor)) {
 			auto current_state = statehan.pop_state();
 			auto last_state = statehan.pop_state();
 			statehan.push_state(State.MENU);
@@ -106,6 +107,7 @@ final class MenuState : GameState {
 
 final class MatchState : GameState {
 
+	UIState state;
 	GameStateHandler statehan;
 
 	this(GameStateHandler statehan, EventHandler* evhan) {
@@ -120,7 +122,7 @@ final class MatchState : GameState {
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+		if(do_button(&state, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
 			auto current_state = statehan.pop_state();
 			auto last_state = statehan.pop_state();
 			statehan.push_state(State.GAME);

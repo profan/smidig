@@ -35,7 +35,7 @@ void draw_rectangle(Window* window, bool filled, int x, int y, int width, int he
 
 }
 
-bool do_button(Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255) {
+bool do_button(UIState* ui, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255) {
 
 	int m_x, m_y;
 	SDL_GetMouseState(&m_x, &m_y);
