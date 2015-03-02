@@ -31,8 +31,24 @@ struct Game {
 
 	}
 
+	void before_ui() {
+		ui_state.hot_item = 0;
+	}
+
 	void update_ui(ref SDL_Event ev) {
 		ui_state.mouse_buttons = SDL_GetMouseState(&ui_state.mouse_x, &ui_state.mouse_y);
+	}
+
+	void reset_ui() {
+
+		if (!is_btn_down(&ui_state, 1)) {
+			ui_state.active_item = 0;
+		} else {
+			if (ui_state.active_item == 0) {
+				ui_state.active_item = -1;
+			}
+		}
+
 	}
 
 	void update(double dt) {
@@ -57,7 +73,9 @@ struct Game {
 
 			window.render_clear();
 			update(1.0);
+			before_ui();
 			draw();
+			reset_ui();
 
 			window.render_present();
 

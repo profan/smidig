@@ -24,7 +24,7 @@ struct PushColor {
 
 struct UIState {
 
-	uint active_item, hot_item;
+	uint active_item = 0, hot_item = 0;
 	int mouse_x, mouse_y;
 	uint mouse_buttons;
 
@@ -54,13 +54,12 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 	if (ui.active_item == id && !is_btn_down(ui, 1)) {
 		if (inside) {
 			result = true;
-			ui.hot_item = id;
 		} else {
 			ui.hot_item = 0;
 		}
 		ui.active_item = 0;
 	} else if (ui.hot_item == id) {
-		if (is_btn_down(ui, 1)) {
+		if (ui.active_item == 0 && is_btn_down(ui, 1)) {
 			ui.active_item = id;
 		}
 	}
