@@ -24,6 +24,8 @@ struct PushColor {
 
 struct UIState {
 
+	int mouse_x, mouse_y;
+
 } //UIState
 
 //Immediate Mode GUI (IMGUI, see Muratori)
@@ -37,9 +39,7 @@ void draw_rectangle(Window* window, bool filled, int x, int y, int width, int he
 
 bool do_button(UIState* ui, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255) {
 
-	int m_x, m_y;
-	SDL_GetMouseState(&m_x, &m_y);
 	draw_rectangle(window, filled, x - width/2, y - height/2, width, height, color, alpha);
-	return point_in_rect(m_x, m_y, x - width/2, y - height/2, width, height);
+	return point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
 
 }
