@@ -7,6 +7,9 @@ import sundownstandoff.game;
 import sundownstandoff.window;
 import sundownstandoff.eventhandler;
 
+import std.stdio : writefln;
+import std.c.process : exit;
+
 const uint DEFAULT_WINDOW_WIDTH = 640;
 const uint DEFAULT_WINDOW_HEIGHT = 480;
 
@@ -16,6 +19,11 @@ void initialize_systems() {
 	DerelictSDL2Image.load();
 	DerelictSDL2Mixer.load();
 	DerelictSDL2ttf.load();
+
+	if (TTF_Init() == -1) {
+		writefln("TTF_Init: %s\n", TTF_GetError());
+		exit(2);
+	}
 
 }
 

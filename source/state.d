@@ -3,6 +3,7 @@ module sundownstandoff.state;
 import std.stdio : writefln;
 
 import derelict.sdl2.sdl;
+import derelict.sdl2.ttf;
 
 import sundownstandoff.eventhandler;
 import sundownstandoff.window;
@@ -62,12 +63,22 @@ final class MenuState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state) {
+	SDL_Texture* menu_mp_texture;
+
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
 
 		this.statehan = statehan;
 		this.ui_state = state;
 		evhan.bind_mousebtn(1, &print_something, KeyState.DOWN);
 		evhan.bind_mousemov(&move_something);
+
+		SDL_Color color = {255, 255, 255};
+		TTF_Font* font = TTF_OpenFont("fonts/OpenSans-Regular.ttf", 32);
+		if (font == null) writefln("Error loading font, error : %s", TTF_GetError());
+		SDL_Surface* surf = TTF_RenderUTF8_Blended(font, "Multiplayer", color);
+		if (surf == null) writefln("Error rendering font, error : %s", TTF_GetError());
+		menu_mp_texture = SDL_CreateTextureFromSurface(window.renderer, surf);
+		SDL_FreeSurface(surf);
 
 	}
 
@@ -95,7 +106,7 @@ final class MenuState : GameState {
 
 		uint item_width = height / 2, item_height = 32;
 		do_button(ui_state, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor);
-		if(do_button(ui_state, window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor)) {
+		if(do_button(ui_state, window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor, 255, menu_mp_texture)) {
 			auto current_state = statehan.pop_state();
 			auto last_state = statehan.pop_state();
 			statehan.push_state(State.MENU);

@@ -37,9 +37,15 @@ void draw_rectangle(Window* window, bool filled, int x, int y, int width, int he
 
 }
 
-bool do_button(UIState* ui, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255) {
+void draw_label(Window* window, SDL_Texture* label, int x, int y, int width, int height, int padding) {
+	SDL_Rect rect = {x: x+padding/2, y: y+padding/2, w: width-padding, h: height-padding};
+	SDL_RenderCopy(window.renderer, label, null, &rect);
+}
+
+bool do_button(UIState* ui, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, SDL_Texture* label = null) {
 
 	draw_rectangle(window, filled, x - width/2, y - height/2, width, height, color, alpha);
+	if (label != null) draw_label(window, label, x - width/2, y - height/2, width, height, 4);
 	return point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
 
 }
