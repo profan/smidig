@@ -96,8 +96,8 @@ final class MenuState : GameState {
 		int itemcolor = 0x8bca42;
 
 		uint width = 512, height = 384;
-		draw_rectangle(window, true, 0, 0, window.width, window.height, bgcolor);
-		draw_rectangle(window, true, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
+		draw_rectangle(window, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
+		draw_rectangle(window, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
 		uint item_width = height / 2, item_height = 32;
 		do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor);

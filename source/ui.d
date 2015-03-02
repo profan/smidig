@@ -30,12 +30,20 @@ struct UIState {
 
 } //UIState
 
+enum DrawFlags {
+
+	NONE = 0,
+	FILL = 1 << 0,
+	BORDER = 1 << 1
+
+} //RectangleType
+
 //Immediate Mode GUI (IMGUI, see Muratori)
-void draw_rectangle(Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255) {
+void draw_rectangle(Window* window, DrawFlags flags, int x, int y, int width, int height, int color, ubyte alpha = 255) {
 
 	SDL_Rect rect = {x: x, y: y, w: width, h: height};
 	auto p = PushColor(window, cast(ubyte)(color>>16), cast(ubyte)(color>>8), cast(ubyte)(color), alpha);
-	(filled) ? SDL_RenderFillRect(window.renderer, &rect) : SDL_RenderDrawRect(window.renderer, &rect);
+	(flags & DrawFlags.FILL) ? SDL_RenderFillRect(window.renderer, &rect) : SDL_RenderDrawRect(window.renderer, &rect);
 
 }
 
@@ -64,7 +72,7 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 		}
 	}
 
-	draw_rectangle(window, filled, x - width/2, y - height/2, width, height, color, alpha);
+	draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, x - width/2, y - height/2, width, height, color, alpha);
 	if (label != null) draw_label(window, label, x - width/2, y - height/2, width, height, 4);
 
 	return result;
