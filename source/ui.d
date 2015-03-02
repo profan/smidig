@@ -24,7 +24,9 @@ struct PushColor {
 
 struct UIState {
 
+	uint active_item, hot_item;
 	int mouse_x, mouse_y;
+	uint mouse_buttons;
 
 } //UIState
 
@@ -42,10 +44,34 @@ void draw_label(Window* window, SDL_Texture* label, int x, int y, int width, int
 	SDL_RenderCopy(window.renderer, label, null, &rect);
 }
 
-bool do_button(UIState* ui, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, SDL_Texture* label = null) {
+bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, SDL_Texture* label = null) {
+
+	bool result = false;
+	bool inside = point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
+
+	if (inside) ui.hot_item = id;
+
+	if (ui.active_item == id && !is_btn_down(ui, 1)) {
+		if (inside) {
+			result = true;
+			ui.hot_item = id;
+		} else {
+			ui.hot_item = 0;
+		}
+		ui.active_item = 0;
+	} else if (ui.hot_item == id) {
+		if (is_btn_down(ui, 1)) {
+			ui.active_item = id;
+		}
+	}
 
 	draw_rectangle(window, filled, x - width/2, y - height/2, width, height, color, alpha);
 	if (label != null) draw_label(window, label, x - width/2, y - height/2, width, height, 4);
-	return point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
 
+	return result;
+
+}
+
+bool is_btn_down(UIState* ui, uint button) {
+	return (ui.mouse_buttons >> button-1) & 1;
 }

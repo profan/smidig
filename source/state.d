@@ -100,8 +100,8 @@ final class MenuState : GameState {
 		draw_rectangle(window, true, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
 		uint item_width = height / 2, item_height = 32;
-		do_button(ui_state, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor);
-		if(do_button(ui_state, window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor, 255, menu_mp_texture)) {
+		do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor);
+		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor, 255, menu_mp_texture)) {
 			auto current_state = statehan.pop_state();
 			auto last_state = statehan.pop_state();
 			statehan.push_state(State.MENU);
@@ -130,7 +130,7 @@ final class MatchState : GameState {
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
 			auto current_state = statehan.pop_state();
 			auto last_state = statehan.pop_state();
 			statehan.push_state(State.GAME);

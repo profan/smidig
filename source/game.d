@@ -32,7 +32,7 @@ struct Game {
 	}
 
 	void update_ui(ref SDL_Event ev) {
-		SDL_GetMouseState(&ui_state.mouse_x, &ui_state.mouse_y);
+		ui_state.mouse_buttons = SDL_GetMouseState(&ui_state.mouse_x, &ui_state.mouse_y);
 	}
 
 	void update(double dt) {
