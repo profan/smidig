@@ -135,9 +135,7 @@ final class MatchState : GameState {
 			auto last_state = statehan.pop_state();
 			statehan.push_state(State.GAME);
 			statehan.push_state(State.MENU);
-		}
-
-		
+		}		
 
 	}
 
