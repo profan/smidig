@@ -30,6 +30,20 @@ struct UIState {
 
 } //UIState
 
+void before_ui(ref UIState ui) {
+	ui.hot_item = 0;
+}
+
+void reset_ui(ref UIState ui) {
+	if (!is_btn_down(&ui, 1)) {
+		ui.active_item = 0;
+	} else {
+		if (ui.active_item == 0) {
+			ui.active_item = -1;
+		}
+	}
+}
+
 enum DrawFlags {
 
 	NONE = 0,
