@@ -64,14 +64,18 @@ final class MenuState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 
-	SDL_Texture* menu_mp_texture;
+	SDL_Texture* menu_join_texture;
+	SDL_Texture* menu_create_texture;
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
 
 		this.statehan = statehan;
 		this.ui_state = state;
 		evhan.bind_mousebtn(1, &print_something, KeyState.DOWN);
-		menu_mp_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Multiplayer", 16, 0x428bca);
+
+		int text_color = 0x0e72c9;
+		menu_join_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Join Game", 20, text_color);
+		menu_create_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Create Game", 20, text_color);
 	}
 
 	void print_something(int x, int y) {
@@ -93,8 +97,8 @@ final class MenuState : GameState {
 		draw_rectangle(window, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
 		uint item_width = height / 2, item_height = 32;
-		do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor);
-		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor, 255, menu_mp_texture)) {
+		do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor, 255, menu_join_texture);
+		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
 			auto current_state = statehan.pop_state();
 			auto last_state = statehan.pop_state();
 			statehan.push_state(State.MENU);

@@ -48,7 +48,10 @@ void draw_rectangle(Window* window, DrawFlags flags, int x, int y, int width, in
 }
 
 void draw_label(Window* window, SDL_Texture* label, int x, int y, int width, int height, int padding) {
-	SDL_Rect rect = {x: x+padding/2, y: y+padding/2, w: width-padding, h: height-padding};
+
+	int w, h;
+	SDL_QueryTexture(label, null, null, &w, &h);
+	SDL_Rect rect = {x: x+width/2-w/2, y: y+height/2-h/2, w: w, h: h};
 	SDL_RenderCopy(window.renderer, label, null, &rect);
 }
 
