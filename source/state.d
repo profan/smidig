@@ -64,6 +64,7 @@ final class MenuState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 
+	SDL_Texture* menu_title_texture;
 	SDL_Texture* menu_join_texture;
 	SDL_Texture* menu_create_texture;
 
@@ -73,7 +74,9 @@ final class MenuState : GameState {
 		this.ui_state = state;
 		evhan.bind_mousebtn(1, &print_something, KeyState.DOWN);
 
+		int title_color = 0xffa500;
 		int text_color = 0x0e72c9;
+		menu_title_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Sundown Standoff", 48, title_color);
 		menu_join_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Join Game", 20, text_color);
 		menu_create_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Create Game", 20, text_color);
 	}
@@ -95,6 +98,8 @@ final class MenuState : GameState {
 		uint width = 512, height = 384;
 		draw_rectangle(window, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
 		draw_rectangle(window, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
+
+		draw_label(window, menu_title_texture, window.width/2, window.height/4, 0, 0, 0);
 
 		uint item_width = height / 2, item_height = 32;
 		do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor, 255, menu_join_texture);
