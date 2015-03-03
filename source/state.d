@@ -6,6 +6,7 @@ import derelict.sdl2.sdl;
 import derelict.sdl2.ttf;
 
 import sundownstandoff.eventhandler;
+import sundownstandoff.graphics;
 import sundownstandoff.window;
 import sundownstandoff.ui;
 
@@ -70,15 +71,7 @@ final class MenuState : GameState {
 		this.statehan = statehan;
 		this.ui_state = state;
 		evhan.bind_mousebtn(1, &print_something, KeyState.DOWN);
-
-		SDL_Color color = {255, 255, 255};
-		TTF_Font* font = TTF_OpenFont("fonts/OpenSans-Regular.ttf", 32);
-		if (font == null) writefln("Error loading font, error : %s", TTF_GetError());
-		SDL_Surface* surf = TTF_RenderUTF8_Blended(font, "Multiplayer", color);
-		if (surf == null) writefln("Error rendering font, error : %s", TTF_GetError());
-		menu_mp_texture = SDL_CreateTextureFromSurface(window.renderer, surf);
-		SDL_FreeSurface(surf);
-
+		menu_mp_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Multiplayer", 16, 0x428bca);
 	}
 
 	void print_something(int x, int y) {
