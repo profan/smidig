@@ -99,7 +99,7 @@ final class MenuState : GameState {
 		draw_rectangle(window, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
 		draw_rectangle(window, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
-		draw_label(window, menu_title_texture, window.width/2, window.height/4, 0, 0, 0);
+		draw_label(window, menu_title_texture, window.width/2, window.height/4, 0, 0);
 
 		uint item_width = height / 2, item_height = 32;
 		do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor, 255, menu_join_texture);

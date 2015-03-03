@@ -47,7 +47,7 @@ void draw_rectangle(Window* window, DrawFlags flags, int x, int y, int width, in
 
 }
 
-void draw_label(Window* window, SDL_Texture* label, int x, int y, int width, int height, int padding) {
+void draw_label(Window* window, SDL_Texture* label, int x, int y, int width, int height) {
 
 	int w, h;
 	SDL_QueryTexture(label, null, null, &w, &h);
@@ -76,7 +76,7 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 	}
 
 	draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, x - width/2, y - height/2, width, height, color, alpha);
-	if (label != null) draw_label(window, label, x - width/2, y - height/2, width, height, 4);
+	if (label != null) draw_label(window, label, x - width/2, y - height/2, width, height);
 
 	return result;
 
