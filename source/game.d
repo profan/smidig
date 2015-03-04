@@ -22,6 +22,7 @@ struct Game {
 		this.evhan = evhan;
 		this.ui_state = UIState();
 		this.state = new GameStateHandler();
+		
 		this.state.add_state(new MatchState(state, evhan, &ui_state), State.GAME);
 		this.state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
 		this.state.push_state(State.GAME);

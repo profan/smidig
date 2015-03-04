@@ -95,7 +95,7 @@ final class MenuState : GameState {
 		int menucolor = 0x428bca;
 		int itemcolor = 0x8bca42;
 
-		uint width = 512, height = 384;
+		uint width = 512, height = window.height - window.height/3;
 		draw_rectangle(window, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
 		draw_rectangle(window, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 

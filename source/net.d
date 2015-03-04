@@ -11,17 +11,27 @@ enum MessageType {
 
 } //MessageType
 
+enum ConnectionState {
+
+	CONNECTED,
+	UNCONNECTED,
+	WAITING
+
+}
+
 
 // Will live in a thread which the game sends and receives messages from!
-struct NetworkPeer {
+class NetworkPeer {
 
 	bool open;
 	TcpSocket socket;
+	ConnectionState state;
 
 	this(short port) {
 
 		this.socket = new TcpSocket();
 		this.socket.bind(new InternetAddress("localhost", 12000));
+		this.state = ConnectionState.UNCONNECTED;
 
 	}
 
