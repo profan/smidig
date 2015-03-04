@@ -102,8 +102,8 @@ final class MenuState : GameState {
 		draw_label(window, menu_title_texture, window.width/2, window.height/4, 0, 0);
 
 		uint item_width = height / 2, item_height = 32;
-		do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor, 255, menu_join_texture);
-		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
+		do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, menu_join_texture);
+		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
 			auto current_state = statehan.pop_state();
 			auto last_state = statehan.pop_state();
 			statehan.push_state(State.MENU);
