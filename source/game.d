@@ -25,6 +25,8 @@ struct Game {
 		
 		this.state.add_state(new MatchState(state, evhan, &ui_state), State.GAME);
 		this.state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
+		this.state.add_state(new JoiningState(state, evhan, &ui_state), State.JOIN);
+		this.state.add_state(new WaitingState(state, evhan, &ui_state), State.WAIT);
 		this.state.push_state(State.GAME);
 		this.state.push_state(State.MENU);
 
