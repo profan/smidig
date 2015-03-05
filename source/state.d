@@ -113,9 +113,6 @@ final class MenuState : GameState {
 		} //join
 
 		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
-			auto current_state = statehan.pop_state();
-			auto last_state = statehan.pop_state();
-			statehan.push_state(State.MENU);
 			statehan.push_state(State.GAME);
 		} //create
 		
@@ -169,10 +166,7 @@ final class MatchState : GameState {
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
 		if(do_button(ui_state, 5, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
-			auto current_state = statehan.pop_state();
-			auto last_state = statehan.pop_state();
-			statehan.push_state(State.GAME);
-			statehan.push_state(State.MENU);
+			statehan.pop_state();
 		}		
 
 	}
