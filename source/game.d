@@ -38,10 +38,6 @@ final class MenuState : GameState {
 
 	}
 
-	void print_something(int x, int y) {
-		writefln("Clicked something.. %d, %d", x, y);
-	}
-
 	override void update(double dt) {
 		//do menu stuff
 	}
@@ -79,10 +75,12 @@ final class JoiningState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
+	Tid network_thread;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
 		this.statehan = statehan;
 		this.ui_state = state;
+		this.network_thread = net_tid;
 	}
 
 	override void update(double dt) {
@@ -102,10 +100,12 @@ final class MatchState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
+	Tid network_thread;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
 		this.statehan = statehan;
 		this.ui_state = state;
+		this.network_thread = net_tid;
 	}
 
 	override void update(double dt) {
@@ -131,10 +131,12 @@ final class WaitingState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
+	Tid network_thread;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
 		this.statehan = statehan;
 		this.ui_state = state;
+		this.network_thread = net_tid;
 	}
 	
 	override void update(double dt) {
@@ -163,10 +165,10 @@ struct Game {
 		this.ui_state = UIState();
 		this.state = new GameStateHandler();
 		
-		this.state.add_state(new MatchState(state, evhan, &ui_state), State.GAME);
+		this.state.add_state(new MatchState(state, evhan, &ui_state, network_thread), State.GAME);
 		this.state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
-		this.state.add_state(new JoiningState(state, evhan, &ui_state), State.JOIN);
-		this.state.add_state(new WaitingState(state, evhan, &ui_state), State.WAIT);
+		this.state.add_state(new JoiningState(state, evhan, &ui_state, network_thread), State.JOIN);
+		this.state.add_state(new WaitingState(state, evhan, &ui_state, network_thread), State.WAIT);
 		this.state.push_state(State.GAME);
 		this.state.push_state(State.MENU);
 
