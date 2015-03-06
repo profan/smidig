@@ -9,6 +9,7 @@ import sundownstandoff.window;
 import sundownstandoff.eventhandler;
 import sundownstandoff.graphics;
 import sundownstandoff.state;
+import sundownstandoff.net;
 import sundownstandoff.ui;
 
 final class MenuState : GameState {
@@ -107,7 +108,7 @@ final class MatchState : GameState {
 	}
 
 	override void update(double dt) {
-
+		//nonblocking receive to process messages from net thread
 	}
 
 	override void draw(Window* window) {
@@ -151,6 +152,8 @@ struct Game {
 	EventHandler* evhan;
 	GameStateHandler state;
 	UIState ui_state;
+	
+	NetworkPeer peer;
 
 	this(Window* window, EventHandler* evhan) {
 
