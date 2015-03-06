@@ -69,6 +69,16 @@ void draw_label(Window* window, SDL_Texture* label, int x, int y, int width, int
 	SDL_RenderCopy(window.renderer, label, null, &rect);
 }
 
+int darken(int color, uint percentage) {
+	int adjustment = 255 / percentage;
+	ubyte r = cast(ubyte)(color>>16), g = cast(ubyte)(color>>8), b = cast(ubyte)(color);
+	r -= adjustment;
+	g -= adjustment;
+	b -= adjustment;
+	int result = (r << 16) | (g << 8) | b;
+	return result;
+}
+
 bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, SDL_Texture* label = null) {
 
 	bool result = false;
@@ -86,6 +96,8 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 	} else if (ui.hot_item == id) {
 		if (ui.active_item == 0 && is_btn_down(ui, 1)) {
 			ui.active_item = id;
+		} else if (ui.active_item == id) {
+			draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
 		}
 	}
 
