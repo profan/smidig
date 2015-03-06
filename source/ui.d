@@ -99,8 +99,8 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 		if (ui.active_item == 0 && is_btn_down(ui, 1)) {
 			ui.active_item = id;
 		} else if (ui.active_item == id) {
-			m_x = x + 2;
-			m_y = y + 2;
+			m_x += 1;
+			m_y += 1;
 		}
 	}
 
