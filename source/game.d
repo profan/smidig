@@ -90,7 +90,7 @@ final class JoiningState : GameState {
 		int item_width = window.width/2, item_height = 32, itemcolor = 0x428bca;
 		if(do_button(ui_state, 4, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
 			statehan.pop_state();
-		}
+		} //back to menu, cancel
 	}
 
 } //JoiningState
@@ -117,7 +117,7 @@ final class MatchState : GameState {
 		uint item_width = window.width / 2, item_height = 32;
 		if(do_button(ui_state, 5, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
 			statehan.pop_state();
-		}		
+		} //back to menu
 
 	}
 
