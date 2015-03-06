@@ -86,6 +86,8 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 
 	if (inside) ui.hot_item = id;
 
+	int m_x = x, m_y = y;
+	int main_color = color;
 	if (ui.active_item == id && !is_btn_down(ui, 1)) {
 		if (inside) {
 			result = true;
@@ -97,12 +99,14 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 		if (ui.active_item == 0 && is_btn_down(ui, 1)) {
 			ui.active_item = id;
 		} else if (ui.active_item == id) {
-			draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
+			m_x = x + 2;
+			m_y = y + 2;
 		}
 	}
 
-	draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, x - width/2, y - height/2, width, height, color, alpha);
-	if (label != null) draw_label(window, label, x - width/2, y - height/2, width, height);
+	draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
+	draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, m_x - width/2, m_y - height/2, width, height, color, alpha);
+	if (label != null) draw_label(window, label, m_x - width/2, m_y - height/2, width, height);
 
 	return result;
 
