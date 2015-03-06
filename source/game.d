@@ -1,5 +1,6 @@
 module sundownstandoff.game;
 
+import std.concurrency;
 import std.stdio : writefln;
 import core.stdc.stdlib : exit;
 
@@ -153,7 +154,7 @@ struct Game {
 	GameStateHandler state;
 	UIState ui_state;
 	
-	NetworkPeer peer;
+	Tid network_thread;
 
 	this(Window* window, EventHandler* evhan) {
 
@@ -195,6 +196,8 @@ struct Game {
 
 	void run() {
 	
+		network_thread = spawn(&launch_peer);
+
 		while(window.alive) {
 
 			evhan.handle_events();
