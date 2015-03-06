@@ -1,7 +1,7 @@
 module sundownstandoff.net;
 
 import std.stdio : writefln;
-import std.socket : InternetAddress, TcpSocket;
+import std.socket : InternetAddress, Socket, TcpSocket;
 
 enum MessageType {
 
@@ -20,6 +20,14 @@ enum ConnectionState {
 
 }
 
+enum Command {
+
+	CREATE,
+	CONNECT,
+	DISCONNECT
+
+}
+
 
 // Will live in a thread which the game sends and receives messages from!
 struct NetworkPeer {
@@ -28,6 +36,8 @@ struct NetworkPeer {
 	TcpSocket socket;
 	ConnectionState state;
 	ushort port = 12000;
+
+	Socket[] peers;
 
 	this(ushort port) {
 
@@ -45,6 +55,7 @@ struct NetworkPeer {
 
 		while (open) {
 			socket.listen(1);
+			peers ~= socket.accept();
 		}
 
 	}
