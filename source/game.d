@@ -27,7 +27,6 @@ final class MenuState : GameState {
 
 		this.statehan = statehan;
 		this.ui_state = state;
-		evhan.bind_mousebtn(1, &print_something, KeyState.DOWN);
 
 		int title_color = 0xffa500;
 		int text_color = 0x0e72c9;
