@@ -54,6 +54,9 @@ class GameStateHandler {
 
 abstract class GameState {
 
+	void enter();
+	void leave();
+
 	void update(double dt);
 	void draw(Window* window);
 

@@ -36,6 +36,15 @@ final class MenuState : GameState {
 		menu_quit_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Quit", 20, text_color);
 
 	}
+	
+	override void enter() {
+
+	}
+
+	override void leave() {
+
+	}
+
 
 	override void update(double dt) {
 		//do menu stuff
@@ -82,6 +91,14 @@ final class JoiningState : GameState {
 		this.network_thread = net_tid;
 	}
 
+	override void enter() {
+
+	}
+
+	override void leave() {
+
+	}
+
 	override void update(double dt) {
 		//much update
 	}
@@ -107,6 +124,14 @@ final class MatchState : GameState {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
+	}
+
+	override void enter() {
+
+	}
+
+	override void leave() {
+
 	}
 
 	override void update(double dt) {
@@ -138,6 +163,14 @@ final class WaitingState : GameState {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
+	}
+
+	override void enter() {
+		send(network_thread, Command.CREATE);
+	}
+
+	override void leave() {
+		
 	}
 	
 	override void update(double dt) {
