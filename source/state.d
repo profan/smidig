@@ -33,11 +33,14 @@ class GameStateHandler {
 	}
 
 	void push_state(State state) {
-		stack ~= states[state];
+		GameState st = states[state];
+		st.enter(); //entering the state
+		stack ~= st;
 	}
 
 	GameState pop_state() {
 		GameState st = stack[$-1];
+		st.leave(); //leaving the state, do exit stuff
 		stack = stack[0..$-1];
 		return st;
 	}
