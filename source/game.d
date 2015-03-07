@@ -68,11 +68,11 @@ final class MenuState : GameState {
 		} //join
 
 		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
-			statehan.push_state(State.GAME);
+			statehan.push_state(State.WAIT);
 		} //create
 		
 		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, menu_quit_texture)) {
-			exit(0);
+			window.alive = false;
 		} //quit
 
 	}
@@ -178,7 +178,11 @@ final class WaitingState : GameState {
 	}
 
 	override void draw(Window* window) {
-		//...
+		int itemcolor = 0x8bca42;
+		uint item_width = window.width / 2, item_height = 32;
+		if(do_button(ui_state, 6, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+			statehan.pop_state();
+		} //back to menu
 	}
 
 } //WaitingState
@@ -199,15 +203,7 @@ struct Game {
 		this.ui_state = UIState();
 		this.state = new GameStateHandler();
 		
-		this.state.add_state(new MatchState(state, evhan, &ui_state, network_thread), State.GAME);
-		this.state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
-		this.state.add_state(new JoiningState(state, evhan, &ui_state, network_thread), State.JOIN);
-		this.state.add_state(new WaitingState(state, evhan, &ui_state, network_thread), State.WAIT);
-		this.state.push_state(State.GAME);
-		this.state.push_state(State.MENU);
-
-		this.evhan.add_listener(&this.update_ui);
-
+		
 	}
 
 	void update_ui(ref SDL_Event ev) {
@@ -233,6 +229,14 @@ struct Game {
 	void run() {
 	
 		network_thread = spawn(&launch_peer);
+		
+		state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
+		state.add_state(new MatchState(state, evhan, &ui_state, network_thread), State.GAME);
+		state.add_state(new JoiningState(state, evhan, &ui_state, network_thread), State.JOIN);
+		state.add_state(new WaitingState(state, evhan, &ui_state, network_thread), State.WAIT);
+		state.push_state(State.MENU);
+
+		evhan.add_listener(&this.update_ui);
 
 		while(window.alive) {
 
@@ -247,6 +251,8 @@ struct Game {
 			window.render_present();
 
 		}
+
+		send(network_thread, Command.TERMINATE);
 
 	}
 

@@ -2,6 +2,7 @@ module sundownstandoff.net;
 
 import std.stdio : writefln;
 import std.socket : InternetAddress, Socket, TcpSocket;
+import std.concurrency;
 
 enum MessageType {
 
@@ -24,7 +25,8 @@ enum Command {
 
 	CREATE,
 	CONNECT,
-	DISCONNECT
+	DISCONNECT,
+	TERMINATE
 
 }
 
@@ -52,6 +54,14 @@ struct NetworkPeer {
 
 		this.open = true;
 		writefln("Listening on localhost:%d", port);
+
+		auto msg = receiveOnly!(Command);
+		writefln("Command: %d", msg);
+
+		if (msg == Command.TERMINATE) {
+			writefln("Terminating.");
+			return;
+		}
 
 		while (open) {
 			socket.listen(1);
