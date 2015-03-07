@@ -41,9 +41,9 @@ struct Window {
 
 		assert(window != null);
 
-		GLint major = 3, minor = 0;
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
+		//GLint major = 4, minor = 0;
+		//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
+		//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
 		glcontext = SDL_GL_CreateContext(window);
 
 		if (glcontext == null) {
@@ -57,6 +57,8 @@ struct Window {
 		printf("OpenGL renderer is: %s \n", sGLVersion_ren);
 		printf("OpenGL version is: %s \n", sGLVersion_main);
 		printf("GLSL version is: %s \n", sGLVersion_shader);
+		printf("Loading GL Extensions. \n");
+		DerelictGL3.reload();
 		alive = true;
 
 	}

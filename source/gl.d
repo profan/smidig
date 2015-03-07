@@ -1,5 +1,6 @@
 module sundownstandoff.gl;
 
+import core.vararg;
 import std.c.stdlib;
 import core.stdc.stdio;
 import derelict.opengl3.gl3;
@@ -24,7 +25,7 @@ bool check_shader_compile_success(GLuint shader) {
 
 }
 
-GLuint compile_shader(const(GLchar*)* shader_source, GLuint shader_type) {
+GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) {
 
 	GLuint new_shader;
 	
@@ -38,5 +39,20 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLuint shader_type) {
 	}
 
 	return new_shader;
+
+}
+
+GLuint create_shader_program(GLuint shaders[]...) {
+
+	GLuint program = glCreateProgram();
+
+	foreach(shader; shaders) {
+		glAttachShader(program, shader);
+	}
+
+	glBindFragDataLocation(program, 0, "outColor");
+	glLinkProgram(program);
+
+	return program;
 
 }

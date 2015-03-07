@@ -2,15 +2,18 @@ module sundownstandoff.game;
 
 import std.concurrency;
 import std.stdio : writefln;
-import core.stdc.stdlib : exit;
+import std.file : read, readText;
+import core.stdc.stdlib : malloc, free, exit;
 
 import derelict.sdl2.sdl;
+import derelict.opengl3.gl3;
 
 import sundownstandoff.window;
 import sundownstandoff.eventhandler;
 import sundownstandoff.graphics;
 import sundownstandoff.state;
 import sundownstandoff.net;
+import sundownstandoff.gl;
 import sundownstandoff.ui;
 
 final class MenuState : GameState {
@@ -35,6 +38,39 @@ final class MenuState : GameState {
 		menu_create_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Create Game", 20, text_color);
 		menu_quit_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Quit", 20, text_color);
 
+		// Create Vertex Array Object
+		GLuint vao;
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+
+		// Create a Vertex Buffer Object and copy the vertex data to it
+		GLuint vbo;
+		glGenBuffers(1, &vbo);
+
+		GLfloat[6] vertices = [
+			0.0f,  0.5f, // Vertex 1 (X, Y)
+			0.5f, -0.5f, // Vertex 2 (X, Y)
+			-0.5f, -0.5f  // Vertex 3 (X, Y)
+		];
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, vertices.sizeof, cast(void*)vertices, GL_STATIC_DRAW);
+		
+		char* vs = cast(char*)malloc(2048);
+		vs = cast(char*)read("shaders/triangle.vs", 2048);
+		GLuint triangle_vs = compile_shader(&vs, GL_VERTEX_SHADER);
+		
+		char* fs = cast(char*)malloc(2048);
+		fs = cast(char*)read("shaders/triangle.fs", 2048);
+		GLuint triangle_fs = compile_shader(&fs, GL_FRAGMENT_SHADER);
+
+		GLuint program = create_shader_program(triangle_vs, triangle_fs);
+		glUseProgram(program);
+
+		GLint posAttrib = glGetAttribLocation(program, "position");
+		glEnableVertexAttribArray(posAttrib);
+		glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, null);
+
 	}
 	
 	override void enter() {
@@ -50,6 +86,17 @@ final class MenuState : GameState {
 		//do menu stuff
 	}
 
+
+	override void draw(Window* window) {
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+		// Draw a triangle from the 3 vertices
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	}
+
+	/*
 	override void draw(Window* window) {
 
 		int bgcolor = 0xca8142;
@@ -75,7 +122,7 @@ final class MenuState : GameState {
 			window.alive = false;
 		} //quit
 
-	}
+	} */
 
 } //MenuState
 
