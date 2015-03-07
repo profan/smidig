@@ -67,16 +67,19 @@ void draw_label(Window* window, SDL_Texture* label, int x, int y, int width, int
 	SDL_QueryTexture(label, null, null, &w, &h);
 	SDL_Rect rect = {x: x+width/2-w/2, y: y+height/2-h/2, w: w, h: h};
 	SDL_RenderCopy(window.renderer, label, null, &rect);
+
 }
 
 int darken(int color, uint percentage) {
-	int adjustment = 255 / percentage;
+
+	uint adjustment = 255 / percentage;
 	ubyte r = cast(ubyte)(color>>16), g = cast(ubyte)(color>>8), b = cast(ubyte)(color);
 	r -= adjustment;
 	g -= adjustment;
 	b -= adjustment;
 	int result = (r << 16) | (g << 8) | b;
 	return result;
+
 }
 
 bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, SDL_Texture* label = null) {
