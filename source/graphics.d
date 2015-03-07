@@ -6,6 +6,7 @@ import derelict.sdl2.sdl;
 import derelict.sdl2.ttf;
 
 import sundownstandoff.window;
+import sundownstandoff.gl;
 
 SDL_Texture* create_font_texture(Window* window, immutable char* font_path, immutable char* font_text, int font_size, int font_color) {
 	

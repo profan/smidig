@@ -3,6 +3,7 @@ module sundownstandoff.net;
 import std.stdio : writefln;
 import std.socket : InternetAddress, Socket, TcpSocket;
 import std.concurrency;
+import std.conv : to;
 
 enum MessageType {
 
@@ -19,7 +20,7 @@ enum ConnectionState {
 	UNCONNECTED,
 	WAITING
 
-}
+} //ConnectionState
 
 enum Command {
 
@@ -28,7 +29,7 @@ enum Command {
 	DISCONNECT,
 	TERMINATE
 
-}
+} //Command
 
 
 // Will live in a thread which the game sends and receives messages from!
@@ -56,7 +57,7 @@ struct NetworkPeer {
 		writefln("[NET] Listening on localhost:%d", port);
 
 		auto msg = receiveOnly!(Command);
-		writefln("[NET] Command: %d", msg);
+		writefln("[NET] Command: %s", to!string(msg));
 
 		if (msg == Command.TERMINATE) {
 			writefln("[NET] Terminating Thread.");
