@@ -1,3 +1,6 @@
+import std.stdio : writefln;
+import std.c.process : exit;
+
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
 import derelict.sdl2.mixer;
@@ -9,8 +12,6 @@ import sundownstandoff.game;
 import sundownstandoff.window;
 import sundownstandoff.eventhandler;
 
-import std.stdio : writefln;
-import std.c.process : exit;
 
 const uint DEFAULT_WINDOW_WIDTH = 640;
 const uint DEFAULT_WINDOW_HEIGHT = 480;

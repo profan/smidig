@@ -1,9 +1,14 @@
 module sundownstandoff.gl;
 
 import core.vararg;
-import core.stdc.stdlib;
 import core.stdc.stdio;
+import core.stdc.stdlib : malloc, free;
+
 import derelict.opengl3.gl3;
+
+struct Shader {
+
+} //Shader
 
 //C-ish code ahoy
 bool check_shader_compile_success(GLuint shader) {
