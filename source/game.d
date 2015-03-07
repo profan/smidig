@@ -56,12 +56,10 @@ final class MenuState : GameState {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, vertices.sizeof, cast(void*)vertices, GL_STATIC_DRAW);
 		
-		char* vs = cast(char*)malloc(2048);
-		vs = cast(char*)read("shaders/triangle.vs", 2048);
+		auto vs = cast(char*)read("shaders/triangle.vs", 2048);
 		GLuint triangle_vs = compile_shader(&vs, GL_VERTEX_SHADER);
 		
-		char* fs = cast(char*)malloc(2048);
-		fs = cast(char*)read("shaders/triangle.fs", 2048);
+		auto fs = cast(char*)read("shaders/triangle.fs", 2048);
 		GLuint triangle_fs = compile_shader(&fs, GL_FRAGMENT_SHADER);
 
 		GLuint program = create_shader_program(triangle_vs, triangle_fs);

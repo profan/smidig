@@ -1,7 +1,7 @@
 module sundownstandoff.gl;
 
 import core.vararg;
-import std.c.stdlib;
+import core.stdc.stdlib;
 import core.stdc.stdio;
 import derelict.opengl3.gl3;
 
