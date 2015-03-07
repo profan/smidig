@@ -17,7 +17,7 @@ SDL_Texture* create_font_texture(Window* window, immutable char* font_path, immu
 	if (font == null) writefln("Error loading font, error : %s", TTF_GetError());
 	SDL_Surface* surf = TTF_RenderUTF8_Blended(font, font_text, color);
 	if (surf == null) writefln("Error rendering font, error : %s", TTF_GetError());
-	texture = SDL_CreateTextureFromSurface(window.renderer, surf);
+	//texture = SDL_CreateTextureFromSurface(window.renderer, surf);
 	SDL_FreeSurface(surf);
 
 	return texture;

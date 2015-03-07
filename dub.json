@@ -2,6 +2,7 @@
     "name": "sundown_standoff",
 	"dependencies": {
 		"derelict-sdl2": "~>1.9.3",
-		"derelict-gl3": "~>1.0.12"
+		"derelict-gl3": "~>1.0.12",
+		"gl3n": "~>1.0.1"
 	}
 }

@@ -32,6 +32,11 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLuint shader_type) {
 	glShaderSource(new_shader, 1, shader_source, null);
 	glCompileShader(new_shader);
 
+	if (!check_shader_compile_success(new_shader)) {
+		glDeleteShader(new_shader);
+		return 0;
+	}
+
 	return new_shader;
 
 }

@@ -3,6 +3,8 @@ import derelict.sdl2.image;
 import derelict.sdl2.mixer;
 import derelict.sdl2.ttf;
 
+import derelict.opengl3.gl;
+
 import sundownstandoff.game;
 import sundownstandoff.window;
 import sundownstandoff.eventhandler;
@@ -19,6 +21,7 @@ void initialize_systems() {
 	DerelictSDL2Image.load();
 	DerelictSDL2Mixer.load();
 	DerelictSDL2ttf.load();
+	DerelictGL.load();
 
 	if (TTF_Init() == -1) {
 		writefln("TTF_Init: %s\n", TTF_GetError());

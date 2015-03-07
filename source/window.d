@@ -2,41 +2,68 @@ module sundownstandoff.window;
 
 import std.utf : toUTFz;
 import std.stdio : writefln;
+import core.stdc.stdio;
+import std.conv;
 
 import derelict.sdl2.sdl;
+import derelict.opengl3.gl3;
+
+enum WindowType {
+	SDL2,
+	OpenGL
+}
 
 struct Window {
 
 	bool alive;
 	char* c_title; //keep this here so the char* for toStringz doesn't point to nowhere!
 	SDL_Window* window;
-	SDL_Renderer* renderer;
+	SDL_GLContext glcontext;
 
 	//window data
 	uint window_width, window_height;
 
 	this(in char[] title, uint width, uint height) {
+
+		uint flags = 0;
+		flags |= SDL_WINDOW_OPENGL;
+
 		this.c_title = toUTFz!(char*)(title);
 		this.window = SDL_CreateWindow(
 			c_title,
 			SDL_WINDOWPOS_UNDEFINED,
 			SDL_WINDOWPOS_UNDEFINED,
 			width, height,
-			0);
+			flags);
 		
 		window_width = width;
 		window_height = height;
 
 		assert(window != null);
-		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-		assert(renderer != null);
-		alive = true;	
+
+		GLint major = 3, minor = 0;
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
+		glcontext = SDL_GL_CreateContext(window);
+
+		if (glcontext == null) {
+			GLenum glErr = glGetError();
+			writefln("OpenGL Error: %s", to!string(glErr));
+		}
+
+		const GLchar* sGLVersion_ren = glGetString(GL_RENDERER);
+		const GLchar* sGLVersion_main = glGetString(GL_VERSION);
+		const GLchar* sGLVersion_shader = glGetString(GL_SHADING_LANGUAGE_VERSION);
+		printf("OpenGL renderer is: %s \n", sGLVersion_ren);
+		printf("OpenGL version is: %s \n", sGLVersion_main);
+		printf("GLSL version is: %s \n", sGLVersion_shader);
+		alive = true;
 
 	}
 
 	~this() {
 
-		SDL_DestroyRenderer(renderer);
+		SDL_GL_DeleteContext(glcontext);
 		SDL_DestroyWindow(window);
 
 	}
@@ -48,11 +75,11 @@ struct Window {
 	@property uint height() { return window_height; }
 
 	void render_clear() {
-		SDL_RenderClear(renderer);
+		//wop
 	}
 
 	void render_present() {
-		SDL_RenderPresent(renderer);
+		SDL_GL_SwapWindow(window);
 	}
 
 	void handle_events(ref SDL_Event ev) {
