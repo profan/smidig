@@ -53,13 +53,13 @@ struct NetworkPeer {
 	void listen() {
 
 		this.open = true;
-		writefln("Listening on localhost:%d", port);
+		writefln("[NET] Listening on localhost:%d", port);
 
 		auto msg = receiveOnly!(Command);
-		writefln("Command: %d", msg);
+		writefln("[NET] Command: %d", msg);
 
 		if (msg == Command.TERMINATE) {
-			writefln("Terminating.");
+			writefln("[NET] Terminating Thread.");
 			return;
 		}
 
