@@ -48,14 +48,33 @@ final class MenuState : GameState {
 		GLuint vbo;
 		glGenBuffers(1, &vbo);
 
-		GLfloat[15] vertices = [
+		/*GLfloat[15] vertices = [
 			0.0f,  0.5f, 1.0f, 0.0f, 0.0f, // Vertex 1 (X, Y) Red
 			0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // Vertex 2 (X, Y) Green
 			-0.5f, -0.5f, 0.0f, 0.0f, 1.0f  // Vertex 3 (X, Y) Blue
+		];*/
+
+		GLfloat[20] vertices = [
+			-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, // Top-left
+			0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Top-right
+			0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Bottom-right
+			-0.5f, -0.5f, 1.0f, 1.0f, 1.0f  // Bottom-left
 		];
 
+		GLuint ebo;
+		glGenBuffers(1, &ebo);
+		
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, vertices.sizeof, cast(void*)vertices, GL_STATIC_DRAW);
+		
+		GLuint elements[6] = [
+			0, 1, 2,
+			2, 3, 0
+		];
+		
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements.sizeof, cast(void*)elements, GL_STATIC_DRAW);
+
 		
 		auto vs = cast(char*)read("shaders/triangle.vs", 2048);
 		GLuint triangle_vs = compile_shader(&vs, GL_VERTEX_SHADER);
@@ -94,8 +113,8 @@ final class MenuState : GameState {
 		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-		// Draw a triangle from the 3 vertices
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		// Draw a rectangle with two triangles
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, null);
 
 	}
 
