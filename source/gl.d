@@ -8,6 +8,28 @@ import derelict.opengl3.gl3;
 
 struct Shader {
 
+	GLuint program;
+
+	this (char* vertex_shader, char* fragment_shader) {
+
+		GLuint vshader = compile_shader(&vertex_shader, GL_VERTEX_SHADER);
+		GLuint fshader = compile_shader(&fragment_shader, GL_FRAGMENT_SHADER);
+		program = create_shader_program(vshader, fshader);
+
+	}
+
+	void bind() {
+
+		glUseProgram(program);
+
+	}
+
+	void unbind() {
+
+		glUseProgram(0);
+
+	}
+
 } //Shader
 
 //C-ish code ahoy

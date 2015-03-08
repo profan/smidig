@@ -74,22 +74,17 @@ final class MenuState : GameState {
 		
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements.sizeof, cast(void*)elements, GL_STATIC_DRAW);
-
 		
 		auto vs = cast(char*)read("shaders/triangle.vs", 2048);
-		GLuint triangle_vs = compile_shader(&vs, GL_VERTEX_SHADER);
-		
 		auto fs = cast(char*)read("shaders/triangle.fs", 2048);
-		GLuint triangle_fs = compile_shader(&fs, GL_FRAGMENT_SHADER);
+		auto shader = Shader(vs, fs);
+		shader.bind();
 
-		GLuint program = create_shader_program(triangle_vs, triangle_fs);
-		glUseProgram(program);
-
-		GLint posAttrib = glGetAttribLocation(program, "position");
+		GLint posAttrib = glGetAttribLocation(shader.program, "position");
 		glEnableVertexAttribArray(posAttrib);
 		glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5*GLfloat.sizeof, null);
 
-		GLint colAttrib = glGetAttribLocation(program, "color");
+		GLint colAttrib = glGetAttribLocation(shader.program, "color");
 		glEnableVertexAttribArray(colAttrib);
 		glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5*GLfloat.sizeof, cast(void*)(2*GLfloat.sizeof));
 
