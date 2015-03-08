@@ -4,5 +4,11 @@
 		"derelict-sdl2": "~>1.9.3",
 		"derelict-gl3": "~>1.0.12",
 		"gl3n": "~>1.0.1"
+	},
+	"buildTypes": {
+		"debug-profile": {
+			"dflags": ["-vgc"],
+			"buildOptions": ["debugMode", "debugInfo", "profile"]
+		}
 	}
 }
