@@ -1,5 +1,6 @@
 module sundownstandoff.game;
 
+import std.math;
 import std.concurrency;
 import std.stdio : writefln;
 import std.file : read, readText;
@@ -47,10 +48,10 @@ final class MenuState : GameState {
 		GLuint vbo;
 		glGenBuffers(1, &vbo);
 
-		GLfloat[6] vertices = [
-			0.0f,  0.5f, // Vertex 1 (X, Y)
-			0.5f, -0.5f, // Vertex 2 (X, Y)
-			-0.5f, -0.5f  // Vertex 3 (X, Y)
+		GLfloat[15] vertices = [
+			0.0f,  0.5f, 1.0f, 0.0f, 0.0f, // Vertex 1 (X, Y) Red
+			0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // Vertex 2 (X, Y) Green
+			-0.5f, -0.5f, 0.0f, 0.0f, 1.0f  // Vertex 3 (X, Y) Blue
 		];
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -67,7 +68,11 @@ final class MenuState : GameState {
 
 		GLint posAttrib = glGetAttribLocation(program, "position");
 		glEnableVertexAttribArray(posAttrib);
-		glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, null);
+		glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5*GLfloat.sizeof, null);
+
+		GLint colAttrib = glGetAttribLocation(program, "color");
+		glEnableVertexAttribArray(colAttrib);
+		glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5*GLfloat.sizeof, cast(void*)(2*GLfloat.sizeof));
 
 	}
 	
@@ -86,7 +91,7 @@ final class MenuState : GameState {
 
 
 	override void draw(Window* window) {
-
+		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 		// Draw a triangle from the 3 vertices
