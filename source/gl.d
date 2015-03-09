@@ -43,7 +43,7 @@ bool check_shader_compile_success(GLuint shader) {
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
 		log = cast(char*)malloc(length);
 		glGetShaderInfoLog(shader, length, &result, log);
-		printf("OpenGL Error: Unable to compile shader: %s", log);
+		printf("[OpenGL] Error: Unable to compile shader: %s", log);
 		free(log);
 		return false;
 	}

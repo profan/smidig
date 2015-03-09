@@ -38,7 +38,6 @@ struct Window {
 		
 		window_width = width;
 		window_height = height;
-
 		assert(window != null);
 
 		//GLint major = 4, minor = 0;
@@ -48,16 +47,16 @@ struct Window {
 
 		if (glcontext == null) {
 			GLenum glErr = glGetError();
-			writefln("OpenGL Error: %s", to!string(glErr));
+			printf("[OpenGL] Error: %s", glErr);
 		}
 
 		const GLchar* sGLVersion_ren = glGetString(GL_RENDERER);
 		const GLchar* sGLVersion_main = glGetString(GL_VERSION);
 		const GLchar* sGLVersion_shader = glGetString(GL_SHADING_LANGUAGE_VERSION);
-		printf("OpenGL renderer is: %s \n", sGLVersion_ren);
-		printf("OpenGL version is: %s \n", sGLVersion_main);
-		printf("GLSL version is: %s \n", sGLVersion_shader);
-		printf("Loading GL Extensions. \n");
+		printf("[OpenGL] renderer is: %s \n", sGLVersion_ren);
+		printf("[OpenGL] version is: %s \n", sGLVersion_main);
+		printf("[OpenGL] GLSL version is: %s \n", sGLVersion_shader);
+		printf("[OpenGL] Loading GL Extensions. \n");
 		DerelictGL3.reload();
 		alive = true;
 
