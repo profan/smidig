@@ -36,6 +36,7 @@ struct EventHandler {
 	EventDelegate[] delegates;
 	MouseBind[] mouse_events;
 	MouseBind[] motion_events;
+	KeyBind[] input_events;
 	KeyBind[] key_events;
 
 	//mutated by SDL2
@@ -50,6 +51,11 @@ struct EventHandler {
 
 	void add_listener(EventDelegate ed) {
 		delegates ~= ed;
+	}
+
+	void bind_keyevent(SDL_Scancode key, KeyDelegate kd) {
+		KeyBind kb = {key: key, func: kd};
+		input_events ~= kb;
 	}
 
 	void bind_mousebtn(Uint8 button, MouseDelegate md, KeyState state) {
@@ -72,6 +78,13 @@ struct EventHandler {
 		while(SDL_PollEvent(&ev)) {
 		
 			switch (ev.type ) {
+				case SDL_KEYUP:
+					foreach (ref bind; input_events) {
+						if (ev.key.keysym.scancode == bind.key) {
+							bind.func();
+						}
+					}
+					break;
 				case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
 					foreach (ref bind; mouse_events) {
 						if (ev.button.button == bind.mousebtn) {

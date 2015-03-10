@@ -37,6 +37,7 @@ void main() {
 	auto event_handler = EventHandler(SDL_GetKeyboardState(null));
 	auto window = Window("Sundown Standoff", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 	event_handler.add_listener(&window.handle_events);
+	event_handler.bind_keyevent(SDL_SCANCODE_SPACE, &window.toggle_wireframe);
 	auto game = Game(&window, &event_handler);
 	game.run();
 

@@ -82,6 +82,15 @@ struct Window {
 		SDL_GL_SwapWindow(window);
 	}
 
+	void toggle_wireframe() {
+		
+		static GLenum current = GL_FILL;
+
+		current = (current == GL_FILL) ? GL_LINE : GL_FILL;
+		glPolygonMode(GL_FRONT_AND_BACK, current);
+
+	}
+
 	void handle_events(ref SDL_Event ev) {
 		if (ev.type == SDL_QUIT) {
 			alive = false;
