@@ -66,7 +66,10 @@ struct Window {
 	}
 
 	@property const(char*) title() { return c_title; }
-	@property void title(in char[] new_title) { c_title = toUTFz!(char*)(new_title); SDL_SetWindowTitle(window, c_title); }
+	@property void title(in char[] new_title) {
+		c_title = toUTFz!(char*)(new_title);
+		SDL_SetWindowTitle(window, c_title);
+	}
 
 	@property uint width() { return window_width; }
 	@property uint height() { return window_height; }
