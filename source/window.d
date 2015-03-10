@@ -7,6 +7,7 @@ import std.conv;
 
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
+import derelict.opengl3.gl;
 
 enum WindowType {
 	SDL2,
@@ -76,7 +77,10 @@ struct Window {
 	@property uint height() { return window_height; }
 
 	void render_clear() {
-		//wop
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glLoadIdentity();
+		glOrtho(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 	}
 
 	void render_present() {

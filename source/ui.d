@@ -1,23 +1,26 @@
 module sundownstandoff.ui;
 
+import core.stdc.stdio;
+import core.stdc.stdlib;
+
 import derelict.sdl2.sdl;
+import derelict.opengl3.gl;
 
 import sundownstandoff.window;
 import sundownstandoff.util;
 
 struct PushColor {
 
-	Window* window;
 	ubyte r, g, b, a;
+	GLfloat colors[4];
 
-	this(Window* window, ubyte r, ubyte g, ubyte b, ubyte a) {
-		this.window = window;
-		//SDL_GetRenderDrawColor(window.renderer, &this.r, &this.g, &this.b, &this.a);
-		//SDL_SetRenderDrawColor(window.renderer, r, g, b, a);
+	this(ubyte r, ubyte g, ubyte b, ubyte a) {
+		glGetFloatv(GL_CURRENT_COLOR, colors.ptr);
+		glColor3f(cast(float)(r/255), cast(float)(g/255), cast(float)(b/255));
 	}
 
 	~this() {
-		//SDL_SetRenderDrawColor(window.renderer, r, g, b, a);
+		glColor3f(colors[0], colors[1], colors[2]);
 	}
 
 } //PushColor
@@ -55,9 +58,17 @@ enum DrawFlags {
 //Immediate Mode GUI (IMGUI, see Muratori)
 void draw_rectangle(Window* window, DrawFlags flags, int x, int y, int width, int height, int color, ubyte alpha = 255) {
 
-	SDL_Rect rect = {x: x, y: y, w: width, h: height};
-	auto p = PushColor(window, cast(ubyte)(color>>16), cast(ubyte)(color>>8), cast(ubyte)(color), alpha);
-	//(flags & DrawFlags.FILL) ? SDL_RenderFillRect(window.renderer, &rect) : SDL_RenderDrawRect(window.renderer, &rect);
+	GLfloat colors[4];
+	glGetFloatv(GL_CURRENT_COLOR, colors.ptr);
+	glColor3f(cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255);
+	scope(exit) glColor3f(colors[0], colors[1], colors[2]);
+
+	glBegin(GL_QUADS);
+	glVertex3f (x, y, 0);
+	glVertex3f (x, y + height, 0);
+	glVertex3f (x + width, y + height, 0);
+	glVertex3f (x + width, y, 0);
+	glEnd();
 
 }
 

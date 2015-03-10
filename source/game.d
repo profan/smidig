@@ -8,6 +8,7 @@ import core.stdc.stdlib : malloc, free, exit;
 
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
+import derelict.opengl3.gl;
 
 import sundownstandoff.window;
 import sundownstandoff.eventhandler;
@@ -78,7 +79,7 @@ final class MenuState : GameState {
 		auto vs = cast(char*)read("shaders/triangle.vs", 2048);
 		auto fs = cast(char*)read("shaders/triangle.fs", 2048);
 		auto shader = Shader(vs, fs);
-		shader.bind();
+		//shader.bind();
 
 		GLint posAttrib = glGetAttribLocation(shader.program, "position");
 		glEnableVertexAttribArray(posAttrib);
@@ -103,7 +104,7 @@ final class MenuState : GameState {
 		//do menu stuff
 	}
 
-
+/*
 	override void draw(Window* window) {
 		
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -111,9 +112,9 @@ final class MenuState : GameState {
 		// Draw a rectangle with two triangles
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, null);
 
-	}
+	}*/
 
-	/*
+	
 	override void draw(Window* window) {
 
 		int bgcolor = 0xca8142;
@@ -139,7 +140,7 @@ final class MenuState : GameState {
 			window.alive = false;
 		} //quit
 
-	} */
+	}
 
 } //MenuState
 
