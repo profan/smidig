@@ -63,13 +63,18 @@ void draw_rectangle(Window* window, DrawFlags flags, int x, int y, int width, in
 	glColor3f(cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255);
 	scope(exit) glColor3f(colors[0], colors[1], colors[2]);
 
-	GLenum mode = (flags & flags.FILL) ? GL_QUADS : GL_LINES;
+	GLenum mode = (flags & flags.FILL) ? GL_TRIANGLES : GL_LINES;
 
 	glBegin(mode);
-	glVertex3f (x, y, 0);
-	glVertex3f (x, y + height, 0);
-	glVertex3f (x + width, y + height, 0);
-	glVertex3f (x + width, y, 0);
+	
+	glVertex3f (x, y, 0); //top left
+	glVertex3f (x, y + height, 0); //bottom left
+	glVertex3f (x + width, y + height, 0); //bottom right
+
+	glVertex3f (x, y, 0); //top left
+	glVertex3f (x + width, y, 0); //top right
+	glVertex3f (x + width, y + height, 0); //bottom right
+
 	glEnd();
 
 }

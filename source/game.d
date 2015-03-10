@@ -215,8 +215,6 @@ final class MatchState : GameState {
 
 } //MatchState
 
-
-
 //when waiting for another player to connect?
 final class WaitingState : GameState {
 
