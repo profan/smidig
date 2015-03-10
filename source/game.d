@@ -175,6 +175,7 @@ final class JoiningState : GameState {
 		if(do_button(ui_state, 4, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
 			statehan.pop_state();
 		} //back to menu, cancel
+
 	}
 
 } //JoiningState
@@ -241,11 +242,13 @@ final class WaitingState : GameState {
 	}
 
 	override void draw(Window* window) {
+
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
 		if(do_button(ui_state, 6, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
 			statehan.pop_state();
 		} //back to menu
+
 	}
 
 } //WaitingState
