@@ -9,11 +9,6 @@ import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
 import derelict.opengl3.gl;
 
-enum WindowType {
-	SDL2,
-	OpenGL
-}
-
 struct Window {
 
 	bool alive;
