@@ -15,8 +15,11 @@ struct Shader {
 		GLuint vshader = compile_shader(&vertex_shader, GL_VERTEX_SHADER);
 		GLuint fshader = compile_shader(&fragment_shader, GL_FRAGMENT_SHADER);
 		program = create_shader_program(vshader, fshader);
+		glDeleteShader(vshader);
+		glDeleteShader(fshader);
 
 	}
+
 
 	void bind() {
 
@@ -77,7 +80,6 @@ GLuint create_shader_program(GLuint shaders[]...) {
 		glAttachShader(program, shader);
 	}
 
-	glBindFragDataLocation(program, 0, "outColor");
 	glLinkProgram(program);
 
 	return program;
