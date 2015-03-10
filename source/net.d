@@ -2,7 +2,7 @@ module sundownstandoff.net;
 
 import std.stdio : writefln;
 import std.socket : InternetAddress, Socket, TcpSocket;
-import std.concurrency;
+import std.concurrency : receiveOnly, Tid;
 import std.conv : to;
 
 enum MessageType {
