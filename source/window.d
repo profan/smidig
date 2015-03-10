@@ -23,6 +23,7 @@ struct Window {
 
 		uint flags = 0;
 		flags |= SDL_WINDOW_OPENGL;
+		flags |= SDL_WINDOW_RESIZABLE;
 
 		this.c_title = toUTFz!(char*)(title);
 		this.window = SDL_CreateWindow(
@@ -102,6 +103,7 @@ struct Window {
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
 					window_width = ev.window.data1;
 					window_height = ev.window.data2;
+					glViewport(0, 0, window_width, window_height);
 					break;
 				case SDL_WINDOWEVENT_EXPOSED:
 					break;
