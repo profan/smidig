@@ -267,8 +267,7 @@ struct Game {
 		this.window = window;
 		this.evhan = evhan;
 		this.ui_state = UIState();
-		this.state = new GameStateHandler();
-		
+		this.state = new GameStateHandler();		
 		
 	}
 
@@ -313,7 +312,6 @@ struct Game {
 			ui_state.before_ui();
 			draw();
 			ui_state.reset_ui();
-
 			window.render_present();
 
 		}
