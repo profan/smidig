@@ -1,7 +1,7 @@
 module sundownstandoff.net;
 
 import std.stdio : writefln;
-import std.socket : InternetAddress, Socket, TcpSocket;
+import std.socket : InternetAddress, Socket, UdpSocket;
 import std.concurrency : receiveOnly, Tid;
 import std.conv : to;
 
@@ -36,7 +36,7 @@ enum Command {
 struct NetworkPeer {
 
 	bool open;
-	TcpSocket socket;
+	UdpSocket socket;
 	ConnectionState state;
 	ushort port = 12000;
 
@@ -44,7 +44,7 @@ struct NetworkPeer {
 
 	this(ushort port) {
 
-		this.socket = new TcpSocket();
+		this.socket = new UdpSocket();
 		this.socket.bind(new InternetAddress("localhost", port));
 		this.state = ConnectionState.UNCONNECTED;
 		this.port = port;
