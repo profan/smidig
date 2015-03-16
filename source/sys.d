@@ -67,10 +67,28 @@ class InputManager : ComponentManager!(InputComponent, 1) {
 
 	}
 
-}
+} //InputManager
 
 struct InputComponent {
 
 	//.. callbacks?
 
 } //InputComponent
+
+class NetworkManager : ComponentManager!(NetworkComponent) {
+
+	override void update() {
+
+		foreach(id, ref comp; components) {
+			//package everything, send to other player!
+		}
+
+	}
+
+} //NetworkManager
+
+struct NetworkComponent {
+
+	//things, this kind of thing ought to be more general, wtb polymorphism
+
+} //NetworkComponent
