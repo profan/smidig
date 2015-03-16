@@ -63,7 +63,7 @@ class InputManager : ComponentManager!(InputComponent, 1) {
 
 	override void update() {
 
-		foreach(id, ref comp; components) {
+		foreach (id, ref comp; components) {
 			//DO ALL THE CALLBACKS
 		}
 
@@ -89,7 +89,7 @@ class NetworkManager : ComponentManager!(NetworkComponent) {
 
 	override void update() {
 
-		foreach(id, ref comp; components) {
+		foreach (id, ref comp; components) {
 			//package everything, send to other player!
 		}
 
@@ -102,3 +102,21 @@ struct NetworkComponent {
 	//things, this kind of thing ought to be more general, wtb polymorphism
 
 } //NetworkComponent
+
+class SpriteManager : ComponentManager!(SpriteComponent, 4) {
+
+	override void update() {
+
+		foreach (id, ref comp; components) {
+			//DRAW ALL THE THINGS
+		}
+
+	}
+
+} //SpriteManager
+
+struct SpriteComponent {
+
+	//some drawing stuff?
+
+} //SpriteComponent
