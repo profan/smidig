@@ -4,7 +4,6 @@ import std.math;
 import std.concurrency;
 import std.stdio : writefln;
 import std.file : read, readText;
-import core.stdc.stdlib : malloc, free, exit;
 
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
