@@ -1,5 +1,7 @@
 module sundownstandoff.sys;
 
+import std.concurrency : send, Tid;
+
 import gl3n.linalg;
 
 import profan.ecs;
@@ -76,6 +78,14 @@ struct InputComponent {
 } //InputComponent
 
 class NetworkManager : ComponentManager!(NetworkComponent) {
+
+	Tid network_thread;
+
+	this(Tid net_thread) {
+
+		this.network_thread = net_thread;
+
+	}
 
 	override void update() {
 
