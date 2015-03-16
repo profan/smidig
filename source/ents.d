@@ -14,6 +14,7 @@ auto create_player(EntityManager em, Vec2f pos) {
 	auto cc = em.get_component!CollisionComponent(player);
 	cc.radius = 32; //arbitrary number :D
 	em.register_component!InputComponent(player);
+	em.register_component!SpriteComponent(player);
 
 	return player;
 

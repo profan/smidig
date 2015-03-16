@@ -105,6 +105,14 @@ struct NetworkComponent {
 
 class SpriteManager : ComponentManager!(SpriteComponent, 4) {
 
+	override SpriteComponent construct_component(EntityID id) {
+
+		SpriteComponent sc;
+		sc.mc = em.get_component!MovementComponent(id);
+		return sc;
+
+	}
+
 	override void update() {
 
 		foreach (id, ref comp; components) {
@@ -118,5 +126,7 @@ class SpriteManager : ComponentManager!(SpriteComponent, 4) {
 struct SpriteComponent {
 
 	//some drawing stuff?
+	//texture and vao?
+	@dependency MovementComponent* mc;
 
 } //SpriteComponent
