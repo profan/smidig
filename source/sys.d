@@ -57,4 +57,20 @@ struct CollisionComponent {
 
 } //CollisionComponent
 
+class InputManager : ComponentManager!(InputComponent, 1) {
 
+	override void update() {
+
+		foreach(id, ref comp; components) {
+			//DO ALL THE CALLBACKS
+		}
+
+	}
+
+}
+
+struct InputComponent {
+
+	//.. callbacks?
+
+} //InputComponent
