@@ -1,6 +1,6 @@
 sundown-standoff
 =================================
-Networked 1v1 western-themed shootout game.
+Networked versus squad tactics game.
 
 Requirements
 ------------
