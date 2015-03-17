@@ -14,7 +14,6 @@ struct SelectionBox {
 	void set_size(int new_w, int new_h) {
 		w = new_w - x;
 		h = new_h - y;
-		writefln("new size - w: %d, h: %d", w, h);
 	}
 
 	void set_active(int start_x, int start_y) {
@@ -22,14 +21,12 @@ struct SelectionBox {
 		y = start_y;
 		w = 0; h = 0;
 		active = true;
-		writefln("active - x: %d, y: %d", x, y);
 	}
 
 	void set_inactive(int x, int y) {
 		w = 0;
 		h = 0;
 		active = false;
-		writefln("inactive");
 	}
 
 	void draw(Window* window) {
