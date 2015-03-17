@@ -1,6 +1,6 @@
 sundown-standoff
 =================================
-Networked versus squad tactics game.
+Networked squad tactics game.
 
 Requirements
 ------------
