@@ -192,7 +192,7 @@ final class MatchState : GameState {
 	}
 
 	override void enter() {
-
+		
 	}
 
 	override void leave() {
@@ -204,6 +204,7 @@ final class MatchState : GameState {
 	}
 
 	override void draw(Window* window) {
+
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
@@ -218,14 +219,23 @@ final class MatchState : GameState {
 //when waiting for another player to connect?
 final class WaitingState : GameState {
 
+	import sundownstandoff.action : SelectionBox;
+
 	UIState* ui_state;
 	GameStateHandler statehan;
 	Tid network_thread;
+
+	SelectionBox sbox;
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
+
+		evhan.bind_mousebtn(1, &sbox.set_active, KeyState.DOWN);
+		evhan.bind_mousebtn(1, &sbox.set_inactive, KeyState.UP);
+		evhan.bind_mousemov(&sbox.set_size);
+
 	}
 
 	override void enter() {
@@ -241,6 +251,8 @@ final class WaitingState : GameState {
 	}
 
 	override void draw(Window* window) {
+
+		sbox.draw(window);
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
