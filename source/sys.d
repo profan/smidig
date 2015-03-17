@@ -130,3 +130,27 @@ struct SpriteComponent {
 	@dependency MovementComponent* mc;
 
 } //SpriteComponent
+
+class OrderManager : ComponentManager!(OrderComponent, 5) {
+
+	override void update() {
+
+		foreach (id, ref comp; components) {
+
+		}
+
+	}
+
+} //OrderManager
+
+struct OrderComponent {
+
+	Order[10] orders;
+
+} //OrderComponent
+
+struct Order {
+
+	//enum value and some data?
+
+} //Order
