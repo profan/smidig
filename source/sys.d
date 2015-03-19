@@ -11,7 +11,6 @@ alias Mat3f = Matrix!(float, 3, 3);
 
 class MovementManager : ComponentManager!(MovementComponent, 3) {
 
-	//these could be automated somehow, I CAN FEEL IT
 	override void update() {
 
 		foreach (id, ref comp; components) {
