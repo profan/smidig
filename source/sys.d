@@ -32,15 +32,6 @@ struct MovementComponent {
 
 class CollisionManager : ComponentManager!(CollisionComponent, 2) {
 
-	//AGAIN
-	override CollisionComponent construct_component(EntityID entity) {
-
-		CollisionComponent cc;
-		cc.mc = em.get_component!MovementComponent(entity);
-		return cc;
-
-	}
-
 	override void update() {
 
 		foreach (id, ref comp; components) {
@@ -104,14 +95,6 @@ struct NetworkComponent {
 } //NetworkComponent
 
 class SpriteManager : ComponentManager!(SpriteComponent, 4) {
-
-	override SpriteComponent construct_component(EntityID id) {
-
-		SpriteComponent sc;
-		sc.mc = em.get_component!MovementComponent(id);
-		return sc;
-
-	}
 
 	override void update() {
 
