@@ -3,7 +3,7 @@ module sundownstandoff.net;
 import core.time : dur;
 import std.stdio : writefln;
 import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException;
-import std.concurrency : receiveOnly, receiveTimeout, Tid;
+import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.conv : to;
 
 enum MessageType {
@@ -104,8 +104,9 @@ struct NetworkPeer {
 		auto msg = receiveOnly!(Command); //wait for create or connect command
 		writefln("[NET] Command: %s", to!string(msg));
 
-		switch (msg) with(Command) {
+		switch (msg) with (Command) {
 			case CREATE:
+				send(game_thread, Command.CREATE);
 				break;
 			case CONNECT:
 				break;
@@ -117,7 +118,7 @@ struct NetworkPeer {
 				break;
 		}
 
-		Address from;
+		Address from; //will point to address received from, also port
 		void[1024] data = void;
 		while (open) {
 

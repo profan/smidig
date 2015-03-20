@@ -200,7 +200,8 @@ final class MatchState : GameState {
 	}
 
 	override void update(double dt) {
-		//nonblocking receive to process messages from net thread
+
+
 	}
 
 	override void draw(Window* window) {
@@ -247,7 +248,12 @@ final class WaitingState : GameState {
 	}
 	
 	override void update(double dt) {
-		//...
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+		(Command cmd) {
+			writefln("[GAME] Received %s from net thread.", to!string(cmd));
+		});
+
 	}
 
 	override void draw(Window* window) {
