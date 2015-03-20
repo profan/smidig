@@ -112,6 +112,9 @@ struct NetworkPeer {
 				send(game_thread, Command.CREATE);
 				break;
 			case CONNECT:
+				void[5] buf = [1, 2, 3, 4, 5];
+				auto target = receiveOnly!(InternetAddress);
+				socket.sendTo(buf, target);
 				break;
 			case TERMINATE:
 				writefln("[NET] Terminating Thread.");
