@@ -156,9 +156,9 @@ final class JoiningState : GameState {
 	}
 
 	override void enter() {
-		auto addr = new InternetAddress("localhost", 12000);
+		InternetAddress addr = new InternetAddress("localhost", 12000);
 		send(network_thread, Command.CONNECT);
-		send(network_thread, cast(immutable)addr);
+		send(network_thread, cast(shared)addr);
 	}
 
 	override void leave() {

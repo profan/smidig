@@ -120,10 +120,11 @@ struct NetworkPeer {
 				send(game_thread, Command.CREATE);
 				break;
 			case CONNECT:
-				void[5] buf = [1, 2, 3, 4, 5];
-				auto target = receiveOnly!(InternetAddress);
+				writefln("[NET] Entering Connect.");
+				auto ia = receiveOnly!(shared(InternetAddress));
+				auto target = cast(InternetAddress)ia;
 				writefln("[NET] Connecting to: %s:%s", target.toAddrString(), target.toPortString());
-				auto success = socket.sendTo(buf, target);
+				auto success = socket.sendTo(cast(void[ConnectionMessage.sizeof])ConnectionMessage(), target);
 				writefln("[NET] Sent connection packet.");
 				if (success == Socket.ERROR) {
 					writefln("[NET] Failed to send connection packet.");
