@@ -48,12 +48,6 @@ final class MenuState : GameState {
 		GLuint vbo;
 		glGenBuffers(1, &vbo);
 
-		/*GLfloat[15] vertices = [
-			0.0f,  0.5f, 1.0f, 0.0f, 0.0f, // Vertex 1 (X, Y) Red
-			0.5f, -0.5f, 0.0f, 1.0f, 0.0f, // Vertex 2 (X, Y) Green
-			-0.5f, -0.5f, 0.0f, 0.0f, 1.0f  // Vertex 3 (X, Y) Blue
-		];*/
-
 		GLfloat[20] vertices = [
 			-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, // Top-left
 			0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Top-right
@@ -103,17 +97,6 @@ final class MenuState : GameState {
 		//do menu stuff
 	}
 
-/*
-	override void draw(Window* window) {
-		
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-		// Draw a rectangle with two triangles
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, null);
-
-	}*/
-
-	
 	override void draw(Window* window) {
 
 		int bgcolor = 0xca8142;
