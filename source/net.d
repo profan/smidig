@@ -96,15 +96,25 @@ struct NetworkPeer {
 			socket.bind(new InternetAddress("localhost", ++port));
 		}
 
+		scope(exit) { socket.close(); }
+
 		open = true;
 		writefln("[NET] Listening on localhost:%d", port);
 
-		auto msg = receiveOnly!(Command);
+		auto msg = receiveOnly!(Command); //wait for create or connect command
 		writefln("[NET] Command: %s", to!string(msg));
 
-		if (msg == Command.TERMINATE) {
-			writefln("[NET] Terminating Thread.");
-			return;
+		switch (msg) with(Command) {
+			case CREATE:
+				break;
+			case CONNECT:
+				break;
+			case TERMINATE:
+				writefln("[NET] Terminating Thread.");
+				return;
+			default:
+				writefln("[NET] Unhandled Command: %s", to!string(msg));
+				break;
 		}
 
 		Address from;
