@@ -119,13 +119,14 @@ struct NetworkPeer {
 				writefln("[NET] Command: %s", to!string(cmd));
 				if (cmd == Command.TERMINATE) {
 					writefln("[NET] Terminating Thread.");
-					return;
+					open = false;
 				}
 			});
 
 		}
 
 	}
+
 
 } //NetworkPeer
 
