@@ -183,45 +183,6 @@ final class JoiningState : GameState {
 
 final class MatchState : GameState {
 
-	UIState* ui_state;
-	GameStateHandler statehan;
-	Tid network_thread;
-
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
-		this.statehan = statehan;
-		this.ui_state = state;
-		this.network_thread = net_tid;
-	}
-
-	override void enter() {
-		
-	}
-
-	override void leave() {
-
-	}
-
-	override void update(double dt) {
-
-
-	}
-
-	override void draw(Window* window) {
-
-
-		int itemcolor = 0x8bca42;
-		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, 5, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
-			statehan.pop_state();
-		} //back to menu
-
-	}
-
-} //MatchState
-
-//when waiting for another player to connect?
-final class WaitingState : GameState {
-
 	import sundownstandoff.action : SelectionBox;
 
 	UIState* ui_state;
@@ -242,6 +203,46 @@ final class WaitingState : GameState {
 	}
 
 	override void enter() {
+		
+	}
+
+	override void leave() {
+
+	}
+
+	override void update(double dt) {
+
+
+	}
+
+	override void draw(Window* window) {
+
+		sbox.draw(window);
+
+		int itemcolor = 0x8bca42;
+		uint item_width = window.width / 2, item_height = 32;
+		if(do_button(ui_state, 5, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+			statehan.pop_state();
+		} //back to menu
+
+	}
+
+} //MatchState
+
+//when waiting for another player to connect?
+final class WaitingState : GameState {
+
+	UIState* ui_state;
+	GameStateHandler statehan;
+	Tid network_thread;
+
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
+		this.statehan = statehan;
+		this.ui_state = state;
+		this.network_thread = net_tid;
+	}
+
+	override void enter() {
 		send(network_thread, Command.CREATE);
 	}
 
@@ -259,8 +260,6 @@ final class WaitingState : GameState {
 	}
 
 	override void draw(Window* window) {
-
-		sbox.draw(window);
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;

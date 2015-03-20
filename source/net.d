@@ -46,7 +46,7 @@ enum Command {
 struct Message {
 
 	align(1):
-	uint type;
+	MessageType type;
 	uint client_id;
 	uint content_len;
 	void[] content;
@@ -155,9 +155,14 @@ struct NetworkPeer {
 			auto result = receiveTimeout(dur!("nsecs")(1),
 			(Command cmd) {
 				writefln("[NET] Command: %s", to!string(cmd));
-				if (cmd == Command.TERMINATE) {
-					writefln("[NET] Terminating Thread.");
-					open = false;
+				switch (cmd) with (Command) {
+					case TERMINATE:
+						writefln("[NET] Terminating Thread.");
+						open = false;
+						break;
+					default:
+						writefln("[NET] Unhandled Command: %s", to!string(cmd));
+						break;
 				}
 			});
 
