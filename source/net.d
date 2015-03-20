@@ -1,7 +1,7 @@
 module sundownstandoff.net;
 
 import std.stdio : writefln;
-import std.socket : InternetAddress, Socket, UdpSocket;
+import std.socket : InternetAddress, Socket, UdpSocket, SocketException;
 import std.concurrency : receiveOnly, Tid;
 import std.conv : to;
 
@@ -32,7 +32,18 @@ enum Command {
 } //Command
 
 
-// Will live in a thread which the game sends and receives messages from!
+/******************************
+* Packet Structure ************
+*
+* 	Type: 32 bits
+*	ClientID: 32 bits
+*	Content-Length: 32 bits
+*	Content: Content-Length
+*
+******************************/
+
+
+//recieves messages, owns a thread which sends messages
 struct NetworkPeer {
 
 	bool open;
@@ -46,17 +57,29 @@ struct NetworkPeer {
 	this(ushort port, Tid game_tid) {
 
 		this.socket = new UdpSocket();
-		this.socket.bind(new InternetAddress("localhost", port));
 		this.state = ConnectionState.UNCONNECTED;
-		this.port = port;
-
 		this.game_thread = game_tid;
+		this.port = port;
 
 	}
 
-	void listen() {
+	//send all the shit
+	void broadcast() {
 
-		this.open = true;
+	}
+
+	//recieve all the shit, handle connections as well
+	void listen() {
+	
+		try {
+			socket.bind(new InternetAddress("localhost", port));
+		} catch (SocketException e) {
+			writefln("[NET] Failed to bind to localhost:%d, retrying with localhost:%d", port, port+1);
+			socket.bind(new InternetAddress("localhost", cast(ushort)(port+1)));
+			port += 1;
+		}
+
+		open = true;
 		writefln("[NET] Listening on localhost:%d", port);
 
 		auto msg = receiveOnly!(Command);
