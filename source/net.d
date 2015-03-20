@@ -145,13 +145,16 @@ struct NetworkPeer {
 			auto bytes = socket.receiveFrom(data, from);
 			if (bytes != -1) writefln("[NET] Recieved %d bytes", bytes);
 
-			if (bytes > 0 && bytes == ConnectionMessage.sizeof) {
-				ConnectionMessage cmsg = *(cast(ConnectionMessage*)(data));
-				writefln("[NET] Connection from %s:%s", from.toAddrString(), from.toPortString());
-				Peer p = {client_id: to!ushort(from.toPortString()), address: from};
-				peers ~= p;
-			} else if (bytes > 0) {
-				writefln("[NET] Recieved unknown message.");
+			if (bytes >= cast(typeof(bytes))MessageType.sizeof) {
+				MessageType type = *(cast(MessageType*)data);
+				if (type == MessageType.CONNECT) {
+					ConnectionMessage cmsg = *(cast(ConnectionMessage*)(data));
+					writefln("[NET] Connection from %s:%s", from.toAddrString(), from.toPortString());
+					Peer p = {client_id: to!ushort(from.toPortString()), address: from};
+					peers ~= p;
+				} else {
+					writefln("[NET] Recieved unhandled message type: %s", to!string(type));
+				}
 			}
 
 			auto result = receiveTimeout(dur!("nsecs")(1),
