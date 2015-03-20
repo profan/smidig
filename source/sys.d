@@ -118,8 +118,8 @@ struct SpriteComponent {
 
 	//some drawing stuff?
 	//texture and vao?
-	uint w, h;
-	uint color;
+	int w, h;
+	int color;
 	@dependency MovementComponent* mc;
 
 } //SpriteComponent
