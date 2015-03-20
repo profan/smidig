@@ -304,7 +304,7 @@ struct Game {
 
 	void run() {
 	
-		network_thread = spawn(&launch_peer);
+		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 		
 		state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
 		state.add_state(new MatchState(state, evhan, &ui_state, network_thread), State.GAME);

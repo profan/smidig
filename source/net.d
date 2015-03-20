@@ -39,15 +39,18 @@ struct NetworkPeer {
 	UdpSocket socket;
 	ConnectionState state;
 	ushort port = 12000;
-
 	Socket[] peers;
 
-	this(ushort port) {
+	Tid game_thread;
+
+	this(ushort port, Tid game_tid) {
 
 		this.socket = new UdpSocket();
 		this.socket.bind(new InternetAddress("localhost", port));
 		this.state = ConnectionState.UNCONNECTED;
 		this.port = port;
+
+		this.game_thread = game_tid;
 
 	}
 
@@ -73,9 +76,9 @@ struct NetworkPeer {
 
 } //NetworkPeer
 
-void launch_peer() {
+void launch_peer(Tid game_tid) {
 
-	auto peer = NetworkPeer(12000);
+	auto peer = NetworkPeer(12000, game_tid);
 	peer.listen();
 
 }
