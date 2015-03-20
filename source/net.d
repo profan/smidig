@@ -65,8 +65,8 @@ struct NetworkPeer {
 	bool open;
 	UdpSocket socket;
 	ConnectionState state;
-	ushort port = 12000;
 	Peer[] peers;
+	ushort port;
 
 	Tid game_thread;
 
