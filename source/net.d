@@ -10,6 +10,8 @@ enum MessageType : uint {
 
 	CONNECT,
 	DISCONNECT,
+	PING,
+	PONG,
 	MOVE,
 	FIRE
 
@@ -66,6 +68,28 @@ struct Peer {
 	Address address;
 
 }
+
+struct NetVar(T) {
+
+	alias variable this;
+	bool changed = false;
+	T variable;
+
+	T opUnary(string op)() if (s == "++" || s == "--") {
+		changed = true;
+		mixin("return " ~ op ~ " variable;");
+	}
+
+	T opOpAssign(string op)(T rhs) {
+		mixin("return variable " ~ op ~ "= rhs;");
+	}
+
+	T opBinary(string op)(T rhs) {
+		changed = true;
+		mixin("return variable " ~ op ~ " rhs;");
+	}
+
+} //NetVar
 
 //recieves messages, owns a thread which sends messages
 struct NetworkPeer {

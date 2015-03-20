@@ -193,6 +193,7 @@ final class MatchState : GameState {
 		this.em.add_system(new SpriteManager(window));
 		this.em.add_system(new InputManager());
 
+		//where do these bindings actually belong? WHO KNOWS
 		evhan.bind_mousebtn(1, &sbox.set_active, KeyState.DOWN);
 		evhan.bind_mousebtn(1, &sbox.set_inactive, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
