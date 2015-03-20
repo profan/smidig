@@ -183,6 +183,8 @@ final class JoiningState : GameState {
 
 final class MatchState : GameState {
 
+	import profan.ecs : EntityManager;
+	import sundownstandoff.sys;
 	import sundownstandoff.action : SelectionBox;
 
 	UIState* ui_state;
@@ -190,11 +192,20 @@ final class MatchState : GameState {
 	Tid network_thread;
 
 	SelectionBox sbox;
+	EntityManager em;
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
+
+		this.em = new EntityManager();
+		this.em.add_system(new MovementManager());
+		this.em.add_system(new CollisionManager());
+		this.em.add_system(new MovementManager());
+		this.em.add_system(new NetworkManager(network_thread));
+		this.em.add_system(new SpriteManager());
+		this.em.add_system(new InputManager());
 
 		evhan.bind_mousebtn(1, &sbox.set_active, KeyState.DOWN);
 		evhan.bind_mousebtn(1, &sbox.set_inactive, KeyState.UP);

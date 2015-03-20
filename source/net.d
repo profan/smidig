@@ -148,6 +148,8 @@ struct NetworkPeer {
 			if (bytes > 0 && bytes == ConnectionMessage.sizeof) {
 				ConnectionMessage cmsg = *(cast(ConnectionMessage*)(data));
 				writefln("[NET] Connection from %s:%s", from.toAddrString(), from.toPortString());
+				Peer p = {client_id: to!ushort(from.toPortString()), address: from};
+				peers ~= p;
 			} else if (bytes > 0) {
 				writefln("[NET] Recieved unknown message.");
 			}
