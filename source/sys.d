@@ -95,10 +95,19 @@ struct NetworkComponent {
 
 class SpriteManager : ComponentManager!(SpriteComponent, 4) {
 
+	import sundownstandoff.ui : draw_rectangle, DrawFlags;
+	import sundownstandoff.window : Window;
+
+	Window* window;
+
+	this(Window* window) {
+		this.window = window;
+	}
+
 	override void update() {
 
 		foreach (id, ref comp; components) {
-			//DRAW ALL THE THINGS
+			draw_rectangle(window, DrawFlags.FILL, cast(int)comp.mc.position.x, cast(int)comp.mc.position.y, comp.w, comp.h, comp.color);
 		}
 
 	}
@@ -109,6 +118,8 @@ struct SpriteComponent {
 
 	//some drawing stuff?
 	//texture and vao?
+	uint w, h;
+	uint color;
 	@dependency MovementComponent* mc;
 
 } //SpriteComponent

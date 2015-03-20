@@ -183,8 +183,9 @@ final class JoiningState : GameState {
 
 final class MatchState : GameState {
 
-	import profan.ecs : EntityManager;
+	import profan.ecs : EntityID, EntityManager;
 	import sundownstandoff.sys;
+	import sundownstandoff.ents;
 	import sundownstandoff.action : SelectionBox;
 
 	UIState* ui_state;
@@ -194,7 +195,9 @@ final class MatchState : GameState {
 	SelectionBox sbox;
 	EntityManager em;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
+	EntityID player;
+
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
@@ -204,12 +207,14 @@ final class MatchState : GameState {
 		this.em.add_system(new CollisionManager());
 		this.em.add_system(new MovementManager());
 		this.em.add_system(new NetworkManager(network_thread));
-		this.em.add_system(new SpriteManager());
+		this.em.add_system(new SpriteManager(window));
 		this.em.add_system(new InputManager());
 
 		evhan.bind_mousebtn(1, &sbox.set_active, KeyState.DOWN);
 		evhan.bind_mousebtn(1, &sbox.set_inactive, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
+
+		player = create_unit(em, Vec2f(128, 128));
 
 	}
 
@@ -223,6 +228,7 @@ final class MatchState : GameState {
 
 	override void update(double dt) {
 
+		em.update_systems();
 
 	}
 
@@ -325,7 +331,7 @@ struct Game {
 		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 		
 		state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
-		state.add_state(new MatchState(state, evhan, &ui_state, network_thread), State.GAME);
+		state.add_state(new MatchState(state, evhan, &ui_state, window, network_thread), State.GAME);
 		state.add_state(new JoiningState(state, evhan, &ui_state, network_thread), State.JOIN);
 		state.add_state(new WaitingState(state, evhan, &ui_state, network_thread), State.WAIT);
 		state.push_state(State.MENU);

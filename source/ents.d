@@ -15,6 +15,10 @@ auto create_unit(EntityManager em, Vec2f pos) {
 	cc.radius = 32; //arbitrary number :D
 	em.register_component!InputComponent(unit);
 	em.register_component!SpriteComponent(unit);
+	SpriteComponent* sc = em.get_component!SpriteComponent(unit);
+	sc.color = 0xffa500;
+	sc.w = 32;
+	sc.h = 32;
 
 	return unit;
 
