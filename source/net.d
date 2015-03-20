@@ -1,8 +1,9 @@
 module sundownstandoff.net;
 
+import core.time : dur;
 import std.stdio : writefln;
 import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException;
-import std.concurrency : receiveOnly, Tid;
+import std.concurrency : receiveOnly, receiveTimeout, Tid;
 import std.conv : to;
 
 enum MessageType {
@@ -72,6 +73,7 @@ struct NetworkPeer {
 	this(ushort port, Tid game_tid) {
 
 		this.socket = new UdpSocket();
+		this.socket.blocking = false;
 		this.state = ConnectionState.UNCONNECTED;
 		this.game_thread = game_tid;
 		this.port = port;
@@ -105,8 +107,22 @@ struct NetworkPeer {
 			return;
 		}
 
+		Address from;
+		void[1024] data = void;
 		while (open) {
-		
+
+			auto bytes = socket.receiveFrom(data, from);
+			if (bytes != -1) writefln("[NET] Recieved %d bytes", bytes);
+
+			auto result = receiveTimeout(dur!("nsecs")(1),
+			(Command cmd) {
+				writefln("[NET] Command: %s", to!string(cmd));
+				if (cmd == Command.TERMINATE) {
+					writefln("[NET] Terminating Thread.");
+					return;
+				}
+			});
+
 		}
 
 	}
