@@ -1,7 +1,6 @@
 module sundownstandoff.game;
 
 import std.stdio : writefln;
-import std.file : read, readText;
 import std.concurrency : send, spawn, receiveOnly, thisTid;
 
 import derelict.sdl2.sdl;
@@ -27,6 +26,8 @@ final class MenuState : GameState {
 	SDL_Texture* menu_quit_texture;
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
+
+		import std.file : read;
 
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -166,9 +167,9 @@ final class JoiningState : GameState {
 final class MatchState : GameState {
 
 	import profan.ecs : EntityID, EntityManager;
-	import sundownstandoff.sys;
-	import sundownstandoff.ents;
 	import sundownstandoff.action : SelectionBox;
+	import sundownstandoff.ents : create_unit;
+	import sundownstandoff.sys;
 
 	UIState* ui_state;
 	GameStateHandler statehan;
