@@ -12,7 +12,7 @@ import sundownstandoff.util;
 struct PushColor {
 
 	ubyte r, g, b, a;
-	GLfloat colors[4];
+	GLfloat[4] colors;
 
 	this(ubyte r, ubyte g, ubyte b, ubyte a) {
 		glGetFloatv(GL_CURRENT_COLOR, colors.ptr);
@@ -58,7 +58,7 @@ enum DrawFlags {
 //Immediate Mode GUI (IMGUI, see Muratori)
 void draw_rectangle(Window* window, DrawFlags flags, int x, int y, int width, int height, int color, ubyte alpha = 255) {
 
-	GLfloat colors[4];
+	GLfloat[4] colors;
 	glGetFloatv(GL_CURRENT_COLOR, colors.ptr);
 	glColor3f(cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255);
 	scope(exit) glColor3f(colors[0], colors[1], colors[2]);

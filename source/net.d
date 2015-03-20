@@ -6,7 +6,7 @@ import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException
 import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.conv : to;
 
-enum MessageType {
+enum MessageType : uint {
 
 	CONNECT,
 	DISCONNECT,
@@ -45,10 +45,18 @@ enum Command {
 
 struct Message {
 
+	align(1):
 	uint type;
 	uint client_id;
 	uint content_len;
 	void[] content;
+
+}
+
+struct ConnectionMessage {
+
+	align(1):
+	MessageType type = MessageType.CONNECT;
 
 }
 
@@ -114,7 +122,12 @@ struct NetworkPeer {
 			case CONNECT:
 				void[5] buf = [1, 2, 3, 4, 5];
 				auto target = receiveOnly!(InternetAddress);
-				socket.sendTo(buf, target);
+				writefln("[NET] Connecting to: %s:%s", target.toAddrString(), target.toPortString());
+				auto success = socket.sendTo(buf, target);
+				writefln("[NET] Sent connection packet.");
+				if (success == Socket.ERROR) {
+					writefln("[NET] Failed to send connection packet.");
+				}
 				break;
 			case TERMINATE:
 				writefln("[NET] Terminating Thread.");
@@ -130,6 +143,13 @@ struct NetworkPeer {
 
 			auto bytes = socket.receiveFrom(data, from);
 			if (bytes != -1) writefln("[NET] Recieved %d bytes", bytes);
+
+			if (bytes > 0 && bytes == ConnectionMessage.sizeof) {
+				ConnectionMessage cmsg = *(cast(ConnectionMessage*)(data));
+				writefln("[NET] Connection from %s:%s", from.toAddrString(), from.toPortString());
+			} else if (bytes > 0) {
+				writefln("[NET] Recieved unknown message.");
+			}
 
 			auto result = receiveTimeout(dur!("nsecs")(1),
 			(Command cmd) {

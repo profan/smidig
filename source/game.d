@@ -67,7 +67,7 @@ final class MenuState : GameState {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, vertices.sizeof, cast(void*)vertices, GL_STATIC_DRAW);
 		
-		GLuint elements[6] = [
+		GLuint[6] elements = [
 			0, 1, 2,
 			2, 3, 0
 		];

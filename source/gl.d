@@ -72,7 +72,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) {
 
 }
 
-GLuint create_shader_program(GLuint shaders[]...) {
+GLuint create_shader_program(GLuint[] shaders...) {
 
 	GLuint program = glCreateProgram();
 
