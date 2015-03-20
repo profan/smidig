@@ -68,6 +68,7 @@ struct NetworkPeer {
 	Peer[] peers;
 	ushort port;
 
+	Peer self;
 	Tid game_thread;
 
 	this(ushort port, Tid game_tid) {
@@ -80,23 +81,25 @@ struct NetworkPeer {
 
 	}
 
-	//send all the shit
-	void broadcast() {
-
-	}
-
 	//recieve all the shit, handle connections as well
 	void listen() {
 	
 		//dear god, don't make me go to straight up C based sockets
-		try {
-			socket.bind(new InternetAddress("localhost", port));
-		} catch (SocketException e) {
-			writefln("[NET] Failed to bind to localhost:%d, retrying with localhost:%d", port, port+1);
-			socket.bind(new InternetAddress("localhost", ++port));
+		Address addr;
+		while(true) {
+			try {
+				addr = new InternetAddress("localhost", port);
+				socket.bind(addr);
+				break;
+			} catch (SocketException e) {
+				writefln("[NET] Failed to bind to localhost:%d, retrying with localhost:%d", port, port+1);
+				port += 1;
+			}
 		}
 
 		scope(exit) { socket.close(); }
+		self.client_id = port;
+		self.address = addr;
 
 		open = true;
 		writefln("[NET] Listening on localhost:%d", port);
