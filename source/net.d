@@ -158,29 +158,6 @@ struct NetworkPeer {
 		open = true;
 		writefln("[NET] Listening on localhost:%d", port);
 
-		auto msg = receiveOnly!(Command); //wait for create or connect command
-		writefln("[NET] Command: %s", to!string(msg));
-
-		switch (msg) with (Command) {
-			case CREATE:
-				send(game_thread, Command.CREATE);
-				break;
-			case CONNECT:
-				writefln("[NET] Entering Connect.");
-				auto ia = receiveOnly!(shared(InternetAddress));
-				auto target = cast(InternetAddress)ia;
-				send_packet!(BasicMessage)(MessageType.CONNECT, target, port);
-				Peer new_peer = {client_id: target.port, addr: target};
-				peers[target.port] = new_peer;
-				break;
-			case TERMINATE:
-				writefln("[NET] Terminating Thread.");
-				return;
-			default:
-				writefln("[NET] Unhandled Command: %s", to!string(msg));
-				break;
-		}
-
 		Address from; //will point to address received from, also port
 		void[1024] data = void;
 		while (open) {
@@ -228,17 +205,26 @@ struct NetworkPeer {
 			}
 
 			auto result = receiveTimeout(dur!("nsecs")(1),
-			(Command cmd) {
+			(Command cmd, shared(InternetAddress) addr) {
 				writefln("[NET] Command: %s", to!string(cmd));
-				switch (cmd) with (Command) {
+				switch(cmd) with (Command) {
 					case CONNECT:
 						writefln("[NET] Entering Connect.");
-						//auto ia = receiveOnly!(shared(InternetAddress));
-						//auto target = cast(InternetAddress)ia;
-						auto target = new InternetAddress("localhost", 12000);
+						auto target = cast(InternetAddress)addr;
 						send_packet!(BasicMessage)(MessageType.CONNECT, target, port);
 						Peer new_peer = {client_id: target.port, addr: target};
 						peers[target.port] = new_peer;
+						break;
+					default:
+						writefln("[NET] Unhandled Command: %s", to!string(cmd));
+						break;
+				}
+			},
+			(Command cmd) {
+				writefln("[NET] Command: %s", to!string(cmd));
+				switch (cmd) with (Command) {
+					case CREATE:
+						send(game_thread, Command.CREATE);
 						break;
 					case DISCONNECT:
 						writefln("[NET] Sending disconnect message.");
