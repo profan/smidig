@@ -17,6 +17,8 @@ enum MessageType : uint {
 
 } //MessageType
 
+alias ClientID = uint;
+
 enum ConnectionState {
 
 	CONNECTED,
@@ -40,8 +42,8 @@ enum Command {
 *
 * 	Type: 32 bits
 *	ClientID: 32 bits
-*	Content-Length: 32 bits
-*	Content: Content-Length
+*	Content-Size: 32 bits
+*	Content: Content-Size
 *
 ******************************/
 
@@ -49,8 +51,8 @@ struct Message {
 
 	align(1):
 	MessageType type;
-	uint client_id;
-	uint content_len;
+	ClientID client_id;
+	uint content_size;
 	void[] content;
 
 }
@@ -113,6 +115,13 @@ struct NetworkPeer {
 
 	}
 
+	void send_connection_packet(Address target) {
+		auto success = socket.sendTo(cast(void[ConnectionMessage.sizeof])ConnectionMessage(), target);
+		writefln((success == Socket.ERROR)
+			? "[NET] Failed to send connection packet."
+			: "[NET] Sent connection packet to %s:%s", target.toAddrString(), target.toPortString());
+	}
+
 	//recieve all the shit, handle connections as well
 	void listen() {
 	
@@ -147,12 +156,7 @@ struct NetworkPeer {
 				writefln("[NET] Entering Connect.");
 				auto ia = receiveOnly!(shared(InternetAddress));
 				auto target = cast(InternetAddress)ia;
-				writefln("[NET] Connecting to: %s:%s", target.toAddrString(), target.toPortString());
-				auto success = socket.sendTo(cast(void[ConnectionMessage.sizeof])ConnectionMessage(), target);
-				writefln("[NET] Sent connection packet.");
-				if (success == Socket.ERROR) {
-					writefln("[NET] Failed to send connection packet.");
-				}
+				send_connection_packet(target);
 				break;
 			case TERMINATE:
 				writefln("[NET] Terminating Thread.");
