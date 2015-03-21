@@ -19,6 +19,8 @@ auto create_unit(EntityManager em, Vec2f pos) {
 	sc.color = 0xffa500;
 	sc.w = 32;
 	sc.h = 32;
+	
+	em.register_component!NetworkComponent(unit);
 
 	return unit;
 

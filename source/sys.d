@@ -80,7 +80,7 @@ class NetworkManager : ComponentManager!(NetworkComponent) {
 	override void update() {
 
 		foreach (id, ref comp; components) {
-			//package everything, send to other player!
+			
 		}
 
 	}
@@ -90,6 +90,8 @@ class NetworkManager : ComponentManager!(NetworkComponent) {
 struct NetworkComponent {
 
 	//things, this kind of thing ought to be more general, wtb polymorphism
+	@dependency MovementComponent* mc;
+	
 
 } //NetworkComponent
 

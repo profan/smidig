@@ -201,6 +201,11 @@ struct NetworkPeer {
 							send_packet!(ConnectionMessage)(CONNECT, from);
 							peers[id] = new_peer;
 						}
+
+						if (state != ConnectionState.CONNECTED) {
+							send(game_thread, Command.CREATE);
+							state = ConnectionState.CONNECTED;
+						}
 						break;
 					case PING:
 						send_packet!(PongMessage)(PONG, from);

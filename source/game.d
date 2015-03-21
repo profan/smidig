@@ -149,7 +149,16 @@ final class JoiningState : GameState {
 	}
 
 	override void update(double dt) {
-		//much update
+		
+		auto result = receiveTimeout(dur!("nsecs")(1),
+		(Command cmd) {
+			if (cmd == Command.CREATE) {
+				writefln("[GAME] Received %s from net thread.", to!string(cmd));
+				statehan.pop_state();
+				statehan.push_state(State.GAME);
+			}
+		});
+
 	}
 
 	override void draw(Window* window) {
@@ -255,7 +264,11 @@ final class WaitingState : GameState {
 
 		auto result = receiveTimeout(dur!("nsecs")(1),
 		(Command cmd) {
-			writefln("[GAME] Received %s from net thread.", to!string(cmd));
+			if (cmd == Command.CREATE) {
+				writefln("[GAME] Received %s from net thread.", to!string(cmd));
+				statehan.pop_state();
+				statehan.push_state(State.GAME);
+			}
 		});
 
 	}
