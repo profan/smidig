@@ -211,9 +211,12 @@ struct NetworkPeer {
 						break;
 					case DISCONNECT:
 						BasicMessage cmsg = *(cast(BasicMessage*)(data));
+						writefln("[NET] Client %d sent disconnect message.", cmsg.client_id);
 						peers.remove(cmsg.client_id);
 						break;
 					case PING:
+						BasicMessage cmsg = *(cast(BasicMessage*)(data));
+						writefln("[NET] Client %d sent ping, sending pong.", cmsg.client_id);
 						send_packet!(BasicMessage)(PONG, from, port);
 						break;
 					default:
