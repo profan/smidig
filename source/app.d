@@ -39,7 +39,6 @@ void main() {
 	auto game = Game(&window, &event_handler);
 
 	event_handler.add_listener(&window.handle_events);
-	event_handler.bind_keyevent(SDL_SCANCODE_SPACE, &window.toggle_wireframe);
 	game.run();
 
 }

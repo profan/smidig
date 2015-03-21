@@ -33,7 +33,8 @@ enum Command {
 	CREATE,
 	CONNECT,
 	DISCONNECT,
-	TERMINATE
+	TERMINATE,
+	PING
 
 } //Command
 
@@ -232,6 +233,10 @@ struct NetworkPeer {
 							send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, port);
 						foreach (key; peers.keys) peers.remove(key);
 						state = ConnectionState.UNCONNECTED;
+						break;
+					case PING:
+						foreach (id, peer; peers)
+							send_packet!(BasicMessage)(MessageType.PING, peer.addr, port);
 						break;
 					case TERMINATE:
 						writefln("[NET] Terminating Thread.");

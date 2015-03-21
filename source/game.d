@@ -333,6 +333,8 @@ struct Game {
 		state.push_state(State.MENU);
 
 		evhan.add_listener(&this.update_ui);
+		evhan.bind_keyevent(SDL_SCANCODE_SPACE, &window.toggle_wireframe);
+		evhan.bind_keyevent(SDL_SCANCODE_LCTRL, () => send(network_thread, Command.PING));
 
 		while(window.alive) {
 
