@@ -4,6 +4,7 @@ import core.time : dur;
 import std.stdio : writefln;
 import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException;
 import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
+import std.typecons : Tuple;
 import std.conv : to;
 
 enum MessageType : uint {
@@ -67,7 +68,7 @@ struct ConnectionMessage {
 struct Peer {
 
 	uint client_id;
-	Address address;
+	Address addr;
 
 }
 
@@ -93,16 +94,19 @@ struct NetVar(T) {
 
 } //NetVar
 
+
+alias Self = Tuple!(Address, Peer);
+
 //recieves messages, owns a thread which sends messages
 struct NetworkPeer {
 
 	bool open;
 	UdpSocket socket;
 	ConnectionState state;
-	Peer[] peers;
+	Peer[ClientID] peers;
 	ushort port;
 
-	Peer self;
+	Self self;
 	Tid game_thread;
 
 	this(ushort port, Tid game_tid) {
@@ -139,8 +143,9 @@ struct NetworkPeer {
 		}
 
 		scope(exit) { socket.close(); }
-		self.client_id = port;
-		self.address = addr;
+		self[0] = addr;
+		Peer p = {client_id: port};
+		self[1] = p;
 
 		open = true;
 		writefln("[NET] Listening on localhost:%d", port);
@@ -157,6 +162,8 @@ struct NetworkPeer {
 				auto ia = receiveOnly!(shared(InternetAddress));
 				auto target = cast(InternetAddress)ia;
 				send_connection_packet(target);
+				Peer new_peer = {client_id: target.port, addr: target};
+				peers[target.port] = new_peer;
 				break;
 			case TERMINATE:
 				writefln("[NET] Terminating Thread.");
@@ -178,8 +185,12 @@ struct NetworkPeer {
 				if (type == MessageType.CONNECT) {
 					ConnectionMessage cmsg = *(cast(ConnectionMessage*)(data));
 					writefln("[NET] Connection from %s:%s", from.toAddrString(), from.toPortString());
-					Peer p = {client_id: to!ushort(from.toPortString()), address: from};
-					peers ~= p;
+					ClientID id = to!ClientID(from.toPortString());
+					Peer new_peer = {client_id: id, addr: from};
+					if (id !in peers) {
+						send_connection_packet(from);
+						peers[id] = new_peer;
+					}
 				} else {
 					writefln("[NET] Recieved unhandled message type: %s", to!string(type));
 				}
