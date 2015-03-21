@@ -201,6 +201,8 @@ struct NetworkPeer {
 						if (id !in peers) {
 							send_packet!(BasicMessage)(CONNECT, from, port);
 							peers[id] = new_peer;
+						} else {
+							writefln("[NET] Already in connected peers.");
 						}
 
 						if (state != ConnectionState.CONNECTED) {
@@ -229,10 +231,21 @@ struct NetworkPeer {
 			(Command cmd) {
 				writefln("[NET] Command: %s", to!string(cmd));
 				switch (cmd) with (Command) {
+					case CONNECT:
+						writefln("[NET] Entering Connect.");
+						//auto ia = receiveOnly!(shared(InternetAddress));
+						//auto target = cast(InternetAddress)ia;
+						auto target = new InternetAddress("localhost", 12000);
+						send_packet!(BasicMessage)(MessageType.CONNECT, target, port);
+						Peer new_peer = {client_id: target.port, addr: target};
+						peers[target.port] = new_peer;
+						break;
 					case DISCONNECT:
 						writefln("[NET] Sending disconnect message.");
 						foreach (id, peer; peers)
 							send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, port);
+						foreach (key; peers.keys) peers.remove(key);
+						state = ConnectionState.UNCONNECTED;
 						break;
 					case TERMINATE:
 						writefln("[NET] Terminating Thread.");
