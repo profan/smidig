@@ -1,6 +1,7 @@
 module sundownstandoff.net;
 
 import core.time : dur;
+import std.string : format;
 import std.stdio : writefln;
 import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException;
 import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
@@ -65,6 +66,11 @@ struct ConnectionMessage {
 
 }
 
+struct PongMessage {
+	align(1):
+	MessageType type = MessageType.PONG;
+}
+
 struct Peer {
 
 	uint client_id;
@@ -74,6 +80,7 @@ struct Peer {
 
 struct NetVar(T) {
 
+	uint owner_id; //corresponds to client_id
 	alias variable this;
 	bool changed = false;
 	T variable;
@@ -119,11 +126,12 @@ struct NetworkPeer {
 
 	}
 
-	void send_connection_packet(Address target) {
-		auto success = socket.sendTo(cast(void[ConnectionMessage.sizeof])ConnectionMessage(), target);
+	void send_packet(T, Args...)(MessageType type, Address target, Args args) {
+		auto success = socket.sendTo(cast(void[T.sizeof])T(args), target);
+		string type_str = to!string(type);
 		writefln((success == Socket.ERROR)
-			? "[NET] Failed to send connection packet."
-			: "[NET] Sent connection packet to %s:%s", target.toAddrString(), target.toPortString());
+			? format("[NET] Failed to send %s packet.", type_str)
+			: "[NET] Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
 	}
 
 	//recieve all the shit, handle connections as well
@@ -161,7 +169,7 @@ struct NetworkPeer {
 				writefln("[NET] Entering Connect.");
 				auto ia = receiveOnly!(shared(InternetAddress));
 				auto target = cast(InternetAddress)ia;
-				send_connection_packet(target);
+				send_packet!(ConnectionMessage)(MessageType.CONNECT, target);
 				Peer new_peer = {client_id: target.port, addr: target};
 				peers[target.port] = new_peer;
 				break;
@@ -182,17 +190,24 @@ struct NetworkPeer {
 
 			if (bytes >= cast(typeof(bytes))MessageType.sizeof) {
 				MessageType type = *(cast(MessageType*)data);
-				if (type == MessageType.CONNECT) {
-					ConnectionMessage cmsg = *(cast(ConnectionMessage*)(data));
-					writefln("[NET] Connection from %s:%s", from.toAddrString(), from.toPortString());
-					ClientID id = to!ClientID(from.toPortString());
-					Peer new_peer = {client_id: id, addr: from};
-					if (id !in peers) {
-						send_connection_packet(from);
-						peers[id] = new_peer;
-					}
-				} else {
-					writefln("[NET] Recieved unhandled message type: %s", to!string(type));
+
+				switch (type) with (MessageType) {
+					case CONNECT:
+						ConnectionMessage cmsg = *(cast(ConnectionMessage*)(data));
+						writefln("[NET] Connection from %s:%s", from.toAddrString(), from.toPortString());
+						ClientID id = to!ClientID(from.toPortString());
+						Peer new_peer = {client_id: id, addr: from};
+						if (id !in peers) {
+							send_packet!(ConnectionMessage)(CONNECT, from);
+							peers[id] = new_peer;
+						}
+						break;
+					case PING:
+						send_packet!(PongMessage)(PONG, from);
+						break;
+					default:
+						writefln("[NET] Recieved unhandled message type: %s", to!string(type));
+						break;
 				}
 			}
 
