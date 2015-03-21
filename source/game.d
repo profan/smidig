@@ -216,7 +216,7 @@ final class MatchState : GameState {
 	}
 
 	override void leave() {
-
+		send(network_thread, Command.DISCONNECT);
 	}
 
 	override void update(double dt) {

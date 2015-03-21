@@ -229,6 +229,11 @@ struct NetworkPeer {
 			(Command cmd) {
 				writefln("[NET] Command: %s", to!string(cmd));
 				switch (cmd) with (Command) {
+					case DISCONNECT:
+						writefln("[NET] Sending disconnect message.");
+						foreach (id, peer; peers)
+							send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, port);
+						break;
 					case TERMINATE:
 						writefln("[NET] Terminating Thread.");
 						open = false;
