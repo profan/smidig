@@ -12,10 +12,9 @@ enum MessageType : uint {
 
 	CONNECT,
 	DISCONNECT,
+	UPDATE,
 	PING,
 	PONG,
-	MOVE,
-	FIRE
 
 } //MessageType
 
@@ -59,16 +58,17 @@ struct Message {
 
 }
 
-struct ConnectionMessage {
+struct BasicMessage {
+
+	this(MessageType type, ClientID client) {
+		this.type = type;
+		this.client_id = client;
+	}
 
 	align(1):
-	MessageType type = MessageType.CONNECT;
+	MessageType type;
+	ClientID client_id;
 
-}
-
-struct PongMessage {
-	align(1):
-	MessageType type = MessageType.PONG;
 }
 
 struct Peer {
@@ -127,7 +127,7 @@ struct NetworkPeer {
 	}
 
 	void send_packet(T, Args...)(MessageType type, Address target, Args args) {
-		auto success = socket.sendTo(cast(void[T.sizeof])T(args), target);
+		auto success = socket.sendTo(cast(void[T.sizeof])T(type, args), target);
 		string type_str = to!string(type);
 		writefln((success == Socket.ERROR)
 			? format("[NET] Failed to send %s packet.", type_str)
@@ -169,7 +169,7 @@ struct NetworkPeer {
 				writefln("[NET] Entering Connect.");
 				auto ia = receiveOnly!(shared(InternetAddress));
 				auto target = cast(InternetAddress)ia;
-				send_packet!(ConnectionMessage)(MessageType.CONNECT, target);
+				send_packet!(BasicMessage)(MessageType.CONNECT, target, port);
 				Peer new_peer = {client_id: target.port, addr: target};
 				peers[target.port] = new_peer;
 				break;
@@ -193,12 +193,13 @@ struct NetworkPeer {
 
 				switch (type) with (MessageType) {
 					case CONNECT:
-						ConnectionMessage cmsg = *(cast(ConnectionMessage*)(data));
+						BasicMessage cmsg = *(cast(BasicMessage*)(data));
 						writefln("[NET] Connection from %s:%s", from.toAddrString(), from.toPortString());
 						ClientID id = to!ClientID(from.toPortString());
 						Peer new_peer = {client_id: id, addr: from};
+
 						if (id !in peers) {
-							send_packet!(ConnectionMessage)(CONNECT, from);
+							send_packet!(BasicMessage)(CONNECT, from, port);
 							peers[id] = new_peer;
 						}
 
@@ -206,9 +207,14 @@ struct NetworkPeer {
 							send(game_thread, Command.CREATE);
 							state = ConnectionState.CONNECTED;
 						}
+
+						break;
+					case DISCONNECT:
+						BasicMessage cmsg = *(cast(BasicMessage*)(data));
+						peers.remove(cmsg.client_id);
 						break;
 					case PING:
-						send_packet!(PongMessage)(PONG, from);
+						send_packet!(BasicMessage)(PONG, from, port);
 						break;
 					default:
 						writefln("[NET] Recieved unhandled message type: %s", to!string(type));
