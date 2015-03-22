@@ -348,7 +348,6 @@ struct Game {
 
 		sw.start();
 		auto start_time = sw.peek();
-
 		while(window.alive) {
 
 			if (sw.peek() - last > iter) {
@@ -364,8 +363,11 @@ struct Game {
 
 			}
 
-			auto diff = cast(Duration)(sw.peek() - last) - iter;
-			if (diff > dur!("hnsecs")(0)) Thread.sleep(diff);
+			auto diff = cast(Duration)(last - sw.peek()) + iter;
+			if (diff > dur!("hnsecs")(0)) {
+				//writefln("sleeping for: %s", diff);
+				Thread.sleep(diff);
+			}
 
 		}
 
