@@ -55,7 +55,7 @@ class GameStateHandler {
 
 } //GameStateHandler
 
-abstract class GameState {
+interface GameState {
 
 	void enter();
 	void leave();
