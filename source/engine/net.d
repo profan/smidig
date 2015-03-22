@@ -173,7 +173,7 @@ struct NetworkPeer {
 		while (open) {
 
 			auto bytes = socket.receiveFrom(data, from);
-			if (bytes != -1) writefln("[NET] Recieved %d bytes", bytes);
+			if (bytes != -1) writefln("[NET] Received %d bytes", bytes);
 
 			if (bytes >= cast(typeof(bytes))MessageType.sizeof) {
 				MessageType type = *(cast(MessageType*)data);
@@ -213,7 +213,7 @@ struct NetworkPeer {
 						writefln("[NET] Client %d sent pong.", cmsg.client_id);
 						break;
 					default:
-						writefln("[NET] Recieved unhandled message type: %s", to!string(type));
+						writefln("[NET] Received unhandled message type: %s", to!string(type));
 						break;
 				}
 			}
