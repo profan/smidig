@@ -206,16 +206,20 @@ final class MatchState : GameState {
 		evhan.bind_mousebtn(1, &sbox.set_inactive, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
 
-		player = create_unit(em, Vec2f(128, 128));
 
 	}
 
 	override void enter() {
-		
+
+		player = create_unit(em, Vec2f(128, 128));
+
 	}
 
 	override void leave() {
+
+		em.unregister_component!void(player, "*");
 		send(network_thread, Command.DISCONNECT);
+
 	}
 
 	override void update(double dt) {
