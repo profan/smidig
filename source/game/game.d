@@ -365,7 +365,6 @@ struct Game {
 
 			auto diff = cast(Duration)(last - sw.peek()) + iter;
 			if (diff > dur!("hnsecs")(0)) {
-				//writefln("sleeping for: %s", diff);
 				Thread.sleep(diff);
 			}
 
