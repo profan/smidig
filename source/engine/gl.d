@@ -8,7 +8,12 @@ import derelict.opengl3.gl3;
 
 struct Shader {
 
+
+	//the shader program
 	GLuint program;
+
+	//alias this for implicit conversions
+	alias program this;
 
 	this (char* vertex_shader, char* fragment_shader) {
 
