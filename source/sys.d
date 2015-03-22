@@ -9,27 +9,30 @@ import profan.ecs;
 alias Vec2f = Vector!(float, 2);
 alias Mat3f = Matrix!(float, 3, 3);
 
-class MovementManager : ComponentManager!(MovementComponent, 3) {
+class TransformManager : ComponentManager!(TransformComponent, 3) {
 
 	override void update() {
 
 		foreach (id, ref comp; components) {
-			comp.position += comp.velocity;
+
+			comp.velocity.x = 0.01;
+			comp.transform.matrix[0][0] += comp.velocity.x;
+			comp.transform.matrix[0][1] += comp.velocity.y;
+
 		}
 
 	}
 
-} //MovementManager
+} //TransformManager
 
-struct MovementComponent {
+struct TransformComponent {
 
 	import sundownstandoff.net : NetVar;
 
 	NetVar!(Vec2f) velocity;
-	NetVar!(Vec2f) position;
 	NetVar!(Mat3f) transform;
 
-} //MovementComponent
+} //TransformComponent
 
 class CollisionManager : ComponentManager!(CollisionComponent, 2) {
 
@@ -47,7 +50,7 @@ struct CollisionComponent {
 
 	double radius;
 	void delegate(EntityID) on_collision;
-	@dependency MovementComponent* mc;
+	@dependency TransformComponent* mc;
 
 } //CollisionComponent
 
@@ -92,7 +95,7 @@ class NetworkManager : ComponentManager!(NetworkComponent) {
 struct NetworkComponent {
 
 	//things, this kind of thing ought to be more general, wtb polymorphism
-	@dependency MovementComponent* mc;
+	@dependency TransformComponent* mc;
 	
 
 } //NetworkComponent
@@ -111,7 +114,7 @@ class SpriteManager : ComponentManager!(SpriteComponent, 4) {
 	override void update() {
 
 		foreach (id, ref comp; components) {
-			draw_rectangle(window, DrawFlags.FILL, cast(int)comp.mc.position.x, cast(int)comp.mc.position.y, comp.w, comp.h, comp.color);
+			draw_rectangle(window, DrawFlags.FILL, cast(int)comp.mc.transform.matrix[0][0], cast(int)comp.mc.transform.matrix[0][1], comp.w, comp.h, comp.color);
 		}
 
 	}
@@ -124,7 +127,7 @@ struct SpriteComponent {
 	//texture and vao?
 	int w, h;
 	int color;
-	@dependency MovementComponent* mc;
+	@dependency TransformComponent* mc;
 
 } //SpriteComponent
 

@@ -194,9 +194,8 @@ final class MatchState : GameState {
 		this.network_thread = net_tid;
 
 		this.em = new EntityManager();
-		this.em.add_system(new MovementManager());
+		this.em.add_system(new TransformManager());
 		this.em.add_system(new CollisionManager());
-		this.em.add_system(new MovementManager());
 		this.em.add_system(new NetworkManager(network_thread));
 		this.em.add_system(new SpriteManager(window));
 		this.em.add_system(new InputManager());
