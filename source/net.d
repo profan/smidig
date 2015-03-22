@@ -208,6 +208,10 @@ struct NetworkPeer {
 						writefln("[NET] Client %d sent ping, sending pong.", cmsg.client_id);
 						send_packet!(BasicMessage)(PONG, from, port);
 						break;
+					case PONG:
+						BasicMessage cmsg = *(cast(BasicMessage*)(data));
+						writefln("[NET] Client %d sent pong.", cmsg.client_id);
+						break;
 					default:
 						writefln("[NET] Recieved unhandled message type: %s", to!string(type));
 						break;
