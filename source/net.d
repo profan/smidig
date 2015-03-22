@@ -86,7 +86,7 @@ enum Owner {
 
 struct NetVar(T) {
 
-	Owner owner;
+	Owner owner = Owner.LOCAL;
 	alias variable this;
 	bool changed = false;
 	T variable;
