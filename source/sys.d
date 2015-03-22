@@ -23,9 +23,11 @@ class MovementManager : ComponentManager!(MovementComponent, 3) {
 
 struct MovementComponent {
 
-	Vec2f velocity;
-	Vec2f position;
-	Mat3f transform;
+	import sundownstandoff.net : NetVar;
+
+	NetVar!(Vec2f) velocity;
+	NetVar!(Vec2f) position;
+	NetVar!(Mat3f) transform;
 
 } //MovementComponent
 

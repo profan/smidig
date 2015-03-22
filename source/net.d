@@ -79,24 +79,33 @@ struct Peer {
 
 }
 
+enum Owner {
+	LOCAL,
+	REMOTE
+}
+
 struct NetVar(T) {
 
-	uint owner_id; //corresponds to client_id
+	Owner owner;
 	alias variable this;
 	bool changed = false;
 	T variable;
+
+	this(T var) {
+		this.variable = var;
+	}
 
 	T opUnary(string op)() if (s == "++" || s == "--") {
 		changed = true;
 		mixin("return " ~ op ~ " variable;");
 	}
 
-	T opOpAssign(string op)(T rhs) {
-		mixin("return variable " ~ op ~ "= rhs;");
+	void opOpAssign(string op)(T rhs) {
+		changed = true;
+		mixin("variable " ~ op ~ "= rhs;");
 	}
 
 	T opBinary(string op)(T rhs) {
-		changed = true;
 		mixin("return variable " ~ op ~ " rhs;");
 	}
 
