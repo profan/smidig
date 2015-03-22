@@ -15,10 +15,7 @@ class TransformManager : ComponentManager!(TransformComponent, 3) {
 
 		foreach (id, ref comp; components) {
 
-			comp.velocity.x = 0.01;
-			comp.transform.matrix[0][0] += comp.velocity.x;
-			comp.transform.matrix[0][1] += comp.velocity.y;
-
+			comp.transform += comp.transform.translation(1.0f, 1.0f, 0.0f);
 		}
 
 	}
