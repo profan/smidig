@@ -111,7 +111,7 @@ class SpriteManager : ComponentManager!(SpriteComponent, 4) {
 	override void update() {
 
 		foreach (id, ref comp; components) {
-			draw_rectangle(window, DrawFlags.FILL, cast(int)comp.mc.transform.matrix[0][0], cast(int)comp.mc.transform.matrix[0][1], comp.w, comp.h, comp.color);
+			draw_rectangle(window, DrawFlags.FILL, cast(int)comp.mc.transform.matrix[0][0], cast(int)comp.mc.transform.matrix[1][1], comp.w, comp.h, comp.color);
 		}
 
 	}
