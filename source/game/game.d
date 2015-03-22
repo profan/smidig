@@ -339,16 +339,33 @@ struct Game {
 		evhan.bind_keyevent(SDL_SCANCODE_SPACE, &window.toggle_wireframe);
 		evhan.bind_keyevent(SDL_SCANCODE_LCTRL, () => send(network_thread, Command.PING));
 
+		import core.thread : Thread;
+		import std.datetime : Duration, StopWatch, TickDuration;
+		
+		StopWatch sw;
+		auto iter = TickDuration.from!("msecs")(16);
+		auto last = TickDuration.from!("msecs")(0);
+
+		sw.start();
+		auto start_time = sw.peek();
+
 		while(window.alive) {
 
-			evhan.handle_events();
+			if (sw.peek() - last > iter) {
 
-			window.render_clear();
-			update(1.0);
-			ui_state.before_ui();
-			draw();
-			ui_state.reset_ui();
-			window.render_present();
+				evhan.handle_events();
+				window.render_clear();
+				update(1.0);
+				ui_state.before_ui();
+				draw();
+				ui_state.reset_ui();
+				window.render_present();
+				last = sw.peek();
+
+			}
+
+			auto diff = cast(Duration)(sw.peek() - last) - iter;
+			if (diff > dur!("hnsecs")(0)) Thread.sleep(diff);
 
 		}
 
