@@ -241,6 +241,7 @@ struct NetworkPeer {
 						send(game_thread, Command.CREATE);
 						break;
 					case DISCONNECT:
+						if (state != ConnectionState.UNCONNECTED) break;
 						writefln("[NET] Sending disconnect message.");
 						foreach (id, peer; peers)
 							send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, port);
