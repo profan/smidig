@@ -1,6 +1,6 @@
 module sundownstandoff.sys;
 
-import std.concurrency : send, Tid;
+import std.concurrency : send, receiveTimeout, Tid;
 
 import gl3n.linalg;
 
@@ -71,7 +71,13 @@ struct InputComponent {
 
 class NetworkManager : ComponentManager!(NetworkComponent) {
 
+	import profan.collections : StaticArray;
+
 	Tid network_thread;
+
+	//reused buffer for sending data
+	StaticArray!(byte, 2048) recv_data;
+	StaticArray!(byte, 2048) send_data;
 
 	this(Tid net_thread) {
 

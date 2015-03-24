@@ -72,7 +72,6 @@ final class MenuState : GameState {
 		auto vs = cast(char*)read("shaders/triangle.vs", 2048);
 		auto fs = cast(char*)read("shaders/triangle.fs", 2048);
 		auto shader = Shader(vs, fs);
-		//shader.bind();
 
 		GLint posAttrib = glGetAttribLocation(shader.program, "position");
 		glEnableVertexAttribArray(posAttrib);
@@ -94,7 +93,7 @@ final class MenuState : GameState {
 
 
 	override void update(double dt) {
-		//do menu stuff
+	
 	}
 
 	override void draw(Window* window) {
@@ -216,13 +215,17 @@ final class MatchState : GameState {
 
 	override void leave() {
 
+		//delete the player entity's components
 		em.unregister_component!void(player, "*");
+
+		//disconnect since when in this state, we will have been connected.
 		send(network_thread, Command.DISCONNECT);
 
 	}
 
 	override void update(double dt) {
 
+		//figure out way to split into updating and drawing properly.
 		em.update_systems();
 
 	}
