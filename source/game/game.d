@@ -195,13 +195,15 @@ final class MatchState : GameState {
 		this.em = new EntityManager();
 		this.em.add_system(new TransformManager());
 		this.em.add_system(new CollisionManager());
-		this.em.add_system(new NetworkManager(network_thread));
 		this.em.add_system(new SpriteManager(window));
 		this.em.add_system(new InputManager());
+		this.em.add_system(new NetworkManager(network_thread));
+		this.em.add_system(new OrderManager(&sbox));
 
 		//where do these bindings actually belong? WHO KNOWS
 		evhan.bind_mousebtn(1, &sbox.set_active, KeyState.DOWN);
 		evhan.bind_mousebtn(1, &sbox.set_inactive, KeyState.UP);
+		evhan.bind_mousebtn(2, &sbox.set_order, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
 
 

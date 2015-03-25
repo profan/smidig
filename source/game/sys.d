@@ -1,6 +1,7 @@
 module sundownstandoff.sys;
 
 import std.concurrency : send, receiveTimeout, Tid;
+import std.stdio : writefln;
 
 import gl3n.linalg;
 
@@ -13,9 +14,8 @@ class TransformManager : ComponentManager!(TransformComponent, 3) {
 
 	override void update() {
 
-		foreach (id, ref comp; components) {
-
-			comp.transform += comp.transform.translation(1.0f, 1.0f, 0.0f);
+		foreach (id, ref comp; components) with (comp) {
+			transform += transform.translation(velocity.x, velocity.y, 1.0f);
 		}
 
 	}
@@ -116,8 +116,8 @@ class SpriteManager : ComponentManager!(SpriteComponent, 4) {
 
 	override void update() {
 
-		foreach (id, ref comp; components) {
-			draw_rectangle(window, DrawFlags.FILL, cast(int)comp.mc.transform.matrix[0][0], cast(int)comp.mc.transform.matrix[1][1], comp.w, comp.h, comp.color);
+		foreach (id, ref comp; components) with (comp) {
+			draw_rectangle(window, DrawFlags.FILL, cast(int)mc.transform.matrix[0][2], cast(int)mc.transform.matrix[1][2], w, h, color);
 		}
 
 	}
@@ -136,11 +136,31 @@ struct SpriteComponent {
 
 class OrderManager : ComponentManager!(OrderComponent, 5) {
 
+	import sundownstandoff.action : SelectionBox;
+	import sundownstandoff.util : point_in_rect;
+
+	SelectionBox* sbox;
+
+	this(SelectionBox* sb) {
+		this.sbox = sb;
+	}
+
 	override void update() {
 
-		foreach (id, ref comp; components) {
+		foreach (id, ref comp; components) with (comp, comp.tc) {
+			float x = transform.matrix[0][2];
+			float y = transform.matrix[1][2];
+			if (sbox.active && point_in_rect(cast(int)x, cast(int)y, sbox.x, sbox.y, sbox.w, sbox.h)) with (comp) {
+				selected = true;
+			}
+
+			if (comp.selected && sbox.order_set) {
+				velocity = -(Vec2f(x, y) - Vec2f(sbox.to_x, sbox.to_y)).normalized();
+			}
 
 		}
+	
+		sbox.order_set = false;
 
 	}
 
@@ -148,6 +168,8 @@ class OrderManager : ComponentManager!(OrderComponent, 5) {
 
 struct OrderComponent {
 
+	bool selected = false;
+	@dependency TransformComponent* tc;
 	Order[10] orders;
 
 } //OrderComponent
