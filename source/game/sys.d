@@ -152,6 +152,8 @@ class OrderManager : ComponentManager!(OrderComponent, 5) {
 			float y = transform.matrix[1][2];
 			if (sbox.active && point_in_rect(cast(int)x, cast(int)y, sbox.x, sbox.y, sbox.w, sbox.h)) with (comp) {
 				selected = true;
+			} else if (sbox.active) {
+				comp.selected = false;
 			}
 
 			if (comp.selected && sbox.order_set) {
