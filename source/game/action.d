@@ -43,6 +43,8 @@ struct SelectionBox {
 		if (active) {
 			draw_rectangle(window, DrawFlags.FILL, x, y, w, h, 0x428bca);
 		}
+		
+		order_set = false;
 
 	}
 

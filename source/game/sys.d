@@ -161,8 +161,6 @@ class OrderManager : ComponentManager!(OrderComponent, 5) {
 			}
 
 		}
-	
-		sbox.order_set = false;
 
 	}
 
