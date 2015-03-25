@@ -55,12 +55,36 @@ enum DrawFlags {
 
 } //RectangleType
 
+void set_color(ref GLfloat[4] colors, int color) {
+	glGetFloatv(GL_CURRENT_COLOR, colors.ptr);
+	glColor3f(cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255);
+}
+
+void draw_circle(Window* window, DrawFlags flags, int x, int y, int radius, int color, ubyte alpha = 255) {
+
+	import std.math;
+
+	GLfloat[4] colors;
+	set_color(colors, color);
+	scope(exit) glColor3f(colors[0], colors[1], colors[2]);
+
+	GLenum mode = (flags & flags.FILL) ? GL_TRIANGLE_FAN : GL_LINES;
+
+	glBegin(mode);
+
+	glVertex2f(x, y);
+	for(int angle = 1; angle <= 360; angle = angle + 1)
+		glVertex2f(x + sin(angle) * radius, y + cos(angle) * radius);
+
+	glEnd();
+
+}
+
 //Immediate Mode GUI (IMGUI, see Muratori)
 void draw_rectangle(Window* window, DrawFlags flags, int x, int y, int width, int height, int color, ubyte alpha = 255) {
 
 	GLfloat[4] colors;
-	glGetFloatv(GL_CURRENT_COLOR, colors.ptr);
-	glColor3f(cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255);
+	set_color(colors, color);
 	scope(exit) glColor3f(colors[0], colors[1], colors[2]);
 
 	GLenum mode = (flags & flags.FILL) ? GL_TRIANGLES : GL_LINES;
