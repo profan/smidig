@@ -17,6 +17,8 @@ auto create_unit(EntityManager em, Vec2f pos) {
 	auto cc = em.get_component!CollisionComponent(unit);
 	cc.radius = 32; //arbitrary number :D
 	em.register_component!InputComponent(unit);
+	em.register_component!OrderComponent(unit);
+
 	em.register_component!SpriteComponent(unit);
 	SpriteComponent* sc = em.get_component!SpriteComponent(unit);
 	sc.color = 0xffa500;
@@ -24,7 +26,6 @@ auto create_unit(EntityManager em, Vec2f pos) {
 	sc.h = 32;
 	
 	em.register_component!NetworkComponent(unit);
-	em.register_component!OrderComponent(unit);
 
 	return unit;
 

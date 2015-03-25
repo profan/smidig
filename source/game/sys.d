@@ -105,7 +105,7 @@ struct NetworkComponent {
 
 class SpriteManager : ComponentManager!(SpriteComponent, 4) {
 
-	import sundownstandoff.ui : draw_rectangle, DrawFlags;
+	import sundownstandoff.ui : darken, draw_rectangle, DrawFlags;
 	import sundownstandoff.window : Window;
 
 	Window* window;
@@ -117,7 +117,8 @@ class SpriteManager : ComponentManager!(SpriteComponent, 4) {
 	override void update() {
 
 		foreach (id, ref comp; components) with (comp) {
-			draw_rectangle(window, DrawFlags.FILL, cast(int)mc.transform.matrix[0][2], cast(int)mc.transform.matrix[1][2], w, h, color);
+			int col = (oc.selected) ? darken(color, 10) : color;
+			draw_rectangle(window, DrawFlags.FILL, cast(int)mc.transform.matrix[0][2], cast(int)mc.transform.matrix[1][2], w, h, col);
 		}
 
 	}
@@ -131,6 +132,7 @@ struct SpriteComponent {
 	int w, h;
 	int color;
 	@dependency TransformComponent* mc;
+	@dependency OrderComponent* oc;
 
 } //SpriteComponent
 
