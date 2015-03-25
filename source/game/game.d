@@ -203,7 +203,7 @@ final class MatchState : GameState {
 		//where do these bindings actually belong? WHO KNOWS
 		evhan.bind_mousebtn(1, &sbox.set_active, KeyState.DOWN);
 		evhan.bind_mousebtn(1, &sbox.set_inactive, KeyState.UP);
-		evhan.bind_mousebtn(2, &sbox.set_order, KeyState.UP);
+		evhan.bind_mousebtn(3, &sbox.set_order, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
 
 

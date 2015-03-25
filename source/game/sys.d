@@ -147,16 +147,16 @@ class OrderManager : ComponentManager!(OrderComponent, 5) {
 
 	override void update() {
 
-		foreach (id, ref comp; components) with (comp, comp.tc) {
-			float x = transform.matrix[0][2];
-			float y = transform.matrix[1][2];
-			if (sbox.active && point_in_rect(cast(int)x, cast(int)y, sbox.x, sbox.y, sbox.w, sbox.h)) with (comp) {
+		foreach (id, ref comp; components) with (comp) {
+			float x = tc.transform.matrix[0][2];
+			float y = tc.transform.matrix[1][2];
+			if (sbox.active && point_in_rect(cast(int)x, cast(int)y, sbox.x, sbox.y, sbox.w, sbox.h)) {
 				selected = true;
 			} else if (sbox.active) {
-				comp.selected = false;
+				selected = false;
 			}
 
-			if (comp.selected && sbox.order_set) {
+			if (comp.selected && sbox.order_set) with (comp.tc) {
 				velocity = -(Vec2f(x, y) - Vec2f(sbox.to_x, sbox.to_y)).normalized();
 			}
 
