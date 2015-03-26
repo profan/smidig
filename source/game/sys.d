@@ -11,15 +11,13 @@ alias Vec2f = Vector!(float, 2);
 alias Mat3f = Matrix!(float, 3, 3);
 
 
-uint identifier(T: UpdateSystem)() { return 0; }
-interface UpdateSystem : ComponentSystem!() {
+interface UpdateSystem : ComponentSystem!(0) {
 
 	void update();
 
 }
 
-uint identifier(T: DrawSystem)() { return 1; }
-interface DrawSystem : ComponentSystem!() {
+interface DrawSystem : ComponentSystem!(1) {
 
 	import sundownstandoff.window : Window;
 
