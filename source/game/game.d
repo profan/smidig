@@ -195,7 +195,7 @@ final class MatchState : GameState {
 		this.em = new EntityManager();
 		this.em.add_system(new TransformManager());
 		this.em.add_system(new CollisionManager());
-		this.em.add_system(new SpriteManager(window));
+		this.em.add_system(new SpriteManager());
 		this.em.add_system(new InputManager());
 		this.em.add_system(new NetworkManager(network_thread));
 		this.em.add_system(new OrderManager(&sbox));
@@ -218,7 +218,7 @@ final class MatchState : GameState {
 	override void leave() {
 
 		//delete the player entity's components
-		em.unregister_component!void(player, "*");
+		em.unregister_component(player);
 
 		//disconnect since when in this state, we will have been connected.
 		send(network_thread, Command.DISCONNECT);
@@ -228,11 +228,13 @@ final class MatchState : GameState {
 	override void update(double dt) {
 
 		//figure out way to split into updating and drawing properly.
-		em.update_systems();
+		em.tick!(UpdateSystem)();
 
 	}
 
 	override void draw(Window* window) {
+
+		em.tick!(DrawSystem)(window);
 
 		sbox.draw(window);
 

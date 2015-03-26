@@ -10,9 +10,26 @@ import profan.ecs;
 alias Vec2f = Vector!(float, 2);
 alias Mat3f = Matrix!(float, 3, 3);
 
-class TransformManager : ComponentManager!(TransformComponent, 3) {
 
-	override void update() {
+uint identifier(T: UpdateSystem)() { return 0; }
+interface UpdateSystem : ComponentSystem!() {
+
+	void update();
+
+}
+
+uint identifier(T: DrawSystem)() { return 1; }
+interface DrawSystem : ComponentSystem!() {
+
+	import sundownstandoff.window : Window;
+
+	void update(Window* window);
+
+}
+
+class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) {
+
+	void update() {
 
 		foreach (id, ref comp; components) with (comp) {
 			transform += transform.translation(velocity.x, velocity.y, 1.0f);
@@ -31,9 +48,9 @@ struct TransformComponent {
 
 } //TransformComponent
 
-class CollisionManager : ComponentManager!(CollisionComponent, 2) {
+class CollisionManager : ComponentManager!(UpdateSystem, CollisionComponent, 2) {
 
-	override void update() {
+	void update() {
 
 		foreach (id, ref comp; components) {
 			//check collisions, do callback
@@ -51,9 +68,9 @@ struct CollisionComponent {
 
 } //CollisionComponent
 
-class InputManager : ComponentManager!(InputComponent, 1) {
+class InputManager : ComponentManager!(UpdateSystem, InputComponent, 1) {
 
-	override void update() {
+	void update() {
 
 		foreach (id, ref comp; components) {
 			//DO ALL THE CALLBACKS
@@ -69,7 +86,7 @@ struct InputComponent {
 
 } //InputComponent
 
-class NetworkManager : ComponentManager!(NetworkComponent) {
+class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 	import profan.collections : StaticArray;
 
@@ -85,7 +102,7 @@ class NetworkManager : ComponentManager!(NetworkComponent) {
 
 	}
 
-	override void update() {
+	void update() {
 
 		foreach (id, ref comp; components) {
 			
@@ -99,26 +116,19 @@ struct NetworkComponent {
 
 	//things, this kind of thing ought to be more general, wtb polymorphism
 	@dependency TransformComponent* mc;
-	
+
 
 } //NetworkComponent
 
-class SpriteManager : ComponentManager!(SpriteComponent, 4) {
+class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 
-	import sundownstandoff.ui : darken, draw_rectangle, DrawFlags;
+	import sundownstandoff.ui : draw_rectangle, DrawFlags;
 	import sundownstandoff.window : Window;
 
-	Window* window;
-
-	this(Window* window) {
-		this.window = window;
-	}
-
-	override void update() {
+	void update(Window* window) {
 
 		foreach (id, ref comp; components) with (comp) {
-			int col = (oc.selected) ? darken(color, 10) : color;
-			draw_rectangle(window, DrawFlags.FILL, cast(int)mc.transform.matrix[0][2], cast(int)mc.transform.matrix[1][2], w, h, col);
+			draw_rectangle(window, DrawFlags.FILL, cast(int)mc.transform.matrix[0][2], cast(int)mc.transform.matrix[1][2], w, h, color);
 		}
 
 	}
@@ -132,12 +142,12 @@ struct SpriteComponent {
 	int w, h;
 	int color;
 	@dependency TransformComponent* mc;
-	@dependency OrderComponent* oc;
 
 } //SpriteComponent
 
-class OrderManager : ComponentManager!(OrderComponent, 5) {
+class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 
+	import sundownstandoff.ui : draw_circle, DrawFlags;
 	import sundownstandoff.action : SelectionBox;
 	import sundownstandoff.util : point_in_rect;
 
@@ -147,7 +157,7 @@ class OrderManager : ComponentManager!(OrderComponent, 5) {
 		this.sbox = sb;
 	}
 
-	override void update() {
+	void update() {
 
 		foreach (id, ref comp; components) with (comp) {
 			float x = tc.transform.matrix[0][2];
