@@ -59,6 +59,11 @@ struct Message {
 
 }
 
+mixin template MessageHeader() {
+	MessageType type;
+	ClientID client_id;
+}
+
 struct BasicMessage {
 
 	this(MessageType type, ClientID client) {
@@ -67,8 +72,7 @@ struct BasicMessage {
 	}
 
 	align(1):
-	MessageType type;
-	ClientID client_id;
+	mixin MessageHeader;
 
 }
 

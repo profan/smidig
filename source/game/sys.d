@@ -95,9 +95,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	StaticArray!(byte, 2048) send_data;
 
 	this(Tid net_thread) {
-
 		this.network_thread = net_thread;
-
 	}
 
 	void update() {
