@@ -11,6 +11,19 @@ alias Vec2f = Vector!(float, 2);
 alias Mat3f = Matrix!(float, 3, 3);
 
 
+enum : uint[string] {
+	Identifier = [
+		"TransformComponent" : 0
+	]
+}
+
+mixin template NetIdentifier() {
+	union {
+		uint identifier = Identifier[typeof(this).stringof];
+		ubyte[uint.sizeof] identifier_bytes;
+	}	
+}
+
 interface UpdateSystem : ComponentSystem!(0) {
 
 	void update();
@@ -40,10 +53,9 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 struct TransformComponent {
 
 	import sundownstandoff.net : NetVar;
-	import sundownstandoff.serialize : networked, NetIdentifier;
+	import sundownstandoff.serialize : networked;
 
-	mixin NetIdentifier!(0);
-
+	mixin NetIdentifier;
 	@networked NetVar!(Vec2f) velocity;
 	@networked NetVar!(Mat3f) transform;
 

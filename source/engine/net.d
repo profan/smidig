@@ -8,6 +8,8 @@ import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.typecons : Tuple;
 import std.conv : to;
 
+import profan.collections : StaticArray;
+
 enum MessageType : uint {
 
 	CONNECT,
@@ -79,15 +81,15 @@ struct BasicMessage {
 
 struct UpdateMessage {
 
-	this(MessageType type, ClientID client, ulong data_size, immutable(ubyte[]) data) {
+	this(MessageType type, ClientID client, uint data_size) {
 		this.type = type;
 		this.client_id = client;
+		this.data_size = data_size;
 	}
 
 	align(1):
 	mixin MessageHeader;
 	uint data_size;
-	byte[] data;
 
 }
 
@@ -167,6 +169,18 @@ struct NetworkPeer {
 			: "[NET] Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
 	}
 
+	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
+		StaticArray!(ubyte, 2048) send_data;
+
+		send_data ~= cast(ubyte[UpdateMessage.sizeof])msg;
+		send_data ~= cast(ubyte[])data;
+		auto success = socket.sendTo(cast(void[])send_data.array[0..send_data.elements], target);
+		string type_str = to!string(msg.type);
+		writefln((success == Socket.ERROR)
+			? format("[NET] Failed to send %s packet.", type_str)
+			: "[NET] Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
+	}
+
 	//recieve all the shit, handle connections as well
 	void listen() {
 	
@@ -226,6 +240,8 @@ struct NetworkPeer {
 						writefln("[NET] Client %d sent disconnect message.", cmsg.client_id);
 						peers.remove(cmsg.client_id);
 						break;
+					case UPDATE:
+						break;
 					case PING:
 						BasicMessage cmsg = *(cast(BasicMessage*)(data));
 						writefln("[NET] Client %d sent ping, sending pong.", cmsg.client_id);
@@ -248,7 +264,8 @@ struct NetworkPeer {
 					case UPDATE:
 						writefln("[NET] Sending Game State Update: %d bytes", data.length);
 						foreach (id, peer; peers) {
-							send_packet!(UpdateMessage)(MessageType.UPDATE, peer.addr, port, data.length, data);
+							auto msg = UpdateMessage(MessageType.UPDATE, port, cast(uint)data.length);
+							send_data_packet(msg, data, peer.addr);
 						}
 						break;
 					default:
