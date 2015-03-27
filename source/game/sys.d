@@ -101,6 +101,8 @@ struct InputComponent {
 
 class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
+
+	import std.datetime : dur;
 	import profan.collections : StaticArray;
 	import sundownstandoff.serialize : serialize;
 	import sundownstandoff.net : Command;
@@ -116,6 +118,22 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	}
 
 	void update() {
+
+		receiveTimeout(dur!("nsecs")(1),
+		(Command cmd, immutable(ubyte)[] data) {
+			writefln("[GAME] Received world update, %d bytes", data.length);
+			uint type = cast(uint)data.ptr;
+			
+			switch (type) {
+				case 0: //TransformComponent
+					writefln("[GAME] Handling TransformComponent.");
+					break;
+				default:
+					writefln("[GAME] Unhandled Component.");
+					break;
+			}
+
+		});
 
 		//recieve some stuff, send some stuff
 		send_data.elements = 0; //reset point to add to
