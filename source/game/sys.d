@@ -121,16 +121,26 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 		receiveTimeout(dur!("nsecs")(1),
 		(Command cmd, immutable(ubyte)[] data) {
-			writefln("[GAME] Received world update, %d bytes", data.length);
-			uint type = cast(uint)data.ptr;
-			
-			switch (type) {
-				case 0: //TransformComponent
-					writefln("[GAME] Handling TransformComponent.");
-					break;
-				default:
-					writefln("[GAME] Unhandled Component, id: %d", type);
-					break;
+
+			bool done = false;
+			size_t read_bytes = 0;
+
+			while (!done && read_bytes < data.length) {
+				writefln("[GAME] Received world update, %d bytes", data.length);
+				uint type = *(cast(uint*)data);
+				read_bytes += type.sizeof;
+					
+				switch (type) {
+					case 0: //TransformComponent
+						writefln("[GAME] Handling TransformComponent.");
+						read_bytes += TransformComponent.sizeof;
+						break;
+					default:
+						writefln("[GAME] Unhandled Component, id: %d", type);
+						done = true; //all bets are off at this point
+						break;
+				}
+
 			}
 
 		});
