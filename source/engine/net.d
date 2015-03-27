@@ -243,8 +243,7 @@ struct NetworkPeer {
 					case UPDATE:
 						//take slice from sizeof(header) to sizeof(header) + header.data_length and send
 						UpdateMessage umsg = *(cast(UpdateMessage*)(data));
-						writefln("[NET] Client %d sent update message.", umsg.client_id);
-						writefln("[NET]  - payload size: %d", umsg.data_size);
+						writefln("[NET] Client %d sent update message, payload size: %d bytes", umsg.client_id, umsg.data_size);
 						send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[UpdateMessage.sizeof..UpdateMessage.sizeof+umsg.data_size].idup);
 						break;
 					case PING:

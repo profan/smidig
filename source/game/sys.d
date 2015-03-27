@@ -129,7 +129,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 					writefln("[GAME] Handling TransformComponent.");
 					break;
 				default:
-					writefln("[GAME] Unhandled Component.");
+					writefln("[GAME] Unhandled Component, id: %d", type);
 					break;
 			}
 
