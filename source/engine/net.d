@@ -79,7 +79,7 @@ struct BasicMessage {
 
 struct UpdateMessage {
 
-	this(MessageType type, ClientID client, ulong data_size, immutable(byte[]) data) {
+	this(MessageType type, ClientID client, ulong data_size, immutable(ubyte[]) data) {
 		this.type = type;
 		this.client_id = client;
 	}
@@ -108,7 +108,11 @@ struct NetVar(T) {
 	Owner owner = Owner.LOCAL;
 	alias variable this;
 	bool changed = false;
-	T variable;
+	
+	union {
+		T variable;
+		ubyte[T.sizeof] bytes;
+	}
 
 	this(T var) {
 		this.variable = var;
@@ -238,13 +242,13 @@ struct NetworkPeer {
 			}
 
 			auto result = receiveTimeout(dur!("nsecs")(1),
-			(Command cmd, immutable(byte)[] data) {
+			(Command cmd, immutable(ubyte)[] data) {
 				writefln("[NET] Command: %s", to!string(cmd));
 				switch (cmd) with (Command) {
 					case UPDATE:
-						writefln("[NET] Sending Game State Update: %d bytes", data.sizeof);
+						writefln("[NET] Sending Game State Update: %d bytes", data.length);
 						foreach (id, peer; peers) {
-							send_packet!(UpdateMessage)(MessageType.UPDATE, peer.addr, port, data.sizeof, data);
+							send_packet!(UpdateMessage)(MessageType.UPDATE, peer.addr, port, data.length, data);
 						}
 						break;
 					default:

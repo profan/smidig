@@ -57,18 +57,10 @@ static template ForEachMember(T, alias data, alias object, members...) {
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
 
 		/*Identifier!(Symbol!(object, members[0]).variable)*/ 
-		static if (isPOD!(typeof(NetVarToSym!(T, members[0])))) {
+		enum ForEachMember =
+			Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ members[0] ~ ".bytes;"
+				~ ForEachMember!(T, data, object, members[1 .. $]);
 
-			enum ForEachMember = ForEachMember!(typeof(NetVarToSym!(T, members[0])), data, object, 
-				__traits(allMembers, typeof(NetVarToSym!(T, members[0]))));
-
-		} else {
-
-			enum ForEachMember = 
-				Identifier!(data) ~ " ~= nativeToBigEndian(" ~ Identifier!(object) ~ "." ~ members[0] ~ ".variable);" 
-					~ ForEachMember!(T, data, members[1 .. $]);
-
-		}
 
 	} else static if (members.length > 0) {
 
@@ -82,13 +74,17 @@ static template ForEachMember(T, alias data, alias object, members...) {
 
 }
 
-static template Serialize(T, alias data, alias object) {
-	enum Serialize = ForEachMember!(T, data, object, __traits(allMembers, T));
+static template WriteHeader(T, alias data, alias object) {
+	enum WriteHeader = Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ "identifier_bytes; ";
 }
 
-byte[T.sizeof] serialize(T)(T* object) {
+static template Serialize(T, alias data, alias object) {
+	enum Serialize = WriteHeader!(T,data, object) ~ ForEachMember!(T, data, object, __traits(allMembers, T));
+}
 
-	StaticArray!(byte, T.sizeof) data;
+ubyte[T.sizeof] serialize(T)(T* object) {
+
+	StaticArray!(ubyte, T.sizeof) data;
 
 	mixin Serialize!(T, data, object);
 	mixin(Serialize);

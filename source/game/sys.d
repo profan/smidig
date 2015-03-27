@@ -39,6 +39,11 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 
 struct TransformComponent {
 
+	union {
+		uint identifier = 0;
+		ubyte[uint.sizeof] identifier_bytes;
+	}
+
 	import sundownstandoff.net : NetVar;
 	import sundownstandoff.serialize : networked;
 
@@ -94,8 +99,8 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	Tid network_thread;
 
 	//reused buffer for sending data
-	StaticArray!(byte, 2048) recv_data;
-	StaticArray!(byte, 2048) send_data;
+	StaticArray!(ubyte, 2048) recv_data;
+	StaticArray!(ubyte, 2048) send_data;
 
 	this(Tid net_thread) {
 		this.network_thread = net_thread;
@@ -103,14 +108,14 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 	void update() {
 
-		send_data.elements = 0; //reset point to add to
 		//recieve some stuff, send some stuff
+		send_data.elements = 0; //reset point to add to
 		foreach (id, ref comp; components) {
 			send_data ~= serialize(comp.tc);
 		}
 
 		//make a version which uses double buffers or something and never allocates
-		send(network_thread, Command.UPDATE, send_data.array.idup);
+		send(network_thread, Command.UPDATE, send_data.array[0..send_data.elements].idup);
 
 	}
 
