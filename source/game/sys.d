@@ -20,7 +20,7 @@ enum : uint[string] {
 mixin template NetIdentifier() {
 	union {
 		uint identifier = Identifier[typeof(this).stringof];
-		ubyte[uint.sizeof] identifier_bytes;
+		ubyte[identifier.sizeof] identifier_bytes;
 	}	
 }
 

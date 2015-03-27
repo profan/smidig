@@ -172,7 +172,7 @@ struct NetworkPeer {
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
 		StaticArray!(ubyte, 2048) send_data;
 
-		send_data ~= cast(ubyte[UpdateMessage.sizeof])msg;
+		send_data ~= cast(ubyte[msg.sizeof])msg;
 		send_data ~= cast(ubyte[])data;
 		auto success = socket.sendTo(cast(void[])send_data.array[0..send_data.elements], target);
 		string type_str = to!string(msg.type);
@@ -244,7 +244,7 @@ struct NetworkPeer {
 						//take slice from sizeof(header) to sizeof(header) + header.data_length and send
 						UpdateMessage umsg = *(cast(UpdateMessage*)(data));
 						writefln("[NET] Client %d sent update message, payload size: %d bytes", umsg.client_id, umsg.data_size);
-						send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[UpdateMessage.sizeof..UpdateMessage.sizeof+umsg.data_size].idup);
+						send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
 						break;
 					case PING:
 						BasicMessage cmsg = *(cast(BasicMessage*)(data));
