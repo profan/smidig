@@ -34,6 +34,7 @@ enum Command {
 	CONNECT,
 	DISCONNECT,
 	TERMINATE,
+	UPDATE,
 	PING
 
 } //Command
@@ -73,6 +74,20 @@ struct BasicMessage {
 
 	align(1):
 	mixin MessageHeader;
+
+}
+
+struct UpdateMessage {
+
+	this(MessageType type, ClientID client, ulong data_size, immutable(byte[]) data) {
+		this.type = type;
+		this.client_id = client;
+	}
+
+	align(1):
+	mixin MessageHeader;
+	uint data_size;
+	byte[] data;
 
 }
 
@@ -223,6 +238,19 @@ struct NetworkPeer {
 			}
 
 			auto result = receiveTimeout(dur!("nsecs")(1),
+			(Command cmd, immutable(byte)[] data) {
+				writefln("[NET] Command: %s", to!string(cmd));
+				switch (cmd) with (Command) {
+					case UPDATE:
+						writefln("[NET] Sending Game State Update: %d bytes", data.sizeof);
+						foreach (id, peer; peers) {
+							send_packet!(UpdateMessage)(MessageType.UPDATE, peer.addr, port, data.sizeof, data);
+						}
+						break;
+					default:
+						writefln("[NET:1] Unhandled Command: %s", to!string(cmd));
+				}
+			},
 			(Command cmd, shared(InternetAddress) addr) {
 				writefln("[NET] Command: %s", to!string(cmd));
 				switch(cmd) with (Command) {
@@ -234,7 +262,7 @@ struct NetworkPeer {
 						peers[target.port] = new_peer;
 						break;
 					default:
-						writefln("[NET] Unhandled Command: %s", to!string(cmd));
+						writefln("[NET:2] Unhandled Command: %s", to!string(cmd));
 						break;
 				}
 			},
@@ -261,7 +289,7 @@ struct NetworkPeer {
 						open = false;
 						break;
 					default:
-						writefln("[NET] Unhandled Command: %s", to!string(cmd));
+						writefln("[NET:3] Unhandled Command: %s", to!string(cmd));
 						break;
 				}
 			});

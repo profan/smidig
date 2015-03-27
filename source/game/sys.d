@@ -87,6 +87,8 @@ struct InputComponent {
 class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 	import profan.collections : StaticArray;
+	import sundownstandoff.serialize : serialize;
+	import sundownstandoff.net : Command;
 
 	Tid network_thread;
 
@@ -100,9 +102,14 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 	void update() {
 
+		send_data.elements = 0; //reset point to add to
+		//recieve some stuff, send some stuff
 		foreach (id, ref comp; components) {
-			
+			send_data ~= serialize(comp.tc);
 		}
+
+		//make a version which uses double buffers or something and never allocates
+		send(network_thread, Command.UPDATE, send_data.array.idup);
 
 	}
 
@@ -111,7 +118,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 struct NetworkComponent {
 
 	//things, this kind of thing ought to be more general, wtb polymorphism
-	@dependency TransformComponent* mc;
+	@dependency TransformComponent* tc;
 
 
 } //NetworkComponent
