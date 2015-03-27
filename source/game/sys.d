@@ -40,9 +40,10 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 struct TransformComponent {
 
 	import sundownstandoff.net : NetVar;
+	import sundownstandoff.serialize : networked;
 
-	NetVar!(Vec2f) velocity;
-	NetVar!(Mat3f) transform;
+	@networked NetVar!(Vec2f) velocity;
+	@networked NetVar!(Mat3f) transform;
 
 } //TransformComponent
 
