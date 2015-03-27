@@ -6,11 +6,11 @@ import std.bitmanip;
 
 enum networked = "networked";
 
-static template isAttribute(alias curAttr, alias Attr) {
+template isAttribute(alias curAttr, alias Attr) {
 	enum isAttribute = is(typeof(curAttr) == typeof(Attr));
 }
 
-static template hasAttribute(T, alias Member, alias Attribute, Attributes...) {
+template hasAttribute(T, alias Member, alias Attribute, Attributes...) {
 
 	static if (Attributes.length > 0 && isAttribute!(Attribute, Attributes[0])) {
 
@@ -28,35 +28,34 @@ static template hasAttribute(T, alias Member, alias Attribute, Attributes...) {
 
 }
 
-static template getAttributes(T, alias Member) {
+template getAttributes(T, alias Member) {
 	enum getAttributes = __traits(getAttributes, __traits(getMember, T, Member));
 }
 
-static template Identifier(alias Sym) {
+template Identifier(alias Sym) {
 	enum Identifier = __traits(identifier, Sym);
 }
 
-static template Symbol(alias T, alias Member) {
+template Symbol(alias T, alias Member) {
 	enum Symbol = __traits(getMember, T, Member);
 }
 
-static template Symbol(T, alias Member) {
+template Symbol(T, alias Member) {
 	enum Symbol = __traits(getMember, T, Member);
 }
 
-static template isPOD(T) {
+template isPOD(T) {
 	enum isPOD = __traits(isPOD, T);
 }
 
-static template NetVarToSym(T, alias Member) {
+template NetVarToSym(T, alias Member) {
 	enum NetVarToSym = Symbol!(T, Member).variable;
 }
 
-static template ForEachMember(T, alias data, alias object, members...) {
+template ForEachMember(T, alias data, alias object, members...) {
 
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
 
-		/*Identifier!(Symbol!(object, members[0]).variable)*/ 
 		enum ForEachMember =
 			Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ members[0] ~ ".bytes;"
 				~ ForEachMember!(T, data, object, members[1 .. $]);
@@ -74,11 +73,11 @@ static template ForEachMember(T, alias data, alias object, members...) {
 
 }
 
-static template WriteHeader(T, alias data, alias object) {
+template WriteHeader(T, alias data, alias object) {
 	enum WriteHeader = Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ "identifier_bytes; ";
 }
 
-static template Serialize(T, alias data, alias object) {
+template Serialize(T, alias data, alias object) {
 	enum Serialize = WriteHeader!(T,data, object) ~ ForEachMember!(T, data, object, __traits(allMembers, T));
 }
 
