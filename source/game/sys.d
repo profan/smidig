@@ -127,12 +127,13 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 			while (!done && read_bytes < data.length) {
 				writefln("[GAME] Received world update, %d bytes", data.length);
-				uint type = *(cast(uint*)data);
-				read_bytes += type.sizeof;
+				uint type = cast(uint*)data[0];
+				uint userid = cast(uint*)data[1];
+				read_bytes += type.sizeof + userid.sizeof;
 					
 				switch (type) {
 					case 0: //TransformComponent
-						writefln("[GAME] Handling TransformComponent.");
+						writefln("[GAME] Handling TransformComponent from: %d", userid);
 						read_bytes += TransformComponent.sizeof;
 						break;
 					default:
@@ -148,7 +149,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 		//recieve some stuff, send some stuff
 		send_data.elements = 0; //reset point to add to
 		foreach (id, ref comp; components) {
-			send_data ~= serialize(comp.tc);
+			send_data ~= serialize(id, comp.tc);
 		}
 
 		//make a version which uses double buffers or something and never allocates

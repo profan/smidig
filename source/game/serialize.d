@@ -73,19 +73,22 @@ template ForEachMember(T, alias data, alias object, members...) {
 
 }
 
-template WriteHeader(T, alias data, alias object) {
-	enum WriteHeader = Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ "identifier_bytes; ";
+template WriteHeader(T, alias data, alias object, alias id) {
+	enum WriteHeader =
+		Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ "identifier_bytes;" ~
+		Identifier!(data) ~ " ~= " ~ "(cast(ubyte*)&" ~ Identifier!(id) ~ ")[0..id.sizeof];";
+		
 }
 
-template Serialize(T, alias data, alias object) {
-	enum Serialize = WriteHeader!(T,data, object) ~ ForEachMember!(T, data, object, __traits(allMembers, T));
+template Serialize(T, alias data, alias object, alias id) {
+	enum Serialize = WriteHeader!(T, data, object, id) ~ ForEachMember!(T, data, object, __traits(allMembers, T));
 }
 
-ubyte[T.sizeof] serialize(T)(T* object) {
+ubyte[T.sizeof] serialize(I, T)(I id, T* object) {
 
 	StaticArray!(ubyte, T.sizeof) data;
 
-	mixin Serialize!(T, data, object);
+	mixin Serialize!(T, data, object, id);
 	mixin(Serialize);
 
 	return data.array;
