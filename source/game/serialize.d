@@ -82,6 +82,13 @@ static template Serialize(T, alias data, alias object) {
 	enum Serialize = WriteHeader!(T,data, object) ~ ForEachMember!(T, data, object, __traits(allMembers, T));
 }
 
+mixin template NetIdentifier(uint N) {
+	union {
+		uint identifier = N;
+		ubyte[uint.sizeof] identifier_bytes;
+	}
+}
+
 ubyte[T.sizeof] serialize(T)(T* object) {
 
 	StaticArray!(ubyte, T.sizeof) data;

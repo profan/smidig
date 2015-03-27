@@ -39,13 +39,10 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 
 struct TransformComponent {
 
-	union {
-		uint identifier = 0;
-		ubyte[uint.sizeof] identifier_bytes;
-	}
-
 	import sundownstandoff.net : NetVar;
-	import sundownstandoff.serialize : networked;
+	import sundownstandoff.serialize : networked, NetIdentifier;
+
+	mixin NetIdentifier!(0);
 
 	@networked NetVar!(Vec2f) velocity;
 	@networked NetVar!(Mat3f) transform;
