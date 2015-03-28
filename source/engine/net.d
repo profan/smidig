@@ -231,18 +231,18 @@ struct NetworkPeer {
 							case MessageType.UPDATE:
 								//take slice from sizeof(header) to sizeof(header) + header.data_length and send
 								UpdateMessage umsg = *(cast(UpdateMessage*)(data));
-								writefln("[NET] Client %d sent update message, payload size: %d bytes", umsg.client_id, umsg.data_size);
+								writefln("[NET] (CONNECTED) Client %d sent update message, payload size: %d bytes", umsg.client_id, umsg.data_size);
 								send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
 								break;
 
 							case MessageType.DISCONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] Client %d sent disconnect message.", cmsg.client_id);
+								writefln("[NET] (CONNECTED) Client %d sent disconnect message.", cmsg.client_id);
 								peers.remove(cmsg.client_id);
 								break;
 
 							default:
-								writefln("[NET] Unhandled message: %s", to!string(type));
+								writefln("[NET] (CONNECTED) Unhandled message: %s", to!string(type));
 								break;
 
 						}
