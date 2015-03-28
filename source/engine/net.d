@@ -245,7 +245,6 @@ struct NetworkPeer {
 								writefln("[NET] Unhandled message: %s", to!string(type));
 								break;
 
-
 						}
 					}
 
@@ -288,7 +287,6 @@ struct NetworkPeer {
 
 							default:
 								writefln("[NET] (UNCONNECTED) Unhandled message: %s", to!string(type));
-								break;
 
 						}
 					}
@@ -306,7 +304,6 @@ struct NetworkPeer {
 								break;
 							default:
 								writefln("[NET:2] Unhandled Command: %s", to!string(cmd));
-								break;
 						}
 					},
 					(Command cmd) {
@@ -324,7 +321,6 @@ struct NetworkPeer {
 								break;
 							default:
 								writefln("[NET] (UNCONNECTED) Unhandled command: %s", to!string(cmd));
-								break;
 						}
 					});
 
@@ -365,7 +361,6 @@ struct NetworkPeer {
 
 							default:
 								writefln("[NET] (WAITING) Unhandled message: %s", to!string(type));
-								break;
 
 						}
 
@@ -384,7 +379,6 @@ struct NetworkPeer {
 								break;
 							default:
 								writefln("[NET:1] Unhandled Command: %s", to!string(cmd));
-								break;
 						}
 					},
 					(Command cmd) {
@@ -402,7 +396,6 @@ struct NetworkPeer {
 								break;
 							default:
 								writefln("[NET] (WAITING) Unhandled command: %s", to!string(cmd));
-								break;
 						}
 					});
 
