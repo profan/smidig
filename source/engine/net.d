@@ -280,7 +280,7 @@ struct NetworkPeer {
 						switch (type) {
 							case MessageType.CONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (UNCONNECTED) Connection from %s:%s", from.toAddrString(), from.toPortString());
+								writefln("[NET] (UNCONNECTED) Connection from %s at %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
 								ClientID id = cmsg.client_uuid;
 
 								if (id !in peers) {
@@ -352,7 +352,7 @@ struct NetworkPeer {
 
 							case MessageType.CONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (WAITING) Connection from %s:%s", from.toAddrString(), from.toPortString());
+								writefln("[NET] (WAITING) Connection from %s at: %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
 								ClientID id = cmsg.client_uuid;
 
 								if (id !in peers) {
