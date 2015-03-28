@@ -354,13 +354,11 @@ struct NetworkPeer {
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
 								writefln("[NET] (WAITING) Connection from %s:%s", from.toAddrString(), from.toPortString());
 								ClientID id = cmsg.client_uuid;
-								writefln("[NET] (WAITING) After peer.");
 
 								if (id !in peers) {
 									Peer new_peer = {client_uuid: id, addr: from};
 									send_packet!(BasicMessage)(MessageType.CONNECT, from, client_uuid);
 									peers[id] = new_peer;
-									writefln("[NET] (WAITING) Sent connect!");
 								} else {
 									writefln("[NET] (WAITING) Already in connected peers.");
 								}
