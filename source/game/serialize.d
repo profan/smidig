@@ -52,27 +52,29 @@ template NetVarToSym(T, alias Member) {
 	enum NetVarToSym = Symbol!(T, Member).variable;
 }
 
-template ForEachMember(T, alias data, alias object, members...) {
+template SerializeEachMember(T, alias data, alias object, members...) {
 
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
 
-		enum ForEachMember =
+		enum SerializeEachMember =
 			Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ members[0] ~ ".bytes;"
-				~ ForEachMember!(T, data, object, members[1 .. $]);
+				~ SerializeEachMember!(T, data, object, members[1 .. $]);
 
 
 	} else static if (members.length > 0) {
 
-		enum ForEachMember = ForEachMember!(T, data, members[1 .. $]);
+		enum SerializeEachMember = SerializeEachMember!(T, data, members[1 .. $]);
 
 	} else {
 
-		enum ForEachMember = "";
+		enum SerializeEachMember = "";
 
 	}
 
 }
 
+
+//write identifier(type of component) and entity id, header of component message.
 template WriteHeader(T, alias data, alias object, alias id) {
 	enum WriteHeader =
 		Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ "identifier_bytes;" ~
@@ -81,7 +83,11 @@ template WriteHeader(T, alias data, alias object, alias id) {
 }
 
 template Serialize(T, alias data, alias object, alias id) {
-	enum Serialize = WriteHeader!(T, data, object, id) ~ ForEachMember!(T, data, object, __traits(allMembers, T));
+	enum Serialize = WriteHeader!(T, data, object, id) ~ SerializeEachMember!(T, data, object, __traits(allMembers, T));
+}
+
+template DeSerialize(T, alias data, alias object, alias id) {
+	enum DeSerialize = 0;
 }
 
 ubyte[T.sizeof] serialize(I, T)(I id, T* object) {
@@ -92,5 +98,9 @@ ubyte[T.sizeof] serialize(I, T)(I id, T* object) {
 	mixin(Serialize);
 
 	return data.array;
+
+}
+
+T deserialize(T)(ubyte[] data) {
 
 }
