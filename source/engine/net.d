@@ -293,7 +293,7 @@ struct NetworkPeer {
 			
 					auto result = receiveTimeout(dur!("nsecs")(1),
 					(Command cmd, shared(InternetAddress) addr) {
-						writefln("[NET] Command: %s", to!string(cmd));
+						writefln("[NET] (UNCONNECTED) Command: %s", to!string(cmd));
 						switch(cmd) {
 							case Command.CONNECT:
 								writefln("[NET] Entering Connect.");
@@ -368,7 +368,7 @@ struct NetworkPeer {
 
 					auto result = receiveTimeout(dur!("nsecs")(1),
 					(Command cmd, immutable(ubyte)[] data) {
-					writefln("[NET] Command: %s", to!string(cmd));
+					writefln("[NET] (WAITING) Command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.UPDATE:
 								writefln("[NET] Sending Game State Update: %d bytes", data.length);
