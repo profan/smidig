@@ -187,7 +187,7 @@ final class MatchState : GameState {
 
 	EntityID player;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid, ClientID uuid) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
@@ -197,7 +197,7 @@ final class MatchState : GameState {
 		this.em.add_system(new CollisionManager());
 		this.em.add_system(new SpriteManager());
 		this.em.add_system(new InputManager());
-		this.em.add_system(new NetworkManager(network_thread));
+		this.em.add_system(new NetworkManager(network_thread, uuid));
 		this.em.add_system(new OrderManager(&sbox));
 
 		//where do these bindings actually belong? WHO KNOWS
@@ -296,19 +296,23 @@ final class WaitingState : GameState {
 
 struct Game {
 
+	import std.uuid;
+
 	Window* window;
 	EventHandler* evhan;
 	GameStateHandler state;
 	UIState ui_state;
 	
 	Tid network_thread;
+	ClientID client_uuid;
 
 	this(Window* window, EventHandler* evhan) {
 
 		this.window = window;
 		this.evhan = evhan;
 		this.ui_state = UIState();
-		this.state = new GameStateHandler();		
+		this.state = new GameStateHandler();
+		this.client_uuid = randomUUID();
 		
 	}
 
@@ -334,10 +338,10 @@ struct Game {
 
 	void run() {
 	
-		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
+		network_thread = spawn(&launch_peer, thisTid, client_uuid); //pass game thread so it can pass recieved messages back
 		
 		state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
-		state.add_state(new MatchState(state, evhan, &ui_state, window, network_thread), State.GAME);
+		state.add_state(new MatchState(state, evhan, &ui_state, window, network_thread, client_uuid), State.GAME);
 		state.add_state(new JoiningState(state, evhan, &ui_state, network_thread), State.JOIN);
 		state.add_state(new WaitingState(state, evhan, &ui_state, network_thread), State.WAIT);
 		state.push_state(State.MENU);

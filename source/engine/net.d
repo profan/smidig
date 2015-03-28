@@ -20,7 +20,8 @@ enum MessageType : uint {
 
 } //MessageType
 
-alias ClientID = uint;
+import std.uuid : UUID;
+alias ClientID = UUID;
 
 enum ConnectionState {
 
@@ -52,26 +53,16 @@ enum Command {
 *
 ******************************/
 
-struct Message {
-
-	align(1):
-	MessageType type;
-	ClientID client_id;
-	uint content_size;
-	void[] content;
-
-}
-
 mixin template MessageHeader() {
 	MessageType type;
-	ClientID client_id;
+	ClientID client_uuid;
 }
 
 struct BasicMessage {
 
 	this(MessageType type, ClientID client) {
 		this.type = type;
-		this.client_id = client;
+		this.client_uuid = client;
 	}
 
 	align(1):
@@ -83,7 +74,7 @@ struct UpdateMessage {
 
 	this(MessageType type, ClientID client, uint data_size) {
 		this.type = type;
-		this.client_id = client;
+		this.client_uuid = client;
 		this.data_size = data_size;
 	}
 
@@ -95,7 +86,7 @@ struct UpdateMessage {
 
 struct Peer {
 
-	uint client_id;
+	ClientID client_uuid;
 	Address addr;
 
 }
@@ -146,17 +137,19 @@ struct NetworkPeer {
 	UdpSocket socket;
 	ConnectionState state;
 	Peer[ClientID] peers;
+	ClientID client_uuid;
 	ushort port;
 
 	Self self;
 	Tid game_thread;
 
-	this(ushort port, Tid game_tid) {
+	this(ushort port, Tid game_tid, ClientID uuid) {
 
 		this.socket = new UdpSocket();
 		this.socket.blocking = false;
 		this.state = ConnectionState.UNCONNECTED;
 		this.game_thread = game_tid;
+		this.client_uuid = uuid;
 		this.port = port;
 
 	}
@@ -230,14 +223,14 @@ struct NetworkPeer {
 							case MessageType.UPDATE:
 								//take slice from sizeof(header) to sizeof(header) + header.data_length and send
 								UpdateMessage umsg = *(cast(UpdateMessage*)(data));
-								writefln("[NET] (CONNECTED) Client %d sent update message, payload size: %d bytes", umsg.client_id, umsg.data_size);
+								writefln("[NET] (CONNECTED) Client %d sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
 								send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
 								break;
 
 							case MessageType.DISCONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (CONNECTED) Client %d sent disconnect message.", cmsg.client_id);
-								peers.remove(cmsg.client_id);
+								writefln("[NET] (CONNECTED) Client %d sent disconnect message.", cmsg.client_uuid);
+								peers.remove(cmsg.client_uuid);
 								break;
 
 							default:
@@ -253,7 +246,7 @@ struct NetworkPeer {
 							case Command.UPDATE:
 								writefln("[NET] (CONNECTED) Sending Game State Update: %d bytes", data.length);
 								foreach (id, peer; peers) {
-									auto msg = UpdateMessage(MessageType.UPDATE, port, cast(uint)data.length);
+									auto msg = UpdateMessage(MessageType.UPDATE, client_uuid, cast(uint)data.length);
 									send_data_packet(msg, data, peer.addr);
 								}
 								break;
@@ -268,9 +261,9 @@ struct NetworkPeer {
 						writefln("[NET] (CONNECTED) Command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.DISCONNECT:
-								writefln("[NET] (WAITING) Sending disconnect message.");
+								writefln("[NET] (CONNECTED) Sending disconnect message.");
 								foreach (id, peer; peers)
-									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, port);
+									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, client_uuid);
 								foreach (key; peers.keys) peers.remove(key);
 								state = ConnectionState.UNCONNECTED;
 								break;
@@ -287,15 +280,15 @@ struct NetworkPeer {
 						switch (type) {
 							case MessageType.CONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (WAITING) Connection from %s:%s", from.toAddrString(), from.toPortString());
-								ClientID id = to!ClientID(from.toPortString());
-								Peer new_peer = {client_id: id, addr: from};
+								writefln("[NET] (UNCONNECTED) Connection from %s:%s", from.toAddrString(), from.toPortString());
+								ClientID id = cmsg.client_uuid;
 
 								if (id !in peers) {
-									send_packet!(BasicMessage)(MessageType.CONNECT, from, port);
+									Peer new_peer = {client_uuid: id, addr: from};
+									send_packet!(BasicMessage)(MessageType.CONNECT, from, client_uuid);
 									peers[id] = new_peer;
 								} else {
-									writefln("[NET] (WAITING) Already in connected peers.");
+									writefln("[NET] (UNCONNECTED) Already in connected peers.");
 								}
 
 								send(game_thread, Command.CREATE);
@@ -304,13 +297,13 @@ struct NetworkPeer {
 
 							case MessageType.PING:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (UNCONNECTED) Client %d sent ping, sending pong.", cmsg.client_id);
-								send_packet!(BasicMessage)(MessageType.PONG, from, port);
+								writefln("[NET] (UNCONNECTED) Client %d sent ping, sending pong.", cmsg.client_uuid);
+								send_packet!(BasicMessage)(MessageType.PONG, from, client_uuid);
 								break;
 
 							case MessageType.PONG:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (UNCONNECTED) Client %d sent pong.", cmsg.client_id);
+								writefln("[NET] (UNCONNECTED) Client %d sent pong.", cmsg.client_uuid);
 								break;
 
 							default:
@@ -326,9 +319,7 @@ struct NetworkPeer {
 							case Command.CONNECT:
 								writefln("[NET] (UNCONNECTED) Entering Connect.");
 								auto target = cast(InternetAddress)addr;
-								send_packet!(BasicMessage)(MessageType.CONNECT, target, port);
-								Peer new_peer = {client_id: target.port, addr: target};
-								peers[target.port] = new_peer;
+								send_packet!(BasicMessage)(MessageType.CONNECT, target, client_uuid);
 								break;
 							default:
 								writefln("[NET:2] Unhandled Command: %s", to!string(cmd));
@@ -345,7 +336,7 @@ struct NetworkPeer {
 								break;
 							case Command.PING:
 								foreach (id, peer; peers)
-									send_packet!(BasicMessage)(MessageType.PING, peer.addr, port);
+									send_packet!(BasicMessage)(MessageType.PING, peer.addr, client_uuid);
 								break;
 							default:
 								writefln("[NET] (UNCONNECTED) Unhandled command: %s", to!string(cmd));
@@ -362,12 +353,14 @@ struct NetworkPeer {
 							case MessageType.CONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
 								writefln("[NET] (WAITING) Connection from %s:%s", from.toAddrString(), from.toPortString());
-								ClientID id = to!ClientID(from.toPortString());
-								Peer new_peer = {client_id: id, addr: from};
+								ClientID id = cmsg.client_uuid;
+								writefln("[NET] (WAITING) After peer.");
 
 								if (id !in peers) {
-									send_packet!(BasicMessage)(MessageType.CONNECT, from, port);
+									Peer new_peer = {client_uuid: id, addr: from};
+									send_packet!(BasicMessage)(MessageType.CONNECT, from, client_uuid);
 									peers[id] = new_peer;
+									writefln("[NET] (WAITING) Sent connect!");
 								} else {
 									writefln("[NET] (WAITING) Already in connected peers.");
 								}
@@ -378,13 +371,13 @@ struct NetworkPeer {
 
 							case MessageType.PING:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (WAITING) Client %d sent ping, sending pong.", cmsg.client_id);
-								send_packet!(BasicMessage)(MessageType.PONG, from, port);
+								writefln("[NET] (WAITING) Client %d sent ping, sending pong.", cmsg.client_uuid);
+								send_packet!(BasicMessage)(MessageType.PONG, from, client_uuid);
 								break;
 
 							case MessageType.PONG:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (WAITING) Client %d sent pong.", cmsg.client_id);
+								writefln("[NET] (WAITING) Client %d sent pong.", cmsg.client_uuid);
 								break;
 
 							default:
@@ -401,7 +394,7 @@ struct NetworkPeer {
 							case Command.DISCONNECT:
 								writefln("[NET] (WAITING) Sending disconnect message.");
 								foreach (id, peer; peers)
-									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, port);
+									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, client_uuid);
 								foreach (key; peers.keys) peers.remove(key);
 								state = ConnectionState.UNCONNECTED;
 								break;
@@ -423,9 +416,9 @@ struct NetworkPeer {
 
 } //NetworkPeer
 
-void launch_peer(Tid game_tid) {
+void launch_peer(Tid game_tid, ClientID uuid) {
 
-	auto peer = NetworkPeer(12000, game_tid);
+	auto peer = NetworkPeer(12000, game_tid, uuid);
 	peer.listen();
 
 }

@@ -105,16 +105,18 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import std.datetime : dur;
 	import profan.collections : StaticArray;
 	import sundownstandoff.serialize : serialize;
-	import sundownstandoff.net : Command;
+	import sundownstandoff.net : Command, ClientID;
 
 	Tid network_thread;
+	ClientID client_uuid;
 
 	//reused buffer for sending data
 	StaticArray!(ubyte, 2048) recv_data;
 	StaticArray!(ubyte, 2048) send_data;
 
-	this(Tid net_thread) {
+	this(Tid net_thread, ClientID uuid) {
 		this.network_thread = net_thread;
+		this.client_uuid = uuid;
 	}
 
 	void update() {
@@ -128,12 +130,12 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 			while (!done && read_bytes < data.length) {
 				writefln("[GAME] Received world update, %d bytes", data.length);
 				uint type = (cast(uint*)data)[0];
-				uint userid = (cast(uint*)data)[1];
+				EntityID userid = *(cast(EntityID*)&data[uint.sizeof]);
 				read_bytes += type.sizeof + userid.sizeof;
 					
 				switch (type) {
 					case 0: //TransformComponent
-						writefln("[GAME] Handling TransformComponent for id: %d", userid);
+						writefln("[GAME] Handling TransformComponent for id: %s", userid);
 
 						ubyte* ptr = cast(ubyte*)data.ptr;
 						

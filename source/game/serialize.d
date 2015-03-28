@@ -115,9 +115,10 @@ template DeSerialize(T, alias data, alias object, alias id) {
 	enum DeSerialize = ReadHeader!() ~ DeSerializeEachMember(T, data, object, __traits(allMembers, T));
 }
 
-ubyte[T.sizeof] serialize(I, T)(I id, T* object) {
+import profan.ecs : EntityID;
+ubyte[EntityID.sizeof + T.sizeof] serialize(I, T)(I id, T* object) {
 
-	StaticArray!(ubyte, T.sizeof) data;
+	StaticArray!(ubyte, EntityID.sizeof + T.sizeof) data;
 
 	mixin Serialize!(T, data, object, id);
 	mixin(Serialize);
