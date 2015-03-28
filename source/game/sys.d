@@ -127,14 +127,28 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 			while (!done && read_bytes < data.length) {
 				writefln("[GAME] Received world update, %d bytes", data.length);
-				uint type = cast(uint*)data[0];
-				uint userid = cast(uint*)data[1];
+				uint type = (cast(uint*)data)[0];
+				uint userid = (cast(uint*)data)[1];
 				read_bytes += type.sizeof + userid.sizeof;
 					
 				switch (type) {
 					case 0: //TransformComponent
-						writefln("[GAME] Handling TransformComponent from: %d", userid);
-						read_bytes += TransformComponent.sizeof;
+						writefln("[GAME] Handling TransformComponent for id: %d", userid);
+
+						ubyte* ptr = cast(ubyte*)data.ptr;
+						
+						ptr += Vec2f.sizeof;
+						Vec2f vel = *cast(Vec2f*)ptr;
+						read_bytes += vel.sizeof;
+
+						ptr += Mat3f.sizeof;
+						Mat3f mat = *cast(Mat3f*)ptr;
+						read_bytes += mat.sizeof;
+
+						writefln("[GAME] Vector: %s, Matrix: %s", vel, mat);
+
+						components[userid].tc.velocity = vel;
+						components[userid].tc.transform = mat;
 						break;
 					default:
 						writefln("[GAME] Unhandled Component, id: %d", type);
