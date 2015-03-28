@@ -163,7 +163,9 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 		//recieve some stuff, send some stuff
 		send_data.elements = 0; //reset point to add to
 		foreach (id, ref comp; components) {
-			send_data ~= serialize(id, comp.tc);
+			auto data = serialize(id, comp.tc);
+			writefln("[GAME] Data to send: %s", data);
+			send_data ~= data;
 		}
 
 		//make a version which uses double buffers or something and never allocates
