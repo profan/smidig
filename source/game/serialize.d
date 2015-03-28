@@ -73,6 +73,27 @@ template SerializeEachMember(T, alias data, alias object, members...) {
 
 }
 
+template DeSerializeEachMember(T, alias data, alias object, members...) {
+
+	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
+
+		enum DeSerializeEachMember =
+			Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ members[0] ~ ".bytes;"
+				~ DeSerializeEachMember!(T, data, object, members[1 .. $]);
+
+
+	} else static if (members.length > 0) {
+
+		enum DeSerializeEachMember = DeSerializeEachMember!(T, data, members[1 .. $]);
+
+	} else {
+
+		enum DeSerializeEachMember = "";
+
+	}
+
+
+}
 
 //write identifier(type of component) and entity id, header of component message.
 template WriteHeader(T, alias data, alias object, alias id) {
@@ -82,12 +103,16 @@ template WriteHeader(T, alias data, alias object, alias id) {
 		
 }
 
+template ReadHeader() {
+	enum ReadHeader = "";
+}
+
 template Serialize(T, alias data, alias object, alias id) {
 	enum Serialize = WriteHeader!(T, data, object, id) ~ SerializeEachMember!(T, data, object, __traits(allMembers, T));
 }
 
 template DeSerialize(T, alias data, alias object, alias id) {
-	enum DeSerialize = 0;
+	enum DeSerialize = ReadHeader!() ~ DeSerializeEachMember(T, data, object, __traits(allMembers, T));
 }
 
 ubyte[T.sizeof] serialize(I, T)(I id, T* object) {
