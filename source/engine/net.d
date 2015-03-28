@@ -213,7 +213,7 @@ struct NetworkPeer {
 			auto bytes = socket.receiveFrom(data, from);
 			if (bytes != -1) writefln("[NET] Received %d bytes", bytes);
 
-			bool msg;
+			bool msg; //if msg is set, theres a packet to be handled.
 			MessageType type;
 			if (bytes >= cast(typeof(bytes))MessageType.sizeof) {
 				type = *(cast(MessageType*)data);
@@ -273,6 +273,22 @@ struct NetworkPeer {
 
 					if (msg) {
 						switch (type) {
+							case MessageType.CONNECT:
+								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								writefln("[NET] (WAITING) Connection from %s:%s", from.toAddrString(), from.toPortString());
+								ClientID id = to!ClientID(from.toPortString());
+								Peer new_peer = {client_id: id, addr: from};
+
+								if (id !in peers) {
+									send_packet!(BasicMessage)(MessageType.CONNECT, from, port);
+									peers[id] = new_peer;
+								} else {
+									writefln("[NET] (WAITING) Already in connected peers.");
+								}
+
+								send(game_thread, Command.CREATE);
+								state = ConnectionState.CONNECTED;
+								break;
 
 							case MessageType.PING:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
@@ -294,9 +310,9 @@ struct NetworkPeer {
 					auto result = receiveTimeout(dur!("nsecs")(1),
 					(Command cmd, shared(InternetAddress) addr) {
 						writefln("[NET] (UNCONNECTED) Command: %s", to!string(cmd));
-						switch(cmd) {
+						switch (cmd) {
 							case Command.CONNECT:
-								writefln("[NET] Entering Connect.");
+								writefln("[NET] (UNCONNECTED) Entering Connect.");
 								auto target = cast(InternetAddress)addr;
 								send_packet!(BasicMessage)(MessageType.CONNECT, target, port);
 								Peer new_peer = {client_id: target.port, addr: target};
@@ -367,20 +383,6 @@ struct NetworkPeer {
 					}
 
 					auto result = receiveTimeout(dur!("nsecs")(1),
-					(Command cmd, immutable(ubyte)[] data) {
-					writefln("[NET] (WAITING) Command: %s", to!string(cmd));
-						switch (cmd) {
-							case Command.UPDATE:
-								writefln("[NET] Sending Game State Update: %d bytes", data.length);
-								foreach (id, peer; peers) {
-									auto msg = UpdateMessage(MessageType.UPDATE, port, cast(uint)data.length);
-									send_data_packet(msg, data, peer.addr);
-								}
-								break;
-							default:
-								writefln("[NET:1] Unhandled Command: %s", to!string(cmd));
-						}
-					},
 					(Command cmd) {
 						writefln("[NET] (WAITING) Received command: %s", to!string(cmd));
 						switch (cmd) {
