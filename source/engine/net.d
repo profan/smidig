@@ -294,7 +294,7 @@ struct NetworkPeer {
 					}
 			
 					auto result = receiveTimeout(dur!("nsecs")(1),
-						(Command cmd, shared(InternetAddress) addr) {
+					(Command cmd, shared(InternetAddress) addr) {
 						writefln("[NET] Command: %s", to!string(cmd));
 						switch(cmd) {
 							case Command.CONNECT:
