@@ -181,11 +181,8 @@ struct NetworkPeer {
 			: "[NET] Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
 	}
 
-	//recieve all the shit, handle connections as well
-	void listen() {
-	
-		//dear god, don't make me go to straight up C based sockets
-		Address addr;
+	void bind_to_port(out Address addr) {
+
 		while(true) {
 			try {
 				addr = new InternetAddress("localhost", port);
@@ -197,132 +194,225 @@ struct NetworkPeer {
 			}
 		}
 
-		scope(exit) { socket.close(); }
-		self[0] = addr;
-		Peer p = {client_id: port};
-		self[1] = p;
+	}
+
+	//rewritten
+	void listen() {
+
+		Address addr;
+		bind_to_port(addr);
 
 		open = true;
+		state = ConnectionState.UNCONNECTED;
 		writefln("[NET] Listening on localhost:%d", port);
 
-		Address from; //will point to address received from, also port
-		void[1024] data = void;
+		Address from; //used to keep track of who message was received from
+		void[2048] data = void;
 		while (open) {
 
 			auto bytes = socket.receiveFrom(data, from);
 			if (bytes != -1) writefln("[NET] Received %d bytes", bytes);
 
+			bool msg;
+			MessageType type;
 			if (bytes >= cast(typeof(bytes))MessageType.sizeof) {
-				MessageType type = *(cast(MessageType*)data);
-
-				switch (type) with (MessageType) {
-					case CONNECT:
-						BasicMessage cmsg = *(cast(BasicMessage*)(data));
-						writefln("[NET] Connection from %s:%s", from.toAddrString(), from.toPortString());
-						ClientID id = to!ClientID(from.toPortString());
-						Peer new_peer = {client_id: id, addr: from};
-
-						if (id !in peers) {
-							send_packet!(BasicMessage)(CONNECT, from, port);
-							peers[id] = new_peer;
-						} else {
-							writefln("[NET] Already in connected peers.");
-						}
-
-						if (state != ConnectionState.CONNECTED) {
-							send(game_thread, Command.CREATE);
-							state = ConnectionState.CONNECTED;
-						}
-
-						break;
-					case DISCONNECT:
-						BasicMessage cmsg = *(cast(BasicMessage*)(data));
-						writefln("[NET] Client %d sent disconnect message.", cmsg.client_id);
-						peers.remove(cmsg.client_id);
-						break;
-					case UPDATE:
-						//take slice from sizeof(header) to sizeof(header) + header.data_length and send
-						UpdateMessage umsg = *(cast(UpdateMessage*)(data));
-						writefln("[NET] Client %d sent update message, payload size: %d bytes", umsg.client_id, umsg.data_size);
-						send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
-						break;
-					case PING:
-						BasicMessage cmsg = *(cast(BasicMessage*)(data));
-						writefln("[NET] Client %d sent ping, sending pong.", cmsg.client_id);
-						send_packet!(BasicMessage)(PONG, from, port);
-						break;
-					case PONG:
-						BasicMessage cmsg = *(cast(BasicMessage*)(data));
-						writefln("[NET] Client %d sent pong.", cmsg.client_id);
-						break;
-					default:
-						writefln("[NET] Received unhandled message type: %s", to!string(type));
-						break;
-				}
+				type = *(cast(MessageType*)data);
+				msg = true;
+			} else {
+				msg = false;
 			}
 
-			auto result = receiveTimeout(dur!("nsecs")(1),
-			(Command cmd, immutable(ubyte)[] data) {
-				writefln("[NET] Command: %s", to!string(cmd));
-				switch (cmd) with (Command) {
-					case UPDATE:
-						writefln("[NET] Sending Game State Update: %d bytes", data.length);
-						foreach (id, peer; peers) {
-							auto msg = UpdateMessage(MessageType.UPDATE, port, cast(uint)data.length);
-							send_data_packet(msg, data, peer.addr);
+			final switch (state) {
+				case ConnectionState.CONNECTED:
+
+					if (msg) {
+						switch (type) {
+
+							case MessageType.UPDATE:
+								//take slice from sizeof(header) to sizeof(header) + header.data_length and send
+								UpdateMessage umsg = *(cast(UpdateMessage*)(data));
+								writefln("[NET] Client %d sent update message, payload size: %d bytes", umsg.client_id, umsg.data_size);
+								send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
+								break;
+
+							case MessageType.DISCONNECT:
+								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								writefln("[NET] Client %d sent disconnect message.", cmsg.client_id);
+								peers.remove(cmsg.client_id);
+								break;
+
+							default:
+								writefln("[NET] Unhandled message: %s", to!string(type));
+								break;
+
+
 						}
-						break;
-					default:
-						writefln("[NET:1] Unhandled Command: %s", to!string(cmd));
-				}
-			},
-			(Command cmd, shared(InternetAddress) addr) {
-				writefln("[NET] Command: %s", to!string(cmd));
-				switch(cmd) with (Command) {
-					case CONNECT:
-						writefln("[NET] Entering Connect.");
-						auto target = cast(InternetAddress)addr;
-						send_packet!(BasicMessage)(MessageType.CONNECT, target, port);
-						Peer new_peer = {client_id: target.port, addr: target};
-						peers[target.port] = new_peer;
-						break;
-					default:
-						writefln("[NET:2] Unhandled Command: %s", to!string(cmd));
-						break;
-				}
-			},
-			(Command cmd) {
-				writefln("[NET] Command: %s", to!string(cmd));
-				switch (cmd) with (Command) {
-					case CREATE:
-						send(game_thread, Command.CREATE);
-						break;
-					case DISCONNECT:
-						if (state != ConnectionState.UNCONNECTED) break;
-						writefln("[NET] Sending disconnect message.");
-						foreach (id, peer; peers)
-							send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, port);
-						foreach (key; peers.keys) peers.remove(key);
-						state = ConnectionState.UNCONNECTED;
-						break;
-					case PING:
-						foreach (id, peer; peers)
-							send_packet!(BasicMessage)(MessageType.PING, peer.addr, port);
-						break;
-					case TERMINATE:
-						writefln("[NET] Terminating Thread.");
-						open = false;
-						break;
-					default:
-						writefln("[NET:3] Unhandled Command: %s", to!string(cmd));
-						break;
-				}
-			});
+					}
+
+					auto result = receiveTimeout(dur!("nsecs")(1),
+					(Command cmd, immutable(ubyte)[] data) { //handle updates sent from game thread
+						writefln("[NET] (CONNECTED) Command: %s", to!string(cmd));
+						switch (cmd) {
+							case Command.UPDATE:
+								writefln("[NET] (CONNECTED) Sending Game State Update: %d bytes", data.length);
+								foreach (id, peer; peers) {
+									auto msg = UpdateMessage(MessageType.UPDATE, port, cast(uint)data.length);
+									send_data_packet(msg, data, peer.addr);
+								}
+								break;
+							case Command.TERMINATE:
+								open = false;
+								break;
+							default:
+								writefln("[NET] (CONNECTED) Unhandled Command: %s", to!string(cmd));
+						}
+					});
+
+					break;
+
+				case ConnectionState.UNCONNECTED:
+
+					if (msg) {
+						switch (type) {
+
+							case MessageType.PING:
+								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								writefln("[NET] (UNCONNECTED) Client %d sent ping, sending pong.", cmsg.client_id);
+								send_packet!(BasicMessage)(MessageType.PONG, from, port);
+								break;
+
+							case MessageType.PONG:
+								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								writefln("[NET] (UNCONNECTED) Client %d sent pong.", cmsg.client_id);
+								break;
+
+							default:
+								writefln("[NET] (UNCONNECTED) Unhandled message: %s", to!string(type));
+								break;
+
+						}
+					}
+			
+					auto result = receiveTimeout(dur!("nsecs")(1),
+						(Command cmd, shared(InternetAddress) addr) {
+						writefln("[NET] Command: %s", to!string(cmd));
+						switch(cmd) {
+							case Command.CONNECT:
+								writefln("[NET] Entering Connect.");
+								auto target = cast(InternetAddress)addr;
+								send_packet!(BasicMessage)(MessageType.CONNECT, target, port);
+								Peer new_peer = {client_id: target.port, addr: target};
+								peers[target.port] = new_peer;
+								break;
+							default:
+								writefln("[NET:2] Unhandled Command: %s", to!string(cmd));
+								break;
+						}
+					},
+					(Command cmd) {
+						writefln("[NET] (UNCONNECTED) Received command: %s", to!string(cmd));
+						switch (cmd) {
+							case Command.CREATE:
+								state = ConnectionState.WAITING;
+								break;							
+							case Command.TERMINATE:
+								open = false;
+								break;
+							case Command.PING:
+								foreach (id, peer; peers)
+									send_packet!(BasicMessage)(MessageType.PING, peer.addr, port);
+								break;
+							default:
+								writefln("[NET] (UNCONNECTED) Unhandled command: %s", to!string(cmd));
+								break;
+						}
+					});
+
+					break;
+
+				case ConnectionState.WAITING:
+
+					if (msg) {
+						switch (type) {
+
+							case MessageType.CONNECT:
+								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								writefln("[NET] (WAITING) Connection from %s:%s", from.toAddrString(), from.toPortString());
+								ClientID id = to!ClientID(from.toPortString());
+								Peer new_peer = {client_id: id, addr: from};
+
+								if (id !in peers) {
+									send_packet!(BasicMessage)(MessageType.CONNECT, from, port);
+									peers[id] = new_peer;
+								} else {
+									writefln("[NET] (WAITING) Already in connected peers.");
+								}
+
+								send(game_thread, Command.CREATE);
+								state = ConnectionState.CONNECTED;
+								break;
+
+							case MessageType.PING:
+								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								writefln("[NET] (WAITING) Client %d sent ping, sending pong.", cmsg.client_id);
+								send_packet!(BasicMessage)(MessageType.PONG, from, port);
+								break;
+
+							case MessageType.PONG:
+								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								writefln("[NET] (WAITING) Client %d sent pong.", cmsg.client_id);
+								break;
+
+							default:
+								writefln("[NET] (WAITING) Unhandled message: %s", to!string(type));
+								break;
+
+						}
+
+					}
+
+					auto result = receiveTimeout(dur!("nsecs")(1),
+					(Command cmd, immutable(ubyte)[] data) {
+					writefln("[NET] Command: %s", to!string(cmd));
+						switch (cmd) {
+							case Command.UPDATE:
+								writefln("[NET] Sending Game State Update: %d bytes", data.length);
+								foreach (id, peer; peers) {
+									auto msg = UpdateMessage(MessageType.UPDATE, port, cast(uint)data.length);
+									send_data_packet(msg, data, peer.addr);
+								}
+								break;
+							default:
+								writefln("[NET:1] Unhandled Command: %s", to!string(cmd));
+								break;
+						}
+					},
+					(Command cmd) {
+						writefln("[NET] (WAITING) Received command: %s", to!string(cmd));
+						switch (cmd) {
+							case Command.DISCONNECT:
+								writefln("[NET] (WAITING) Sending disconnect message.");
+								foreach (id, peer; peers)
+									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, port);
+								foreach (key; peers.keys) peers.remove(key);
+								state = ConnectionState.UNCONNECTED;
+								break;
+							case Command.TERMINATE:
+								open = false;
+								break;
+							default:
+								writefln("[NET] (WAITING) Unhandled command: %s", to!string(cmd));
+								break;
+						}
+					});
+
+					break;
+
+			}
 
 		}
 
 	}
-
 
 } //NetworkPeer
 
