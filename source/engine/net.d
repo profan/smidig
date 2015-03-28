@@ -243,7 +243,6 @@ struct NetworkPeer {
 
 							default:
 								writefln("[NET] (CONNECTED) Unhandled message: %s", to!string(type));
-								break;
 
 						}
 					}
@@ -261,6 +260,20 @@ struct NetworkPeer {
 								break;
 							case Command.TERMINATE:
 								open = false;
+								break;
+							default:
+								writefln("[NET] (CONNECTED) Unhandled Command: %s", to!string(cmd));
+						}
+					},
+					(Command cmd) {
+						writefln("[NET] (CONNECTED) Command: %s", to!string(cmd));
+						switch (cmd) {
+							case Command.DISCONNECT:
+								writefln("[NET] (WAITING) Sending disconnect message.");
+								foreach (id, peer; peers)
+									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, port);
+								foreach (key; peers.keys) peers.remove(key);
+								state = ConnectionState.UNCONNECTED;
 								break;
 							default:
 								writefln("[NET] (CONNECTED) Unhandled Command: %s", to!string(cmd));

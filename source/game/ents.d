@@ -10,7 +10,7 @@ auto create_unit(EntityManager em, Vec2f pos) {
 
 	auto unit = em.create_entity();
 
-	TransformComponent mc = {velocity: Vec2f(0,0), transform: Mat3f(vec3(0, 0, pos.x), vec3(0, 0, pos.y), vec3(0, 0, 1))};
+	TransformComponent mc = {velocity: Vec2f(1,1), transform: Mat3f(vec3(0, 0, pos.x), vec3(0, 0, pos.y), vec3(0, 0, 1))};
 	writefln("Matrix: %s", mc.transform);
 	em.register_component!TransformComponent(unit, mc);
 	em.register_component!CollisionComponent(unit); //beware of order, this depends on above component
