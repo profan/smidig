@@ -1,5 +1,6 @@
 module blindfire.net;
 
+
 import core.time : dur;
 import std.string : format;
 import std.stdio : writefln;
@@ -8,6 +9,7 @@ import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.typecons : Tuple;
 import std.conv : to;
 
+import blindfire.log : Logger;
 import profan.collections : StaticArray;
 
 enum MessageType : uint {
@@ -143,6 +145,7 @@ struct NetworkPeer {
 	ClientID client_uuid;
 	ushort port;
 
+	Logger!("NET", ConnectionState) logger;
 
 	this(ushort port, Tid game_tid, ClientID uuid) {
 
@@ -157,14 +160,16 @@ struct NetworkPeer {
 		this.client_uuid = uuid;
 		this.port = port;
 
+		this.logger = Logger!("NET", ConnectionState)(&state);
+
 	}
 
 	void send_packet(T, Args...)(MessageType type, Address target, Args args) {
 		auto success = socket.sendTo(cast(void[T.sizeof])T(type, args), target);
 		string type_str = to!string(type);
-		writefln((success == Socket.ERROR)
-			? format("[NET] Failed to send %s packet.", type_str)
-			: "[NET] Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
+		logger.log((success == Socket.ERROR)
+			? format("Failed to send %s packet.", type_str)
+			: "Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
 	}
 
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
@@ -173,9 +178,9 @@ struct NetworkPeer {
 		send_data ~= cast(ubyte[])data;
 		auto success = socket.sendTo(cast(void[])send_data.array[0..send_data.elements], target);
 		string type_str = to!string(msg.type);
-		writefln((success == Socket.ERROR)
-			? format("[NET] Failed to send %s packet.", type_str)
-			: "[NET] Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
+		logger.log((success == Socket.ERROR)
+			? format("Failed to send %s packet.", type_str)
+			: "Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
 	}
 
 
@@ -195,6 +200,7 @@ struct NetworkPeer {
 
 	}
 
+
 	//rewritten
 	void listen() {
 
@@ -210,7 +216,7 @@ struct NetworkPeer {
 		while (open) {
 
 			auto bytes = socket.receiveFrom(data, from);
-			if (bytes != -1) writefln("[NET] Received %d bytes", bytes);
+			if (bytes != -1) logger.log("Received %d bytes", bytes);
 
 			bool msg; //if msg is set, theres a packet to be handled.
 			MessageType type;
@@ -230,28 +236,28 @@ struct NetworkPeer {
 							case MessageType.UPDATE:
 								//take slice from sizeof(header) to sizeof(header) + header.data_length and send
 								UpdateMessage umsg = *(cast(UpdateMessage*)(data));
-								writefln("[NET] (CONNECTED) Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
+								logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
 								send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
 								break;
 
 							case MessageType.DISCONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (CONNECTED) Client %s sent disconnect message.", cmsg.client_uuid);
+								logger.log("Client %s sent disconnect message.", cmsg.client_uuid);
 								peers.remove(cmsg.client_uuid);
 								break;
 
 							default:
-								writefln("[NET] (CONNECTED) Unhandled message: %s", to!string(type));
+								logger.log("Unhandled message: %s", to!string(type));
 
 						}
 					}
 
 					auto result = receiveTimeout(dur!("nsecs")(1),
 					(Command cmd, immutable(ubyte)[] data) { //handle updates sent from game thread
-						writefln("[NET] (CONNECTED) Command: %s", to!string(cmd));
+						logger.log("Command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.UPDATE:
-								writefln("[NET] (CONNECTED) Sending Game State Update: %d bytes", data.length);
+								logger.log("Sending Game State Update: %d bytes", data.length);
 								foreach (id, peer; peers) {
 									auto msg = UpdateMessage(MessageType.UPDATE, client_uuid, cast(uint)data.length);
 									send_data_packet(msg, data, peer.addr);
@@ -261,21 +267,21 @@ struct NetworkPeer {
 								open = false;
 								break;
 							default:
-								writefln("[NET] (CONNECTED) Unhandled Command: %s", to!string(cmd));
+								logger.log("Unhandled Command: %s", to!string(cmd));
 						}
 					},
 					(Command cmd) {
-						writefln("[NET] (CONNECTED) Command: %s", to!string(cmd));
+						logger.log("Command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.DISCONNECT:
-								writefln("[NET] (CONNECTED) Sending disconnect message.");
+								logger.log("Sending disconnect message.");
 								foreach (id, peer; peers)
 									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, client_uuid);
 								foreach (key; peers.keys) peers.remove(key);
 								state = ConnectionState.UNCONNECTED;
 								break;
 							default:
-								writefln("[NET] (CONNECTED) Unhandled Command: %s", to!string(cmd));
+								logger.log("Unhandled Command: %s", to!string(cmd));
 						}
 					});
 
@@ -287,7 +293,7 @@ struct NetworkPeer {
 						switch (type) {
 							case MessageType.CONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (UNCONNECTED) Connection from %s at %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
+								logger.log("Connection from %s at %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
 								ClientID id = cmsg.client_uuid;
 
 								if (id !in peers) {
@@ -295,7 +301,7 @@ struct NetworkPeer {
 									send_packet!(BasicMessage)(MessageType.CONNECT, from, client_uuid);
 									peers[id] = new_peer;
 								} else {
-									writefln("[NET] (UNCONNECTED) Already in connected peers.");
+									logger.log("Already in connected peers.");
 								}
 
 								send(game_thread, Command.CREATE);
@@ -304,36 +310,36 @@ struct NetworkPeer {
 
 							case MessageType.PING:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (UNCONNECTED) Client %d sent ping, sending pong.", cmsg.client_uuid);
+								logger.log("Client %s sent ping, sending pong.", cmsg.client_uuid);
 								send_packet!(BasicMessage)(MessageType.PONG, from, client_uuid);
 								break;
 
 							case MessageType.PONG:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (UNCONNECTED) Client %d sent pong.", cmsg.client_uuid);
+								logger.log("Client %s sent pong.", cmsg.client_uuid);
 								break;
 
 							default:
-								writefln("[NET] (UNCONNECTED) Unhandled message: %s", to!string(type));
+								logger.log("Unhandled message: %s", to!string(type));
 
 						}
 					}
 			
 					auto result = receiveTimeout(dur!("nsecs")(1),
 					(Command cmd, shared(InternetAddress) addr) {
-						writefln("[NET] (UNCONNECTED) Command: %s", to!string(cmd));
+						logger.log("Command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.CONNECT:
-								writefln("[NET] (UNCONNECTED) Entering Connect.");
+								logger.log("Entering Connect.");
 								auto target = cast(InternetAddress)addr;
 								send_packet!(BasicMessage)(MessageType.CONNECT, target, client_uuid);
 								break;
 							default:
-								writefln("[NET:2] Unhandled Command: %s", to!string(cmd));
+								logger.log("Unhandled Command: %s", to!string(cmd));
 						}
 					},
 					(Command cmd) {
-						writefln("[NET] (UNCONNECTED) Received command: %s", to!string(cmd));
+						logger.log("Received command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.CREATE:
 								state = ConnectionState.WAITING;
@@ -346,7 +352,7 @@ struct NetworkPeer {
 									send_packet!(BasicMessage)(MessageType.PING, peer.addr, client_uuid);
 								break;
 							default:
-								writefln("[NET] (UNCONNECTED) Unhandled command: %s", to!string(cmd));
+								logger.log("Unhandled command: %s", to!string(cmd));
 						}
 					});
 
@@ -359,7 +365,7 @@ struct NetworkPeer {
 
 							case MessageType.CONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (WAITING) Connection from %s at: %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
+								logger.log("Connection from %s at: %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
 								ClientID id = cmsg.client_uuid;
 
 								if (id !in peers) {
@@ -367,7 +373,7 @@ struct NetworkPeer {
 									send_packet!(BasicMessage)(MessageType.CONNECT, from, client_uuid);
 									peers[id] = new_peer;
 								} else {
-									writefln("[NET] (WAITING) Already in connected peers.");
+									logger.log("Already in connected peers.");
 								}
 
 								send(game_thread, Command.CREATE);
@@ -376,17 +382,17 @@ struct NetworkPeer {
 
 							case MessageType.PING:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (WAITING) Client %d sent ping, sending pong.", cmsg.client_uuid);
+								logger.log("Client %S sent ping, sending pong.", cmsg.client_uuid);
 								send_packet!(BasicMessage)(MessageType.PONG, from, client_uuid);
 								break;
 
 							case MessageType.PONG:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								writefln("[NET] (WAITING) Client %d sent pong.", cmsg.client_uuid);
+								logger.log("Client %S sent pong.", cmsg.client_uuid);
 								break;
 
 							default:
-								writefln("[NET] (WAITING) Unhandled message: %s", to!string(type));
+								logger.log("Unhandled message: %s", to!string(type));
 
 						}
 
@@ -394,10 +400,10 @@ struct NetworkPeer {
 
 					auto result = receiveTimeout(dur!("nsecs")(1),
 					(Command cmd) {
-						writefln("[NET] (WAITING) Received command: %s", to!string(cmd));
+						logger.log("Received command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.DISCONNECT:
-								writefln("[NET] (WAITING) Sending disconnect message.");
+								logger.log("Sending disconnect message.");
 								foreach (id, peer; peers)
 									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, client_uuid);
 								foreach (key; peers.keys) peers.remove(key);
@@ -407,7 +413,7 @@ struct NetworkPeer {
 								open = false;
 								break;
 							default:
-								writefln("[NET] (WAITING) Unhandled command: %s", to!string(cmd));
+								logger.log("Unhandled command: %s", to!string(cmd));
 						}
 					});
 
