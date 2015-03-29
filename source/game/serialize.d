@@ -132,11 +132,11 @@ template TotalNetSize(T, members...) {
 }
 
 template MemberSize(T) {
-	enum MemberSize = TotalNetSize(T, __traits(allMembers, t));
+	enum MemberSize = TotalNetSize!(T, __traits(allMembers, T));
 }
 
 import profan.ecs : EntityID;
-ubyte[TotalNetSize!(T, MemberSize!(T))] serialize(T)(T* object) {
+ubyte[MemberSize!(T)] serialize(T)(T* object) {
 
 	StaticArray!(ubyte, MemberSize!(T)) data;
 
