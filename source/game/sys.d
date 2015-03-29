@@ -106,6 +106,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import profan.collections : StaticArray;
 	import sundownstandoff.serialize : serialize;
 	import sundownstandoff.net : Command, ClientID;
+	import sundownstandoff.netmsg : UpdateType;
 
 	Tid network_thread;
 	ClientID client_uuid;
@@ -130,34 +131,47 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 			while (!done && read_bytes < data.length) {
 				writefln("[GAME] Received world update, %d bytes", data.length);
 				uint type = (cast(uint*)data)[0];
-				EntityID userid = *(cast(EntityID*)&data[uint.sizeof]);
-				read_bytes += type.sizeof + userid.sizeof;
-					
+
 				switch (type) {
-					case 0: //TransformComponent
-						writefln("[GAME] Handling TransformComponent for id: %s", userid);
+					uint component_type = (cast(uint*)data)[1];
+					EntityID userid = *(cast(EntityID*)&data[uint.sizeof]);
+					read_bytes += type.sizeof + userid.sizeof;
+					
 
-						ubyte* ptr = cast(ubyte*)data.ptr;
-						
-						ptr += Vec2f.sizeof;
-						Vec2f vel = *cast(Vec2f*)ptr;
-						read_bytes += vel.sizeof;
-
-						ptr += Mat3f.sizeof;
-						Mat3f mat = *cast(Mat3f*)ptr;
-						read_bytes += mat.sizeof;
-
-						writefln("[GAME] Vector: %s, Matrix: %s", vel, mat);
-
-						components[userid].tc.velocity = vel;
-						components[userid].tc.transform = mat;
+					case UpdateType.CREATE:
 						break;
+					case UpdateType.DESTROY:
+						break;
+					case UpdateType.UPDATE:		
+						switch (component_type) {
+							case 0: //TransformComponent
+								writefln("[GAME] Handling TransformComponent for id: %s", userid);
+								ubyte* ptr = cast(ubyte*)data.ptr;
+									
+								ptr += Vec2f.sizeof;
+								Vec2f vel = *cast(Vec2f*)ptr;
+								read_bytes += vel.sizeof;
+
+								ptr += Mat3f.sizeof;
+								Mat3f mat = *cast(Mat3f*)ptr;
+								read_bytes += mat.sizeof;
+
+								writefln("[GAME] Vector: %s, Matrix: %s", vel, mat);
+								components[userid].tc.velocity = vel;
+								components[userid].tc.transform = mat;
+								break;
+
+							default:
+								writefln("[GAME] Unhandled Component, id: %d", type);
+								done = true; //all bets are off at this point
+						}
+
+						break;
+
 					default:
-						writefln("[GAME] Unhandled Component, id: %d", type);
-						done = true; //all bets are off at this point
-						break;
-				}
+						writefln("[GAME] Unhandled update type: %s", to!string(type));
 
+				}
 			}
 
 		});
@@ -165,12 +179,14 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 		//recieve some stuff, send some stuff
 		send_data.elements = 0; //reset point to add to
 		foreach (id, ref comp; components) {
-			auto data = serialize(id, comp.tc);
+			ubyte[UpdateType.sizeof] type = UpdateType.UPDATE;
+			auto data = serialize(type, id, comp.tc);
 			writefln("[GAME] Data to send: %s", data);
 			send_data ~= data;
 		}
 
 		//make a version which uses double buffers or something and never allocates
+		//currently takes a slice of the internal array to as far as the buffer was actually filled
 		send(network_thread, Command.UPDATE, send_data.array[0..send_data.elements].idup);
 
 	}

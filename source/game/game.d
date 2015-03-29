@@ -192,7 +192,7 @@ final class MatchState : GameState {
 		this.ui_state = state;
 		this.network_thread = net_tid;
 
-		this.em = new EntityManager();
+		this.em = new EntityManager(uuid);
 		this.em.add_system(new TransformManager());
 		this.em.add_system(new CollisionManager());
 		this.em.add_system(new SpriteManager());

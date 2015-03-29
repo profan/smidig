@@ -96,8 +96,9 @@ template DeSerializeEachMember(T, alias data, alias object, members...) {
 }
 
 //write identifier(type of component) and entity id, header of component message.
-template WriteHeader(T, alias data, alias object, alias id) {
+template WriteHeader(T, alias type, alias data, alias object, alias id) {
 	enum WriteHeader =
+		Identifier!(data) ~ " ~= " ~ Identifier!(type) ~ ";" ~
 		Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ "identifier_bytes;" ~
 		Identifier!(data) ~ " ~= " ~ "(cast(ubyte*)&" ~ Identifier!(id) ~ ")[0..id.sizeof];";
 		
@@ -107,8 +108,8 @@ template ReadHeader() {
 	enum ReadHeader = "";
 }
 
-template Serialize(T, alias data, alias object, alias id) {
-	enum Serialize = WriteHeader!(T, data, object, id) ~ SerializeEachMember!(T, data, object, __traits(allMembers, T));
+template Serialize(T, alias type, alias data, alias object, alias id) {
+	enum Serialize = WriteHeader!(T, type, data, object, id) ~ SerializeEachMember!(T, data, object, __traits(allMembers, T));
 }
 
 template DeSerialize(T, alias data, alias object, alias id) {
@@ -116,11 +117,11 @@ template DeSerialize(T, alias data, alias object, alias id) {
 }
 
 import profan.ecs : EntityID;
-ubyte[EntityID.sizeof + T.sizeof] serialize(I, T)(I id, T* object) {
+ubyte[U.sizeof + I.sizeof + T.sizeof] serialize(U, I, T)(U type, I id, T* object) {
 
-	StaticArray!(ubyte, EntityID.sizeof + T.sizeof) data;
+	StaticArray!(ubyte, U.sizeof + I.sizeof + T.sizeof) data;
 
-	mixin Serialize!(T, data, object, id);
+	mixin Serialize!(T, type, data, object, id);
 	mixin(Serialize);
 
 	return data.array;
