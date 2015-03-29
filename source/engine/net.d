@@ -1,6 +1,5 @@
 module blindfire.net;
 
-
 import core.time : dur;
 import std.string : format;
 import std.stdio : writefln;
@@ -48,10 +47,10 @@ enum Command {
 /******************************
 * Packet Structure ************
 *
-* 	Type: 32 bits
-*	ClientID: 32 bits
-*	Content-Size: 32 bits
-*	Content: Content-Size
+* 	Type
+*	ClientID
+*	Content-Size
+*	Content
 *
 ******************************/
 

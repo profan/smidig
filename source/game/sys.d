@@ -101,7 +101,6 @@ struct InputComponent {
 
 class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
-
 	import std.datetime : dur;
 	import profan.collections : StaticArray;
 	import blindfire.serialize : serialize;
@@ -112,8 +111,9 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	ClientID client_uuid;
 
 	//reused buffer for sending data
-	StaticArray!(ubyte, 2048) recv_data;
-	StaticArray!(ubyte, 2048) send_data;
+	immutable size_t MAX_PACKET_SIZE = 2048; //bytes
+	StaticArray!(ubyte, MAX_PACKET_SIZE) recv_data;
+	StaticArray!(ubyte, MAX_PACKET_SIZE) send_data;
 
 	this(Tid net_thread, ClientID uuid) {
 		this.network_thread = net_thread;
