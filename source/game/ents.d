@@ -1,14 +1,19 @@
 module blindfire.ents;
 
 import std.stdio : writefln;
+import std.uuid : UUID;
 
 import profan.ecs;
 import gl3n.linalg;
 import blindfire.sys;
 
-auto create_unit(bool net = false)(EntityManager em, Vec2f pos) {
+auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id) {
 
-	auto unit = em.create_entity();
+	static if (net) {
+		auto unit = em.create_entity(*id);
+	} else {
+		auto unit = em.create_entity();
+	}
 
 	TransformComponent mc = {velocity: Vec2f(0, 0), transform: Mat3f(vec3(0, 0, pos.x), vec3(0, 0, pos.y), vec3(0, 0, 1))};
 	writefln("Matrix: %s", mc.transform);

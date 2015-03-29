@@ -211,7 +211,7 @@ final class MatchState : GameState {
 
 	override void enter() {
 
-		player = create_unit(em, Vec2f(128, 128));
+		player = create_unit(em, Vec2f(128, 128), cast(EntityID*)null);
 
 	}
 

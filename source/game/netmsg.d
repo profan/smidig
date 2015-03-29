@@ -7,6 +7,14 @@ enum UpdateType {
 	UPDATE
 }
 
+enum EntityType {
+	UNIT
+}
+
+enum ComponentType {
+	TRANSFORM_COMPONENT
+}
+
 struct NetMessage {
 	
 } //NetMessage

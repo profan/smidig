@@ -105,7 +105,8 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import profan.collections : StaticArray;
 	import blindfire.serialize : serialize;
 	import blindfire.net : Command, ClientID;
-	import blindfire.netmsg : InputStream, UpdateType;
+	import blindfire.netmsg : InputStream, UpdateType, EntityType;
+	import blindfire.ents : create_unit;
 
 	Tid network_thread;
 	ClientID client_uuid;
@@ -137,6 +138,20 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 				switch (type) {
 
 					case UpdateType.CREATE:
+
+						EntityType entity_type = input_stream.read!EntityType();
+
+						switch (entity_type) {
+							case EntityType.UNIT: //create_unit
+
+								Vec2f position = input_stream.read!Vec2f();
+								create_unit!(true)(em, position, &entity_id);
+								break;
+
+							default:
+								writefln("[GAME] [C] Unhandled Entity from %s, id: %d", entity_id.owner, entity_type);
+						}
+
 						break;
 					case UpdateType.DESTROY:
 						break;
@@ -171,6 +186,8 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 			}
 
 		});
+
+		//handle entity creation and destruction here
 
 		//recieve some stuff, send some stuff
 		send_data.elements = 0; //reset point to add to
