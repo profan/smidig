@@ -126,21 +126,24 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 		(Command cmd, immutable(ubyte)[] data) {
 
 			bool done = false;
-			auto input_stream = InputStream(cast(ubyte[]*)&data);
+			auto input_stream = InputStream(cast(ubyte*)data.ptr, data.length);
+
+			writefln("[GAME] Received world update, %d bytes", data.length);
+			UpdateType type = input_stream.read!UpdateType();
+			EntityID entity_id = input_stream.read!EntityID();
 
 			while (!done && input_stream.current < data.length) {
-				writefln("[GAME] Received world update, %d bytes", data.length);
-				UpdateType type = input_stream.read!UpdateType();
 
 				switch (type) {
-					uint component_type = input_stream.read!uint();
-					EntityID entity_id = input_stream.read!EntityID();
 
 					case UpdateType.CREATE:
 						break;
 					case UpdateType.DESTROY:
 						break;
-					case UpdateType.UPDATE:		
+					case UpdateType.UPDATE:
+
+						uint component_type = input_stream.read!uint();
+
 						switch (component_type) {
 							case 0: //TransformComponent
 								writefln("[GAME] Handling TransformComponent for id: %s:%s", entity_id.owner, entity_id.id);
@@ -183,6 +186,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 			auto data = serialize(comp.tc);
 			writefln("[GAME] Data to send: %s", data);
 			send_data ~= data;
+
 		}
 
 		//make a version which uses double buffers or something and never allocates

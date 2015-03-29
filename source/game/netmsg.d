@@ -15,14 +15,14 @@ struct InputStream {
 
 	size_t size;
 	size_t current = 0;
-	ubyte[]* buffer;
-	this(ubyte[]* data) {
+	ubyte* buffer;
+	this(ubyte* data, size_t length) {
 		this.buffer = data;
-		this.size = data.length;
+		this.size = length;
 	}
 
 	T read(T)() @nogc {
-		T obj = *(cast(T*)*(buffer[current..T.sizeof].ptr));	
+		T obj = *(cast(T*)(buffer[current..current+T.sizeof].ptr));
 		current += T.sizeof;
 		return obj;
 	}
