@@ -106,7 +106,7 @@ template ReadHeader() {
 }
 
 template Serialize(T, alias data, alias object) {
-	enum Serialize = WriteHeader!(T, data, object) ~ SerializeEachMember!(T, data, object, __traits(allMembers, T));
+	enum Serialize = SerializeEachMember!(T, data, object, __traits(allMembers, T));
 }
 
 template DeSerialize(T, alias data, alias object) {
@@ -117,7 +117,7 @@ template TotalNetSize(T, members...) {
 
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
 
-		enum TotalNetSize = typeof(__traits(getMember, T, members[0])).sizeof + TotalNetSize!(T, members[1 .. $]);
+		enum TotalNetSize = typeof(__traits(getMember, T, members[0]).bytes).sizeof + TotalNetSize!(T, members[1 .. $]);
 
 	} else static if (members.length > 0) {
 

@@ -232,6 +232,7 @@ final class MatchState : GameState {
 		data ~= (cast(ubyte*)&ent_type)[0..ent_type.sizeof];
 
 		auto vec2 = Vec2f(x, y);
+
 		data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
 			
 		send(network_thread, Command.UPDATE, data.array[0..data.elements].idup);

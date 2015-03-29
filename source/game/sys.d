@@ -19,10 +19,7 @@ enum : ComponentType[string] {
 }
 
 mixin template NetIdentifier() {
-	union {
-		uint identifier = Identifier[typeof(this).stringof];
-		ubyte[identifier.sizeof] identifier_bytes;
-	}	
+	@networked NetVar!(ComponentType) identifier = Identifier[typeof(this).stringof];
 }
 
 interface UpdateSystem : ComponentSystem!(0) {
@@ -208,6 +205,8 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 			}
 
 		}
+
+		writefln("[GAME] Sending %d bytes to NET", send_data.elements);
 
 		//make a version which uses double buffers or something and never allocates
 		//currently takes a slice of the internal array to as far as the buffer was actually filled
