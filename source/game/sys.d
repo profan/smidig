@@ -179,9 +179,12 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 		//recieve some stuff, send some stuff
 		send_data.elements = 0; //reset point to add to
+		//ubyte[UpdateType.sizeof] type = UpdateType.UPDATE;
+		UpdateType type = UpdateType.UPDATE;
+		send_data ~= (cast(ubyte*)&type)[0..type.sizeof];
+
 		foreach (id, ref comp; components) {
-			ubyte[UpdateType.sizeof] type = UpdateType.UPDATE;
-			auto data = serialize(type, id, comp.tc);
+			auto data = serialize(id, comp.tc);
 			writefln("[GAME] Data to send: %s", data);
 			send_data ~= data;
 		}
