@@ -105,7 +105,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import profan.collections : StaticArray;
 	import blindfire.serialize : serialize;
 	import blindfire.net : Command, ClientID;
-	import blindfire.netmsg : Stream, UpdateType;
+	import blindfire.netmsg : InputStream, UpdateType;
 
 	Tid network_thread;
 	ClientID client_uuid;
@@ -126,7 +126,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 		(Command cmd, immutable(ubyte)[] data) {
 
 			bool done = false;
-			Stream input_stream = Stream(cast(ubyte[]*)&data);
+			auto input_stream = InputStream(cast(ubyte[]*)&data);
 
 			while (!done && input_stream.current < data.length) {
 				writefln("[GAME] Received world update, %d bytes", data.length);
@@ -171,12 +171,16 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 		//recieve some stuff, send some stuff
 		send_data.elements = 0; //reset point to add to
-		//ubyte[UpdateType.sizeof] type = UpdateType.UPDATE;
 		UpdateType type = UpdateType.UPDATE;
 		send_data ~= (cast(ubyte*)&type)[0..type.sizeof];
 
 		foreach (id, ref comp; components) {
-			auto data = serialize(id, comp.tc);
+
+			//write which entity it belongs to
+			send_data ~= (cast(ubyte*)&id)[0..id.sizeof];
+
+			//write the fields to be serialized in the entity's components.
+			auto data = serialize(comp.tc);
 			writefln("[GAME] Data to send: %s", data);
 			send_data ~= data;
 		}
