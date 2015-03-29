@@ -3,5 +3,5 @@ docs.json
 *.o
 *.obj
 .*.s??
-sundown_standoff
+blindfire
 fonts/

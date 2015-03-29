@@ -1,4 +1,4 @@
-module sundownstandoff.game;
+module blindfire.game;
 
 import std.stdio : writefln;
 import std.concurrency : send, spawn, receiveOnly, thisTid;
@@ -7,13 +7,13 @@ import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
 import derelict.opengl3.gl;
 
-import sundownstandoff.window;
-import sundownstandoff.eventhandler;
-import sundownstandoff.graphics;
-import sundownstandoff.state;
-import sundownstandoff.net;
-import sundownstandoff.gl;
-import sundownstandoff.ui;
+import blindfire.window;
+import blindfire.eventhandler;
+import blindfire.graphics;
+import blindfire.state;
+import blindfire.net;
+import blindfire.gl;
+import blindfire.ui;
 
 final class MenuState : GameState {
 	
@@ -34,7 +34,7 @@ final class MenuState : GameState {
 
 		int title_color = 0xffa500;
 		int text_color = 0x0e72c9;
-		menu_title_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Sundown Standoff", 48, title_color);
+		menu_title_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Project Blindfire", 48, title_color);
 		menu_join_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Join Game", 20, text_color);
 		menu_create_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Create Game", 20, text_color);
 		menu_quit_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Quit", 20, text_color);
@@ -174,9 +174,9 @@ final class JoiningState : GameState {
 final class MatchState : GameState {
 
 	import profan.ecs : EntityID, EntityManager;
-	import sundownstandoff.action : SelectionBox;
-	import sundownstandoff.ents : create_unit;
-	import sundownstandoff.sys;
+	import blindfire.action : SelectionBox;
+	import blindfire.ents : create_unit;
+	import blindfire.sys;
 
 	UIState* ui_state;
 	GameStateHandler statehan;

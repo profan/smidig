@@ -1,4 +1,4 @@
-module sundownstandoff.eventhandler;
+module blindfire.eventhandler;
 
 import std.stdio : writefln;
 

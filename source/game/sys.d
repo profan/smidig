@@ -1,4 +1,4 @@
-module sundownstandoff.sys;
+module blindfire.sys;
 
 import std.concurrency : send, receiveTimeout, Tid;
 import std.stdio : writefln;
@@ -32,7 +32,7 @@ interface UpdateSystem : ComponentSystem!(0) {
 
 interface DrawSystem : ComponentSystem!(1) {
 
-	import sundownstandoff.window : Window;
+	import blindfire.window : Window;
 
 	void update(Window* window);
 
@@ -52,8 +52,8 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 
 struct TransformComponent {
 
-	import sundownstandoff.net : NetVar;
-	import sundownstandoff.serialize : networked;
+	import blindfire.net : NetVar;
+	import blindfire.serialize : networked;
 
 	mixin NetIdentifier;
 	@networked NetVar!(Vec2f) velocity;
@@ -104,9 +104,9 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 	import std.datetime : dur;
 	import profan.collections : StaticArray;
-	import sundownstandoff.serialize : serialize;
-	import sundownstandoff.net : Command, ClientID;
-	import sundownstandoff.netmsg : UpdateType;
+	import blindfire.serialize : serialize;
+	import blindfire.net : Command, ClientID;
+	import blindfire.netmsg : UpdateType;
 
 	Tid network_thread;
 	ClientID client_uuid;
@@ -207,8 +207,8 @@ struct NetworkComponent {
 
 class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 
-	import sundownstandoff.ui : draw_rectangle, DrawFlags;
-	import sundownstandoff.window : Window;
+	import blindfire.ui : draw_rectangle, DrawFlags;
+	import blindfire.window : Window;
 
 	void update(Window* window) {
 
@@ -232,9 +232,9 @@ struct SpriteComponent {
 
 class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 
-	import sundownstandoff.ui : draw_circle, DrawFlags;
-	import sundownstandoff.action : SelectionBox;
-	import sundownstandoff.util : point_in_rect;
+	import blindfire.ui : draw_circle, DrawFlags;
+	import blindfire.action : SelectionBox;
+	import blindfire.util : point_in_rect;
 
 	SelectionBox* sbox;
 

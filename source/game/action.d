@@ -1,8 +1,8 @@
-module sundownstandoff.action;
+module blindfire.action;
 
-import sundownstandoff.ui : draw_rectangle, DrawFlags;
-import sundownstandoff.window : Window;
-import sundownstandoff.sys : Vec2f;
+import blindfire.ui : draw_rectangle, DrawFlags;
+import blindfire.window : Window;
+import blindfire.sys : Vec2f;
 
 import std.stdio : writefln;
 

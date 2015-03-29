@@ -1,4 +1,4 @@
-module sundownstandoff.resource;
+module blindfire.resource;
 
 //some resource loading shenanigans, this will probably become some horrid singleton or global.
 

@@ -1,10 +1,10 @@
-module sundownstandoff.ents;
+module blindfire.ents;
 
 import std.stdio : writefln;
 
 import profan.ecs;
 import gl3n.linalg;
-import sundownstandoff.sys;
+import blindfire.sys;
 
 auto create_unit(bool net = false)(EntityManager em, Vec2f pos) {
 

@@ -1,7 +1,7 @@
-module sundownstandoff.serialize;
+module blindfire.serialize;
 
 import profan.collections : StaticArray;
-import sundownstandoff.net : NetVar;
+import blindfire.net : NetVar;
 import std.bitmanip;
 
 enum networked = "networked";

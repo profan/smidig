@@ -1,12 +1,12 @@
-module sundownstandoff.graphics;
+module blindfire.graphics;
 
 import std.stdio : writefln;
 
 import derelict.sdl2.sdl;
 import derelict.sdl2.ttf;
 
-import sundownstandoff.window;
-import sundownstandoff.gl;
+import blindfire.window;
+import blindfire.gl;
 
 SDL_Texture* create_font_texture(Window* window, immutable char* font_path, immutable char* font_text, int font_size, int font_color) {
 	

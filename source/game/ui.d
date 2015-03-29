@@ -1,4 +1,4 @@
-module sundownstandoff.ui;
+module blindfire.ui;
 
 import core.stdc.stdio;
 import core.stdc.stdlib;
@@ -6,8 +6,8 @@ import core.stdc.stdlib;
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl;
 
-import sundownstandoff.window;
-import sundownstandoff.util;
+import blindfire.window;
+import blindfire.util;
 
 struct PushColor {
 

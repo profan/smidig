@@ -1,4 +1,4 @@
-module sundownstandoff.window;
+module blindfire.window;
 
 import std.utf : toUTFz;
 import std.stdio : writefln;

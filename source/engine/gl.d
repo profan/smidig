@@ -1,4 +1,4 @@
-module sundownstandoff.gl;
+module blindfire.gl;
 
 import core.vararg;
 import core.stdc.stdio;

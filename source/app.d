@@ -8,9 +8,9 @@ import derelict.sdl2.ttf;
 
 import derelict.opengl3.gl;
 
-import sundownstandoff.game;
-import sundownstandoff.window;
-import sundownstandoff.eventhandler;
+import blindfire.game;
+import blindfire.window;
+import blindfire.eventhandler;
 
 
 const uint DEFAULT_WINDOW_WIDTH = 640;
@@ -35,7 +35,7 @@ void main() {
 
 	initialize_systems();
 	auto event_handler = EventHandler(SDL_GetKeyboardState(null));
-	auto window = Window("Sundown Standoff", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+	auto window = Window("Project Blindfire", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 	auto game = Game(&window, &event_handler);
 
 	event_handler.add_listener(&window.handle_events);

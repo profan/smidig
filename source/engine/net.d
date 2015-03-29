@@ -1,4 +1,4 @@
-module sundownstandoff.net;
+module blindfire.net;
 
 import core.time : dur;
 import std.string : format;

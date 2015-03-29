@@ -1,12 +1,12 @@
-module sundownstandoff.state;
+module blindfire.state;
 
 import std.stdio : writefln;
 
 import derelict.sdl2.sdl;
 import derelict.sdl2.ttf;
 
-import sundownstandoff.eventhandler;
-import sundownstandoff.window;
+import blindfire.eventhandler;
+import blindfire.window;
 
 alias StateID = ulong;
 
