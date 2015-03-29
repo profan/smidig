@@ -214,7 +214,12 @@ final class MatchState : GameState {
 
 	override void enter() {
 
-		player = create_unit(em, Vec2f(128, 128), cast(EntityID*)null);
+		import std.random : uniform;
+
+		auto x = uniform(128, 256);
+		auto y = uniform(128, 256);
+
+		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null);
 		
 		data.elements = 0;
 		auto type = UpdateType.CREATE;
@@ -226,7 +231,7 @@ final class MatchState : GameState {
 		auto ent_type = EntityType.UNIT;
 		data ~= (cast(ubyte*)&ent_type)[0..ent_type.sizeof];
 
-		auto vec2 = Vec2f(256, 256);
+		auto vec2 = Vec2f(x, y);
 		data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
 			
 		send(network_thread, Command.UPDATE, data.array[0..data.elements].idup);

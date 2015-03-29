@@ -99,7 +99,6 @@ template DeSerializeEachMember(T, alias data, alias object, members...) {
 template WriteHeader(T, alias data, alias object) {
 	enum WriteHeader =
 		Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ "identifier_bytes;";
-		
 }
 
 template ReadHeader() {
@@ -114,10 +113,32 @@ template DeSerialize(T, alias data, alias object) {
 	enum DeSerialize = ReadHeader!() ~ DeSerializeEachMember(T, data, object, __traits(allMembers, T));
 }
 
-import profan.ecs : EntityID;
-ubyte[T.sizeof] serialize(T)(T* object) {
+template TotalNetSize(T, members...) {
 
-	StaticArray!(ubyte, T.sizeof) data;
+	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
+
+		enum TotalNetSize = typeof(__traits(getMember, T, members[0])).sizeof + TotalNetSize!(T, members[1 .. $]);
+
+	} else static if (members.length > 0) {
+
+		enum TotalNetSize = TotalNetSize!(T, members[1 .. $]);
+
+	} else {
+
+		enum TotalNetSize = 0;
+
+	}
+
+}
+
+template MemberSize(T) {
+	enum MemberSize = TotalNetSize(T, __traits(allMembers, t));
+}
+
+import profan.ecs : EntityID;
+ubyte[TotalNetSize!(T, MemberSize!(T))] serialize(T)(T* object) {
+
+	StaticArray!(ubyte, MemberSize!(T)) data;
 
 	mixin Serialize!(T, data, object);
 	mixin(Serialize);
