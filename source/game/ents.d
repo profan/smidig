@@ -32,6 +32,10 @@ auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id) {
 	
 	em.register_component!NetworkComponent(unit);
 
+	static if (net) {
+		em.get_component!NetworkComponent(unit).local = false;
+	}
+
 	return unit;
 
 }

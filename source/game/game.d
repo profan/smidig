@@ -209,9 +209,27 @@ final class MatchState : GameState {
 
 	}
 
+	import blindfire.netmsg : UpdateType, EntityType;
+	StaticArray!(ubyte, 512) data;
+
 	override void enter() {
 
 		player = create_unit(em, Vec2f(128, 128), cast(EntityID*)null);
+		
+		data.elements = 0;
+		auto type = UpdateType.CREATE;
+		data ~= (cast(ubyte*)&type)[0..type.sizeof];
+
+		auto id = player;
+		data ~= (cast(ubyte*)&player)[0..player.sizeof];
+
+		auto ent_type = EntityType.UNIT;
+		data ~= (cast(ubyte*)&ent_type)[0..ent_type.sizeof];
+
+		auto vec2 = Vec2f(256, 256);
+		data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
+			
+		send(network_thread, Command.UPDATE, data.array[0..data.elements].idup);
 
 	}
 

@@ -10,10 +10,11 @@ import profan.ecs;
 alias Vec2f = Vector!(float, 2);
 alias Mat3f = Matrix!(float, 3, 3);
 
+import blindfire.netmsg : ComponentType;
 
-enum : uint[string] {
+enum : ComponentType[string] {
 	Identifier = [
-		"TransformComponent" : 0
+		"TransformComponent" : ComponentType.TRANSFORM_COMPONENT
 	]
 }
 
@@ -157,10 +158,10 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 						break;
 					case UpdateType.UPDATE:
 
-						uint component_type = input_stream.read!uint();
+						ComponentType component_type = input_stream.read!ComponentType();
 
 						switch (component_type) {
-							case 0: //TransformComponent
+							case ComponentType.TRANSFORM_COMPONENT: //TransformComponent
 								writefln("[GAME] Handling TransformComponent for id: %s:%s", entity_id.owner, entity_id.id);
 								
 								Vec2f vel = input_stream.read!Vec2f();	
@@ -196,13 +197,14 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 		foreach (id, ref comp; components) {
 
-			//write which entity it belongs to
-			send_data ~= (cast(ubyte*)&id)[0..id.sizeof];
+			if (comp.local) {
+				//write which entity it belongs to
+				send_data ~= (cast(ubyte*)&id)[0..id.sizeof];
 
-			//write the fields to be serialized in the entity's components.
-			auto data = serialize(comp.tc);
-			writefln("[GAME] Data to send: %s", data);
-			send_data ~= data;
+				//write the fields to be serialized in the entity's components.
+				auto data = serialize(comp.tc);
+				send_data ~= data;
+			}
 
 		}
 
@@ -217,6 +219,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 struct NetworkComponent {
 
 	//things, this kind of thing ought to be more general, wtb polymorphism
+	bool local = true;
 	@dependency TransformComponent* tc;
 
 
