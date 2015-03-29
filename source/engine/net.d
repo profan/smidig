@@ -290,22 +290,6 @@ struct NetworkPeer {
 
 					if (msg) {
 						switch (type) {
-							case MessageType.CONNECT:
-								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								logger.log("Connection from %s at %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
-								ClientID id = cmsg.client_uuid;
-
-								if (id !in peers) {
-									Peer new_peer = {client_uuid: id, addr: from};
-									send_packet!(BasicMessage)(MessageType.CONNECT, from, client_uuid);
-									peers[id] = new_peer;
-								} else {
-									logger.log("Already in connected peers.");
-								}
-
-								send(game_thread, Command.CREATE);
-								state = ConnectionState.CONNECTED;
-								break;
 
 							case MessageType.PING:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
@@ -332,6 +316,7 @@ struct NetworkPeer {
 								logger.log("Entering Connect.");
 								auto target = cast(InternetAddress)addr;
 								send_packet!(BasicMessage)(MessageType.CONNECT, target, client_uuid);
+								state = ConnectionState.WAITING;
 								break;
 							default:
 								logger.log("Unhandled Command: %s", to!string(cmd));
