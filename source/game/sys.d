@@ -106,7 +106,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import profan.collections : StaticArray;
 	import blindfire.serialize : serialize;
 	import blindfire.net : Command, ClientID;
-	import blindfire.netmsg : UpdateType;
+	import blindfire.netmsg : Stream, UpdateType;
 
 	Tid network_thread;
 	ClientID client_uuid;
@@ -126,17 +126,15 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 		(Command cmd, immutable(ubyte)[] data) {
 
 			bool done = false;
-			size_t read_bytes = 0;
+			Stream input_stream = Stream(cast(ubyte[]*)&data);
 
-			while (!done && read_bytes < data.length) {
+			while (!done && input_stream.current < data.length) {
 				writefln("[GAME] Received world update, %d bytes", data.length);
-				UpdateType type = *(cast(UpdateType*)data);
-				read_bytes += type.sizeof;
+				UpdateType type = input_stream.read!UpdateType();
 
 				switch (type) {
-					uint component_type = *(cast(uint*)&data[UpdateType.sizeof]);
-					EntityID userid = *(cast(EntityID*)&data[uint.sizeof]);
-					read_bytes += component_type.sizeof + userid.sizeof;	
+					uint component_type = input_stream.read!uint();
+					EntityID entity_id = input_stream.read!EntityID();
 
 					case UpdateType.CREATE:
 						break;
@@ -145,24 +143,18 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 					case UpdateType.UPDATE:		
 						switch (component_type) {
 							case 0: //TransformComponent
-								writefln("[GAME] Handling TransformComponent for id: %s", userid);
-								ubyte* ptr = cast(ubyte*)data.ptr;
-									
-								ptr += Vec2f.sizeof;
-								Vec2f vel = *cast(Vec2f*)ptr;
-								read_bytes += vel.sizeof;
-
-								ptr += Mat3f.sizeof;
-								Mat3f mat = *cast(Mat3f*)ptr;
-								read_bytes += mat.sizeof;
+								writefln("[GAME] Handling TransformComponent for id: %s:%s", entity_id.owner, entity_id.id);
+								
+								Vec2f vel = input_stream.read!Vec2f();	
+								Mat3f mat = input_stream.read!Mat3f();
 
 								writefln("[GAME] Vector: %s, Matrix: %s", vel, mat);
-								components[userid].tc.velocity = vel;
-								components[userid].tc.transform = mat;
+								components[entity_id].tc.velocity = vel;
+								components[entity_id].tc.transform = mat;
 								break;
 
 							default:
-								writefln("[GAME] Unhandled Component, id: %d", type);
+								writefln("[GAME] Unhandled Component from %s, id: %d", entity_id.owner, component_type);
 								done = true; //all bets are off at this point
 						}
 

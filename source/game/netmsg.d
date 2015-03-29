@@ -10,3 +10,21 @@ enum UpdateType {
 struct NetMessage {
 	
 } //NetMessage
+
+struct Stream {
+
+	size_t size;
+	size_t current = 0;
+	ubyte[]* buffer;
+	this(ubyte[]* data) {
+		this.buffer = data;
+		this.size = data.length;
+	}
+
+	T read(T)() {
+		T obj = *(cast(T*)*(buffer[current..T.sizeof].ptr));	
+		current += T.sizeof;
+		return obj;
+	}
+
+}
