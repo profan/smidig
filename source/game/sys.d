@@ -130,13 +130,13 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 			while (!done && read_bytes < data.length) {
 				writefln("[GAME] Received world update, %d bytes", data.length);
-				uint type = (cast(uint*)data)[0];
+				UpdateType type = *(cast(UpdateType*)data);
+				read_bytes += type.sizeof;
 
 				switch (type) {
-					uint component_type = (cast(uint*)data)[1];
+					uint component_type = *(cast(uint*)&data[UpdateType.sizeof]);
 					EntityID userid = *(cast(EntityID*)&data[uint.sizeof]);
-					read_bytes += type.sizeof + userid.sizeof;
-					
+					read_bytes += component_type.sizeof + userid.sizeof;	
 
 					case UpdateType.CREATE:
 						break;
@@ -170,6 +170,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 					default:
 						writefln("[GAME] Unhandled update type: %s", to!string(type));
+						done = true;
 
 				}
 			}
