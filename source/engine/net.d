@@ -130,25 +130,30 @@ struct NetVar(T) {
 
 alias Self = Tuple!(Address, Peer);
 
-//recieves messages, owns a thread which sends messages
 struct NetworkPeer {
 
 	bool open;
 	UdpSocket socket;
 	ConnectionState state;
+
+	//list of connected peers as a hashmap, identified by their UUID
 	Peer[ClientID] peers;
+
+	Tid game_thread;
 	ClientID client_uuid;
 	ushort port;
 
-	Self self;
-	Tid game_thread;
 
 	this(ushort port, Tid game_tid, ClientID uuid) {
 
+		//set socket to nonblocking, since one thread is used both for transmission and receiving, doesn't block on receive.
 		this.socket = new UdpSocket();
 		this.socket.blocking = false;
-		this.state = ConnectionState.UNCONNECTED;
+
+		//thread id to pass messages back to
 		this.game_thread = game_tid;
+		
+		//unique network identifier
 		this.client_uuid = uuid;
 		this.port = port;
 
@@ -173,6 +178,8 @@ struct NetworkPeer {
 			: "[NET] Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
 	}
 
+
+	//attempts to bind to a port, increments port number if binding fails.
 	void bind_to_port(out Address addr) {
 
 		while(true) {
