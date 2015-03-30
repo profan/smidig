@@ -79,7 +79,7 @@ struct Window {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glLoadIdentity();
-		glOrtho(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
+		//glOrtho(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 	}
 
 	void render_present() {

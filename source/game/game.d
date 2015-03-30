@@ -45,9 +45,9 @@ final class MenuState : GameState {
 		shader = Shader("shaders/basic");
 
 		Vertex[3] vertices = [
-			Vertex(Vec3f(0.0, 0.0, 50.0), Vec2f(0.0, 0.0)),
-			Vertex(Vec3f(50.0, 100.0, 50.0), Vec2f(0.5, 1.0)),
-			Vertex(Vec3f(100.0, 0.0, 50.0), Vec2f(1.0, 0.0))
+			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(0.0, 0.0)),
+			Vertex(Vec3f(0.0, 0.5, 0.0), Vec2f(0.5, 1.0)),
+			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(1.0, 0.0))
 		];
 
 		mesh = Mesh(vertices.ptr, vertices.length);
@@ -69,6 +69,8 @@ final class MenuState : GameState {
 	}
 
 	override void draw(Window* window) {
+
+		/*
 
 		int bgcolor = 0xca8142;
 		int menucolor = 0x428bca;
@@ -92,6 +94,8 @@ final class MenuState : GameState {
 		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, menu_quit_texture)) {
 			window.alive = false;
 		} //quit
+
+		*/
 
 		shader.bind();
 		texture.bind(1);

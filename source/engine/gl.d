@@ -24,7 +24,6 @@ struct Mesh {
 
 	enum {
 		POSITION_VB,
-		TEXCOORD_VB,
 		NUM_BUFFERS
 	}
 
@@ -39,38 +38,22 @@ struct Mesh {
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
 
-		Vec3f* positions = cast(Vec3f*)malloc(Vec3f.sizeof * vertices_count);
-		Vec2f* tex_coords = cast(Vec2f*)malloc(Vec2f.sizeof * vertices_count);
-		scope(exit) {
-			free(positions);
-			free(tex_coords);
-		}
-
-		for (size_t i = 0; i < vertices_count; ++i) {
-			positions[i] = vertices[i].pos;
-			tex_coords[i] = vertices[i].tex_coord;
-		}
-	
 		//create NUM_BUFFERS
 		glGenBuffers(NUM_BUFFERS, vbo.ptr);
 
 		//vertex position buffer
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[POSITION_VB]); //tells OpenGL to interpret this as an array 
-		glBufferData(GL_ARRAY_BUFFER, vertices_count * positions[0].sizeof, positions, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertices_count * vertices[0].sizeof, vertices, GL_STATIC_DRAW);
 		//upload to GPU, send size in bytes and pointer to array, also tell GPU it will never be modified
 
-		glEnableVertexAttribArray(POSITION_VB);
-		glVertexAttribPointer(POSITION_VB, 3, GL_FLOAT, GL_FALSE, 0, cast(const(void)*)null);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertices[0].sizeof, cast(const(void)*)null);
 		//0 corresponds to precious attribarray, 3 is number of elements in vertex, set type to float (don't normalize(GL_FALSE))
 		// 0 - skip nothing to find the next attribute, 0 - distance from beginning to find the first attribute
+		// use sizeof of tex_coord as stride
 
-
-		//texture coordinate buffer
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[TEXCOORD_VB]);
-		glBufferData(GL_ARRAY_BUFFER, vertices_count * tex_coords[0].sizeof, tex_coords, GL_STATIC_DRAW);
-
-		glEnableVertexAttribArray(TEXCOORD_VB);
-		glVertexAttribPointer(TEXCOORD_VB, 2, GL_FLOAT, GL_FALSE, 0, cast(const(void)*)null);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, vertices[0].sizeof, cast(const(void)*)vertices[0].pos.sizeof);
 
 		//UNBIND
 		glBindVertexArray(0); //unbind
