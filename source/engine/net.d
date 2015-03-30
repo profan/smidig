@@ -315,12 +315,12 @@ struct NetworkPeer {
 					}
 			
 					auto result = receiveTimeout(dur!("nsecs")(1),
-					(Command cmd, shared(InternetAddress) addr) {
+					(Command cmd, shared(InternetAddress) to_addr) {
 						logger.log("Command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.CONNECT:
 								logger.log("Entering Connect.");
-								auto target = cast(InternetAddress)addr;
+								auto target = cast(InternetAddress)to_addr;
 								send_packet!(BasicMessage)(MessageType.CONNECT, target, client_uuid);
 								state = ConnectionState.WAITING;
 								break;
@@ -357,6 +357,12 @@ struct NetworkPeer {
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
 								logger.log("Connection from %s at: %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
 								ClientID id = cmsg.client_uuid;
+
+								if (id == client_uuid) {
+									logger.log("Can't connect to self.");
+									state = ConnectionState.UNCONNECTED;
+									break;
+								}
 
 								if (id !in peers) {
 									Peer new_peer = {client_uuid: id, addr: from};
