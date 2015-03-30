@@ -188,7 +188,7 @@ struct NetworkPeer {
 
 		while(true) {
 			try {
-				addr = new InternetAddress("localhost", port);
+				addr = new InternetAddress(InternetAddress.ADDR_ANY, port);
 				socket.bind(addr);
 				break;
 			} catch (SocketException e) {
