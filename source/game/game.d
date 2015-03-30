@@ -26,6 +26,7 @@ final class MenuState : GameState {
 	SDL_Texture* menu_quit_texture;
 
 	Shader shader;
+	Mesh mesh;
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
 
@@ -40,6 +41,8 @@ final class MenuState : GameState {
 		menu_quit_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Quit", 20, text_color);
 		
 		shader = Shader("shaders/triangle");
+		Vec3f[3] vertices = [Vec3f(50.0, 50.0, 0.0), Vec3f(0.0, 100.0, 0.0), Vec3f(100.0, 50.0, 0.0)];
+		mesh = Mesh(vertices.ptr, vertices.length);
 
 	}
 	
@@ -57,9 +60,6 @@ final class MenuState : GameState {
 	}
 
 	override void draw(Window* window) {
-
-		shader.bind();
-		shader.unbind();
 
 		int bgcolor = 0xca8142;
 		int menucolor = 0x428bca;
@@ -83,6 +83,10 @@ final class MenuState : GameState {
 		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, menu_quit_texture)) {
 			window.alive = false;
 		} //quit
+
+		mesh.draw();
+		shader.bind();
+		shader.unbind();
 
 	}
 

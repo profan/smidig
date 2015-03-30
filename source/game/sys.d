@@ -8,6 +8,7 @@ import gl3n.linalg;
 import profan.ecs;
 
 alias Vec2f = Vector!(float, 2);
+alias Vec3f = Vector!(float, 3);
 alias Mat3f = Matrix!(float, 3, 3);
 
 import blindfire.netmsg : ComponentType;

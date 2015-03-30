@@ -5,6 +5,7 @@ import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
 
 import derelict.opengl3.gl3;
+import blindfire.sys : Vec3f;
 import std.file : read;
 
 struct VAO {
@@ -18,6 +19,63 @@ struct VBO {
 	GLuint vbo;
 
 } //VBO
+
+struct Mesh {
+
+	enum {
+		POSITION_VB,
+		NUM_BUFFERS
+	}
+
+	GLuint vao; //vertex array object
+	GLuint[NUM_BUFFERS] vbo; //vertex array buffers
+	uint draw_count;
+
+	this(Vec3f* vertices, uint vertices_count) {
+
+		this.draw_count = vertices_count;
+
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+	
+		glGenBuffers(NUM_BUFFERS, vbo.ptr);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[POSITION_VB]); //tells OpenGL to interpret this as an array 
+		//upload to GPU, send size in bytes and pointer to array, also tell GPU it will never be modified
+		glBufferData(GL_ARRAY_BUFFER, vertices_count * vertices[0].sizeof, vertices, GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		
+		//0 corresponds to precious attribarray, 3 is number of elements in vertex, set type to float (don't normalize(GL_FALSE))
+		// 0 - skip nothing to find the next attribute, 0 - distance from beginning to find the first attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, cast(const(void)*)null);
+		
+		glBindVertexArray(0); //unbind previous vao
+
+	}
+
+	@disable this(this);
+
+	~this() {
+
+		glDeleteVertexArrays(1, &vao);
+
+	}
+
+	void draw() {
+
+		glBindVertexArray(vao); //set vertex array to use
+
+		glDrawArrays(GL_TRIANGLES, 0, draw_count); //read from beginning (offset is 0), draw draw_count vertices
+
+		glBindVertexArray(0); //unbind
+
+	}
+
+} //Mesh
+
+struct Vertex {
+
+} //Vertex
 
 struct Shader {
 
