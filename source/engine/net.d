@@ -208,7 +208,7 @@ struct NetworkPeer {
 
 		open = true;
 		state = ConnectionState.UNCONNECTED;
-		writefln("[NET] Listening on localhost:%d", port);
+		logger.log("Listening on localhost:%d", port);
 
 		Address from; //used to keep track of who message was received from
 		void[2048] data = void;
