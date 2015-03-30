@@ -136,14 +136,10 @@ template MemberSize(T) {
 }
 
 import profan.ecs : EntityID;
-ubyte[MemberSize!(T)] serialize(T)(T* object) {
-
-	StaticArray!(ubyte, MemberSize!(T)) data;
+void serialize(B, T)(ref B data, T* object) {
 
 	mixin Serialize!(T, data, object);
 	mixin(Serialize);
-
-	return data.array;
 
 }
 

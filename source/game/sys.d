@@ -110,7 +110,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	ClientID client_uuid;
 
 	//reused buffer for sending data
-	immutable size_t MAX_PACKET_SIZE = 2048; //bytes
+	enum MAX_PACKET_SIZE = 2048; //bytes
 	StaticArray!(ubyte, MAX_PACKET_SIZE) recv_data;
 	StaticArray!(ubyte, MAX_PACKET_SIZE) send_data;
 
@@ -200,8 +200,8 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 				send_data ~= (cast(ubyte*)&id)[0..id.sizeof];
 
 				//write the fields to be serialized in the entity's components.
-				auto data = serialize(comp.tc);
-				send_data ~= data;
+				serialize(send_data, comp.tc);
+
 			}
 
 		}
