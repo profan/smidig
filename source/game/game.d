@@ -25,9 +25,9 @@ final class MenuState : GameState {
 	SDL_Texture* menu_create_texture;
 	SDL_Texture* menu_quit_texture;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
+	Shader shader;
 
-		import std.file : read;
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
 
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -38,48 +38,8 @@ final class MenuState : GameState {
 		menu_join_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Join Game", 20, text_color);
 		menu_create_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Create Game", 20, text_color);
 		menu_quit_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Quit", 20, text_color);
-
-		// Create Vertex Array Object
-		GLuint vao;
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
-
-		// Create a Vertex Buffer Object and copy the vertex data to it
-		GLuint vbo;
-		glGenBuffers(1, &vbo);
-
-		GLfloat[20] vertices = [
-			-0.5f, 0.5f, 1.0f, 0.0f, 0.0f, // Top-left
-			0.5f,  0.5f, 0.0f, 1.0f, 0.0f, // Top-right
-			0.5f, -0.5f, 0.0f, 0.0f, 1.0f, // Bottom-right
-			-0.5f, -0.5f, 1.0f, 1.0f, 1.0f  // Bottom-left
-		];
-
-		GLuint ebo;
-		glGenBuffers(1, &ebo);
 		
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, vertices.sizeof, cast(void*)vertices, GL_STATIC_DRAW);
-		
-		GLuint[6] elements = [
-			0, 1, 2,
-			2, 3, 0
-		];
-		
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, elements.sizeof, cast(void*)elements, GL_STATIC_DRAW);
-		
-		auto vs = cast(char*)read("shaders/triangle.vs", 2048);
-		auto fs = cast(char*)read("shaders/triangle.fs", 2048);
-		auto shader = Shader(vs, fs);
-
-		GLint posAttrib = glGetAttribLocation(shader.program, "position");
-		glEnableVertexAttribArray(posAttrib);
-		glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 5*GLfloat.sizeof, null);
-
-		GLint colAttrib = glGetAttribLocation(shader.program, "color");
-		glEnableVertexAttribArray(colAttrib);
-		glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 5*GLfloat.sizeof, cast(void*)(2*GLfloat.sizeof));
+		shader = Shader("shaders/triangle");
 
 	}
 	
@@ -97,6 +57,9 @@ final class MenuState : GameState {
 	}
 
 	override void draw(Window* window) {
+
+		shader.bind();
+		shader.unbind();
 
 		int bgcolor = 0xca8142;
 		int menucolor = 0x428bca;

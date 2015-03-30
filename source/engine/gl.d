@@ -5,9 +5,21 @@ import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
 
 import derelict.opengl3.gl3;
+import std.file : read;
+
+struct VAO {
+
+	GLuint vao;
+
+} //VAO
+
+struct VBO {
+
+	GLuint vbo;
+
+} //VBO
 
 struct Shader {
-
 
 	//the shader program
 	GLuint program;
@@ -15,13 +27,25 @@ struct Shader {
 	//alias this for implicit conversions
 	alias program this;
 
-	this (char* vertex_shader, char* fragment_shader) {
+	this (in char[] file_name) {
 
-		GLuint vshader = compile_shader(&vertex_shader, GL_VERTEX_SHADER);
-		GLuint fshader = compile_shader(&fragment_shader, GL_FRAGMENT_SHADER);
+		char* vs = load_shader(file_name ~ ".vs");	
+		char* fs = load_shader(file_name ~ ".fs");	
+		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER);
+		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER);
+
 		program = create_shader_program(vshader, fshader);
+
+		glDetachShader(program, vshader);
+		glDetachShader(program, fshader);
 		glDeleteShader(vshader);
 		glDeleteShader(fshader);
+
+	}
+
+	~this() {
+
+		glDeleteProgram(program);
 
 	}
 
@@ -41,19 +65,33 @@ struct Shader {
 } //Shader
 
 //C-ish code ahoy
-bool check_shader_compile_success(GLuint shader) {
 
-	GLint length, result;
+char* load_shader(in char[] file_name) {
+	return cast(char*)read(file_name);
+}
 
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
+bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) {
+
+	GLint result;
+
+	if (isProgram) {
+		glGetProgramiv(shader, flag, &result);
+	} else {
+		glGetShaderiv(shader, flag, &result);
+	}
+
 	if (result == GL_FALSE) {
-		char* log;
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-		log = cast(char*)malloc(length);
-		glGetShaderInfoLog(shader, length, &result, log);
-		printf("[OpenGL] Error: Unable to compile shader: %s", log);
-		free(log);
+
+		GLchar[1024] log = void;
+		if (isProgram) {
+			glGetProgramInfoLog(shader, log.sizeof, null, log.ptr);
+		} else {
+			glGetShaderInfoLog(shader, log.sizeof, null, log.ptr);
+		}
+
+		printf("[OpenGL] Error: %s\n", log.ptr);
 		return false;
+
 	}
 
 	return true;
@@ -68,7 +106,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) {
 	glShaderSource(new_shader, 1, shader_source, null);
 	glCompileShader(new_shader);
 
-	if (!check_shader_compile_success(new_shader)) {
+	if (!check_shader_error(new_shader, GL_COMPILE_STATUS, false)) {
 		glDeleteShader(new_shader);
 		return 0;
 	}
@@ -85,7 +123,19 @@ GLuint create_shader_program(GLuint[] shaders...) {
 		glAttachShader(program, shader);
 	}
 
+	glBindAttribLocation(program, 0, "position");
+
 	glLinkProgram(program);
+	if (!check_shader_error(program, GL_LINK_STATUS, true)) {
+		glDeleteShader(program);
+		return 0;
+	}
+
+	glValidateProgram(program);
+	if (!check_shader_error(program, GL_VALIDATE_STATUS, true)) {
+		glDeleteShader(program);
+		return 0;
+	}
 
 	return program;
 
