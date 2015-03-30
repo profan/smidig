@@ -151,8 +151,13 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 						}
 
 						break;
+
 					case UpdateType.DESTROY:
+
+						em.unregister_component(entity_id);
+						
 						break;
+
 					case UpdateType.UPDATE:
 
 						ComponentType component_type = input_stream.read!ComponentType();
@@ -196,6 +201,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 		foreach (id, ref comp; components) {
 
 			if (comp.local) {
+
 				//write which entity it belongs to
 				send_data ~= (cast(ubyte*)&id)[0..id.sizeof];
 

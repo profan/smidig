@@ -221,6 +221,7 @@ final class MatchState : GameState {
 
 		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null);
 		
+		//move this into create_unit?
 		data.elements = 0;
 		auto type = UpdateType.CREATE;
 		data ~= (cast(ubyte*)&type)[0..type.sizeof];
@@ -232,7 +233,6 @@ final class MatchState : GameState {
 		data ~= (cast(ubyte*)&ent_type)[0..ent_type.sizeof];
 
 		auto vec2 = Vec2f(x, y);
-
 		data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
 			
 		send(network_thread, Command.UPDATE, data.array[0..data.elements].idup);
