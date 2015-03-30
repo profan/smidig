@@ -25,6 +25,7 @@ final class MenuState : GameState {
 	SDL_Texture* menu_create_texture;
 	SDL_Texture* menu_quit_texture;
 
+	Texture texture;
 	Shader shader;
 	Mesh mesh;
 
@@ -39,10 +40,18 @@ final class MenuState : GameState {
 		menu_join_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Join Game", 20, text_color);
 		menu_create_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Create Game", 20, text_color);
 		menu_quit_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Quit", 20, text_color);
-		
-		shader = Shader("shaders/triangle");
-		Vec3f[3] vertices = [Vec3f(50.0, 50.0, 0.0), Vec3f(0.0, 100.0, 0.0), Vec3f(100.0, 50.0, 0.0)];
+	
+	
+		shader = Shader("shaders/basic");
+
+		Vertex[3] vertices = [
+			Vertex(Vec3f(0.0, 0.0, 50.0), Vec2f(0.0, 0.0)),
+			Vertex(Vec3f(50.0, 100.0, 50.0), Vec2f(0.5, 1.0)),
+			Vertex(Vec3f(100.0, 0.0, 50.0), Vec2f(1.0, 0.0))
+		];
+
 		mesh = Mesh(vertices.ptr, vertices.length);
+		texture = Texture("resource/img/dev_red_512_512.png");
 
 	}
 	
@@ -84,8 +93,9 @@ final class MenuState : GameState {
 			window.alive = false;
 		} //quit
 
-		mesh.draw();
 		shader.bind();
+		texture.bind(1);
+		mesh.draw();
 		shader.unbind();
 
 	}
