@@ -235,6 +235,12 @@ struct NetworkPeer {
 							case MessageType.UPDATE:
 								//take slice from sizeof(header) to sizeof(header) + header.data_length and send
 								UpdateMessage umsg = *(cast(UpdateMessage*)(data));
+
+								if (umsg.client_uuid !in peers) {
+									logger.log("Unconnected client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
+									break;
+								}
+
 								logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
 								send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
 								break;

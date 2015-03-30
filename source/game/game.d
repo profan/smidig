@@ -206,7 +206,6 @@ final class MatchState : GameState {
 		evhan.bind_mousebtn(3, &sbox.set_order, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
 
-
 	}
 
 	import blindfire.netmsg : UpdateType, EntityType;

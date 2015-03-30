@@ -172,7 +172,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 								writefln("[GAME] Vector: %s, Matrix: %s", vel, mat);
 								components[entity_id].tc.velocity = vel;
 								components[entity_id].tc.transform = mat;
-								writefln("Read: %d bytes, Total: %d bytes", input_stream.current, data.length);
+								writefln("[GAME] Read: %d bytes, Total: %d bytes", input_stream.current, data.length);
 								break;
 
 							default:
