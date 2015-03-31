@@ -35,9 +35,13 @@ struct Text {
 	@property void text(ref char[MAX_SIZE] new_text) { content = new_text[]; }
 
 	this(TTF_Font* font, char[64] initial_text, int font_color) {
+
 		content = initial_text;
 		SDL_Color color = {cast(ubyte)(font_color>>16), cast(ubyte)(font_color>>8), cast(ubyte)(font_color)};
 		SDL_Surface* surf = TTF_RenderUTF8_Blended(font, initial_text.ptr, color);
+		texture = Texture(surf.pixels, surf.w, surf.h);
+		SDL_FreeSurface(surf);
+
 	}
 
 	~this() {
