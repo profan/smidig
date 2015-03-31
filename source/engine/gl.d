@@ -20,6 +20,32 @@ struct VBO {
 
 } //VBO
 
+struct Text {
+
+	import derelict.sdl2.sdl;
+	import derelict.sdl2.ttf;
+
+	enum MAX_SIZE = 64;
+	char[MAX_SIZE] content;
+
+	Mesh rect;
+	Texture texture;
+
+	@property ref char[MAX_SIZE] text() { return content; }
+	@property void text(ref char[MAX_SIZE] new_text) { content = new_text[]; }
+
+	this(TTF_Font* font, char[64] initial_text, int font_color) {
+		content = initial_text;
+		SDL_Color color = {cast(ubyte)(font_color>>16), cast(ubyte)(font_color>>8), cast(ubyte)(font_color)};
+		SDL_Surface* surf = TTF_RenderUTF8_Blended(font, initial_text.ptr, color);
+	}
+
+	~this() {
+
+	}
+
+} //Text
+
 struct Mesh {
 
 	enum {
@@ -100,7 +126,7 @@ struct Texture {
 		scope(exit) SDL_FreeSurface(image);
 
 		if (image == null) {
-			printf("[OpenGL] Texture load failure for: %s", IMG_GetError());
+			printf("[OpenGL] Failed to load texture %s : %s", toStringz(file_name), IMG_GetError());
 		}
 
 		int width, height;
@@ -109,7 +135,12 @@ struct Texture {
 		width = image.w;
 		height = image.h;
 		pixels = image.pixels;
+		this(pixels, width, height);
 
+	}
+
+	this(void* pixels, int width, int height) {
+		
 		//generate single texture, put handle in texture
 		glGenTextures(1, &texture);
 

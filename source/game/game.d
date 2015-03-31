@@ -44,10 +44,19 @@ final class MenuState : GameState {
 	
 		shader = Shader("shaders/basic");
 
-		Vertex[3] vertices = [
+		/*Vertex[6] vertices = [
 			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(0.0, 0.0)),
-			Vertex(Vec3f(0.0, 0.5, 0.0), Vec2f(0.5, 1.0)),
-			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(1.0, 0.0))
+			Vertex(Vec3f(0.5, 0.0, 0.0), Vec2f(0.0, 0.0))
+		];*/
+
+		Vertex[6] vertices = [
+			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, 0.5)), // top left
+			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(0.5, -0.5)), // top right
+			Vertex(Vec3f(0.5, 0.5, 0.0), Vec2f(0.5, 0.5)), // bottom right
+
+			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, -0.5)), // top left
+			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(-0.5, 0.5)), // bottom left
+			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(0.5, 0.5)) // bottom right
 		];
 
 		mesh = Mesh(vertices.ptr, vertices.length);
