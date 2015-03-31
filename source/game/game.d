@@ -43,7 +43,8 @@ final class MenuState : GameState {
 	
 	
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
-		shader = Shader("shaders/basic", attributes);
+		char[16][1] uniforms = ["transform"];
+		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 
 		Vertex[6] vertices = [
 			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, 0.5)), // top left

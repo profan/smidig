@@ -210,17 +210,25 @@ struct Shader {
 	//the shader program
 	GLuint program;
 
+	//bound uniforms
+	GLuint[2] bound_uniforms;
+
 	//alias this for implicit conversions
 	alias program this;
 
-	this (in char[] file_name, AttribLocation[] attribs) {
+	this (in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
 
 		char* vs = load_shader(file_name ~ ".vs");	
 		char* fs = load_shader(file_name ~ ".fs");	
 		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER);
 		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER);
 
-		program = create_shader_program([vshader, fshader], attribs);
+		GLuint[2] shaders = [vshader, fshader];
+		program = create_shader_program(shaders, attribs);
+
+		foreach (i, uniform; uniforms) {
+			bound_uniforms[i] = glGetUniformLocation(program, uniform.ptr);
+		}
 
 		glDetachShader(program, vshader);
 		glDetachShader(program, fshader);
@@ -301,7 +309,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) {
 
 }
 
-GLuint create_shader_program(GLuint[] shaders, AttribLocation[] attribs) {
+GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) {
 
 	GLuint program = glCreateProgram();
 
