@@ -45,11 +45,6 @@ final class MenuState : GameState {
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		shader = Shader("shaders/basic", attributes);
 
-		/*Vertex[6] vertices = [
-			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(0.0, 0.0)),
-			Vertex(Vec3f(0.5, 0.0, 0.0), Vec2f(0.0, 0.0))
-		];*/
-
 		Vertex[6] vertices = [
 			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, 0.5)), // top left
 			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(0.5, -0.5)), // top right
