@@ -42,7 +42,8 @@ final class MenuState : GameState {
 		menu_quit_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Quit", 20, text_color);
 	
 	
-		shader = Shader("shaders/basic");
+		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
+		shader = Shader("shaders/basic", attributes);
 
 		/*Vertex[6] vertices = [
 			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(0.0, 0.0)),

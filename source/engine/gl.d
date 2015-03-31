@@ -20,6 +20,18 @@ struct VBO {
 
 } //VBO
 
+struct AttribLocation {
+
+	this(GLuint offset, char[64] identifier) {
+		this.offset = offset;
+		this.identifier = identifier;
+	}
+
+	GLuint offset;
+	char[64] identifier;
+
+}
+
 struct Text {
 
 	import derelict.sdl2.sdl;
@@ -201,14 +213,14 @@ struct Shader {
 	//alias this for implicit conversions
 	alias program this;
 
-	this (in char[] file_name) {
+	this (in char[] file_name, AttribLocation[] attribs) {
 
 		char* vs = load_shader(file_name ~ ".vs");	
 		char* fs = load_shader(file_name ~ ".fs");	
 		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER);
 		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER);
 
-		program = create_shader_program(vshader, fshader);
+		program = create_shader_program([vshader, fshader], attribs);
 
 		glDetachShader(program, vshader);
 		glDetachShader(program, fshader);
@@ -289,7 +301,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) {
 
 }
 
-GLuint create_shader_program(GLuint[] shaders...) {
+GLuint create_shader_program(GLuint[] shaders, AttribLocation[] attribs) {
 
 	GLuint program = glCreateProgram();
 
@@ -297,8 +309,9 @@ GLuint create_shader_program(GLuint[] shaders...) {
 		glAttachShader(program, shader);
 	}
 
-	glBindAttribLocation(program, 0, "position");
-	glBindAttribLocation(program, 1, "tex_coord");
+	foreach (ref attr; attribs) {
+		glBindAttribLocation(program, attr.offset, attr.identifier.ptr);
+	}
 
 	glLinkProgram(program);
 	if (!check_shader_error(program, GL_LINK_STATUS, true)) {
