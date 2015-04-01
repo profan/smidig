@@ -3,14 +3,7 @@ module blindfire.sys;
 import std.concurrency : send, receiveTimeout, Tid;
 import std.stdio : writefln;
 
-import gl3n.linalg;
-
 import profan.ecs;
-
-alias Vec2f = Vector!(float, 2);
-alias Vec3f = Vector!(float, 3);
-alias Mat3f = Matrix!(float, 3, 3);
-
 import blindfire.netmsg : ComponentType;
 
 enum : ComponentType[string] {
@@ -42,7 +35,7 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 	void update() {
 
 		foreach (id, ref comp; components) with (comp) {
-			transform += transform.translation(velocity.x, velocity.y, 1.0f);
+			transform.position += velocity;
 		}
 
 	}
@@ -53,10 +46,11 @@ struct TransformComponent {
 
 	import blindfire.net : NetVar;
 	import blindfire.serialize : networked;
+	import blindfire.gl : Vec2f, Transform;
 
 	mixin NetIdentifier;
 	@networked NetVar!(Vec2f) velocity;
-	@networked NetVar!(Mat3f) transform;
+	@networked NetVar!(Transform) transform;
 
 } //TransformComponent
 
@@ -106,6 +100,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import blindfire.net : Command, ClientID;
 	import blindfire.netmsg : InputStream, UpdateType, EntityType;
 	import blindfire.ents : create_unit;
+	import blindfire.gl : Vec2f, Mat3f, Transform;
 
 	Tid network_thread;
 	ClientID client_uuid;
@@ -167,8 +162,8 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 							case ComponentType.TRANSFORM_COMPONENT: //TransformComponent
 								writefln("[GAME] Handling TransformComponent for id: %s:%s", entity_id.owner, entity_id.id);
 								
-								Vec2f vel = input_stream.read!Vec2f();	
-								Mat3f mat = input_stream.read!Mat3f();
+								auto vel = input_stream.read!Vec2f();	
+								auto mat = input_stream.read!Transform();
 
 								writefln("[GAME] Vector: %s, Matrix: %s", vel, mat);
 								components[entity_id].tc.velocity = vel;
@@ -240,7 +235,7 @@ class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 	void update(Window* window) {
 
 		foreach (id, ref comp; components) with (comp) {
-			draw_rectangle(window, DrawFlags.FILL, cast(int)mc.transform.matrix[0][2], cast(int)mc.transform.matrix[1][2], w, h, color);
+			draw_rectangle(window, DrawFlags.FILL, tc.transform.position.x, tc.transform.position.y, w, h, color);
 		}
 
 	}
@@ -253,7 +248,7 @@ struct SpriteComponent {
 	//texture and vao?
 	int w, h;
 	int color;
-	@dependency TransformComponent* mc;
+	@dependency TransformComponent* tc;
 
 } //SpriteComponent
 
@@ -272,8 +267,8 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 	void update() {
 
 		foreach (id, ref comp; components) with (comp) {
-			float x = tc.transform.matrix[0][2];
-			float y = tc.transform.matrix[1][2];
+			float x = tc.transform.position.x;
+			float y = tc.transform.position.y;
 			if (sbox.active && point_in_rect(cast(int)x, cast(int)y, sbox.x, sbox.y, sbox.w, sbox.h)) {
 				selected = true;
 			} else if (sbox.active) {

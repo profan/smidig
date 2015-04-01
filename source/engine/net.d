@@ -117,6 +117,11 @@ struct NetVar(T) {
 		mixin("return " ~ op ~ " variable;");
 	}
 
+	void opAssign(T rhs) {
+		changed = true;
+		variable = rhs;
+	}
+
 	void opOpAssign(string op)(T rhs) {
 		changed = true;
 		mixin("variable " ~ op ~ "= rhs;");

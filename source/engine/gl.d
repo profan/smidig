@@ -5,8 +5,14 @@ import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
 
 import derelict.opengl3.gl3;
-import blindfire.sys : Vec2f, Vec3f;
 import std.file : read;
+
+import gfm.math;
+
+alias Vec2f = Vector!(float, 2);
+alias Vec3f = Vector!(float, 3);
+alias Mat3f = Matrix!(float, 3, 3);
+alias Mat4f = Matrix!(float, 4, 4);
 
 struct VAO {
 
@@ -193,6 +199,34 @@ struct Texture {
 
 } //Texture
 
+struct Transform {
+
+	Vec2f position;
+	Vec2f rotation;
+	Vec2f scale;
+
+	this(in Vec2f pos, in Vec2f rotation, in Vec2f scale) {
+		this.position = pos;
+		this.rotation = rotation;
+		this.scale = scale;
+	}
+
+	@property Mat4f transform() {
+
+		Mat4f posMatrix = Mat4f.translation(Vec3f(position, 0.0f));
+		Mat4f rotXMatrix = Mat4f.rotation(rotation.x, Vec3f(1, 0, 0));
+		Mat4f rotYMatrix = Mat4f.rotation(rotation.y, Vec3f(0, 1, 0));
+		Mat4f rotZMatrix = Mat4f.rotation(0.0f, Vec3f(0, 0, 1));
+		Mat4f scaleMatrix = Mat4f.scaling(Vec3f(scale, 1.0f));
+		
+		Mat4f rotMatrix = rotXMatrix * rotYMatrix * rotZMatrix;
+
+		return posMatrix * rotMatrix * scaleMatrix;
+
+	}
+
+} //Transform
+
 struct Vertex {
 
 	this(Vec3f pos, Vec2f tex_coord) {
@@ -234,6 +268,15 @@ struct Shader {
 		glDetachShader(program, fshader);
 		glDeleteShader(vshader);
 		glDeleteShader(fshader);
+
+	}
+
+	void update(ref Transform transform) {
+
+		Mat4f model = transform.transform;
+
+		//transpose matrix, since row major, not column
+		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, model.ptr);
 
 	}
 

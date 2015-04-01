@@ -2,7 +2,7 @@ module blindfire.action;
 
 import blindfire.ui : draw_rectangle, DrawFlags;
 import blindfire.window : Window;
-import blindfire.sys : Vec2f;
+import blindfire.gl : Vec2f;
 
 import std.stdio : writefln;
 

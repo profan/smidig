@@ -81,7 +81,7 @@ void draw_circle(Window* window, DrawFlags flags, int x, int y, int radius, int 
 }
 
 //Immediate Mode GUI (IMGUI, see Muratori)
-void draw_rectangle(Window* window, DrawFlags flags, int x, int y, int width, int height, int color, ubyte alpha = 255) {
+void draw_rectangle(Window* window, DrawFlags flags, float x, float y, float width, float height, int color, ubyte alpha = 255) {
 
 	GLfloat[4] colors;
 	set_color(colors, color);

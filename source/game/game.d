@@ -103,8 +103,11 @@ final class MenuState : GameState {
 
 		*/
 
+		auto tf = Transform(Vec2f(0.0f, 0.0f), Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
+
 		shader.bind();
 		texture.bind(1);
+		shader.update(tf);
 		mesh.draw();
 		shader.unbind();
 

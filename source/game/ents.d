@@ -3,9 +3,9 @@ module blindfire.ents;
 import std.stdio : writefln;
 import std.uuid : UUID;
 
-import profan.ecs;
-import gl3n.linalg;
+import blindfire.gl : Vec2f, Transform;
 import blindfire.sys;
+import profan.ecs;
 
 auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id) {
 
@@ -15,7 +15,7 @@ auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id) {
 		auto unit = em.create_entity();
 	}
 
-	TransformComponent mc = {velocity: Vec2f(0, 0), transform: Mat3f(vec3(0, 0, pos.x), vec3(0, 0, pos.y), vec3(0, 0, 1))};
+	TransformComponent mc = {velocity: Vec2f(0, 0), transform: Transform(pos, Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f))};
 	writefln("Matrix: %s", mc.transform);
 	em.register_component!TransformComponent(unit, mc);
 	em.register_component!CollisionComponent(unit); //beware of order, this depends on above component

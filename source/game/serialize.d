@@ -63,7 +63,7 @@ template SerializeEachMember(T, alias data, alias object, members...) {
 
 	} else static if (members.length > 0) {
 
-		enum SerializeEachMember = SerializeEachMember!(T, data, members[1 .. $]);
+		enum SerializeEachMember = SerializeEachMember!(T, data, object, members[1 .. $]);
 
 	} else {
 
