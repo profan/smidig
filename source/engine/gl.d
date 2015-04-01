@@ -64,13 +64,13 @@ struct Text {
 		texture = Texture(surf.pixels, surf.w, surf.h, GL_RGBA, GL_RGBA);
 
 		Vertex[6] vertices = [
-			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, 0.5)), // top left 
-			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(0.5, -0.5)), // top right
-			Vertex(Vec3f(0.5, 0.5, 0.0), Vec2f(0.5, 0.5)), // bottom right
+			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(0, 0)), // top left 
+			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(1, 0)), // top right
+			Vertex(Vec3f(0.5, 0.5, 0.0), Vec2f(1, 1)), // bottom right
 
-			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, -0.5)), // top left
-			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(-0.5, 0.5)), // bottom left
-			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(0.5, 0.5)) // bottom right
+			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(0, 0)), // top left
+			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(0, 1)), // bottom left
+			Vertex(Vec3f(0.5, 0.5, 0.0), Vec2f(1, 1)) // bottom right
 		];
 
 		mesh = Mesh(vertices.ptr, vertices.length);
