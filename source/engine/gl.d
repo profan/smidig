@@ -137,6 +137,7 @@ struct Texture {
 	import std.string : toStringz;
 
 	GLuint texture; //OpenGL handle for texture
+	int width, height;
 
 	this(in char[] file_name) {
 
@@ -151,12 +152,11 @@ struct Texture {
 			printf("[OpenGL] Failed to load texture %s : %s", toStringz(file_name), IMG_GetError());
 		}
 
-		int width, height;
 		void* pixels;
-
 		width = image.w;
 		height = image.h;
 		pixels = image.pixels;
+
 		this(pixels, width, height);
 
 	}
@@ -181,6 +181,8 @@ struct Texture {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
 	}
+
+	@disable this(this);
 
 	~this() {
 
@@ -211,7 +213,7 @@ struct Transform {
 		this.scale = scale;
 	}
 
-	@property Mat4f transform() {
+	@property Mat4f transform() const {
 
 		Mat4f posMatrix = Mat4f.translation(Vec3f(position, 0.0f));
 		Mat4f rotXMatrix = Mat4f.rotation(rotation.x, Vec3f(1, 0, 0));
@@ -229,7 +231,7 @@ struct Transform {
 
 struct Vertex {
 
-	this(Vec3f pos, Vec2f tex_coord) {
+	this(in Vec3f pos, in Vec2f tex_coord) {
 		this.pos = pos;
 		this.tex_coord = tex_coord;
 	}
