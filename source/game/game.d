@@ -6,6 +6,7 @@ import std.concurrency : send, spawn, receiveOnly, thisTid;
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
 import derelict.opengl3.gl;
+import derelict.freetype.ft;
 
 import blindfire.window;
 import blindfire.eventhandler;

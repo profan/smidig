@@ -8,6 +8,8 @@ import derelict.sdl2.ttf;
 
 import derelict.opengl3.gl;
 
+import derelict.freetype.ft;
+
 import blindfire.game;
 import blindfire.window;
 import blindfire.eventhandler;
@@ -23,6 +25,7 @@ void initialize_systems() {
 	DerelictSDL2Mixer.load();
 	DerelictSDL2ttf.load();
 	DerelictGL.load();
+	DerelictFT.load();
 
 	if (TTF_Init() == -1) {
 		writefln("TTF_Init: %s\n", TTF_GetError());
