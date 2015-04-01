@@ -28,7 +28,7 @@ void initialize_systems() {
 	DerelictFT.load();
 
 	if (TTF_Init() == -1) {
-		writefln("TTF_Init: %s\n", TTF_GetError());
+		writefln("[GAME] TTF_Init: %s\n", TTF_GetError());
 		exit(2);
 	}
 

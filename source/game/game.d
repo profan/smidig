@@ -29,7 +29,7 @@ final class MenuState : GameState {
 	Texture texture;
 	Shader shader;
 	Mesh mesh;
-
+	
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
 
 		this.statehan = statehan;

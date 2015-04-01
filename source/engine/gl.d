@@ -57,7 +57,7 @@ struct Text {
 		content = initial_text;
 		SDL_Color color = {cast(ubyte)(font_color>>16), cast(ubyte)(font_color>>8), cast(ubyte)(font_color)};
 		SDL_Surface* surf = TTF_RenderUTF8_Blended(font, initial_text.ptr, color);
-		texture = Texture(surf.pixels, surf.w, surf.h);
+		texture = Texture(surf.pixels, surf.w, surf.h, GL_RGBA, GL_RGBA);
 		SDL_FreeSurface(surf);
 
 	}
@@ -157,11 +157,11 @@ struct Texture {
 		height = image.h;
 		pixels = image.pixels;
 
-		this(pixels, width, height);
+		this(pixels, width, height, GL_RGBA, GL_RGBA);
 
 	}
 
-	this(void* pixels, int width, int height) {
+	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) {
 		
 		//generate single texture, put handle in texture
 		glGenTextures(1, &texture);
@@ -178,7 +178,7 @@ struct Texture {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		//texture type, level, format to store as, width, height, border, format loaded in
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+		glTexImage2D(GL_TEXTURE_2D, 0, input_format, width, height, 0, output_format, GL_UNSIGNED_BYTE, pixels);
 
 	}
 
