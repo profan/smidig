@@ -4,6 +4,7 @@ import std.stdio : writefln;
 import std.concurrency : send, spawn, receiveOnly, thisTid;
 
 import derelict.sdl2.sdl;
+import derelict.sdl2.ttf;
 import derelict.opengl3.gl3;
 import derelict.opengl3.gl;
 import derelict.freetype.ft;
@@ -21,10 +22,12 @@ final class MenuState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 
-	Texture menu_title_texture;
-	Texture menu_join_texture;
-	Texture menu_create_texture;
-	Texture menu_quit_texture;
+	TTF_Font* menu_font;
+
+	Text menu_title_texture;
+	Text menu_join_texture;
+	Text menu_create_texture;
+	Text menu_quit_texture;
 	Shader font_shader;
 
 	Texture texture;
@@ -38,15 +41,16 @@ final class MenuState : GameState {
 
 		int title_color = 0xffa500;
 		int text_color = 0x0e72c9;
-		menu_title_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Project Blindfire", 48, title_color);
-		menu_join_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Join Game", 20, text_color);
-		menu_create_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Create Game", 20, text_color);
-		menu_quit_texture = create_font_texture(window, "fonts/OpenSans-Bold.ttf", "Quit", 20, text_color);
-	
-	
+
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][1] uniforms = ["transform"];
 		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
+
+		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 24);
+		menu_title_texture = Text(menu_font, "Project Blindfire", title_color, &shader);
+		menu_join_texture = Text(menu_font, "Join Game", title_color, &shader);
+		menu_create_texture = Text(menu_font, "Create Game", title_color, &shader);
+		menu_quit_texture = Text(menu_font, "Quit", title_color, &shader);	
 
 		Vertex[6] vertices = [
 			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, 0.5)), // top left
@@ -88,7 +92,7 @@ final class MenuState : GameState {
 
 		draw_label(window, &menu_title_texture, window.width/2, window.height/4, 0, 0);
 
-		uint item_width = height / 2, item_height = 32;
+		/*uint item_width = height / 2, item_height = 32;
 		if(do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, &menu_join_texture)) {
 			statehan.push_state(State.JOIN);
 		} //join
@@ -99,7 +103,7 @@ final class MenuState : GameState {
 		
 		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, &menu_quit_texture)) {
 			window.alive = false;
-		} //quit		
+		} //quit */
 
 		auto tf = Transform(Vec2f(0.0f, 0.0f), Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
 

@@ -104,9 +104,9 @@ void draw_rectangle(Window* window, DrawFlags flags, float x, float y, float wid
 
 }
 
-void draw_label(Window* window, Texture* label, int x, int y, int width, int height) {
+void draw_label(Window* window, Text* label, int x, int y, int width, int height) {
 
-	
+	label.draw(Vec2f(-0.5, -0.5));
 
 }
 
@@ -122,7 +122,7 @@ int darken(int color, uint percentage) {
 
 }
 
-bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, Texture* label = null) {
+bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, Text* label = null) {
 
 	bool result = false;
 	bool inside = point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);

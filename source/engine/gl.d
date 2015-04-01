@@ -3,9 +3,10 @@ module blindfire.gl;
 import core.vararg;
 import core.stdc.stdio;
 import core.stdc.stdlib : malloc, free;
+import std.stdio : writefln;
+import std.file : read;
 
 import derelict.opengl3.gl3;
-import std.file : read;
 
 import gfm.math;
 
@@ -46,19 +47,46 @@ struct Text {
 	enum MAX_SIZE = 64;
 	char[MAX_SIZE] content;
 
-	Mesh rect;
+	Mesh mesh;
 	Texture texture;
+	Shader* shader;
 
 	@property ref char[MAX_SIZE] text() { return content; }
 	@property void text(ref char[MAX_SIZE] new_text) { content = new_text[]; }
 
-	this(TTF_Font* font, char[64] initial_text, int font_color) {
+	this(TTF_Font* font, char[64] initial_text, int font_color, Shader* text_shader)  {
 
 		content = initial_text;
 		SDL_Color color = {cast(ubyte)(font_color>>16), cast(ubyte)(font_color>>8), cast(ubyte)(font_color)};
 		SDL_Surface* surf = TTF_RenderUTF8_Blended(font, initial_text.ptr, color);
+		scope(exit) SDL_FreeSurface(surf);
+
 		texture = Texture(surf.pixels, surf.w, surf.h, GL_RGBA, GL_RGBA);
-		SDL_FreeSurface(surf);
+
+		Vertex[6] vertices = [
+			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, 0.5)), // top left 
+			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(0.5, -0.5)), // top right
+			Vertex(Vec3f(0.5, 0.5, 0.0), Vec2f(0.5, 0.5)), // bottom right
+
+			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, -0.5)), // top left
+			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(-0.5, 0.5)), // bottom left
+			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(0.5, 0.5)) // bottom right
+		];
+
+		mesh = Mesh(vertices.ptr, vertices.length);
+		shader = text_shader;
+
+	}
+
+	void draw(Vec2f position) {
+
+		auto tf = Transform(position, Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
+
+		shader.bind();
+		texture.bind(1);
+		shader.update(tf);
+		mesh.draw();
+		shader.unbind();
 
 	}
 
@@ -186,6 +214,7 @@ struct Texture {
 
 	~this() {
 
+		writefln("[GAME] Cleaned up texture id: %d", texture);
 		glDeleteTextures(1, &texture);
 
 	}
