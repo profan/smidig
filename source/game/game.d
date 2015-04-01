@@ -47,6 +47,9 @@ final class MenuState : GameState {
 		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 
 		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 24);
+		if (menu_font == null) {
+			writefln("[GAME] Failed to open font: %s", "fonts/OpenSans-Bold.ttf");
+		}
 		scope(exit) TTF_CloseFont(menu_font);
 
 		menu_title_texture = Text(menu_font, "Project Blindfire", title_color, &shader);
