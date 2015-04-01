@@ -47,6 +47,8 @@ final class MenuState : GameState {
 		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 
 		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 24);
+		scope(exit) TTF_CloseFont(menu_font);
+
 		menu_title_texture = Text(menu_font, "Project Blindfire", title_color, &shader);
 		menu_join_texture = Text(menu_font, "Join Game", title_color, &shader);
 		menu_create_texture = Text(menu_font, "Create Game", title_color, &shader);
