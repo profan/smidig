@@ -21,10 +21,11 @@ final class MenuState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 
-	SDL_Texture* menu_title_texture;
-	SDL_Texture* menu_join_texture;
-	SDL_Texture* menu_create_texture;
-	SDL_Texture* menu_quit_texture;
+	Texture menu_title_texture;
+	Texture menu_join_texture;
+	Texture menu_create_texture;
+	Texture menu_quit_texture;
+	Shader font_shader;
 
 	Texture texture;
 	Shader shader;
@@ -77,8 +78,6 @@ final class MenuState : GameState {
 
 	override void draw(Window* window) {
 
-		/*
-
 		int bgcolor = 0xca8142;
 		int menucolor = 0x428bca;
 		int itemcolor = 0x8bca42;
@@ -87,22 +86,20 @@ final class MenuState : GameState {
 		draw_rectangle(window, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
 		draw_rectangle(window, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
-		draw_label(window, menu_title_texture, window.width/2, window.height/4, 0, 0);
+		draw_label(window, &menu_title_texture, window.width/2, window.height/4, 0, 0);
 
 		uint item_width = height / 2, item_height = 32;
-		if(do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, menu_join_texture)) {
+		if(do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, &menu_join_texture)) {
 			statehan.push_state(State.JOIN);
 		} //join
 
-		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
+		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, &menu_create_texture)) {
 			statehan.push_state(State.WAIT);
 		} //create
 		
-		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, menu_quit_texture)) {
+		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, &menu_quit_texture)) {
 			window.alive = false;
-		} //quit
-
-		*/
+		} //quit		
 
 		auto tf = Transform(Vec2f(0.0f, 0.0f), Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
 

@@ -8,6 +8,7 @@ import derelict.opengl3.gl;
 
 import blindfire.window;
 import blindfire.util;
+import blindfire.gl;
 
 struct PushColor {
 
@@ -103,12 +104,9 @@ void draw_rectangle(Window* window, DrawFlags flags, float x, float y, float wid
 
 }
 
-void draw_label(Window* window, SDL_Texture* label, int x, int y, int width, int height) {
+void draw_label(Window* window, Texture* label, int x, int y, int width, int height) {
 
-	int w, h;
-	SDL_QueryTexture(label, null, null, &w, &h);
-	SDL_Rect rect = {x: x+width/2-w/2, y: y+height/2-h/2, w: w, h: h};
-	//SDL_RenderCopy(window.renderer, label, null, &rect);
+	
 
 }
 
@@ -124,7 +122,7 @@ int darken(int color, uint percentage) {
 
 }
 
-bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, SDL_Texture* label = null) {
+bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, Texture* label = null) {
 
 	bool result = false;
 	bool inside = point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
