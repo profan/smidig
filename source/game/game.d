@@ -43,14 +43,15 @@ final class MenuState : GameState {
 		int text_color = 0x0e72c9;
 
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
-		char[16][1] uniforms = ["transform"];
+		char[16][2] uniforms = ["transform", "perspective"];
 		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 
-		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 24);
+		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 64);
+		scope(exit) TTF_CloseFont(menu_font);
+
 		if (menu_font == null) {
 			writefln("[GAME] Failed to open font: %s", "fonts/OpenSans-Bold.ttf");
 		}
-		scope(exit) TTF_CloseFont(menu_font);
 
 		menu_title_texture = Text(menu_font, "Project Blindfire", title_color, &shader);
 		menu_join_texture = Text(menu_font, "Join Game", title_color, &shader);
@@ -369,6 +370,7 @@ struct Game {
 		evhan.add_listener(&this.update_ui);
 		evhan.bind_keyevent(SDL_SCANCODE_SPACE, &window.toggle_wireframe);
 		evhan.bind_keyevent(SDL_SCANCODE_LCTRL, () => send(network_thread, Command.PING));
+		evhan.bind_keyevent(SDL_SCANCODE_LALT, () => send(network_thread, Command.STATS));
 
 		import core.thread : Thread;
 		import std.datetime : Duration, StopWatch, TickDuration;

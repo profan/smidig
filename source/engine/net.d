@@ -39,6 +39,7 @@ enum Command {
 	DISCONNECT,
 	TERMINATE,
 	UPDATE,
+	STATS,
 	PING
 
 } //Command
