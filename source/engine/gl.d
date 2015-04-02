@@ -195,7 +195,7 @@ struct Texture {
 
 		this.width = width;
 		this.height = height;
-		
+	
 		//generate single texture, put handle in texture
 		glGenTextures(1, &texture);
 
@@ -212,6 +212,14 @@ struct Texture {
 
 		//texture type, level, format to store as, width, height, border, format loaded in
 		glTexImage2D(GL_TEXTURE_2D, 0, input_format, width, height, 0, output_format, GL_UNSIGNED_BYTE, pixels);
+
+		//UNBIND
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		GLenum status = glGetError();
+		if (status != GL_NO_ERROR) {
+			writefln("[OpenGL] Texture loading error: %d", status);
+		}
 
 	}
 
