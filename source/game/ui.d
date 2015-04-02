@@ -104,9 +104,9 @@ void draw_rectangle(Window* window, DrawFlags flags, float x, float y, float wid
 
 }
 
-void draw_label(Window* window, Text* label, int x, int y, int width, int height) {
+void draw_label(Window* window, ref Mat4f projection, Text* label, int x, int y, int width, int height) {
 
-	label.draw(Vec2f(0, 0));
+	label.draw(projection, Vec2f(x, y));
 
 }
 
@@ -122,7 +122,7 @@ int darken(int color, uint percentage) {
 
 }
 
-bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, Text* label = null) {
+bool do_button(UIState* ui, uint id, Window* window, ref Mat4f projection, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, Text* label = null) {
 
 	bool result = false;
 	bool inside = point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
@@ -149,7 +149,7 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 
 	draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
 	draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, m_x - width/2, m_y - height/2, width, height, color, alpha);
-	if (label != null) draw_label(window, label, m_x - width/2, m_y - height/2, width, height);
+	if (label != null) draw_label(window, projection, label, m_x - width/2, m_y - height/2, width, height);
 
 	return result;
 

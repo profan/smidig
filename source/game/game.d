@@ -28,7 +28,9 @@ final class MenuState : GameState {
 	Text menu_join_texture;
 	Text menu_create_texture;
 	Text menu_quit_texture;
-	Shader font_shader;
+	Shader text_shader;
+
+	Mat4f orthographic_projection;
 
 	Texture texture;
 	Shader shader;
@@ -39,8 +41,7 @@ final class MenuState : GameState {
 		this.statehan = statehan;
 		this.ui_state = state;
 
-		int title_color = 0xffa500;
-		int text_color = 0x0e72c9;
+		orthographic_projection = Mat4f.orthographic(0.0f, window.width, window.height, 0.0f, 0.0f, 1.0f);
 
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
@@ -53,6 +54,8 @@ final class MenuState : GameState {
 			writefln("[GAME] Failed to open font: %s", "fonts/OpenSans-Bold.ttf");
 		}
 
+		int title_color = 0xffa500;
+		int text_color = 0x0e72c9;
 		menu_title_texture = Text(menu_font, "Project Blindfire", title_color, &shader);
 		menu_join_texture = Text(menu_font, "Join Game", title_color, &shader);
 		menu_create_texture = Text(menu_font, "Create Game", title_color, &shader);
@@ -96,7 +99,7 @@ final class MenuState : GameState {
 		draw_rectangle(window, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
 		draw_rectangle(window, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
-		draw_label(window, &menu_title_texture, window.width/2, window.height/4, 0, 0);
+		draw_label(window, orthographic_projection, &menu_title_texture, window.width/2, window.height/4, 0, 0);
 
 		/*uint item_width = height / 2, item_height = 32;
 		if(do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, &menu_join_texture)) {

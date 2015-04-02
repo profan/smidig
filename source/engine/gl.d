@@ -63,31 +63,35 @@ struct Text {
 
 		texture = Texture(surf.pixels, surf.w, surf.h, GL_RGBA, GL_RGBA);
 
-
+		int w = texture.width;
+		int h = texture.height;
 		//cartesian coordinate system, inverted y component to not draw upside down.
 		Vertex[6] vertices = [
-			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(0, 1)), // top left 
-			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(1, 1)), // top right
-			Vertex(Vec3f(0.5, 0.5, 0.0), Vec2f(1, 0)), // bottom right
+			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+			Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
+			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
 
-			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(0, 1)), // top left
-			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(0, 0)), // bottom left
-			Vertex(Vec3f(0.5, 0.5, 0.0), Vec2f(1, 0)) // bottom right
+			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+			Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
+			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
 		];
 
 		mesh = Mesh(vertices.ptr, vertices.length);
 		shader = text_shader;
 
+		writefln("W: %d, H: %d", w, h);
+
 	}
 
-	void draw(Vec2f position) {
+	void draw(ref Mat4f projection, Vec2f position) {
 
 		auto tf = Transform(position, Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
 
 		shader.bind();
 		texture.bind(1);
-		shader.update(tf);
+		shader.update(projection, tf);
 		mesh.draw();
+		texture.unbind();
 		shader.unbind();
 
 	}
@@ -182,16 +186,14 @@ struct Texture {
 			printf("[OpenGL] Failed to load texture %s : %s", toStringz(file_name), IMG_GetError());
 		}
 
-		void* pixels;
-		width = image.w;
-		height = image.h;
-		pixels = image.pixels;
-
-		this(pixels, width, height, GL_RGBA, GL_RGBA);
+		this(image.pixels, image.w, image.h, GL_RGBA, GL_RGBA);
 
 	}
 
 	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) {
+
+		this.width = width;
+		this.height = height;
 		
 		//generate single texture, put handle in texture
 		glGenTextures(1, &texture);
@@ -227,6 +229,12 @@ struct Texture {
 		assert(unit >= 0U && unit <= 31U);
 		glActiveTexture(GL_TEXTURE0 + unit); //since this is sequential, this works
 		glBindTexture(GL_TEXTURE_2D, texture);
+
+	}
+
+	void unbind() {
+
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 	}
 
@@ -304,12 +312,13 @@ struct Shader {
 
 	}
 
-	void update(ref Transform transform) {
+	void update(ref Mat4f projection, ref Transform transform) {
 
 		Mat4f model = transform.transform;
 
 		//transpose matrix, since row major, not column
 		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, model.ptr);
+		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
 	}
 
