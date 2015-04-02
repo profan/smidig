@@ -51,6 +51,9 @@ struct Text {
 	Texture texture;
 	Shader* shader;
 
+	@property int width() { return texture.width; }
+	@property int height() { return texture.height; }
+
 	@property ref char[MAX_SIZE] text() { return content; }
 	@property void text(ref char[MAX_SIZE] new_text) { content = new_text[]; }
 
@@ -78,9 +81,7 @@ struct Text {
 
 		mesh = Mesh(vertices.ptr, vertices.length);
 		shader = text_shader;
-
-		writefln("W: %d, H: %d", w, h);
-
+	
 	}
 
 	void draw(ref Mat4f projection, Vec2f position) {

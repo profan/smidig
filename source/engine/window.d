@@ -9,12 +9,17 @@ import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
 import derelict.opengl3.gl;
 
+import gfm.math : Matrix;
+alias Mat4f = Matrix!(float, 4, 4);
+
 struct Window {
 
 	bool alive;
 	char* c_title; //keep this here so the char* for toStringz doesn't point to nowhere!
 	SDL_Window* window;
 	SDL_GLContext glcontext;
+
+	Mat4f view_projection;
 
 	//window data
 	uint window_width, window_height;
@@ -59,6 +64,7 @@ struct Window {
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		view_projection = Mat4f.orthographic(0.0f, width, height, 0.0f, 0.0f, 1.0f);
 
 	}
 
@@ -81,8 +87,6 @@ struct Window {
 	void render_clear() {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		glLoadIdentity();
-		//glOrtho(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 	}
 
 	void render_present() {
@@ -107,6 +111,7 @@ struct Window {
 					window_width = ev.window.data1;
 					window_height = ev.window.data2;
 					glViewport(0, 0, window_width, window_height);
+					view_projection = Mat4f.orthographic(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 					break;
 				case SDL_WINDOWEVENT_EXPOSED:
 					break;
