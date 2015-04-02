@@ -106,7 +106,7 @@ void draw_rectangle(Window* window, DrawFlags flags, float x, float y, float wid
 
 void draw_label(Window* window, Text* label, int x, int y, int width, int height) {
 
-	label.draw(Vec2f(-0.5, -0.5));
+	label.draw(Vec2f(0, 0));
 
 }
 
