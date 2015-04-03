@@ -99,7 +99,7 @@ final class MenuState : GameState {
 
 		draw_label(window, &menu_title_texture, window.width/2, window.height/4, 0, 0);
 
-		/*uint item_width = height / 2, item_height = 32;
+		uint item_width = height / 2, item_height = 32;
 		if(do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, &menu_join_texture)) {
 			statehan.push_state(State.JOIN);
 		} //join
@@ -110,15 +110,17 @@ final class MenuState : GameState {
 		
 		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, &menu_quit_texture)) {
 			window.alive = false;
-		} //quit */
+		} //quit 
 
+		/*
 		auto tf = Transform(Vec2f(0.0f, 0.0f), Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
+
 
 		shader.bind();
 		texture.bind(1);
 		shader.update(tf);
 		mesh.draw();
-		shader.unbind();
+		shader.unbind();*/
 
 	}
 

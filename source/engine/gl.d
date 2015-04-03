@@ -89,7 +89,7 @@ struct Text {
 		auto tf = Transform(position, Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
 
 		shader.bind();
-		texture.bind(1);
+		texture.bind(0);
 		shader.update(projection, tf);
 		mesh.draw();
 		texture.unbind();
@@ -233,9 +233,9 @@ struct Texture {
 	}
 
 	//since OpenGL lets you bind multiple textures at once, maximum(32?)
-	void bind(uint unit) {
+	void bind(int unit) {
 
-		assert(unit >= 0U && unit <= 31U);
+		assert(unit >= 0 && unit <= 31);
 		glActiveTexture(GL_TEXTURE0 + unit); //since this is sequential, this works
 		glBindTexture(GL_TEXTURE_2D, texture);
 
