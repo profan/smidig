@@ -61,6 +61,12 @@ struct UIState {
 
 	}
 
+	~this() {
+
+		glDeleteVertexArrays(1, &box_vao);
+
+	}
+
 } //UIState
 
 void before_ui(ref UIState ui) {

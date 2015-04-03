@@ -228,7 +228,6 @@ struct Texture {
 
 	~this() {
 
-		writefln("[GAME] Cleaned up texture id: %d", texture);
 		glDeleteTextures(1, &texture);
 
 	}
