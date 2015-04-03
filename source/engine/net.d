@@ -367,6 +367,7 @@ struct NetworkPeer {
 								if (id == client_uuid) {
 									logger.log("Can't connect to self.");
 									state = ConnectionState.UNCONNECTED;
+									send(game_thread, Command.DISCONNECT);
 									break;
 								}
 

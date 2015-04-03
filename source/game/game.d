@@ -132,6 +132,9 @@ final class JoiningState : GameState {
 				writefln("[GAME] Received %s from net thread.", to!string(cmd));
 				statehan.pop_state();
 				statehan.push_state(State.GAME);
+			} else if (cmd == Command.DISCONNECT) {
+				writefln("[GAME] Received %s from net thread, going back to menu.", to!string(cmd));
+				statehan.pop_state();
 			}
 		});
 
@@ -288,6 +291,7 @@ final class WaitingState : GameState {
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
 		if(do_button(ui_state, 6, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+			send(network_thread, Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
 
