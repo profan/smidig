@@ -30,8 +30,6 @@ final class MenuState : GameState {
 	Text menu_quit_texture;
 	Shader text_shader;
 
-	Mat4f orthographic_projection;
-
 	Texture texture;
 	Shader shader;
 	Mesh mesh;
@@ -45,7 +43,7 @@ final class MenuState : GameState {
 		char[16][2] uniforms = ["transform", "perspective"];
 		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 
-		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 24);
+		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 20);
 		scope(exit) TTF_CloseFont(menu_font);
 
 		if (menu_font == null) {
@@ -201,7 +199,7 @@ final class MatchState : GameState {
 
 		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null);
 		
-		//move this into create_unit?
+		//TODO move this into create_unit?
 		data.elements = 0;
 		auto type = UpdateType.CREATE;
 		data ~= (cast(ubyte*)&type)[0..type.sizeof];
@@ -231,7 +229,6 @@ final class MatchState : GameState {
 
 	override void update(double dt) {
 
-		//figure out way to split into updating and drawing properly.
 		em.tick!(UpdateSystem)();
 
 	}
@@ -301,7 +298,7 @@ final class WaitingState : GameState {
 
 struct Game {
 
-	import std.uuid;
+	import std.uuid : randomUUID;
 
 	Window* window;
 	EventHandler* evhan;

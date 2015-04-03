@@ -16,6 +16,7 @@ struct UIState {
 	int mouse_x, mouse_y;
 	uint mouse_buttons;
 
+	//encapsulate this, this is TEMPORARY
 	GLuint box_vao;
 	GLuint box_vbo;
 	Shader box_shader;
@@ -70,10 +71,13 @@ struct UIState {
 } //UIState
 
 void before_ui(ref UIState ui) {
+
 	ui.hot_item = 0;
+
 }
 
 void reset_ui(ref UIState ui) {
+
 	if (!is_btn_down(&ui, 1)) {
 		ui.active_item = 0;
 	} else {
@@ -81,6 +85,7 @@ void reset_ui(ref UIState ui) {
 			ui.active_item = -1;
 		}
 	}
+
 }
 
 enum DrawFlags {
