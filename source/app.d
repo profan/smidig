@@ -7,8 +7,9 @@ import derelict.sdl2.mixer;
 import derelict.sdl2.ttf;
 
 import derelict.opengl3.gl;
-
 import derelict.freetype.ft;
+import derelict.util.loader;
+import derelict.util.exception;
 
 import blindfire.game;
 import blindfire.window;
@@ -18,7 +19,21 @@ import blindfire.eventhandler;
 const uint DEFAULT_WINDOW_WIDTH = 640;
 const uint DEFAULT_WINDOW_HEIGHT = 480;
 
+ShouldThrow missingSymFunc( string symName ) {
+
+	//introduced at a later version than what I can find as a binary on windows
+	//also not used in the project, so lets not care about this dependency.
+    if( symName == "FT_Gzip_Uncompress") {
+        return ShouldThrow.No;
+    }
+
+    // Any other missing symbol should throw.
+    return ShouldThrow.Yes;
+}
+
 void initialize_systems() {
+
+	DerelictFT.missingSymbolCallback = &missingSymFunc;
 
 	DerelictSDL2.load();
 	DerelictSDL2Image.load();

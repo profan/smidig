@@ -5,3 +5,5 @@ docs.json
 .*.s??
 blindfire
 fonts/
+*.dll
+*.exe
