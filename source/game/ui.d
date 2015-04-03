@@ -10,27 +10,56 @@ import blindfire.window;
 import blindfire.util;
 import blindfire.gl;
 
-struct PushColor {
-
-	ubyte r, g, b, a;
-	GLfloat[4] colors;
-
-	this(ubyte r, ubyte g, ubyte b, ubyte a) {
-		glGetFloatv(GL_CURRENT_COLOR, colors.ptr);
-		glColor3f(cast(float)(r/255), cast(float)(g/255), cast(float)(b/255));
-	}
-
-	~this() {
-		glColor3f(colors[0], colors[1], colors[2]);
-	}
-
-} //PushColor
-
 struct UIState {
 
 	uint active_item = 0, hot_item = 0;
 	int mouse_x, mouse_y;
 	uint mouse_buttons;
+
+	GLuint box_vao;
+	GLuint box_vbo;
+	Shader box_shader;
+	uint box_num_vertices;
+
+	void init() {
+
+		//upload the vertex data, transform it when actually drawing
+		Vec3f[6] vertices = [
+
+			Vec3f(0.0f, 0.0f, 0.0f), // top left
+			Vec3f(1.0f, 0.0f, 0.0f), // top right
+			Vec3f(1.0f, 1.0f, 0.0f), // bottom right
+
+			Vec3f(0.0f, 0.0f, 0.0f), // top left
+			Vec3f(0.0f, 1.0f, 0.0f), // bottom left
+			Vec3f(1.0f, 1.0f, 0.0f) // bottom right
+
+		];
+
+		box_num_vertices = vertices.length;
+
+		glGenVertexArrays(1, &box_vao);
+		glBindVertexArray(box_vao);
+
+		glGenBuffers(1, &box_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, box_vbo);
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertices[0].sizeof, cast(const(void)*)0);
+
+		glBindVertexArray(0); //INDEED
+
+		AttribLocation[1] attrs = [AttribLocation(0, "position")];
+		char[16][3] uniforms = ["transform", "perspective", "color"];
+		box_shader = Shader("shaders/rectangle", attrs[0..attrs.length], uniforms[0..uniforms.length]);
+
+		int status = glGetError();
+		if (status != GL_NO_ERROR) {
+			writefln("[GAME] OpenGL ERROR: %d", status);
+		}
+
+	}
 
 } //UIState
 
@@ -56,51 +85,27 @@ enum DrawFlags {
 
 } //RectangleType
 
-void set_color(ref GLfloat[4] colors, int color) {
-	glGetFloatv(GL_CURRENT_COLOR, colors.ptr);
-	glColor3f(cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255);
-}
-
 void draw_circle(Window* window, DrawFlags flags, int x, int y, int radius, int color, ubyte alpha = 255) {
-
-	import std.math;
-
-	GLfloat[4] colors;
-	set_color(colors, color);
-	scope(exit) glColor3f(colors[0], colors[1], colors[2]);
-
-	GLenum mode = (flags & flags.FILL) ? GL_TRIANGLE_FAN : GL_LINES;
-
-	glBegin(mode);
-
-	glVertex2f(x, y);
-	for(int angle = 1; angle <= 360; angle = angle + 1)
-		glVertex2f(x + sin(angle) * radius, y + cos(angle) * radius);
-
-	glEnd();
-
+	
 }
 
 //Immediate Mode GUI (IMGUI, see Muratori)
-void draw_rectangle(Window* window, DrawFlags flags, float x, float y, float width, float height, int color, ubyte alpha = 255) {
+void draw_rectangle(Window* window, UIState* state, DrawFlags flags, float x, float y, float width, float height, int color, ubyte alpha = 255) {
 
-	GLfloat[4] colors;
-	set_color(colors, color);
-	scope(exit) glColor3f(colors[0], colors[1], colors[2]);
+	//Vec4f[4] rows = [Vec4f(x, y, 0, 1.0f), Vec4f(0, 0, 0, 1), Vec4f(width, height, 0, 1), Vec4f(1.0f, 1.0f, 1.0f, 1.0f)];
+	//auto transform = Mat4f.fromRows(rows);
+	auto transform = Mat4f.translation(Vec3f(x, y, 0.0f)) * Mat4f.scaling(Vec3f(width, height, 1.0f));
+	GLfloat[4] gl_color = [cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255, cast(float)cast(ubyte)(alpha)/255];
 
-	GLenum mode = (flags & flags.FILL) ? GL_TRIANGLES : GL_LINES;
+	state.box_shader.bind();
+	state.box_shader.update(window.view_projection, transform);
+	glUniform4fv(state.box_shader.bound_uniforms[2], 1, gl_color.ptr);
 
-	glBegin(mode);
-	
-	glVertex3f (x, y, 0); //top left
-	glVertex3f (x, y + height, 0); //bottom left
-	glVertex3f (x + width, y + height, 0); //bottom right
+	glBindVertexArray(state.box_vao);
+	glDrawArrays(GL_TRIANGLES, 0, state.box_num_vertices);
+	glBindVertexArray(0);
 
-	glVertex3f (x, y, 0); //top left
-	glVertex3f (x + width, y, 0); //top right
-	glVertex3f (x + width, y + height, 0); //bottom right
-
-	glEnd();
+	state.box_shader.unbind();
 
 }
 
@@ -147,9 +152,9 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 		}
 	}
 
-	draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
-	draw_rectangle(window, (filled) ? DrawFlags.FILL : DrawFlags.NONE, m_x - width/2, m_y - height/2, width, height, color, alpha);
-	if (label != null) draw_label(window, label, m_x - width/2, m_y - height/2, width, height);
+	draw_rectangle(window, ui, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
+	draw_rectangle(window, ui, (filled) ? DrawFlags.FILL : DrawFlags.NONE, m_x - width/2, m_y - height/2, width, height, color, alpha);
+	if (label != null) draw_label(window, label, m_x, m_y, width, height);
 
 	return result;
 

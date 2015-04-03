@@ -59,7 +59,7 @@ final class MenuState : GameState {
 		menu_create_texture = Text(menu_font, "Create Game", title_color, &shader);
 		menu_quit_texture = Text(menu_font, "Quit", title_color, &shader);
 
-		int w = 512, h = 512;
+		int w = 128, h = 128;
 		Vertex[6] vertices = [
 			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
 			Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
@@ -95,8 +95,8 @@ final class MenuState : GameState {
 		int itemcolor = 0x8bca42;
 
 		uint width = 512, height = window.height - window.height/3;
-		draw_rectangle(window, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
-		draw_rectangle(window, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
+		draw_rectangle(window, ui_state, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
+		draw_rectangle(window, ui_state, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
 		draw_label(window, &menu_title_texture, window.width/2, window.height/4, 0, 0);
 
@@ -359,6 +359,9 @@ struct Game {
 	}
 
 	void run() {
+
+		//upload vertices for ui to gpu, set up shaders.
+		ui_state.init();
 	
 		network_thread = spawn(&launch_peer, thisTid, client_uuid); //pass game thread so it can pass recieved messages back
 		

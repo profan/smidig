@@ -40,9 +40,9 @@ struct SelectionBox {
 
 	void draw(Window* window) {
 
-		if (active) {
-			draw_rectangle(window, DrawFlags.FILL, x, y, w, h, 0x428bca);
-		}
+		//if (active) {
+		//	draw_rectangle(window, DrawFlags.FILL, x, y, w, h, 0x428bca);
+		//}
 		
 		order_set = false;
 

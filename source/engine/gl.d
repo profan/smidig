@@ -12,6 +12,7 @@ import gfm.math;
 
 alias Vec2f = Vector!(float, 2);
 alias Vec3f = Vector!(float, 3);
+alias Vec4f = Vector!(float, 4);
 alias Mat3f = Matrix!(float, 3, 3);
 alias Mat4f = Matrix!(float, 4, 4);
 
@@ -295,7 +296,7 @@ struct Shader {
 	GLuint program;
 
 	//bound uniforms
-	GLuint[2] bound_uniforms;
+	GLuint[4] bound_uniforms;
 
 	//alias this for implicit conversions
 	alias program this;
@@ -327,6 +328,14 @@ struct Shader {
 
 		//transpose matrix, since row major, not column
 		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, model.ptr);
+		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
+
+	}
+
+	void update(ref Mat4f projection, ref Mat4f transform) {
+
+		//transpose matrix, since row major, not column
+		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, transform.ptr);
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
 	}

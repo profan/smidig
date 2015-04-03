@@ -235,7 +235,7 @@ class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 	void update(Window* window) {
 
 		foreach (id, ref comp; components) with (comp) {
-			draw_rectangle(window, DrawFlags.FILL, tc.transform.position.x, tc.transform.position.y, w, h, color);
+			//draw_rectangle(window, DrawFlags.FILL, tc.transform.position.x, tc.transform.position.y, w, h, color);
 		}
 
 	}
