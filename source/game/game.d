@@ -57,16 +57,17 @@ final class MenuState : GameState {
 		menu_title_texture = Text(menu_font, "Project Blindfire", title_color, &shader);
 		menu_join_texture = Text(menu_font, "Join Game", title_color, &shader);
 		menu_create_texture = Text(menu_font, "Create Game", title_color, &shader);
-		menu_quit_texture = Text(menu_font, "Quit", title_color, &shader);	
+		menu_quit_texture = Text(menu_font, "Quit", title_color, &shader);
 
+		int w = 512, h = 512;
 		Vertex[6] vertices = [
-			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, 0.5)), // top left
-			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(0.5, -0.5)), // top right
-			Vertex(Vec3f(0.5, 0.5, 0.0), Vec2f(0.5, 0.5)), // bottom right
+			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+			Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
+			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
 
-			Vertex(Vec3f(-0.5, 0.5, 0.0), Vec2f(-0.5, -0.5)), // top left
-			Vertex(Vec3f(-0.5, -0.5, 0.0), Vec2f(-0.5, 0.5)), // bottom left
-			Vertex(Vec3f(0.5, -0.5, 0.0), Vec2f(0.5, 0.5)) // bottom right
+			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+			Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
+			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
 		];
 
 		mesh = Mesh(vertices.ptr, vertices.length);
@@ -111,16 +112,13 @@ final class MenuState : GameState {
 		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, &menu_quit_texture)) {
 			window.alive = false;
 		} //quit 
-
-		/*
-		auto tf = Transform(Vec2f(0.0f, 0.0f), Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
-
-
+		
+		auto tf = Transform(Vec2f(0.0f, 128.0f), Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
 		shader.bind();
-		texture.bind(1);
-		shader.update(tf);
+		texture.bind(0);
+		shader.update(window.view_projection, tf);
 		mesh.draw();
-		shader.unbind();*/
+		shader.unbind();
 
 	}
 
