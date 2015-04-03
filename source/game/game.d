@@ -45,7 +45,7 @@ final class MenuState : GameState {
 		char[16][2] uniforms = ["transform", "perspective"];
 		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 
-		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 64);
+		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 24);
 		scope(exit) TTF_CloseFont(menu_font);
 
 		if (menu_font == null) {
@@ -58,20 +58,6 @@ final class MenuState : GameState {
 		menu_join_texture = Text(menu_font, "Join Game", title_color, &shader);
 		menu_create_texture = Text(menu_font, "Create Game", title_color, &shader);
 		menu_quit_texture = Text(menu_font, "Quit", title_color, &shader);
-
-		int w = 128, h = 128;
-		Vertex[6] vertices = [
-			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-			Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
-			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
-
-			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-			Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
-			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
-		];
-
-		mesh = Mesh(vertices.ptr, vertices.length);
-		texture = Texture("resource/img/dev_red_512_512.png");
 
 	}
 	
@@ -113,13 +99,6 @@ final class MenuState : GameState {
 			window.alive = false;
 		} //quit 
 		
-		auto tf = Transform(Vec2f(0.0f, 128.0f), Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
-		shader.bind();
-		texture.bind(0);
-		shader.update(window.view_projection, tf);
-		mesh.draw();
-		shader.unbind();
-
 	}
 
 } //MenuState
