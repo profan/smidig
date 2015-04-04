@@ -42,6 +42,7 @@ class GameStateHandler {
 		GameState st = stack[$-1];
 		st.leave(); //leaving the state, do exit stuff
 		stack = stack[0..$-1];
+		stack[$-1].enter(); //entering the state now on top of stack
 		return st;
 	}
 

@@ -11,6 +11,9 @@ import std.conv : to;
 import blindfire.log : Logger;
 import profan.collections : StaticArray;
 
+import std.uuid : UUID;
+alias ClientID = UUID;
+
 enum MessageType : uint {
 
 	CONNECT,
@@ -20,9 +23,6 @@ enum MessageType : uint {
 	PONG,
 
 } //MessageType
-
-import std.uuid : UUID;
-alias ClientID = UUID;
 
 enum ConnectionState {
 
@@ -93,14 +93,8 @@ struct Peer {
 
 }
 
-enum Owner {
-	LOCAL,
-	REMOTE
-}
-
 struct NetVar(T) {
 
-	Owner owner = Owner.LOCAL;
 	alias variable this;
 	bool changed = false;
 	
