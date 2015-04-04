@@ -187,11 +187,11 @@ final class MatchState : GameState {
 
 	}
 
-	import blindfire.netmsg : UpdateType, EntityType;
 	StaticArray!(ubyte, 512) data;
 
 	override void enter() {
 
+		import blindfire.netmsg : UpdateType, EntityType;
 		import std.random : uniform;
 
 		auto x = uniform(128, 256);
