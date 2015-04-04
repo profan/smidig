@@ -56,12 +56,12 @@ final class MenuState : GameState {
 			writefln("[GAME] Failed to open font: %s", "fonts/OpenSans-Bold.ttf");
 		}
 
-		int title_color = 0xffa500;
-		int text_color = 0x0e72c9;
+		int title_color = 0x0e72c9;
+		int text_color = 0x8142ca;
 		menu_title_texture = Text(title_font, "Project Blindfire", title_color, &shader);
-		menu_join_texture = Text(menu_font, "Join Game", title_color, &shader);
-		menu_create_texture = Text(menu_font, "Create Game", title_color, &shader);
-		menu_quit_texture = Text(menu_font, "Quit", title_color, &shader);
+		menu_join_texture = Text(menu_font, "Join Game", text_color, &shader);
+		menu_create_texture = Text(menu_font, "Create Game", text_color, &shader);
+		menu_quit_texture = Text(menu_font, "Quit", text_color, &shader);
 
 	}
 	
