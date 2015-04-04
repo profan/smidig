@@ -23,6 +23,7 @@ final class MenuState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 
+	TTF_Font* title_font;
 	TTF_Font* menu_font;
 
 	Text menu_title_texture;
@@ -44,8 +45,12 @@ final class MenuState : GameState {
 		char[16][2] uniforms = ["transform", "perspective"];
 		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 
+		title_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 48);
 		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 20);
-		scope(exit) TTF_CloseFont(menu_font);
+		scope(exit) {
+			TTF_CloseFont(title_font);
+			TTF_CloseFont(menu_font);
+		}
 
 		if (menu_font == null) {
 			writefln("[GAME] Failed to open font: %s", "fonts/OpenSans-Bold.ttf");
@@ -53,7 +58,7 @@ final class MenuState : GameState {
 
 		int title_color = 0xffa500;
 		int text_color = 0x0e72c9;
-		menu_title_texture = Text(menu_font, "Project Blindfire", title_color, &shader);
+		menu_title_texture = Text(title_font, "Project Blindfire", title_color, &shader);
 		menu_join_texture = Text(menu_font, "Join Game", title_color, &shader);
 		menu_create_texture = Text(menu_font, "Create Game", title_color, &shader);
 		menu_quit_texture = Text(menu_font, "Quit", title_color, &shader);
