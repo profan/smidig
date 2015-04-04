@@ -250,7 +250,7 @@ struct Transform {
 	Vec2f rotation;
 	Vec2f scale;
 
-	this(in Vec2f pos, in Vec2f rotation, in Vec2f scale) {
+	this(in Vec2f pos, in Vec2f rotation = Vec2f(0.0f, 0.0f), in Vec2f scale = Vec2f(1.0f, 1.0f)) {
 		this.position = pos;
 		this.rotation = rotation;
 		this.scale = scale;

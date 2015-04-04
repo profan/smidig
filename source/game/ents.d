@@ -15,12 +15,13 @@ auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id) {
 		auto unit = em.create_entity();
 	}
 
-	TransformComponent mc = {velocity: Vec2f(0, 0), transform: Transform(pos, Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f))};
-	writefln("Matrix: %s", mc.transform);
+	TransformComponent mc = {velocity: Vec2f(0, 0), transform: Transform(pos)};
 	em.register_component!TransformComponent(unit, mc);
+
 	em.register_component!CollisionComponent(unit); //beware of order, this depends on above component
 	auto cc = em.get_component!CollisionComponent(unit);
 	cc.radius = 32; //arbitrary number :D
+
 	em.register_component!InputComponent(unit);
 	em.register_component!OrderComponent(unit);
 
