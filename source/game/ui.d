@@ -97,6 +97,13 @@ enum DrawFlags {
 
 } //RectangleType
 
+GLfloat[4] int_to_glcolor(int color, ubyte alpha) {
+
+	GLfloat[4] gl_color = [cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255, cast(float)cast(ubyte)(alpha)/255];
+	return gl_color;
+
+}
+
 void draw_circle(Window* window, DrawFlags flags, int x, int y, int radius, int color, ubyte alpha = 255) {
 	
 }
@@ -104,10 +111,8 @@ void draw_circle(Window* window, DrawFlags flags, int x, int y, int radius, int 
 //Immediate Mode GUI (IMGUI, see Muratori)
 void draw_rectangle(Window* window, UIState* state, DrawFlags flags, float x, float y, float width, float height, int color, ubyte alpha = 255) {
 
-	//Vec4f[4] rows = [Vec4f(x, y, 0, 1.0f), Vec4f(0, 0, 0, 1), Vec4f(width, height, 0, 1), Vec4f(1.0f, 1.0f, 1.0f, 1.0f)];
-	//auto transform = Mat4f.fromRows(rows);
 	auto transform = Mat4f.translation(Vec3f(x, y, 0.0f)) * Mat4f.scaling(Vec3f(width, height, 1.0f));
-	GLfloat[4] gl_color = [cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255, cast(float)cast(ubyte)(alpha)/255];
+	GLfloat[4] gl_color = int_to_glcolor(color, alpha);
 
 	state.box_shader.bind();
 	state.box_shader.update(window.view_projection, transform);

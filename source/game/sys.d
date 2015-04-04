@@ -264,6 +264,7 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 		this.sbox = sb;
 	}
 
+	//TODO make sure this only works for local units that the player is in control of later, probably easy to fix
 	void update() {
 
 		foreach (id, ref comp; components) with (comp) {
@@ -285,6 +286,8 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 
 } //OrderManager
 
+
+//TODO order system without polymorphism? hello-switch?
 struct OrderComponent {
 
 	bool selected = false;
