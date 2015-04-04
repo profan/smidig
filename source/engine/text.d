@@ -13,7 +13,7 @@ struct FontAtlas {
 	FT_Face face;
 	FT_GlyphSlot g;
 
-	this(in char[] font_name) {
+	this(in char[] font_name, uint font_size) {
 
 		if (FT_Init_FreeType(&ft)) { 
 			writefln("[GAME] Could not init freetype.");
@@ -23,7 +23,7 @@ struct FontAtlas {
 			writefln("[GAME] Could not open font.");
 		}
 
-		FT_Set_Pixel_Sizes(face, 0, 48);
+		FT_Set_Pixel_Sizes(face, 0, font_size);
 
 	}
 

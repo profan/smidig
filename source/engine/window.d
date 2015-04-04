@@ -19,6 +19,7 @@ struct Window {
 	SDL_Window* window;
 	SDL_GLContext glcontext;
 
+	//gl related data
 	Mat4f view_projection;
 
 	//window data

@@ -13,6 +13,7 @@ import blindfire.window;
 import blindfire.eventhandler;
 import blindfire.graphics;
 import blindfire.state;
+import blindfire.defs;
 import blindfire.net;
 import blindfire.gl;
 import blindfire.ui;

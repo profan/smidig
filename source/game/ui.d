@@ -8,6 +8,7 @@ import derelict.opengl3.gl;
 
 import blindfire.window;
 import blindfire.util;
+import blindfire.defs;
 import blindfire.gl;
 
 struct UIState {
