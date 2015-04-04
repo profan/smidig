@@ -24,6 +24,7 @@ struct InputStream {
 	size_t size;
 	size_t current = 0;
 	ubyte* buffer;
+
 	this(ubyte* data, size_t length) {
 		this.buffer = data;
 		this.size = length;
@@ -41,10 +42,11 @@ struct OutputStream {
 
 	size_t size;
 	size_t current = 0;
-	ubyte[]* buffer;
-	this(ubyte[]* data) {
+	ubyte* buffer;
+
+	this(ubyte* data, size_t length) {
 		this.buffer = data;
-		this.size = data.length;
+		this.size = length;
 	}
 
 	void write(T)() @nogc {
