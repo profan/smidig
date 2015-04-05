@@ -199,6 +199,21 @@ struct NetworkPeer {
 
 	}
 
+	void handle_disconnect() {
+
+		logger.log("Sending disconnect message.");
+		foreach (id, peer; peers)
+			send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, client_uuid);
+		foreach (key; peers.keys) //creates an array of keys from the hashmap's keys
+			peers.remove(key);
+		state = switch_state(ConnectionState.UNCONNECTED);
+
+	}
+
+	ConnectionState switch_state(ConnectionState new_state) {
+		logger.log("Switching state to: %s", to!string(new_state));
+		return new_state;
+	}
 
 	//rewritten
 	void listen() {
@@ -207,7 +222,7 @@ struct NetworkPeer {
 		bind_to_port(addr);
 
 		open = true;
-		state = ConnectionState.UNCONNECTED;
+		state = switch_state(ConnectionState.UNCONNECTED);
 		logger.log("Listening on localhost:%d", port);
 
 		Address from; //used to keep track of who message was received from
@@ -279,11 +294,7 @@ struct NetworkPeer {
 						logger.log("Command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.DISCONNECT:
-								logger.log("Sending disconnect message.");
-								foreach (id, peer; peers)
-									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, client_uuid);
-								foreach (key; peers.keys) peers.remove(key);
-								state = ConnectionState.UNCONNECTED;
+								handle_disconnect();
 								break;
 							default:
 								logger.log("Unhandled Command: %s", to!string(cmd));
@@ -322,7 +333,7 @@ struct NetworkPeer {
 								logger.log("Entering Connect.");
 								auto target = cast(InternetAddress)to_addr;
 								send_packet!(BasicMessage)(MessageType.CONNECT, target, client_uuid);
-								state = ConnectionState.WAITING;
+								state = switch_state(ConnectionState.WAITING);
 								break;
 							default:
 								logger.log("Unhandled Command: %s", to!string(cmd));
@@ -332,7 +343,7 @@ struct NetworkPeer {
 						logger.log("Received command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.CREATE:
-								state = ConnectionState.WAITING;
+								state = switch_state(ConnectionState.WAITING);
 								break;							
 							case Command.TERMINATE:
 								open = false;
@@ -360,7 +371,7 @@ struct NetworkPeer {
 
 								if (id == client_uuid) {
 									logger.log("Can't connect to self.");
-									state = ConnectionState.UNCONNECTED;
+									state = switch_state(ConnectionState.UNCONNECTED);
 									send(game_thread, Command.DISCONNECT);
 									break;
 								}
@@ -374,7 +385,7 @@ struct NetworkPeer {
 								}
 
 								send(game_thread, Command.CREATE);
-								state = ConnectionState.CONNECTED;
+								state = switch_state(ConnectionState.CONNECTED);
 								break;
 
 							case MessageType.PING:
@@ -400,11 +411,7 @@ struct NetworkPeer {
 						logger.log("Received command: %s", to!string(cmd));
 						switch (cmd) {
 							case Command.DISCONNECT:
-								logger.log("Sending disconnect message.");
-								foreach (id, peer; peers)
-									send_packet!(BasicMessage)(MessageType.DISCONNECT, peer.addr, client_uuid);
-								foreach (key; peers.keys) peers.remove(key);
-								state = ConnectionState.UNCONNECTED;
+								handle_disconnect();
 								break;
 							case Command.TERMINATE:
 								open = false;
