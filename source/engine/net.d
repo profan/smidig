@@ -242,7 +242,7 @@ struct NetworkPeer {
 								}
 
 								logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
-								send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
+								send(game_thread, Command.UPDATE, data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
 								break;
 
 							case MessageType.DISCONNECT:
