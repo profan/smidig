@@ -117,7 +117,7 @@ final class JoiningState : GameState {
 			if (cmd == Command.CREATE) {
 				writefln("[GAME] Received %s from net thread.", to!string(cmd));
 				statehan.pop_state();
-				statehan.push_state(State.GAME);
+				statehan.push_state(State.LOBBY);
 			} else if (cmd == Command.DISCONNECT) {
 				writefln("[GAME] Received %s from net thread, going back to menu.", to!string(cmd));
 				statehan.pop_state();
