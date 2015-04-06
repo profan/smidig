@@ -135,7 +135,7 @@ struct NetworkPeer {
 
 	bool open;
 	UdpSocket socket;
-	ConnectionState state;
+	ConnectionState state = ConnectionState.UNCONNECTED;
 
 	//list of connected peers as a hashmap, identified by their UUID
 	Peer[ClientID] peers;
@@ -222,7 +222,6 @@ struct NetworkPeer {
 		bind_to_port(addr);
 
 		open = true;
-		state = switch_state(ConnectionState.UNCONNECTED);
 		logger.log("Listening on localhost:%d", port);
 
 		Address from; //used to keep track of who message was received from
@@ -257,7 +256,7 @@ struct NetworkPeer {
 								}
 
 								logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
-								send(game_thread, Command.UPDATE, data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
+								send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup); //this cast is not useless, DO NOT REMOVE THIS UNLESS YOU ACTUALLY FIX THE PROBLEM
 								break;
 
 							case MessageType.DISCONNECT:

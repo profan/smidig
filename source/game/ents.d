@@ -3,11 +3,12 @@ module blindfire.ents;
 import std.stdio : writefln;
 import std.uuid : UUID;
 
-import blindfire.gl : Vec2f, Transform;
+import blindfire.gl : Mesh, Shader, Texture, Transform, Vertex;
+import blindfire.defs : Vec2f, Vec3f;
 import blindfire.sys;
 import profan.ecs;
 
-auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id) {
+auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id, Shader* shader, Texture* texture) {
 
 	static if (net) {
 		auto unit = em.create_entity(*id);
@@ -27,9 +28,22 @@ auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id) {
 
 	em.register_component!SpriteComponent(unit);
 	SpriteComponent* sc = em.get_component!SpriteComponent(unit);
-	sc.color = 0xffa500;
-	sc.w = 32;
-	sc.h = 32;
+	
+	int w = texture.width;
+	int h = texture.height;
+	Vertex[6] vertices = [
+		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+		Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
+		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
+
+		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+		Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
+		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
+	];
+
+	sc.mesh = Mesh(vertices.ptr, vertices.length);
+	sc.texture = texture;
+	sc.shader = shader;
 	
 	em.register_component!NetworkComponent(unit);
 

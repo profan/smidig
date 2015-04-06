@@ -12,6 +12,7 @@ import derelict.freetype.ft;
 import blindfire.window;
 import blindfire.eventhandler;
 import blindfire.graphics;
+import blindfire.resource;
 import blindfire.state;
 import blindfire.defs;
 import blindfire.net;
@@ -44,6 +45,8 @@ final class MenuState : GameState {
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
 		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
+
+		ResourceManager.get().set_resource!(Shader)(cast(shared)&shader, 0);
 
 		title_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 48);
 		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 20);
@@ -171,6 +174,8 @@ final class MatchState : GameState {
 	EntityManager em;
 
 	EntityID player;
+	
+	Texture unit_texture;
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid, ClientID uuid) {
 		this.statehan = statehan;
@@ -191,6 +196,9 @@ final class MatchState : GameState {
 		evhan.bind_mousebtn(3, &sbox.set_order, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
 
+		unit_texture = Texture("resource/img/dev_red_512_512.png");
+		ResourceManager.get().set_resource!(Texture)(cast(shared)&unit_texture, 1);
+
 	}
 
 	StaticArray!(ubyte, 512) data;
@@ -203,7 +211,10 @@ final class MatchState : GameState {
 		auto x = uniform(128, 256);
 		auto y = uniform(128, 256);
 
-		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null);
+		Shader* s = ResourceManager.get().get_resource!(Shader)(0);
+		Texture* t = ResourceManager.get().get_resource!(Texture)(1);
+
+		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null, s, t);
 		
 		//TODO move this into create_unit?
 		data.elements = 0;
@@ -219,7 +230,7 @@ final class MatchState : GameState {
 		auto vec2 = Vec2f(x, y);
 		data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
 			
-		send(network_thread, Command.UPDATE, data.array[0..data.elements].idup);
+		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data.array[0..data.elements].idup);
 
 	}
 

@@ -9,21 +9,28 @@ alias ResourceID = uint;
 class ResourceManager {
 
 	//some structure mapping an identifier to a texture
-	Texture[ResourceID] textures;
-
-	this() {
-
-	}
-
-	void load_texture(in char[] file_name, ResourceID identifier) {
+	private void*[ResourceID] resources;
+	private static shared ResourceManager instance;
 		
-		textures[identifier] = Texture(file_name);
+	static shared(ResourceManager) get() {
+
+		if (instance is null) {
+			instance = new ResourceManager();
+		}
+
+		return instance;
 
 	}
 
-	ref auto get_texture(ResourceID identifier) {
+	shared void set_resource(T)(shared(T*) resource, ResourceID identifier) {
 
-		return textures[identifier];
+		resources[identifier] = resource;
+
+	}
+
+	shared T* get_resource(T)(ResourceID identifier) {
+
+		return cast(T*)resources[identifier];
 
 	}
 

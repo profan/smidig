@@ -138,8 +138,13 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 						switch (entity_type) {
 							case EntityType.UNIT: //create_unit
 
+								import blindfire.resource : ResourceManager;
+								import blindfire.gl : Shader, Texture;
+								writefln("CREATED!");
 								Vec2f position = input_stream.read!Vec2f();
-								create_unit!(true)(em, position, &entity_id);
+								create_unit!(true)(em, position, &entity_id, 
+										ResourceManager.get().get_resource!(Shader)(0),
+										ResourceManager.get().get_resource!(Texture)(1));
 								break;
 
 							default:
@@ -235,7 +240,12 @@ class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 	void update(Window* window) {
 
 		foreach (id, ref comp; components) with (comp) {
-			//draw_rectangle(window, DrawFlags.FILL, tc.transform.position.x, tc.transform.position.y, w, h, color);
+			shader.bind();
+			texture.bind(0);
+			shader.update(window.view_projection, tc.transform);
+			mesh.draw();
+			texture.unbind();
+			shader.unbind();
 		}
 
 	}
@@ -244,10 +254,13 @@ class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 
 struct SpriteComponent {
 
+	import blindfire.gl : Mesh, Shader, Texture;
+
 	//some drawing stuff?
 	//texture and vao?
-	int w, h;
-	int color;
+	Mesh mesh;
+	Shader* shader;
+   	Texture* texture;
 	@dependency TransformComponent* tc;
 
 } //SpriteComponent
