@@ -15,7 +15,8 @@ enum State {
 	MENU = 0,
 	GAME = 1,
 	JOIN = 2,
-	WAIT = 3
+	LOBBY = 3,
+	WAIT = 4
 
 } //State
 

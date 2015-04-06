@@ -73,15 +73,15 @@ final class MenuState : GameState {
 		draw_label(window, menu_title_texture, window.width/2, window.height/4, 0, 0);
 
 		uint item_width = height / 2, item_height = 32;
-		if(do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, menu_join_texture)) {
+		if (do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, menu_join_texture)) {
 			statehan.push_state(State.JOIN);
 		} //join
 
-		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
-			statehan.push_state(State.WAIT);
+		if (do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
+			statehan.push_state(State.LOBBY);
 		} //create
 		
-		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, menu_quit_texture)) {
+		if (do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, menu_quit_texture)) {
 			window.alive = false;
 		} //quit 
 		
@@ -130,7 +130,7 @@ final class JoiningState : GameState {
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width/2, item_height = 32;
-		if(do_button(ui_state, 4, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+		if (do_button(ui_state, 4, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
 			statehan.pop_state();
 		} //back to menu, cancel
 
@@ -148,7 +148,7 @@ final class LobbyState : GameState {
 
 	ClientID uuid;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid, ClientID uuid) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, ClientID uuid) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
@@ -156,7 +156,7 @@ final class LobbyState : GameState {
 	}
 
 	void enter() {
-
+		send(network_thread, Command.CREATE);
 	}
 
 	void leave() {
@@ -168,6 +168,16 @@ final class LobbyState : GameState {
 	}
 
 	void draw(Window* window) {
+
+		int bgcolor = 0xbc8142;
+		draw_rectangle(window, ui_state, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
+
+		int itemcolor = 0x8bca42;
+		uint item_width = window.width / 2, item_height = 32;
+		if (do_button(ui_state, 6, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+			send(network_thread, Command.DISCONNECT);
+			statehan.pop_state();
+		} //back to menu
 
 	}
 
@@ -289,7 +299,6 @@ final class WaitingState : GameState {
 	}
 
 	override void enter() {
-		send(network_thread, Command.CREATE);
 	}
 
 	override void leave() {
@@ -441,6 +450,7 @@ struct Game {
 		state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
 		state.add_state(new MatchState(state, evhan, &ui_state, window, network_thread, client_uuid), State.GAME);
 		state.add_state(new JoiningState(state, evhan, &ui_state, network_thread), State.JOIN);
+		state.add_state(new LobbyState(state, evhan, &ui_state, network_thread, client_uuid), State.LOBBY);
 		state.add_state(new WaitingState(state, evhan, &ui_state, network_thread), State.WAIT);
 		state.push_state(State.MENU);
 
