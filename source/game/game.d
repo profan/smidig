@@ -159,6 +159,41 @@ final class JoiningState : GameState {
 
 } //JoiningState
 
+
+// state handles match-preparation stage (whatever that may be?)
+final class LobbyState : GameState {
+
+	UIState* ui_state;
+	GameStateHandler statehan;
+	Tid network_thread;
+
+	ClientID uuid;
+
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid, ClientID uuid) {
+		this.statehan = statehan;
+		this.ui_state = state;
+		this.network_thread = net_tid;
+		this.uuid = uuid;
+	}
+
+	void enter() {
+
+	}
+
+	void leave() {
+
+	}
+
+	void update(double dt) {
+
+	}
+
+	void draw(Window* window) {
+
+	}
+
+} //LobbyState
+
 final class MatchState : GameState {
 
 	import profan.ecs : EntityID, EntityManager;
