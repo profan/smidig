@@ -148,6 +148,9 @@ final class LobbyState : GameState {
 
 	ClientID uuid;
 
+	Text* lobby_start_texture;
+	Text* lobby_quit_texture;
+
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, ClientID uuid) {
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -156,7 +159,15 @@ final class LobbyState : GameState {
 	}
 
 	void enter() {
+
+		if (lobby_start_texture is null) {
+			auto rm = ResourceManager.get();
+			lobby_start_texture = rm.get_resource!(Text)(Resource.LOBBY_START_TEXTURE);
+			lobby_quit_texture = rm.get_resource!(Text)(Resource.LOBBY_QUIT_TEXTURE);
+		}
+
 		send(network_thread, Command.CREATE);
+
 	}
 
 	void leave() {
@@ -174,7 +185,12 @@ final class LobbyState : GameState {
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
-		if (do_button(ui_state, 6, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+
+		//bottom left for quit button
+		if (do_button(ui_state, 8, window, true, item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, lobby_start_texture)) {
+			
+		}
+		if (do_button(ui_state, 9, window, true, item_width + item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, lobby_quit_texture)) {
 			send(network_thread, Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
@@ -342,6 +358,9 @@ enum Resource {
 	MENU_CREATE_TEXTURE,
 	MENU_QUIT_TEXTURE,
 
+	LOBBY_START_TEXTURE,
+	LOBBY_QUIT_TEXTURE,
+
 	//units
 	UNIT_TEXTURE
 
@@ -425,17 +444,24 @@ struct Game {
 
 		int title_color = 0x0e72c9;
 		int text_color = 0x8142ca;
-
-		char[64][4] texts = ["Project Blindfire", "Join Game", "Create Game", "Quit"];
-		auto menu_title_texture = ra.allocate!(Text)(title_font, texts[0], title_color, shader);
-		auto menu_join_texture = ra.allocate!(Text)(menu_font, texts[1], text_color, shader);
-		auto menu_create_texture = ra.allocate!(Text)(menu_font, texts[2], text_color, shader);
-		auto menu_quit_texture = ra.allocate!(Text)(menu_font, texts[3], text_color, shader);
+		char[64][4] menu_text = ["Project Blindfire", "Join Game", "Create Game", "Quit"];
+		auto menu_title_texture = ra.allocate!(Text)(title_font, menu_text[0], title_color, shader);
+		auto menu_join_texture = ra.allocate!(Text)(menu_font, menu_text[1], text_color, shader);
+		auto menu_create_texture = ra.allocate!(Text)(menu_font, menu_text[2], text_color, shader);
+		auto menu_quit_texture = ra.allocate!(Text)(menu_font, menu_text[3], text_color, shader);
 
 		rm.set_resource!(Text)(menu_title_texture, Resource.MENU_TITLE_TEXTURE);
 		rm.set_resource!(Text)(menu_join_texture, Resource.MENU_JOIN_TEXTURE);
 		rm.set_resource!(Text)(menu_create_texture, Resource.MENU_CREATE_TEXTURE);
 		rm.set_resource!(Text)(menu_quit_texture, Resource.MENU_QUIT_TEXTURE);
+
+		//lobby resources
+		char[64][2] lobby_text = ["Start Game", "Exit Lobby"];
+		auto lobby_start_texture = ra.allocate!(Text)(menu_font, lobby_text[0], title_color, shader);
+		auto lobby_quit_texture = ra.allocate!(Text)(menu_font, lobby_text[1], title_color, shader);
+
+		rm.set_resource!(Text)(lobby_start_texture, Resource.LOBBY_START_TEXTURE);
+		rm.set_resource!(Text)(lobby_quit_texture, Resource.LOBBY_QUIT_TEXTURE);
 
 	}
 
