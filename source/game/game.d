@@ -190,6 +190,7 @@ final class LobbyState : GameState {
 		if (do_button(ui_state, 8, window, true, item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, lobby_start_texture)) {
 			
 		}
+
 		if (do_button(ui_state, 9, window, true, item_width + item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, lobby_quit_texture)) {
 			send(network_thread, Command.DISCONNECT);
 			statehan.pop_state();
