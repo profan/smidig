@@ -101,6 +101,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import blindfire.netmsg : InputStream, UpdateType, EntityType;
 	import blindfire.ents : create_unit;
 	import blindfire.gl : Vec2f, Mat3f, Transform;
+	import blindfire.game : Resource;
 
 	Tid network_thread;
 	ClientID client_uuid;
@@ -143,8 +144,8 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 								writefln("CREATED!");
 								Vec2f position = input_stream.read!Vec2f();
 								create_unit!(true)(em, position, &entity_id, 
-										ResourceManager.get().get_resource!(Shader)(0),
-										ResourceManager.get().get_resource!(Texture)(1));
+										ResourceManager.get().get_resource!(Shader)(Resource.BASIC_SHADER),
+										ResourceManager.get().get_resource!(Texture)(Resource.UNIT_TEXTURE));
 								break;
 
 							default:

@@ -10,9 +10,9 @@ class ResourceManager {
 
 	//some structure mapping an identifier to a texture
 	private void*[ResourceID] resources;
-	private static shared ResourceManager instance;
+	private static __gshared ResourceManager instance;
 		
-	static shared(ResourceManager) get() {
+	static ResourceManager get() {
 
 		if (instance is null) {
 			instance = new ResourceManager();
@@ -22,13 +22,13 @@ class ResourceManager {
 
 	}
 
-	shared void set_resource(T)(shared(T*) resource, ResourceID identifier) {
+	__gshared void set_resource(T)(T* resource, ResourceID identifier) {
 
 		resources[identifier] = resource;
 
 	}
 
-	shared T* get_resource(T)(ResourceID identifier) {
+	__gshared T* get_resource(T)(ResourceID identifier) {
 
 		return cast(T*)resources[identifier];
 

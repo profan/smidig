@@ -27,48 +27,27 @@ final class MenuState : GameState {
 	TTF_Font* title_font;
 	TTF_Font* menu_font;
 
-	Text menu_title_texture;
-	Text menu_join_texture;
-	Text menu_create_texture;
-	Text menu_quit_texture;
-	Shader text_shader;
-
-	Texture texture;
-	Shader shader;
-	Mesh mesh;
+	Text* menu_title_texture;
+	Text* menu_join_texture;
+	Text* menu_create_texture;
+	Text* menu_quit_texture;
 	
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
 
 		this.statehan = statehan;
 		this.ui_state = state;
 
-		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
-		char[16][2] uniforms = ["transform", "perspective"];
-		shader = Shader("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
-
-		ResourceManager.get().set_resource!(Shader)(cast(shared)&shader, 0);
-
-		title_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 48);
-		menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 20);
-		scope(exit) {
-			TTF_CloseFont(title_font);
-			TTF_CloseFont(menu_font);
-		}
-
-		if (menu_font == null) {
-			writefln("[GAME] Failed to open font: %s", "fonts/OpenSans-Bold.ttf");
-		}
-
-		int title_color = 0x0e72c9;
-		int text_color = 0x8142ca;
-		menu_title_texture = Text(title_font, "Project Blindfire", title_color, &shader);
-		menu_join_texture = Text(menu_font, "Join Game", text_color, &shader);
-		menu_create_texture = Text(menu_font, "Create Game", text_color, &shader);
-		menu_quit_texture = Text(menu_font, "Quit", text_color, &shader);
-
 	}
 	
 	override void enter() {
+
+		if (this.menu_title_texture is null) {
+			auto rm = ResourceManager.get();
+			this.menu_title_texture = rm.get_resource!(Text)(Resource.MENU_TITLE_TEXTURE);
+			this.menu_join_texture = rm.get_resource!(Text)(Resource.MENU_JOIN_TEXTURE);
+			this.menu_create_texture = rm.get_resource!(Text)(Resource.MENU_CREATE_TEXTURE);
+			this.menu_quit_texture = rm.get_resource!(Text)(Resource.MENU_QUIT_TEXTURE);
+		}
 
 	}
 
@@ -91,18 +70,18 @@ final class MenuState : GameState {
 		draw_rectangle(window, ui_state, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
 		draw_rectangle(window, ui_state, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
-		draw_label(window, &menu_title_texture, window.width/2, window.height/4, 0, 0);
+		draw_label(window, menu_title_texture, window.width/2, window.height/4, 0, 0);
 
 		uint item_width = height / 2, item_height = 32;
-		if(do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, &menu_join_texture)) {
+		if(do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, menu_join_texture)) {
 			statehan.push_state(State.JOIN);
 		} //join
 
-		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, &menu_create_texture)) {
+		if(do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
 			statehan.push_state(State.WAIT);
 		} //create
 		
-		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, &menu_quit_texture)) {
+		if(do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, menu_quit_texture)) {
 			window.alive = false;
 		} //quit 
 		
@@ -209,8 +188,6 @@ final class MatchState : GameState {
 	EntityManager em;
 
 	EntityID player;
-	
-	Texture unit_texture;
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid, ClientID uuid) {
 		this.statehan = statehan;
@@ -231,9 +208,6 @@ final class MatchState : GameState {
 		evhan.bind_mousebtn(3, &sbox.set_order, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
 
-		unit_texture = Texture("resource/img/dev_red_512_512.png");
-		ResourceManager.get().set_resource!(Texture)(cast(shared)&unit_texture, 1);
-
 	}
 
 	StaticArray!(ubyte, 512) data;
@@ -246,8 +220,8 @@ final class MatchState : GameState {
 		auto x = uniform(128, 256);
 		auto y = uniform(128, 256);
 
-		Shader* s = ResourceManager.get().get_resource!(Shader)(0);
-		Texture* t = ResourceManager.get().get_resource!(Texture)(1);
+		Shader* s = ResourceManager.get().get_resource!(Shader)(Resource.BASIC_SHADER);
+		Texture* t = ResourceManager.get().get_resource!(Texture)(Resource.UNIT_TEXTURE);
 
 		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null, s, t);
 		
@@ -348,6 +322,22 @@ final class WaitingState : GameState {
 
 } //WaitingState
 
+enum Resource {
+
+	//shaders
+	BASIC_SHADER,
+
+	//textures
+	MENU_TITLE_TEXTURE,
+	MENU_JOIN_TEXTURE,
+	MENU_CREATE_TEXTURE,
+	MENU_QUIT_TEXTURE,
+
+	//units
+	UNIT_TEXTURE
+
+}
+
 struct Game {
 
 	import std.uuid : randomUUID;
@@ -360,6 +350,10 @@ struct Game {
 	Tid network_thread;
 	ClientID client_uuid;
 
+	import blindfire.memory;
+	StackAllocator resource_allocator;
+
+
 	this(Window* window, EventHandler* evhan) {
 
 		this.window = window;
@@ -367,6 +361,7 @@ struct Game {
 		this.ui_state = UIState();
 		this.state = new GameStateHandler();
 		this.client_uuid = randomUUID();
+		this.resource_allocator = StackAllocator(8096);
 		
 	}
 
@@ -386,12 +381,58 @@ struct Game {
 	void draw() {
 
 		//such draw
+		ui_state.before_ui();
 		state.draw(window);
+		ui_state.reset_ui();
+
+	}
+
+	void load_resources() {
+
+		import blindfire.gl;
+
+		alias ra = resource_allocator;
+		auto rm = ResourceManager.get();
+
+		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
+		char[16][2] uniforms = ["transform", "perspective"];
+		auto shader = ra.allocate!(Shader)("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
+		rm.set_resource!(Shader)(shader, Resource.BASIC_SHADER);
+
+		auto unit_tex = ra.allocate!(Texture)("resource/img/dev_red_512_512.png");
+		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
+
+		//menu resourcs
+		auto title_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 48);
+		auto menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 20);
+		scope(exit) {
+			TTF_CloseFont(title_font);
+			TTF_CloseFont(menu_font);
+		}
+
+		if (menu_font == null) {
+			writefln("[GAME] Failed to open font: %s", "fonts/OpenSans-Bold.ttf");
+		}
+
+		int title_color = 0x0e72c9;
+		int text_color = 0x8142ca;
+
+		char[64][4] texts = ["Project Blindfire", "Join Game", "Create Game", "Quit"];
+		auto menu_title_texture = ra.allocate!(Text)(title_font, texts[0], title_color, shader);
+		auto menu_join_texture = ra.allocate!(Text)(menu_font, texts[1], text_color, shader);
+		auto menu_create_texture = ra.allocate!(Text)(menu_font, texts[2], text_color, shader);
+		auto menu_quit_texture = ra.allocate!(Text)(menu_font, texts[3], text_color, shader);
+
+		rm.set_resource!(Text)(menu_title_texture, Resource.MENU_TITLE_TEXTURE);
+		rm.set_resource!(Text)(menu_join_texture, Resource.MENU_JOIN_TEXTURE);
+		rm.set_resource!(Text)(menu_create_texture, Resource.MENU_CREATE_TEXTURE);
+		rm.set_resource!(Text)(menu_quit_texture, Resource.MENU_QUIT_TEXTURE);
 
 	}
 
 	void run() {
 
+		load_resources();
 		//upload vertices for ui to gpu, set up shaders.
 		ui_state.init();
 	
@@ -422,15 +463,14 @@ struct Game {
 			if (sw.peek() - last > iter) {
 
 				evhan.handle_events();
-				window.render_clear();
 				update(1.0);
-				ui_state.before_ui();
-				draw();
-				ui_state.reset_ui();
-				window.render_present();
 				last = sw.peek();
 
 			}
+
+			window.render_clear();
+			draw();
+			window.render_present();
 
 			auto diff = cast(Duration)(last - sw.peek()) + iter;
 			if (diff > dur!("hnsecs")(0)) {
