@@ -57,7 +57,6 @@ struct StackAllocator {
 	auto allocate(T, Args...)(Args args) {
 
 		size_t item_size = get_size!T();
-
 		auto memory = buffer[allocated_size .. allocated_size+item_size];
 		allocated_size += item_size;
 

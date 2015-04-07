@@ -10,13 +10,9 @@ class ResourceManager {
 
 	//some structure mapping an identifier to a texture
 	private void*[ResourceID] resources;
-	private static __gshared ResourceManager instance;
+	private static __gshared ResourceManager instance = new ResourceManager;
 		
 	static ResourceManager get() {
-
-		if (instance is null) {
-			instance = new ResourceManager();
-		}
 
 		return instance;
 

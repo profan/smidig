@@ -382,7 +382,6 @@ struct Game {
 	import blindfire.memory;
 	StackAllocator resource_allocator;
 
-
 	this(Window* window, EventHandler* evhan) {
 
 		this.window = window;
@@ -390,7 +389,7 @@ struct Game {
 		this.ui_state = UIState();
 		this.state = new GameStateHandler();
 		this.client_uuid = randomUUID();
-		this.resource_allocator = StackAllocator(8096);
+		this.resource_allocator = StackAllocator(8112);
 		
 	}
 
