@@ -96,12 +96,7 @@ struct LinearAllocator {
 		allocated_size += wrapper_size;
 		current += wrapper_size;
 
-		static if (is(T == class)) {
-			allocated_pointers[pointer_count++] = emplace!(MemoryObject!T)(wrapper_memory, element);
-		} else if (is(T == struct)) {
-			allocated_pointers[pointer_count++] = emplace!(MemoryObject!T)(wrapper_memory, element);
-		}
-
+		allocated_pointers[pointer_count++] = emplace!(MemoryObject!T)(wrapper_memory, element);
 		return element;
 
 	}
