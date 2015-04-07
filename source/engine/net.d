@@ -137,6 +137,9 @@ struct NetworkPeer {
 	UdpSocket socket;
 	ConnectionState state = ConnectionState.UNCONNECTED;
 
+	//keep track of if Peer is host as well?
+	bool is_host = false;
+
 	//list of connected peers as a hashmap, identified by their UUID
 	Peer[ClientID] peers;
 
@@ -212,6 +215,12 @@ struct NetworkPeer {
 
 	ConnectionState switch_state(ConnectionState new_state) {
 		logger.log("Switching state to: %s", to!string(new_state));
+
+		//set this back to false!
+		if (new_state == ConnectionState.UNCONNECTED) {
+			is_host = false;
+		}
+
 		return new_state;
 	}
 
@@ -223,6 +232,8 @@ struct NetworkPeer {
 
 		open = true;
 		logger.log("Listening on localhost:%d", port);
+
+		Peer host_peer; //reference to current host, not used if self is host, otherwise queried for certain information.
 
 		Address from; //used to keep track of who message was received from
 		void[2048] data = void;
@@ -262,6 +273,12 @@ struct NetworkPeer {
 							case MessageType.DISCONNECT:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
 								logger.log("Client %s sent disconnect message.", cmsg.client_uuid);
+
+								if (!is_host && host_peer.client_uuid == cmsg.client_uuid) { //if disconnecting client is the host, disconnect too.
+									state = switch_state(ConnectionState.UNCONNECTED);
+									send(game_thread, Command.DISCONNECT);
+								}
+
 								peers.remove(cmsg.client_uuid);
 								break;
 
@@ -343,6 +360,7 @@ struct NetworkPeer {
 						switch (cmd) {
 							case Command.CREATE:
 								state = switch_state(ConnectionState.WAITING);
+								is_host = true;
 								break;							
 							case Command.TERMINATE:
 								open = false;
@@ -383,7 +401,11 @@ struct NetworkPeer {
 									logger.log("Already in connected peers.");
 								}
 
-								send(game_thread, Command.CREATE);
+								if (!is_host) {
+									host_peer = Peer(cmsg.client_uuid, from);
+									send(game_thread, Command.CREATE);
+								}
+
 								state = switch_state(ConnectionState.CONNECTED);
 								break;
 

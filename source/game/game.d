@@ -176,6 +176,18 @@ final class LobbyState : GameState {
 
 	void update(double dt) {
 
+		auto result = receiveTimeout(dur!("nsecs")(1),
+		(Command cmd) {
+			if (cmd == Command.CREATE) {
+				writefln("[GAME] Received %s from net thread.", to!string(cmd));
+				statehan.pop_state();
+				statehan.push_state(State.GAME);
+			} else if (cmd == Command.DISCONNECT) {
+				writefln("[GAME] Received %s from net thread, going back to menu.", to!string(cmd));
+				statehan.pop_state();
+			}
+		});
+
 	}
 
 	void draw(Window* window) {
@@ -188,7 +200,9 @@ final class LobbyState : GameState {
 
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, true, item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, lobby_start_texture)) {
-			
+			send(network_thread, Command.CREATE);
+			statehan.pop_state();
+			statehan.push_state(State.GAME);
 		}
 
 		if (do_button(ui_state, 9, window, true, item_width + item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, lobby_quit_texture)) {
@@ -281,6 +295,14 @@ final class MatchState : GameState {
 	}
 
 	override void update(double dt) {
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+		(Command cmd) {
+			if (cmd == Command.DISCONNECT) {
+				writefln("[GAME] Received %s from net thread, going back to menu.", to!string(cmd));
+				statehan.pop_state();
+			}
+		});
 
 		em.tick!(UpdateSystem)();
 

@@ -141,7 +141,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 								import blindfire.resource : ResourceManager;
 								import blindfire.gl : Shader, Texture;
-								writefln("CREATED!");
+
 								Vec2f position = input_stream.read!Vec2f();
 								create_unit!(true)(em, position, &entity_id, 
 										ResourceManager.get().get_resource!(Shader)(Resource.BASIC_SHADER),
