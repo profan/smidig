@@ -380,7 +380,8 @@ struct Game {
 	ClientID client_uuid;
 
 	import blindfire.memory;
-	StackAllocator resource_allocator;
+	LinearAllocator resource_allocator;
+	LinearAllocator system_allocator;
 
 	this(Window* window, EventHandler* evhan) {
 
@@ -389,7 +390,8 @@ struct Game {
 		this.ui_state = UIState();
 		this.state = new GameStateHandler();
 		this.client_uuid = randomUUID();
-		this.resource_allocator = StackAllocator(8112);
+		this.resource_allocator = LinearAllocator(8112);
+		this.system_allocator = LinearAllocator(16384);
 		
 	}
 
@@ -472,12 +474,13 @@ struct Game {
 		ui_state.init();
 	
 		network_thread = spawn(&launch_peer, thisTid, client_uuid); //pass game thread so it can pass recieved messages back
-		
-		state.add_state(new MenuState(state, evhan, &ui_state, window), State.MENU);
-		state.add_state(new MatchState(state, evhan, &ui_state, window, network_thread, client_uuid), State.GAME);
-		state.add_state(new JoiningState(state, evhan, &ui_state, network_thread), State.JOIN);
-		state.add_state(new LobbyState(state, evhan, &ui_state, network_thread, client_uuid), State.LOBBY);
-		state.add_state(new WaitingState(state, evhan, &ui_state, network_thread), State.WAIT);
+
+		alias ra = system_allocator;	
+		state.add_state(ra.allocate!(MenuState)(state, evhan, &ui_state, window), State.MENU);
+		state.add_state(ra.allocate!(MatchState)(state, evhan, &ui_state, window, network_thread, client_uuid), State.GAME);
+		state.add_state(ra.allocate!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
+		state.add_state(ra.allocate!(LobbyState)(state, evhan, &ui_state, network_thread, client_uuid), State.LOBBY);
+		state.add_state(ra.allocate!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);
 		state.push_state(State.MENU);
 
 		evhan.add_listener(&this.update_ui);
