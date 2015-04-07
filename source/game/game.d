@@ -426,10 +426,10 @@ struct Game {
 
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
-		auto shader = ra.allocate!(Shader)("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
+		auto shader = ra.alloc!(Shader)("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 		rm.set_resource!(Shader)(shader, Resource.BASIC_SHADER);
 
-		auto unit_tex = ra.allocate!(Texture)("resource/img/dev_red_512_512.png");
+		auto unit_tex = ra.alloc!(Texture)("resource/img/dev_red_512_512.png");
 		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
 
 		//menu resourcs
@@ -447,10 +447,10 @@ struct Game {
 		int title_color = 0x0e72c9;
 		int text_color = 0x8142ca;
 		char[64][4] menu_text = ["Project Blindfire", "Join Game", "Create Game", "Quit"];
-		auto menu_title_texture = ra.allocate!(Text)(title_font, menu_text[0], title_color, shader);
-		auto menu_join_texture = ra.allocate!(Text)(menu_font, menu_text[1], text_color, shader);
-		auto menu_create_texture = ra.allocate!(Text)(menu_font, menu_text[2], text_color, shader);
-		auto menu_quit_texture = ra.allocate!(Text)(menu_font, menu_text[3], text_color, shader);
+		auto menu_title_texture = ra.alloc!(Text)(title_font, menu_text[0], title_color, shader);
+		auto menu_join_texture = ra.alloc!(Text)(menu_font, menu_text[1], text_color, shader);
+		auto menu_create_texture = ra.alloc!(Text)(menu_font, menu_text[2], text_color, shader);
+		auto menu_quit_texture = ra.alloc!(Text)(menu_font, menu_text[3], text_color, shader);
 
 		rm.set_resource!(Text)(menu_title_texture, Resource.MENU_TITLE_TEXTURE);
 		rm.set_resource!(Text)(menu_join_texture, Resource.MENU_JOIN_TEXTURE);
@@ -459,8 +459,8 @@ struct Game {
 
 		//lobby resources
 		char[64][2] lobby_text = ["Start Game", "Exit Lobby"];
-		auto lobby_start_texture = ra.allocate!(Text)(menu_font, lobby_text[0], title_color, shader);
-		auto lobby_quit_texture = ra.allocate!(Text)(menu_font, lobby_text[1], title_color, shader);
+		auto lobby_start_texture = ra.alloc!(Text)(menu_font, lobby_text[0], title_color, shader);
+		auto lobby_quit_texture = ra.alloc!(Text)(menu_font, lobby_text[1], title_color, shader);
 
 		rm.set_resource!(Text)(lobby_start_texture, Resource.LOBBY_START_TEXTURE);
 		rm.set_resource!(Text)(lobby_quit_texture, Resource.LOBBY_QUIT_TEXTURE);
@@ -476,11 +476,11 @@ struct Game {
 		network_thread = spawn(&launch_peer, thisTid, client_uuid); //pass game thread so it can pass recieved messages back
 
 		alias ra = system_allocator;	
-		state.add_state(ra.allocate!(MenuState)(state, evhan, &ui_state, window), State.MENU);
-		state.add_state(ra.allocate!(MatchState)(state, evhan, &ui_state, window, network_thread, client_uuid), State.GAME);
-		state.add_state(ra.allocate!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
-		state.add_state(ra.allocate!(LobbyState)(state, evhan, &ui_state, network_thread, client_uuid), State.LOBBY);
-		state.add_state(ra.allocate!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);
+		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, window), State.MENU);
+		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, window, network_thread, client_uuid), State.GAME);
+		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
+		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread, client_uuid), State.LOBBY);
+		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);
 		state.push_state(State.MENU);
 
 		evhan.add_listener(&this.update_ui);

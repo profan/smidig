@@ -69,8 +69,9 @@ struct LinearAllocator {
 
 	}
 
-	auto allocate(T, Args...)(Args args) {
+	auto alloc(T, Args...)(Args args) {
 
+		//allocate space for item being allocated
 		size_t item_size = get_size!(T)();
 		auto item_alignment = get_aligned!(T)(current);
 
@@ -84,7 +85,7 @@ struct LinearAllocator {
 
 		auto element = emplace!(T, Args)(memory, args);
 
-
+		//now allocate wrapper which runs destructors.
 		size_t wrapper_size = get_size!(MemoryObject!T)();
 		auto wrapper_alignment = get_aligned!(MemoryObject!T)(current);
 
@@ -101,9 +102,20 @@ struct LinearAllocator {
 
 	}
 
-}
+} //LinearAllocator
 
-//returns an aligned position, to allocate from.
+struct StackAllocator {
+
+	void* buffer;
+	void* current;
+
+	this(size_t size) {
+
+	}
+
+} //StackAllocator
+
+//returns an aligned offset in bytes from current to allocate from.
 ptrdiff_t get_aligned(T)(void* current) {
 
 	auto alignment = T.alignof;
@@ -112,6 +124,7 @@ ptrdiff_t get_aligned(T)(void* current) {
 
 }
 
+//returns size of type in memory
 size_t get_size(T)() {
 
 	static if (is(T == class)) {
