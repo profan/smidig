@@ -171,7 +171,7 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 
 	draw_rectangle(window, ui, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
 	draw_rectangle(window, ui, (filled) ? DrawFlags.FILL : DrawFlags.NONE, m_x - width/2, m_y - height/2, width, height, color, alpha);
-	if (label != null) draw_label(window, label, m_x, m_y, width, height);
+	if (label !is null) draw_label(window, label, m_x, m_y, width, height);
 
 	return result;
 
