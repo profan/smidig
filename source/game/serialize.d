@@ -81,11 +81,8 @@ template DeSerializeEachMember(T, alias data, alias object, members...) {
 
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
 
-		pragma(msg, Identifier!(object) ~ "." ~ members[0] ~ ".variable" ~ " = " ~
-			Identifier!(data) ~ ".read!(" ~ mixin("typeof(object."~members[0]~".variable).stringof") ~ ")();");
-
 		enum DeSerializeEachMember = Identifier!(object) ~ "." ~ members[0] ~ ".variable" ~ " = " ~
-				Identifier!(data) ~ ".read!(" ~ mixin("typeof(object."~members[0]~".variable).stringof") ~ ")();" 
+				Identifier!(data) ~ ".read!(" ~ mixin("typeof("~Identifier!(object)~"."~members[0]~".variable).stringof") ~ ")();" 
 				~ DeSerializeEachMember!(T, data, object, members[1 .. $]);
 
 
