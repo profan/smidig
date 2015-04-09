@@ -261,8 +261,9 @@ final class MatchState : GameState {
 		auto x = uniform(128, 256);
 		auto y = uniform(128, 256);
 
-		Shader* s = ResourceManager.get().get_resource!(Shader)(Resource.BASIC_SHADER);
-		Texture* t = ResourceManager.get().get_resource!(Texture)(Resource.UNIT_TEXTURE);
+		auto rm = ResourceManager.get();
+		Shader* s = rm.get_resource!(Shader)(Resource.BASIC_SHADER);
+		Texture* t = rm.get_resource!(Texture)(Resource.UNIT_TEXTURE);
 
 		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null, s, t);
 		
@@ -451,7 +452,7 @@ struct Game {
 		auto shader = ra.alloc!(Shader)("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 		rm.set_resource!(Shader)(shader, Resource.BASIC_SHADER);
 
-		auto unit_tex = ra.alloc!(Texture)("resource/img/dev_red_512_512.png");
+		auto unit_tex = ra.alloc!(Texture)("resource/img/dude2.png");
 		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
 
 		//menu resourcs
@@ -491,7 +492,9 @@ struct Game {
 
 	void run() {
 
+		//load game resources
 		load_resources();
+
 		//upload vertices for ui to gpu, set up shaders.
 		ui_state.init();
 	

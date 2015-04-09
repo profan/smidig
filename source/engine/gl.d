@@ -82,7 +82,7 @@ struct Text {
 
 	void draw(ref Mat4f projection, Vec2f position) {
 
-		auto tf = Transform(position, Vec2f(0.0f, 0.0f), Vec2f(1.0f, 1.0f));
+		auto tf = Transform(position);
 
 		shader.bind();
 		texture.bind(0);
@@ -247,26 +247,31 @@ struct Texture {
 struct Transform {
 
 	Vec2f position;
-	Vec2f rotation;
+	Vec3f rotation;
 	Vec2f scale;
 
-	this(in Vec2f pos, in Vec2f rotation = Vec2f(0.0f, 0.0f), in Vec2f scale = Vec2f(1.0f, 1.0f)) {
+	Vec3f origin;
+
+	this(in Vec2f pos, in Vec3f rotation = Vec3f(0.0f, 0.0f, 0.0f), in Vec2f scale = Vec2f(1.0f, 1.0f)) {
 		this.position = pos;
 		this.rotation = rotation;
 		this.scale = scale;
+		this.origin = Vec3f(0.0f, 0.0f, 0.0f);
 	}
 
 	@property Mat4f transform() const {
 
-		Mat4f posMatrix = Mat4f.translation(Vec3f(position, 0.0f));
+		Mat4f originMatrix = Mat4f.translation(origin);
+		Mat4f posMatrix = Mat4f.translation(Vec3f(position, 0.0f) - origin);
+
 		Mat4f rotXMatrix = Mat4f.rotation(rotation.x, Vec3f(1, 0, 0));
 		Mat4f rotYMatrix = Mat4f.rotation(rotation.y, Vec3f(0, 1, 0));
-		Mat4f rotZMatrix = Mat4f.rotation(0.0f, Vec3f(0, 0, 1));
+		Mat4f rotZMatrix = Mat4f.rotation(rotation.z, Vec3f(0, 0, 1));
 		Mat4f scaleMatrix = Mat4f.scaling(Vec3f(scale, 1.0f));
 		
 		Mat4f rotMatrix = rotXMatrix * rotYMatrix * rotZMatrix;
 
-		return posMatrix * rotMatrix * scaleMatrix;
+		return posMatrix * rotMatrix * originMatrix * scaleMatrix;
 
 	}
 

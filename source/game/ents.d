@@ -17,6 +17,7 @@ auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id, Sh
 	}
 
 	TransformComponent mc = {velocity: Vec2f(0, 0), transform: Transform(pos)};
+	mc.transform.origin = Vec3f(-16.0f, -16.0f, 0.0f);
 	em.register_component!TransformComponent(unit, mc);
 
 	em.register_component!CollisionComponent(unit); //beware of order, this depends on above component

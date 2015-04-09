@@ -290,8 +290,11 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 				selected = false;
 			}
 
+			import std.math;
+
 			if (comp.selected && sbox.order_set) with (comp.tc) {
 				velocity = -(Vec2f(x, y) - Vec2f(sbox.to_x, sbox.to_y)).normalized();
+				transform.rotation.z = atan2(sbox.to_y - y - 32/2, sbox.to_x - x-32/2);
 			}
 
 		}
