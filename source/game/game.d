@@ -261,8 +261,9 @@ final class MatchState : GameState {
 		auto x = uniform(128, 256);
 		auto y = uniform(128, 256);
 
-		Shader* s = ResourceManager.get().get_resource!(Shader)(Resource.BASIC_SHADER);
-		Texture* t = ResourceManager.get().get_resource!(Texture)(Resource.UNIT_TEXTURE);
+		auto rm = ResourceManager.get();
+		Shader* s = rm.get_resource!(Shader)(Resource.BASIC_SHADER);
+		Texture* t = rm.get_resource!(Texture)(Resource.UNIT_TEXTURE);
 
 		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null, s, t);
 		
