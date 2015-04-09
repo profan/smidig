@@ -4,6 +4,10 @@ import profan.collections : StaticArray;
 import blindfire.net : NetVar;
 import std.bitmanip;
 
+import blindfire.gl;
+import blindfire.sys;
+import blindfire.defs;
+
 enum networked = "networked";
 
 template isAttribute(alias curAttr, alias Attr) {
@@ -77,14 +81,17 @@ template DeSerializeEachMember(T, alias data, alias object, members...) {
 
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
 
-		enum DeSerializeEachMember =
-			Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ members[0] ~ ".bytes;"
+		pragma(msg, Identifier!(object) ~ "." ~ members[0] ~ ".variable" ~ " = " ~
+			Identifier!(data) ~ ".read!(" ~ mixin("typeof(object."~members[0]~".variable).stringof") ~ ")();");
+
+		enum DeSerializeEachMember = Identifier!(object) ~ "." ~ members[0] ~ ".variable" ~ " = " ~
+				Identifier!(data) ~ ".read!(" ~ mixin("typeof(object."~members[0]~".variable).stringof") ~ ")();" 
 				~ DeSerializeEachMember!(T, data, object, members[1 .. $]);
 
 
 	} else static if (members.length > 0) {
 
-		enum DeSerializeEachMember = DeSerializeEachMember!(T, data, members[1 .. $]);
+		enum DeSerializeEachMember = DeSerializeEachMember!(T, data, object, members[1 .. $]);
 
 	} else {
 
@@ -110,7 +117,7 @@ template Serialize(T, alias data, alias object) {
 }
 
 template DeSerialize(T, alias data, alias object) {
-	enum DeSerialize = ReadHeader!() ~ DeSerializeEachMember(T, data, object, __traits(allMembers, T));
+	enum DeSerialize = DeSerializeEachMember!(T, data, object, __traits(allMembers, T)[1 .. $]); //this is until the identifier shit is fix
 }
 
 template TotalNetSize(T, members...) {
@@ -143,6 +150,10 @@ void serialize(B, T)(ref B data, T* object) {
 
 }
 
-T deserialize(T)(ubyte[] data) {
+import blindfire.netmsg : InputStream;
+void deserialize(T)(ref InputStream data, T* object) {
+
+	mixin DeSerialize!(T, data, object);
+	mixin(DeSerialize);
 
 }

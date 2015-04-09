@@ -96,7 +96,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 	import std.datetime : dur;
 	import profan.collections : StaticArray;
-	import blindfire.serialize : serialize;
+	import blindfire.serialize : serialize, deserialize;
 	import blindfire.net : Command, ClientID;
 	import blindfire.netmsg : InputStream, UpdateType, EntityType;
 	import blindfire.ents : create_unit;
@@ -166,15 +166,8 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 						switch (component_type) {
 							case ComponentType.TRANSFORM_COMPONENT: //TransformComponent
-								writefln("[GAME] Handling TransformComponent for id: %s:%s", entity_id.owner, entity_id.id);
-								
-								auto vel = input_stream.read!Vec2f();	
-								auto mat = input_stream.read!Transform();
 
-								writefln("[GAME] Vector: %s, Matrix: %s", vel, mat);
-								components[entity_id].tc.velocity = vel;
-								components[entity_id].tc.transform = mat;
-								writefln("[GAME] Read: %d bytes, Total: %d bytes", input_stream.current, data.length);
+								deserialize!TransformComponent(input_stream, components[entity_id].tc);
 								break;
 
 							default:
