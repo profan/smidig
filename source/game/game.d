@@ -517,7 +517,7 @@ struct Game {
 		import std.datetime : Duration, StopWatch, TickDuration;
 		
 		StopWatch sw;
-		auto iter = TickDuration.from!("msecs")(16);
+		auto iter = TickDuration.from!("msecs")(100);
 		auto last = TickDuration.from!("msecs")(0);
 
 		sw.start();
