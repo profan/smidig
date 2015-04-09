@@ -2,9 +2,10 @@ module blindfire.netmsg;
 
 /* used in the header for net messages to the game, create creates enties, destroy kills them, update modifies */
 enum UpdateType {
-	CREATE,
-	DESTROY,
-	UPDATE
+	JOIN, //join session?
+	CREATE, //create entity
+	DESTROY, //destroy entity
+	UPDATE //update state in ecs
 }
 
 enum EntityType {

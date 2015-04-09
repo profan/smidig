@@ -17,12 +17,12 @@ auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id, Sh
 	}
 
 	TransformComponent mc = {velocity: Vec2f(0, 0), transform: Transform(pos)};
-	mc.transform.origin = Vec3f(-16.0f, -16.0f, 0.0f);
+	mc.transform.origin = Vec3f(-texture.width/2, -texture.height/2, 0.0f);
 	em.register_component!TransformComponent(unit, mc);
 
 	em.register_component!CollisionComponent(unit); //beware of order, this depends on above component
 	auto cc = em.get_component!CollisionComponent(unit);
-	cc.radius = 32; //arbitrary number :D
+	cc.radius = texture.width/2; //arbitrary number :D
 
 	em.register_component!InputComponent(unit);
 	em.register_component!OrderComponent(unit);
