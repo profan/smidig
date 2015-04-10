@@ -9,6 +9,7 @@ import derelict.opengl3.gl;
 import blindfire.window;
 import blindfire.util;
 import blindfire.defs;
+import blindfire.text;
 import blindfire.gl;
 
 struct UIState {
@@ -22,6 +23,8 @@ struct UIState {
 	GLuint box_vbo;
 	Shader box_shader;
 	uint box_num_vertices;
+
+	FontAtlas font_atlas;
 
 	void init() {
 
@@ -61,6 +64,8 @@ struct UIState {
 			writefln("[GAME] OpenGL ERROR: %d", status);
 		}
 
+		font_atlas = FontAtlas("fonts/OpenSans-Bold.ttf", 24);
+
 	}
 
 	~this() {
@@ -97,7 +102,7 @@ enum DrawFlags {
 
 } //RectangleType
 
-GLfloat[4] int_to_glcolor(int color, ubyte alpha) {
+GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
 
 	GLfloat[4] gl_color = [cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255, cast(float)cast(ubyte)(alpha)/255];
 	return gl_color;

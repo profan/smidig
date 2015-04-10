@@ -83,7 +83,13 @@ final class MenuState : GameState {
 		
 		if (do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, menu_quit_texture)) {
 			window.alive = false;
-		} //quit 
+		} //quit
+
+		float sx = 2.0 / window.width;
+		float sy = 2.0 / window.height;
+		//ui_state.font_atlas.render_text("The Quick Brown Fox Jumps Over The Lazy Dog",
+        //      -1 + 8 * sx,   1 - 50 * sy,    sx, sy, 0x428bca);
+		ui_state.font_atlas.render_text("HELLO WORLD", -0.5, 0, sx, sy, 0x428bca);
 		
 	}
 
@@ -375,6 +381,7 @@ enum Resource {
 
 	//shaders
 	BASIC_SHADER,
+	TEXT_SHADER,
 
 	//textures
 	MENU_TITLE_TEXTURE,
@@ -447,11 +454,18 @@ struct Game {
 		alias ra = resource_allocator;
 		auto rm = ResourceManager.get();
 
+		//shaders
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
 		auto shader = ra.alloc!(Shader)("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
 		rm.set_resource!(Shader)(shader, Resource.BASIC_SHADER);
 
+		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
+		char[16][1] text_uniforms = ["color"];
+		auto text_shader = ra.alloc!(Shader)("shaders/text", text_attribs[0..text_attribs.length], text_uniforms[0..text_uniforms.length]); 
+		rm.set_resource!(Shader)(text_shader, Resource.TEXT_SHADER);
+
+		//textures
 		auto unit_tex = ra.alloc!(Texture)("resource/img/dude2.png");
 		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
 

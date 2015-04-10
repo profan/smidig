@@ -187,6 +187,27 @@ struct Texture {
 
 	}
 
+	this(int width, int height, GLenum input_format, GLenum output_format, GLenum unpack_alignment) {
+
+		this.width = width;
+		this.height = height;
+
+		glGenTextures(1, &texture);	
+		glBindTexture(GL_TEXTURE_2D, texture);
+		
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glPixelStorei(GL_UNPACK_ALIGNMENT, unpack_alignment);
+		glTexImage2D(GL_TEXTURE_2D, 0, input_format, width, height, 0, output_format, GL_UNSIGNED_BYTE, cast(void*)0);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+	}
+
 	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) {
 
 		this.width = width;
