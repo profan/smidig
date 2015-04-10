@@ -380,7 +380,7 @@ struct Game {
 	LinearAllocator system_allocator;
 
 	import blindfire.text : FontAtlas;
-	float frametime;
+	float frametime, updatetime, drawtime;
 	FontAtlas debug_atlas;
 
 	this(Window* window, EventHandler* evhan) {
@@ -411,9 +411,22 @@ struct Game {
 		import core.stdc.stdio : sprintf;
 
 		char[64] ft_buf;
-		int chars = sprintf(ft_buf.ptr, "frametime: %f ms", frametime);
+		int ft_chars = sprintf(ft_buf.ptr, "frametime: %f ms", frametime);
+
+		char[64] ut_buf;
+		int ut_chars = sprintf(ut_buf.ptr, "update: %f ms", updatetime);
+		
+		char[64] dt_buf;
+		int dt_chars = sprintf(dt_buf.ptr, "draw: %f ms", drawtime);
+
 		debug_atlas.render_text(
-			window, ft_buf[0..chars], 16, 32, 1, 1, 0xffffff);
+			window, ft_buf[0..ft_chars], 16, 32, 1, 1, 0xffffff);
+
+		debug_atlas.render_text(
+			window, ut_buf[0..ut_chars], 16, 48, 1, 1, 0xffffff);
+
+		debug_atlas.render_text(
+			window, dt_buf[0..dt_chars], 16, 64, 1, 1, 0xffffff);
 
 	}
 
@@ -484,26 +497,35 @@ struct Game {
 		auto iter = TickDuration.from!("msecs")(100);
 		auto last = TickDuration.from!("msecs")(0);
 
-		StopWatch ft_sw;
+		StopWatch ft_sw, ut_sw, dt_sw;
 		ft_sw.start();
+		ut_sw.start();
+		dt_sw.start();
 
 		sw.start();
 		auto start_time = sw.peek();
 		while(window.alive) {
 
+			ft_sw.start();
 			if (sw.peek() - last > iter) {
 
+				ut_sw.start();
 				evhan.handle_events();
 				update(1.0);
 				last = sw.peek();
+				updatetime = ut_sw.peek().msecs;
+				ut_sw.reset();
 
 			}
 
-			ft_sw.start();
+			dt_sw.start();
 			window.render_clear();
 			draw();
 			window.render_present();
+			drawtime = dt_sw.peek().msecs;
 			frametime = ft_sw.peek().msecs;
+
+			dt_sw.reset();
 			ft_sw.reset();
 
 			auto diff = cast(Duration)(last - sw.peek()) + iter;
