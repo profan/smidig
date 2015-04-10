@@ -23,14 +23,6 @@ final class MenuState : GameState {
 	
 	UIState* ui_state;
 	GameStateHandler statehan;
-
-	TTF_Font* title_font;
-	TTF_Font* menu_font;
-
-	Text* menu_title_texture;
-	Text* menu_join_texture;
-	Text* menu_create_texture;
-	Text* menu_quit_texture;
 	
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
 
@@ -40,14 +32,6 @@ final class MenuState : GameState {
 	}
 	
 	override void enter() {
-
-		if (this.menu_title_texture is null) {
-			auto rm = ResourceManager.get();
-			this.menu_title_texture = rm.get_resource!(Text)(Resource.MENU_TITLE_TEXTURE);
-			this.menu_join_texture = rm.get_resource!(Text)(Resource.MENU_JOIN_TEXTURE);
-			this.menu_create_texture = rm.get_resource!(Text)(Resource.MENU_CREATE_TEXTURE);
-			this.menu_quit_texture = rm.get_resource!(Text)(Resource.MENU_QUIT_TEXTURE);
-		}
 
 	}
 
@@ -154,9 +138,6 @@ final class LobbyState : GameState {
 
 	ClientID uuid;
 
-	Text* lobby_start_texture;
-	Text* lobby_quit_texture;
-
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, ClientID uuid) {
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -165,12 +146,6 @@ final class LobbyState : GameState {
 	}
 
 	void enter() {
-
-		if (lobby_start_texture is null) {
-			auto rm = ResourceManager.get();
-			lobby_start_texture = rm.get_resource!(Text)(Resource.LOBBY_START_TEXTURE);
-			lobby_quit_texture = rm.get_resource!(Text)(Resource.LOBBY_QUIT_TEXTURE);
-		}
 
 		send(network_thread, Command.CREATE);
 
@@ -383,15 +358,6 @@ enum Resource {
 	BASIC_SHADER,
 	TEXT_SHADER,
 
-	//textures
-	MENU_TITLE_TEXTURE,
-	MENU_JOIN_TEXTURE,
-	MENU_CREATE_TEXTURE,
-	MENU_QUIT_TEXTURE,
-
-	LOBBY_START_TEXTURE,
-	LOBBY_QUIT_TEXTURE,
-
 	//units
 	UNIT_TEXTURE
 
@@ -480,39 +446,6 @@ struct Game {
 		//textures
 		auto unit_tex = ra.alloc!(Texture)("resource/img/dude2.png");
 		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
-
-		//menu resourcs
-		auto title_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 48);
-		auto menu_font = TTF_OpenFont("fonts/OpenSans-Bold.ttf", 20);
-		scope(exit) {
-			TTF_CloseFont(title_font);
-			TTF_CloseFont(menu_font);
-		}
-
-		if (menu_font == null) {
-			writefln("[GAME] Failed to open font: %s", "fonts/OpenSans-Bold.ttf");
-		}
-
-		int title_color = 0x0e72c9;
-		int text_color = 0x8142ca;
-		char[64][4] menu_text = ["Project Blindfire", "Join Game", "Create Game", "Quit"];
-		auto menu_title_texture = ra.alloc!(Text)(title_font, menu_text[0], title_color, shader);
-		auto menu_join_texture = ra.alloc!(Text)(menu_font, menu_text[1], text_color, shader);
-		auto menu_create_texture = ra.alloc!(Text)(menu_font, menu_text[2], text_color, shader);
-		auto menu_quit_texture = ra.alloc!(Text)(menu_font, menu_text[3], text_color, shader);
-
-		rm.set_resource!(Text)(menu_title_texture, Resource.MENU_TITLE_TEXTURE);
-		rm.set_resource!(Text)(menu_join_texture, Resource.MENU_JOIN_TEXTURE);
-		rm.set_resource!(Text)(menu_create_texture, Resource.MENU_CREATE_TEXTURE);
-		rm.set_resource!(Text)(menu_quit_texture, Resource.MENU_QUIT_TEXTURE);
-
-		//lobby resources
-		char[64][2] lobby_text = ["Start Game", "Exit Lobby"];
-		auto lobby_start_texture = ra.alloc!(Text)(menu_font, lobby_text[0], title_color, shader);
-		auto lobby_quit_texture = ra.alloc!(Text)(menu_font, lobby_text[1], title_color, shader);
-
-		rm.set_resource!(Text)(lobby_start_texture, Resource.LOBBY_START_TEXTURE);
-		rm.set_resource!(Text)(lobby_quit_texture, Resource.LOBBY_QUIT_TEXTURE);
 
 	}
 

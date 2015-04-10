@@ -27,13 +27,10 @@ struct CharacterInfo {
 
 struct FontAtlas {
 
+	GLuint vao, vbo;
 	Shader* shader;
 	Texture atlas;
 	CharacterInfo[96] characters;
-
-	GLuint vao, vbo;
-
-	FT_Library ft;
 
 	int atlas_width, atlas_height;
 	int char_width;
@@ -43,22 +40,28 @@ struct FontAtlas {
 		glGenVertexArrays(1, &vao);
 		glGenBuffers(1, &vbo);
 
+		FT_Library ft;
 		if (FT_Init_FreeType(&ft)) { 
-			writefln("[GAME] Could not init freetype.");
+			writefln("[FontAtlas] Could not init freetype.");
 		}
+
+		scope(exit) { FT_Done_FreeType(ft); }
 
 		FT_Face face;
 		if (FT_New_Face(ft, font_name.ptr, 0, &face)) { 
-			writefln("[GAME] Could not open font.");
+			writefln("[FontAtlas] Could not open font.");
 		}
+
+		scope(exit) { FT_Done_Face(face); }
 
 		FT_Set_Pixel_Sizes(face, 0, font_size);	
 		FT_GlyphSlot glyph = face.glyph;
 
 		int w = 0, h = 0;
 		for (uint i = 32; i < 128; ++i) {
+
 			if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
-				writefln("Character %c failed to load.", i);
+				writefln("[FontAtlas] Character %c failed to load.", i);
 				continue;
 			}
 
@@ -75,15 +78,17 @@ struct FontAtlas {
 
 		auto rm = ResourceManager.get();
 		shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
+
 		atlas = Texture(w, h, GL_RED, GL_RED, 1);
 		glBindTexture(GL_TEXTURE_2D, atlas.texture);
 
-		int x = 0, y = 0;
+		int x = 0;
 		for (uint i = 32; i < 128; ++i) {
+
 			if (FT_Load_Char(face, i, FT_LOAD_RENDER))
 				continue;
 
-			float top_distance = face.glyph.metrics.horiBearingY;
+			float top_distance = face.glyph.metrics.horiBearingY; //used to adjust for eventual hang
 
 			glTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, glyph.bitmap.width, glyph.bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, glyph.bitmap.buffer);
 
@@ -101,7 +106,6 @@ struct FontAtlas {
 			characters[ci].tx_offset_y = (top_distance/64 - (face.glyph.metrics.height>>6));
 
 			x += glyph.bitmap.width;
-			y = max(y, glyph.bitmap.rows);
 
 		}
 		
@@ -118,7 +122,6 @@ struct FontAtlas {
 	}
 
 	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
-		//stuff
 		
 		struct Point {
 			GLfloat x;
@@ -128,7 +131,7 @@ struct FontAtlas {
 		}
 
 		import core.stdc.stdlib : free, malloc;
-		Point* coords_alloc = cast(Point*)malloc((Point.sizeof * text.length)*6);
+		Point* coords_alloc = cast(Point*)malloc((Point.sizeof * text.length)*6); //move this to stack allocator
 		Point[] coords = coords_alloc[0..text.length*6];
 
 		int n = 0; //how many to draw?
@@ -144,6 +147,7 @@ struct FontAtlas {
 			x += characters[ci].advance_x * sx;
 			y += characters[ci].advance_y * sy;
 
+			//adjust for hang
 			y2 -= (characters[ci].bitmap_top * sy);
 			y2 -= (characters[ci].tx_offset_y * sy);
 
