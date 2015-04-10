@@ -7,6 +7,7 @@ import derelict.freetype.ft;
 import derelict.opengl3.gl3;
 
 import blindfire.gl;
+import blindfire.window : Window;
 
 struct CharacterInfo {
 
@@ -20,6 +21,7 @@ struct CharacterInfo {
 	float bitmap_top; // bitmap_top;
  
 	float tx_offset; // x offset of glyph in texture coordinates
+	float tx_offset_y;
 
 }
 
@@ -34,6 +36,7 @@ struct FontAtlas {
 	FT_Library ft;
 
 	int atlas_width, atlas_height;
+	int char_width;
 
 	this(in char[] font_name, uint font_size) {
 
@@ -49,8 +52,7 @@ struct FontAtlas {
 			writefln("[GAME] Could not open font.");
 		}
 
-		FT_Set_Pixel_Sizes(face, 0, font_size);
-		
+		FT_Set_Pixel_Sizes(face, 0, font_size);	
 		FT_GlyphSlot glyph = face.glyph;
 
 		int w = 0, h = 0;
@@ -76,10 +78,12 @@ struct FontAtlas {
 		atlas = Texture(w, h, GL_RED, GL_RED, 1);
 		glBindTexture(GL_TEXTURE_2D, atlas.texture);
 
-		int x = 0;
+		int x = 0, y = 0;
 		for (uint i = 32; i < 128; ++i) {
 			if (FT_Load_Char(face, i, FT_LOAD_RENDER))
 				continue;
+
+			float top_distance = face.glyph.metrics.horiBearingY;
 
 			glTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, glyph.bitmap.width, glyph.bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, glyph.bitmap.buffer);
 
@@ -94,14 +98,15 @@ struct FontAtlas {
 			characters[ci].bitmap_top = glyph.bitmap_top;
 
 			characters[ci].tx_offset = cast(float)x / w;
+			characters[ci].tx_offset_y = (top_distance/64 - (face.glyph.metrics.height>>6));
 
 			x += glyph.bitmap.width;
+			y = max(y, glyph.bitmap.rows);
 
 		}
 		
-		
-		glBindTexture(GL_TEXTURE_2D, 0);
-		
+		this.char_width = face.glyph.metrics.width >> 6;
+		glBindTexture(GL_TEXTURE_2D, 0);	
 
 	}
 	
@@ -112,7 +117,7 @@ struct FontAtlas {
 		glDeleteVertexArrays(1, &vao);
 	}
 
-	void render_text(in char[] text, float x, float y, float sx, float sy, int color) {
+	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
 		//stuff
 		
 		struct Point {
@@ -131,7 +136,7 @@ struct FontAtlas {
 
 			int ci = ch - 32; //get char index
 			float x2 =  x + characters[ci].bitmap_left * sx;
-			float y2 = -y - characters[ci].bitmap_top * sy;
+			float y2 = y + characters[ci].bitmap_top * sy;
 
 			float w = characters[ci].bitmap_width * sx;
 			float h = characters[ci].bitmap_height * sy;
@@ -139,17 +144,20 @@ struct FontAtlas {
 			x += characters[ci].advance_x * sx;
 			y += characters[ci].advance_y * sy;
 
-			//if (!w || !h)
-			//	continue;
+			y2 -= (characters[ci].bitmap_top * sy);
+			y2 -= (characters[ci].tx_offset_y * sy);
 
-			coords[n++] = Point(x2, -y2, characters[ci].tx_offset, 0); //top left?
-			coords[n++] = Point(x2 + w, -y2, characters[ci].tx_offset + characters[ci].bitmap_width / atlas_width, 0);
+			if (!w || !h) //continue if no width or height, invisible character
+			 	continue;
 
-			coords[n++] = Point(x2, -y2 - h, characters[ci].tx_offset, characters[ci].bitmap_height / atlas_height);
-			coords[n++] = Point(x2 + w, -y2, characters[ci].tx_offset + characters[ci].bitmap_width / atlas_width, 0);
+			coords[n++] = Point(x2, y2, characters[ci].tx_offset, characters[ci].bitmap_height / atlas_height); //top left?
+			coords[n++] = Point(x2, y2 - h, characters[ci].tx_offset, 0);
 
-			coords[n++] = Point(x2, -y2 - h, characters[ci].tx_offset, characters[ci].bitmap_height / atlas_height);
-			coords[n++] = Point(x2 + w, -y2 - h, characters[ci].tx_offset + characters[ci].bitmap_width / atlas_width, characters[ci].bitmap_height / atlas_height);
+			coords[n++] = Point(x2 + w, y2, characters[ci].tx_offset + characters[ci].bitmap_width / atlas_width, characters[ci].bitmap_height / atlas_height);
+			coords[n++] = Point(x2 + w, y2, characters[ci].tx_offset + characters[ci].bitmap_width / atlas_width, characters[ci].bitmap_height / atlas_height);
+
+			coords[n++] = Point(x2, y2 - h, characters[ci].tx_offset, 0);
+			coords[n++] = Point(x2 + w, y2 - h, characters[ci].tx_offset + characters[ci].bitmap_width / atlas_width, 0);
 
 		}
 	
@@ -168,6 +176,7 @@ struct FontAtlas {
 
 		GLfloat[4] col = int_to_glcolor(color);
 		glUniform4fv(shader.bound_uniforms[0], 1, col.ptr);
+		shader.update(window.view_projection);
 
 		glBufferData(GL_ARRAY_BUFFER, coords[0].sizeof * coords.length, coords.ptr, GL_DYNAMIC_DRAW);
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, cast(void*)0);

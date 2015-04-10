@@ -70,18 +70,18 @@ final class MenuState : GameState {
 		draw_rectangle(window, ui_state, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
 		draw_rectangle(window, ui_state, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
-		draw_label(window, menu_title_texture, window.width/2, window.height/4, 0, 0);
+		draw_label(window, ui_state, "Project Blindfire", window.width/2, window.height/4, 0, 0);
 
 		uint item_width = height / 2, item_height = 32;
-		if (do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, menu_join_texture)) {
+		if (do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, "Join Game")) {
 			statehan.push_state(State.JOIN);
 		} //join
 
-		if (do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, menu_create_texture)) {
+		if (do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, "Create Game")) {
 			statehan.push_state(State.LOBBY);
 		} //create
 		
-		if (do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, menu_quit_texture)) {
+		if (do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, "Quit Game")) {
 			window.alive = false;
 		} //quit
 
@@ -89,7 +89,7 @@ final class MenuState : GameState {
 		float sy = 2.0 / window.height;
 		//ui_state.font_atlas.render_text("The Quick Brown Fox Jumps Over The Lazy Dog",
         //      -1 + 8 * sx,   1 - 50 * sy,    sx, sy, 0x428bca);
-		ui_state.font_atlas.render_text("HELLO WORLD", -0.5, 0, sx, sy, 0x428bca);
+		ui_state.font_atlas.render_text(window, "HELLO WORLD", -0.5, 0, sx, sy, 0xca8142);
 		
 	}
 
@@ -205,13 +205,13 @@ final class LobbyState : GameState {
 		uint item_width = window.width / 2, item_height = 32;
 
 		//bottom left for quit button
-		if (do_button(ui_state, 8, window, true, item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, lobby_start_texture)) {
+		if (do_button(ui_state, 8, window, true, item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, "Start Game")) {
 			send(network_thread, Command.CREATE);
 			statehan.pop_state();
 			statehan.push_state(State.GAME);
 		}
 
-		if (do_button(ui_state, 9, window, true, item_width + item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, lobby_quit_texture)) {
+		if (do_button(ui_state, 9, window, true, item_width + item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, "Quit Game")) {
 			send(network_thread, Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
@@ -413,6 +413,7 @@ struct Game {
 	LinearAllocator resource_allocator;
 	LinearAllocator system_allocator;
 
+	float frametime;
 	this(Window* window, EventHandler* evhan) {
 
 		this.window = window;
@@ -426,9 +427,7 @@ struct Game {
 	}
 
 	void update_ui(ref SDL_Event ev) {
-
 		ui_state.mouse_buttons = SDL_GetMouseState(&ui_state.mouse_x, &ui_state.mouse_y);
-
 	}
 	
 	void update(double dt) {
@@ -438,12 +437,25 @@ struct Game {
 
 	}
 
+	void draw_debug() {
+		
+		import core.stdc.stdio : sprintf;
+
+		char[64] ft_buf;
+		int chars = sprintf(ft_buf.ptr, "frametime: %f ms", frametime);
+		ui_state.font_atlas.render_text(
+			window, ft_buf[0..chars], 0, 32, 1, 1, 0x428bca);
+
+	}
+
 	void draw() {
 
 		//such draw
 		ui_state.before_ui();
 		state.draw(window);
 		ui_state.reset_ui();
+	
+		draw_debug();
 
 	}
 
@@ -461,7 +473,7 @@ struct Game {
 		rm.set_resource!(Shader)(shader, Resource.BASIC_SHADER);
 
 		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
-		char[16][1] text_uniforms = ["color"];
+		char[16][2] text_uniforms = ["color", "projection"];
 		auto text_shader = ra.alloc!(Shader)("shaders/text", text_attribs[0..text_attribs.length], text_uniforms[0..text_uniforms.length]); 
 		rm.set_resource!(Shader)(text_shader, Resource.TEXT_SHADER);
 
@@ -534,6 +546,9 @@ struct Game {
 		auto iter = TickDuration.from!("msecs")(100);
 		auto last = TickDuration.from!("msecs")(0);
 
+		StopWatch ft_sw;
+		ft_sw.start();
+
 		sw.start();
 		auto start_time = sw.peek();
 		while(window.alive) {
@@ -546,9 +561,12 @@ struct Game {
 
 			}
 
+			ft_sw.start();
 			window.render_clear();
 			draw();
 			window.render_present();
+			frametime = ft_sw.peek().msecs;
+			ft_sw.reset();
 
 			auto diff = cast(Duration)(last - sw.peek()) + iter;
 			if (diff > dur!("hnsecs")(0)) {

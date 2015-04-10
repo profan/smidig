@@ -360,6 +360,12 @@ struct Shader {
 
 	}
 
+	void update(ref Mat4f projection) {
+
+		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
+
+	}
+
 	~this() {
 
 		glDeleteProgram(program);

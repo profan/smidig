@@ -131,9 +131,11 @@ void draw_rectangle(Window* window, UIState* state, DrawFlags flags, float x, fl
 
 }
 
-void draw_label(Window* window, Text* label, int x, int y, int width, int height) {
+void draw_label(Window* window, UIState* ui, in char[] label, int x, int y, int width, int height) {
 
-	label.draw(window.view_projection, Vec2f(x - label.width/2, y - label.height/2));
+	int cw = ui.font_atlas.char_width;
+	float label_width = (label.length * cw);
+	ui.font_atlas.render_text(window, label, (x - label_width/2) - cw*1.5f, y + cw/1.5, 1, 1, 0xca8142);
 
 }
 
@@ -149,7 +151,7 @@ int darken(int color, uint percentage) {
 
 }
 
-bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, Text* label = null) {
+bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, in char[] label = "") {
 
 	bool result = false;
 	bool inside = point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
@@ -176,7 +178,7 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 
 	draw_rectangle(window, ui, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
 	draw_rectangle(window, ui, (filled) ? DrawFlags.FILL : DrawFlags.NONE, m_x - width/2, m_y - height/2, width, height, color, alpha);
-	if (label !is null) draw_label(window, label, m_x, m_y, width, height);
+	if (label != "") draw_label(window, ui, label, m_x, m_y, width, height);
 
 	return result;
 
