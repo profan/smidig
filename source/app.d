@@ -12,6 +12,7 @@ import derelict.util.loader;
 import derelict.util.exception;
 
 import blindfire.game;
+import blindfire.memory;
 import blindfire.window;
 import blindfire.eventhandler;
 

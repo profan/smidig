@@ -232,36 +232,45 @@ final class MatchState : GameState {
 
 	}
 
-	StaticArray!(ubyte, 512) data;
+	StaticArray!(ubyte, 4096) data;
 
 	override void enter() {
 
 		import blindfire.netmsg : UpdateType, EntityType;
 		import std.random : uniform;
 
-		auto x = uniform(128, 256);
-		auto y = uniform(128, 256);
-
 		auto rm = ResourceManager.get();
 		Shader* s = rm.get_resource!(Shader)(Resource.BASIC_SHADER);
 		Texture* t = rm.get_resource!(Texture)(Resource.UNIT_TEXTURE);
 
-		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null, s, t);
-		
-		//TODO move this into create_unit?
+		void network_unit(EntityID id, int x, int y) {
+			data ~= (cast(ubyte*)&id)[0..id.sizeof];
+
+			auto ent_type = EntityType.UNIT;
+			data ~= (cast(ubyte*)&ent_type)[0..ent_type.sizeof];
+
+			auto vec2 = Vec2f(x, y);
+			data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
+		}
+	
 		data.elements = 0;
 		auto type = UpdateType.CREATE;
 		data ~= (cast(ubyte*)&type)[0..type.sizeof];
 
-		auto id = player;
-		data ~= (cast(ubyte*)&player)[0..player.sizeof];
+		auto x = uniform(128, 256);
+		auto y = uniform(128, 256);
 
-		auto ent_type = EntityType.UNIT;
-		data ~= (cast(ubyte*)&ent_type)[0..ent_type.sizeof];
+		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null, s, t);
+		network_unit(player, x, y);
 
-		auto vec2 = Vec2f(x, y);
-		data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
-			
+		for (uint i = 0; i < 25; ++i) {
+			int n_x = uniform(0, 640);
+			int n_y = uniform(0, 480);
+			auto id = create_unit(em, Vec2f(n_x, n_y), cast(EntityID*)null, s, t);
+			network_unit(id, n_x, n_y);
+		}
+
+		//TODO move this into create_unit?
 		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data.array[0..data.elements].idup);
 
 	}
@@ -494,7 +503,7 @@ struct Game {
 		import std.datetime : Duration, StopWatch, TickDuration;
 		
 		StopWatch sw;
-		auto iter = TickDuration.from!("msecs")(100);
+		auto iter = TickDuration.from!("msecs")(16);
 		auto last = TickDuration.from!("msecs")(0);
 
 		StopWatch ft_sw, ut_sw, dt_sw;

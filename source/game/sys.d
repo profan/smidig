@@ -107,7 +107,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	ClientID client_uuid;
 
 	//reused buffer for sending data
-	enum MAX_PACKET_SIZE = 2048; //bytes
+	enum MAX_PACKET_SIZE = 65536; //bytes
 	StaticArray!(ubyte, MAX_PACKET_SIZE) recv_data;
 	StaticArray!(ubyte, MAX_PACKET_SIZE) send_data;
 
@@ -126,14 +126,13 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 			writefln("[GAME] Received world update, %d bytes", data.length);
 			UpdateType type = input_stream.read!UpdateType();
-			EntityID entity_id = input_stream.read!EntityID();
-
 			while (!done && input_stream.current < data.length) {
 
 				switch (type) {
 
 					case UpdateType.CREATE:
 
+						EntityID entity_id = input_stream.read!EntityID();
 						EntityType entity_type = input_stream.read!EntityType();
 
 						switch (entity_type) {
@@ -156,23 +155,28 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 					case UpdateType.DESTROY:
 
+						EntityID entity_id = input_stream.read!EntityID();
 						em.unregister_component(entity_id);
 						
 						break;
 
 					case UpdateType.UPDATE:
+						
+						while (!done && input_stream.current < data.length) {
+							
+							EntityID entity_id = input_stream.read!EntityID();
+							ComponentType component_type = input_stream.read!ComponentType();
+							switch (component_type) {
+								case ComponentType.TRANSFORM_COMPONENT: //TransformComponent
 
-						ComponentType component_type = input_stream.read!ComponentType();
+									deserialize!TransformComponent(input_stream, components[entity_id].tc);
+									break;
 
-						switch (component_type) {
-							case ComponentType.TRANSFORM_COMPONENT: //TransformComponent
+								default:
+									writefln("[GAME] Unhandled Component from %s, id: %d", entity_id.owner, component_type);
+									done = true; //all bets are off at this point
+							}
 
-								deserialize!TransformComponent(input_stream, components[entity_id].tc);
-								break;
-
-							default:
-								writefln("[GAME] Unhandled Component from %s, id: %d", entity_id.owner, component_type);
-								done = true; //all bets are off at this point
 						}
 
 						break;

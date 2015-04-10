@@ -236,7 +236,7 @@ struct NetworkPeer {
 		Peer host_peer; //reference to current host, not used if self is host, otherwise queried for certain information.
 
 		Address from; //used to keep track of who message was received from
-		void[2048] data = void;
+		void[4096] data = void;
 		while (open) {
 
 			auto bytes = socket.receiveFrom(data, from);
