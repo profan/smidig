@@ -379,7 +379,10 @@ struct Game {
 	LinearAllocator resource_allocator;
 	LinearAllocator system_allocator;
 
+	import blindfire.text : FontAtlas;
 	float frametime;
+	FontAtlas debug_atlas;
+
 	this(Window* window, EventHandler* evhan) {
 
 		this.window = window;
@@ -409,8 +412,8 @@ struct Game {
 
 		char[64] ft_buf;
 		int chars = sprintf(ft_buf.ptr, "frametime: %f ms", frametime);
-		ui_state.font_atlas.render_text(
-			window, ft_buf[0..chars], 0, 32, 1, 1, 0x428bca);
+		debug_atlas.render_text(
+			window, ft_buf[0..chars], 16, 32, 1, 1, 0xffffff);
 
 	}
 
@@ -447,6 +450,8 @@ struct Game {
 		auto unit_tex = ra.alloc!(Texture)("resource/img/dude2.png");
 		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
 
+		//font atlases and such
+		this.debug_atlas = FontAtlas("fonts/OpenSans-Regular.ttf", 16);
 	}
 
 	void run() {
