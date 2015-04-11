@@ -52,7 +52,7 @@ struct LinearAllocator {
 		GC.addRange(buffer, total_size);
 
 		//set pointer to top
-		current = buffer;
+		this.current = buffer;
 
 	}
 

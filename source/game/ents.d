@@ -8,6 +8,10 @@ import blindfire.defs : Vec2f, Vec3f;
 import blindfire.sys;
 import profan.ecs;
 
+auto create_wall(bool net = false)(EntityManager em, Vec2f pos, Vec2f bottom_right, EntityID* id, Shader* shader, Texture* texture) {
+
+}
+
 auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id, Shader* shader, Texture* texture) {
 
 	static if (net) {

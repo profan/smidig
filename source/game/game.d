@@ -396,6 +396,9 @@ struct Game {
 	float frametime, updatetime, drawtime;
 	FontAtlas debug_atlas;
 
+	import blindfire.console : Console;
+	Console* console;
+
 	this(Window* window, EventHandler* evhan) {
 
 		this.window = window;
@@ -421,6 +424,8 @@ struct Game {
 	void draw_debug() {
 		
 		import core.stdc.stdio : sprintf;
+
+		console.draw(window);
 
 		char[64] ft_buf;
 		int ft_chars = sprintf(ft_buf.ptr, "frametime: %f ms", frametime);
@@ -476,7 +481,9 @@ struct Game {
 		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
 
 		//font atlases and such
-		this.debug_atlas = FontAtlas("fonts/OpenSans-Regular.ttf", 16);
+		this.debug_atlas = FontAtlas("fonts/OpenSans-Regular.ttf", 12);
+		this.console = system_allocator.alloc!(Console)(&debug_atlas);
+
 	}
 
 	void run() {
@@ -498,9 +505,15 @@ struct Game {
 		state.push_state(State.MENU);
 
 		evhan.add_listener(&this.update_ui);
-		evhan.bind_keyevent(SDL_SCANCODE_SPACE, &window.toggle_wireframe);
+		evhan.bind_keyevent(SDL_SCANCODE_RALT, &window.toggle_wireframe);
 		evhan.bind_keyevent(SDL_SCANCODE_LCTRL, () => send(network_thread, Command.PING));
 		evhan.bind_keyevent(SDL_SCANCODE_LALT, () => send(network_thread, Command.STATS));
+
+		evhan.add_listener(&console.handle_event);
+		evhan.bind_keyevent(SDL_SCANCODE_TAB, &console.toggle);
+		evhan.bind_keyevent(SDL_SCANCODE_BACKSPACE, &console.del);
+		evhan.bind_keyevent(SDL_SCANCODE_DELETE, &console.del);
+		evhan.bind_keyevent(SDL_SCANCODE_RETURN, &console.run);
 
 		import core.thread : Thread;
 		import std.datetime : Duration, StopWatch, TickDuration;

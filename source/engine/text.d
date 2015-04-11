@@ -137,6 +137,8 @@ struct FontAtlas {
 		int n = 0; //how many to draw?
 		foreach (ch; text) {
 
+			if (ch < 32 || ch > 127) continue;
+
 			int ci = ch - 32; //get char index
 			float x2 =  x + characters[ci].bitmap_left * sx;
 			float y2 = y + characters[ci].bitmap_top * sy;
