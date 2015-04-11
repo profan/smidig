@@ -423,27 +423,24 @@ struct Game {
 
 	void draw_debug() {
 		
-		import core.stdc.stdio : sprintf;
+		import std.format : sformat;
 
 		console.draw(window);
 
-		char[64] ft_buf;
-		int ft_chars = sprintf(ft_buf.ptr, "frametime: %f ms", frametime);
+		int offset_x = 16;
+		int offset_y = 32;
 
-		char[64] ut_buf;
-		int ut_chars = sprintf(ut_buf.ptr, "update: %f ms", updatetime);
-		
-		char[64] dt_buf;
-		int dt_chars = sprintf(dt_buf.ptr, "draw: %f ms", drawtime);
+		void render_string(string format, T)(T args) {
+			char[64] buf;
+			const char[] str = sformat(buf, format, args);
+			debug_atlas.render_text(
+				window, str, offset_x, offset_y, 1, 1, 0xffffff);
+			offset_y += 16;
+		}
 
-		debug_atlas.render_text(
-			window, ft_buf[0..ft_chars], 16, 32, 1, 1, 0xffffff);
-
-		debug_atlas.render_text(
-			window, ut_buf[0..ut_chars], 16, 48, 1, 1, 0xffffff);
-
-		debug_atlas.render_text(
-			window, dt_buf[0..dt_chars], 16, 64, 1, 1, 0xffffff);
+		render_string!("frametime: %f ms")(frametime);
+		render_string!("update: %f ms")(updatetime);
+		render_string!("draw: %f ms")(drawtime);
 
 	}
 
