@@ -70,12 +70,15 @@ struct Console {
 
 	}
 
-	void draw(Window* window) {
+	import blindfire.ui : UIState, DrawFlags, draw_rectangle;
+	void draw(Window* window, UIState* state) {
 
 		if (!enabled) return;
 
 		int x = window.width - (atlas.char_width * BUFFER_WIDTH) - atlas.char_width, y = 32;
-		int color = 0xFFFFFF;	
+		int color = 0xFFFFFF;
+
+		draw_rectangle(window, state, DrawFlags.FILL, x - atlas.char_width, y - atlas.char_height - 4, atlas.char_width * BUFFER_WIDTH, 16, 0x000000, 125);
 
 		foreach(ref buf; buffers) {
 

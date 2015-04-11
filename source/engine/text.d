@@ -33,7 +33,7 @@ struct FontAtlas {
 	CharacterInfo[96] characters;
 
 	int atlas_width, atlas_height;
-	int char_width;
+	int char_width, char_height;
 
 	this(in char[] font_name, uint font_size) {
 
@@ -110,6 +110,7 @@ struct FontAtlas {
 		}
 		
 		this.char_width = face.glyph.metrics.width >> 6;
+		this.char_height = face.glyph.metrics.height >> 6;
 		glBindTexture(GL_TEXTURE_2D, 0);	
 
 	}
