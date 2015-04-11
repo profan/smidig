@@ -211,9 +211,9 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 		writefln("[GAME] Sending %d bytes to NET", send_data.elements);
 
-		//make a version which uses double buffers or something and never allocates
+		//make a version which uses double buffers or something and never allocs
 		//currently takes a slice of the internal array to as far as the buffer was actually filled
-		send(network_thread, Command.UPDATE, send_data.array[0..send_data.elements].idup);
+		send(network_thread, Command.UPDATE, send_data[0..send_data.elements].idup);
 
 	}
 

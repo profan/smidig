@@ -56,7 +56,7 @@ struct Console {
 
 		if (!enabled) return;
 
-		const char[] slice = buffers[0].array[0..buffers[0].elements];
+		const char[] slice = buffers[0][0..buffers[0].elements];
 		switch (slice) {
 
 			case ConsoleCommand.SET_FPS:
@@ -80,7 +80,7 @@ struct Console {
 		foreach(ref buf; buffers) {
 
 			if (buf.elements != 0) {
-				atlas.render_text(window, buf.array[0..buf.elements], x, y, 1, 1, color);
+				atlas.render_text(window, buf[0..buf.elements], x, y, 1, 1, color);
 			}
 			y += 12;
 

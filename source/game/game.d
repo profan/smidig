@@ -276,7 +276,7 @@ final class MatchState : GameState {
 		}
 
 		//TODO move this into create_unit?
-		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data.array[0..data.elements].idup);
+		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data[0..data.elements].idup);
 
 	}
 
