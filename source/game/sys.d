@@ -104,16 +104,14 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import blindfire.game : Resource;
 
 	Tid network_thread;
-	ClientID client_uuid;
 
 	//reused buffer for sending data
 	enum MAX_PACKET_SIZE = 65536; //bytes
 	StaticArray!(ubyte, MAX_PACKET_SIZE) recv_data;
 	StaticArray!(ubyte, MAX_PACKET_SIZE) send_data;
 
-	this(Tid net_thread, ClientID uuid) {
+	this(Tid net_thread) {
 		this.network_thread = net_thread;
-		this.client_uuid = uuid;
 	}
 
 	void update() {

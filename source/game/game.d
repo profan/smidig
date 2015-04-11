@@ -136,13 +136,10 @@ final class LobbyState : GameState {
 	GameStateHandler statehan;
 	Tid network_thread;
 
-	ClientID uuid;
-
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, ClientID uuid) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
-		this.uuid = uuid;
 	}
 
 	void enter() {
@@ -211,17 +208,17 @@ final class MatchState : GameState {
 
 	EntityID player;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid, ClientID uuid) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
 
-		this.em = new EntityManager(uuid);
+		this.em = new EntityManager();
 		this.em.add_system(new TransformManager());
 		this.em.add_system(new CollisionManager());
 		this.em.add_system(new SpriteManager());
 		this.em.add_system(new InputManager());
-		this.em.add_system(new NetworkManager(network_thread, uuid));
+		this.em.add_system(new NetworkManager(network_thread));
 		this.em.add_system(new OrderManager(&sbox));
 
 		//where do these bindings actually belong? WHO KNOWS
@@ -238,6 +235,14 @@ final class MatchState : GameState {
 
 		import blindfire.netmsg : UpdateType, EntityType;
 		import std.random : uniform;
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+		(Command cmd, ClientID assigned_id) {
+			if (cmd == Command.ASSIGN_ID) {
+				writefln("[GAME] Recieved id assignment: %d from net thread.", assigned_id);
+				em.client_uuid = assigned_id;
+			}
+		});
 
 		auto rm = ResourceManager.get();
 		Shader* s = rm.get_resource!(Shader)(Resource.BASIC_SHADER);
@@ -382,7 +387,6 @@ struct Game {
 	UIState ui_state;
 	
 	Tid network_thread;
-	ClientID client_uuid;
 
 	import blindfire.memory;
 	LinearAllocator resource_allocator;
@@ -398,7 +402,6 @@ struct Game {
 		this.evhan = evhan;
 		this.ui_state = UIState();
 		this.state = new GameStateHandler();
-		this.client_uuid = randomUUID();
 		this.resource_allocator = LinearAllocator(8112);
 		this.system_allocator = LinearAllocator(16384);
 		
@@ -484,13 +487,13 @@ struct Game {
 		//upload vertices for ui to gpu, set up shaders.
 		ui_state.init();
 	
-		network_thread = spawn(&launch_peer, thisTid, client_uuid); //pass game thread so it can pass recieved messages back
+		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 
 		alias ra = system_allocator;	
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, window), State.MENU);
-		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, window, network_thread, client_uuid), State.GAME);
+		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, window, network_thread), State.GAME);
 		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
-		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread, client_uuid), State.LOBBY);
+		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread), State.LOBBY);
 		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);
 		state.push_state(State.MENU);
 

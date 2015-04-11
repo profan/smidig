@@ -11,8 +11,7 @@ import std.conv : to;
 import blindfire.log : Logger;
 import profan.collections : StaticArray;
 
-import std.uuid : UUID;
-alias ClientID = UUID;
+import blindfire.defs : ClientID;
 
 enum MessageType : uint {
 
@@ -33,6 +32,9 @@ enum ConnectionState {
 } //ConnectionState
 
 enum Command {
+
+	//set ecs id
+	ASSIGN_ID,
 
 	CREATE,
 	CONNECT,
@@ -69,6 +71,20 @@ struct BasicMessage {
 
 	align(1):
 	mixin MessageHeader;
+
+}
+
+struct ConnectMessage {
+
+	this(MessageType type, ClientID client, ClientID assigned_id) {
+		this.type = type;
+		this.client_uuid = client;
+		this.assigned_id = assigned_id;
+	}
+
+	align(1):
+	mixin MessageHeader;
+	ClientID assigned_id;
 
 }
 
@@ -131,6 +147,15 @@ struct NetVar(T) {
 
 alias Self = Tuple!(Address, Peer);
 
+struct NetworkState {
+	ConnectionState* state;
+	ubyte* client_uuid;
+
+	string toString() {
+		return to!string(*state) ~ " " ~ to!string(*client_uuid);
+	}
+}
+
 struct NetworkPeer {
 
 	bool open;
@@ -147,9 +172,10 @@ struct NetworkPeer {
 	ClientID client_uuid;
 	ushort port;
 
-	Logger!("NET", ConnectionState) logger;
+	NetworkState net_state;
+	Logger!("NET", NetworkState) logger;
 
-	this(ushort port, Tid game_tid, ClientID uuid) {
+	this(ushort port, Tid game_tid) {
 
 		//set socket to nonblocking, since one thread is used both for transmission and receiving, doesn't block on receive.
 		this.socket = new UdpSocket();
@@ -159,10 +185,13 @@ struct NetworkPeer {
 		this.game_thread = game_tid;
 		
 		//unique network identifier
-		this.client_uuid = uuid;
+		this.client_uuid = 255; //if it's still 255 when in session, something is wrong.
 		this.port = port;
 
-		this.logger = Logger!("NET", ConnectionState)(&state);
+		this.net_state = NetworkState();
+		net_state.state = &state;
+		net_state.client_uuid = &client_uuid;
+		this.logger = Logger!("NET", NetworkState)(&net_state);
 
 	}
 
@@ -235,6 +264,7 @@ struct NetworkPeer {
 
 		Peer host_peer; //reference to current host, not used if self is host, otherwise queried for certain information.
 
+		ubyte id_counter;
 		Address from; //used to keep track of who message was received from
 		void[4096] data = void;
 		while (open) {
@@ -348,7 +378,7 @@ struct NetworkPeer {
 							case Command.CONNECT:
 								logger.log("Entering Connect.");
 								auto target = cast(InternetAddress)to_addr;
-								send_packet!(BasicMessage)(MessageType.CONNECT, target, client_uuid);
+								send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, cast(ubyte)255);
 								state = switch_state(ConnectionState.WAITING);
 								break;
 							default:
@@ -360,8 +390,11 @@ struct NetworkPeer {
 						switch (cmd) {
 							case Command.CREATE:
 								state = switch_state(ConnectionState.WAITING);
+								client_uuid = 0;
+								id_counter = 0;
 								is_host = true;
-								break;							
+								send(game_thread, Command.ASSIGN_ID, id_counter++);
+								break;
 							case Command.TERMINATE:
 								open = false;
 								break;
@@ -380,12 +413,12 @@ struct NetworkPeer {
 
 					if (msg) {
 						switch (type) {
-
+							
 							case MessageType.CONNECT:
-								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								ConnectMessage cmsg = *(cast(ConnectMessage*)(data));
 								logger.log("Connection from %s at: %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
+								
 								ClientID id = cmsg.client_uuid;
-
 								if (id == client_uuid) {
 									logger.log("Can't connect to self.");
 									state = switch_state(ConnectionState.UNCONNECTED);
@@ -394,16 +427,18 @@ struct NetworkPeer {
 								}
 
 								if (id !in peers) {
-									Peer new_peer = {client_uuid: id, addr: from};
-									send_packet!(BasicMessage)(MessageType.CONNECT, from, client_uuid);
-									peers[id] = new_peer;
+									Peer new_peer = {client_uuid: id_counter, addr: from};
+									send_packet!(ConnectMessage)(MessageType.CONNECT, from, client_uuid, id_counter++);
+									peers[cast(ubyte)(id_counter-1)] = new_peer;
 								} else {
 									logger.log("Already in connected peers.");
 								}
 
 								if (!is_host) {
 									host_peer = Peer(cmsg.client_uuid, from);
+									client_uuid = cmsg.assigned_id;
 									send(game_thread, Command.CREATE);
+									send(game_thread, Command.ASSIGN_ID, cmsg.assigned_id);
 								}
 
 								state = switch_state(ConnectionState.CONNECTED);
@@ -452,9 +487,9 @@ struct NetworkPeer {
 
 } //NetworkPeer
 
-void launch_peer(Tid game_tid, ClientID uuid) {
+void launch_peer(Tid game_tid) {
 
-	auto peer = NetworkPeer(12000, game_tid, uuid);
+	auto peer = NetworkPeer(12000, game_tid);
 	peer.listen();
 
 }

@@ -130,7 +130,7 @@ struct FontAtlas {
 			GLfloat t;
 		}
 
-		import core.stdc.stdlib : free, malloc;
+		import core.stdc.stdlib :free, malloc;
 		Point* coords_alloc = cast(Point*)malloc((Point.sizeof * text.length)*6); //move this to stack allocator
 		Point[] coords = coords_alloc[0..text.length*6];
 
