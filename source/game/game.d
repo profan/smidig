@@ -54,18 +54,18 @@ final class MenuState : GameState {
 		draw_rectangle(window, ui_state, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
 		draw_rectangle(window, ui_state, DrawFlags.FILL, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
 
-		draw_label(window, ui_state, "Project Blindfire", window.width/2, window.height/4, 0, 0);
+		draw_label(window, ui_state, "Project Blindfire", window.width/2, window.height/4, 0, 0, bgcolor);
 
 		uint item_width = height / 2, item_height = 32;
-		if (do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, "Join Game")) {
+		if (do_button(ui_state, 1, window, true, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, "Join Game", menucolor)) {
 			statehan.push_state(State.JOIN);
 		} //join
 
-		if (do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, "Create Game")) {
+		if (do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, "Create Game", menucolor)) {
 			statehan.push_state(State.LOBBY);
 		} //create
 		
-		if (do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, "Quit Game")) {
+		if (do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, "Quit Game", menucolor)) {
 			window.alive = false;
 		} //quit
 
@@ -180,13 +180,13 @@ final class LobbyState : GameState {
 		uint item_width = window.width / 2, item_height = 32;
 
 		//bottom left for quit button
-		if (do_button(ui_state, 8, window, true, item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, "Start Game")) {
+		if (do_button(ui_state, 8, window, true, item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, "Start Game", 0x428bca)) {
 			send(network_thread, Command.CREATE);
 			statehan.pop_state();
 			statehan.push_state(State.GAME);
 		}
 
-		if (do_button(ui_state, 9, window, true, item_width + item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, "Quit Game")) {
+		if (do_button(ui_state, 9, window, true, item_width + item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, "Quit Game", 0x428bca)) {
 			send(network_thread, Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
@@ -307,7 +307,7 @@ final class MatchState : GameState {
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, 5, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+		if(do_button(ui_state, 5, window, true, window.width/2, window.height - item_height/2, item_width, item_height, itemcolor, 255, "Quit", 0x428bca)) {
 			statehan.pop_state();
 		} //back to menu
 
@@ -352,7 +352,7 @@ final class WaitingState : GameState {
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, 6, window, true, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+		if(do_button(ui_state, 6, window, true, window.width/2, window.height - item_height/2, item_width, item_height, itemcolor, 255, "Cancel", 0x428bca)) {
 			send(network_thread, Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
