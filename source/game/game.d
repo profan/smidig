@@ -308,7 +308,7 @@ final class MatchState : GameState {
 
 		em.tick!(DrawSystem)(window);
 
-		sbox.draw(window);
+		sbox.draw(window, ui_state);
 
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;

@@ -1,6 +1,6 @@
 module blindfire.action;
 
-import blindfire.ui : draw_rectangle, DrawFlags;
+import blindfire.ui : UIState, draw_rectangle, DrawFlags;
 import blindfire.window : Window;
 import blindfire.gl : Vec2f;
 
@@ -38,11 +38,11 @@ struct SelectionBox {
 		active = false;
 	}
 
-	void draw(Window* window) {
+	void draw(Window* window, UIState* state) {
 
-		//if (active) {
-		//	draw_rectangle(window, DrawFlags.FILL, x, y, w, h, 0x428bca);
-		//}
+		if (active) {
+			draw_rectangle(window, state, DrawFlags.FILL, x, y, w, h, 0x428bca, 30);
+		}
 		
 		order_set = false;
 
