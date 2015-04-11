@@ -2,7 +2,6 @@ module blindfire.net;
 
 import core.time : dur;
 import std.string : format;
-import std.stdio : writefln;
 import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException;
 import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.typecons : Tuple;
