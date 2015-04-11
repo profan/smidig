@@ -91,8 +91,6 @@ struct Console {
 	void handle_event(ref SDL_Event ev) {
 
 		if (!enabled) return;
-		
-		import core.stdc.string : strcat;
 
 		switch (ev.type) {
 			case SDL_TEXTINPUT:
