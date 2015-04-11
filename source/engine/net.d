@@ -203,7 +203,7 @@ struct NetworkPeer {
 	}
 
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
-		StaticArray!(ubyte, 2048) send_data;
+		StaticArray!(ubyte, 4096) send_data;
 		send_data ~= cast(ubyte[msg.sizeof])msg;
 		send_data ~= cast(ubyte[])data;
 		auto success = socket.sendTo(cast(void[])send_data.array[0..send_data.elements], target);
@@ -223,7 +223,7 @@ struct NetworkPeer {
 				socket.bind(addr);
 				break;
 			} catch (SocketException e) {
-				writefln("[NET] Failed to bind to localhost:%d, retrying with localhost:%d", port, port+1);
+				logger.log("[NET] Failed to bind to localhost:%d, retrying with localhost:%d", port, port+1);
 				port += 1;
 			}
 		}

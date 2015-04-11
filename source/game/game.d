@@ -268,7 +268,7 @@ final class MatchState : GameState {
 		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null, s, t);
 		network_unit(player, x, y);
 
-		for (uint i = 0; i < 25; ++i) {
+		for (uint i = 0; i < 50; ++i) {
 			int n_x = uniform(0, 640);
 			int n_y = uniform(0, 480);
 			auto id = create_unit(em, Vec2f(n_x, n_y), cast(EntityID*)null, s, t);
