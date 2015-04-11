@@ -378,7 +378,7 @@ struct NetworkPeer {
 							case Command.CONNECT:
 								logger.log("Entering Connect.");
 								auto target = cast(InternetAddress)to_addr;
-								send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, cast(ubyte)255);
+								send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, cast(ClientID)255);
 								state = switch_state(ConnectionState.WAITING);
 								break;
 							default:
@@ -429,7 +429,7 @@ struct NetworkPeer {
 								if (id !in peers) {
 									Peer new_peer = {client_uuid: id_counter, addr: from};
 									send_packet!(ConnectMessage)(MessageType.CONNECT, from, client_uuid, id_counter++);
-									peers[cast(ubyte)(id_counter-1)] = new_peer;
+									peers[cast(ClientID)(id_counter-1)] = new_peer;
 								} else {
 									logger.log("Already in connected peers.");
 								}
