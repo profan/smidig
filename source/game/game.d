@@ -512,12 +512,20 @@ struct Game {
 		evhan.bind_keyevent(SDL_SCANCODE_DELETE, &console.del);
 		evhan.bind_keyevent(SDL_SCANCODE_RETURN, &console.run);
 
+		
 		import core.thread : Thread;
 		import std.datetime : Duration, StopWatch, TickDuration;
 		
 		StopWatch sw;
 		auto iter = TickDuration.from!("msecs")(16);
 		auto last = TickDuration.from!("msecs")(0);
+
+		import blindfire.console : ConsoleCommand;
+		console.bind_command(ConsoleCommand.SET_TICKRATE, 
+			(in char[] args) {
+				int tickrate = to!int(args);
+				iter = TickDuration.from!("msecs")(1000/tickrate);
+		});
 
 		StopWatch ft_sw, ut_sw, dt_sw;
 		ft_sw.start();

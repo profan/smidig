@@ -10,29 +10,46 @@ import profan.collections : StaticArray;
 
 enum ConsoleCommand {
 
-	SET_FPS = "set_fps"
+	SET_TICKRATE = "set_tickrate"
 
 }
+
+alias void delegate(in char[] arguments) CommandDelegate;
 
 struct Console {
 
 	enum BUFFER_WIDTH = 80;
 	enum BUFFER_LINES = 30;
 
-	bool enabled = false;
 	FontAtlas* atlas;
+	bool enabled = false;
 	StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] buffers;
+	
+	CommandDelegate[ConsoleCommand] commands;
+	ubyte[4] pad;
 
 	this(FontAtlas* font_atlas) {
 		this.atlas = font_atlas;
 	}
 
-	void write(char[] text) {
+	void bind_command(ConsoleCommand cmd, CommandDelegate cd) {
+
+		commands[cmd] = cd;
+
+	}
+
+	void print(in char[] text) {
+		buffers[0] ~= cast(char[])text;
+		shift_buffer();
+	}
+
+	void write(in char[] text) {
 
 		if (buffers[0].elements + text.length < BUFFER_WIDTH) {
-			buffers[0] ~= text;
+			buffers[0] ~= cast(char[])text;
 		} else {
-			
+			shift_buffer();
+			buffers[0] ~= cast(char[])text;
 		}
 
 	}
@@ -56,16 +73,37 @@ struct Console {
 
 		if (!enabled) return;
 
+		if (buffers[0].elements == 0) return;
 		const char[] slice = buffers[0][0..buffers[0].elements];
-		switch (slice) {
 
-			case ConsoleCommand.SET_FPS:
-				writefln("[Console] Set FPS!");
-				break;
-				
-			default:
-				writefln("[Console] Unknown command: %s", slice);
+		uint i = 0;
+		while (slice[i++] != ' ') {
+			if (i == buffers[0].elements) {
+				shift_buffer();
+				print("Unknown Command!"); 
+				return; 
+			}
+		}
 
+		const char[] command = slice[0..i-1];
+		const char[] args = slice[i .. $];
+
+		if (command in commands) {
+			commands[command](args);
+			shift_buffer();
+		} else {
+			shift_buffer();
+			print("Unknown Command!");
+		}
+
+	}
+
+	void shift_buffer() {
+
+		for (int i = buffers.length-1; i >= 0; --i) {
+			if (i == buffers.length -1) continue;
+			buffers[i+1] = buffers[i];
+			buffers[i].elements = 0;
 		}
 
 	}
