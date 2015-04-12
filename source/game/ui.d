@@ -166,19 +166,26 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 	int m_x = x, m_y = y;
 	int main_color = color;
 	if (ui.active_item == id && !is_btn_down(ui, 1)) {
+
 		if (inside) {
 			result = true;
 		} else {
 			ui.hot_item = 0;
 		}
+
 		ui.active_item = 0;
+
 	} else if (ui.hot_item == id) {
+		
+		text_color = darken(text_color, 10);
+
 		if (ui.active_item == 0 && is_btn_down(ui, 1)) {
 			ui.active_item = id;
 		} else if (ui.active_item == id) {
 			m_x += 1;
 			m_y += 1;
 		}
+
 	}
 
 	draw_rectangle(window, ui, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
