@@ -425,7 +425,7 @@ struct Game {
 		
 		import std.format : sformat;
 
-		console.draw(window, &ui_state);
+		console.draw(window);
 
 		int offset_x = 16;
 		int offset_y = 32;

@@ -68,6 +68,7 @@ struct Console {
 	void toggle() {
 
 		enabled = !enabled;
+		history_index = 0;
 		(enabled) ? SDL_StartTextInput() : SDL_StopTextInput();
 
 	}
@@ -94,6 +95,7 @@ struct Console {
 		if (command in commands) {
 			commands[command](args);
 			history[0] ~= cast(char[])slice;
+			history_index = 0;
 			++history_elements;
 			shift_buffer(history);
 			shift_buffer(buffers);
@@ -133,15 +135,12 @@ struct Console {
 
 	}
 
-	import blindfire.ui : UIState, DrawFlags, draw_rectangle;
-	void draw(Window* window, UIState* state) {
+	void draw(Window* window) {
 
 		if (!enabled) return;
 
 		int x = window.width - (atlas.char_width * BUFFER_WIDTH) - atlas.char_width, y = 16;
 		int color = 0xFFFFFF;
-
-		draw_rectangle(window, state, DrawFlags.FILL, x - atlas.char_width, y - 4, atlas.char_width * BUFFER_WIDTH, atlas.char_height * BUFFER_LINES, 0x000000, 125);
 
 		atlas.render_text(window, ">", x, y + atlas.char_height, 1, 1, color);
 		atlas.render_text(window, buffers[0][0..buffers[0].elements], x + atlas.char_width*2, y + atlas.char_height, 1, 1, color);
