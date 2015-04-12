@@ -94,6 +94,7 @@ struct Console {
 		if (command in commands) {
 			commands[command](args);
 			history[0] ~= cast(char[])slice;
+			++history_elements;
 			shift_buffer(history);
 			shift_buffer(buffers);
 		} else {
@@ -104,6 +105,8 @@ struct Console {
 	}
 
 	size_t history_index = 0;
+	size_t history_elements = 0;
+	ubyte[4] pad;
 	void get_prev() {
 
 		if(!enabled) return;
@@ -115,7 +118,7 @@ struct Console {
 	void get_next() {
 		
 		if(!enabled) return;
-		if (history_index+1 < BUFFER_LINES)
+		if (history_index+1 < BUFFER_LINES && history_index+1 <= history_elements)
 			buffers[0] = history[++history_index];
 
 	}
