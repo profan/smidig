@@ -64,16 +64,14 @@ final class MenuState : GameState {
 		if (do_button(ui_state, 2, window, true, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, "Create Game", menucolor)) {
 			statehan.push_state(State.LOBBY);
 		} //create
-		
-		if (do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*5, item_width, item_height, itemcolor, 255, "Quit Game", menucolor)) {
+
+		if (do_button(ui_state, 12, window, true, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, itemcolor, 255, "Options", menucolor)) {
+			statehan.push_state(State.OPTIONS);
+		} //create
+
+		if (do_button(ui_state, 3, window, true, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, itemcolor, 255, "Quit Game", menucolor)) {
 			window.alive = false;
 		} //quit
-
-		float sx = 2.0 / window.width;
-		float sy = 2.0 / window.height;
-		//ui_state.font_atlas.render_text("The Quick Brown Fox Jumps Over The Lazy Dog",
-        //      -1 + 8 * sx,   1 - 50 * sy,    sx, sy, 0x428bca);
-		ui_state.font_atlas.render_text(window, "HELLO WORLD", -0.5, 0, sx, sy, 0xca8142);
 		
 	}
 
@@ -366,6 +364,36 @@ final class WaitingState : GameState {
 
 } //WaitingState
 
+class OptionsState : GameState {
+
+	GameStateHandler statehan;
+	EventHandler* evhan;
+	UIState* ui_state;
+
+	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui) {
+		this.statehan = state_handler;
+		this.evhan = event_handler;
+		this.ui_state = ui;
+	}
+
+	void enter() {
+
+	}
+
+	void leave() {
+
+	}
+
+	void update(double dt) {
+
+	}
+
+	void draw(Window* window) {
+
+	}
+
+} //OptionsState
+
 enum Resource {
 
 	//shaders
@@ -388,7 +416,7 @@ struct Game {
 	
 	Tid network_thread;
 
-	import blindfire.memory;
+	import blindfire.memory : LinearAllocator;
 	LinearAllocator resource_allocator;
 	LinearAllocator system_allocator;
 
@@ -499,6 +527,7 @@ struct Game {
 		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
 		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread), State.LOBBY);
 		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);
+		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state), State.OPTIONS);
 		state.push_state(State.MENU);
 
 		evhan.add_listener(&this.update_ui);
@@ -514,7 +543,6 @@ struct Game {
 		evhan.bind_keyevent(SDL_SCANCODE_DOWN, &console.get_prev);
 		evhan.bind_keyevent(SDL_SCANCODE_UP, &console.get_next);
 
-		
 		import core.thread : Thread;
 		import std.datetime : Duration, StopWatch, TickDuration;
 		
@@ -527,6 +555,14 @@ struct Game {
 			(in char[] args) {
 				int tickrate = to!int(args);
 				iter = TickDuration.from!("msecs")(1000/tickrate);
+		});
+
+		console.bind_command(ConsoleCommand.PUSH_STATE, 
+			(in char[] args) {
+				int new_state = to!int(args);
+				if (new_state >= State.min && new_state <= State.max) {
+					state.push_state(cast(State)new_state);
+				}
 		});
 
 		StopWatch ft_sw, ut_sw, dt_sw;
@@ -559,7 +595,7 @@ struct Game {
 
 			dt_sw.reset();
 			ft_sw.reset();
-
+			
 			auto diff = cast(Duration)(last - sw.peek()) + iter;
 			if (diff > dur!("hnsecs")(0)) {
 				Thread.sleep(diff);

@@ -1,6 +1,9 @@
 module blindfire.netgame;
 
+import std.concurrency : Tid, receiveTimeout;
+
 import blindfire.netmsg;
+import blindfire.log;
 
 enum SessionState {
 	INACTIVE, //not waiting for players, not running

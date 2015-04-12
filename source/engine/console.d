@@ -10,7 +10,10 @@ import profan.collections : StaticArray;
 
 enum ConsoleCommand {
 
-	SET_TICKRATE = "set_tickrate"
+	HELP = "help",
+	LIST_COMMANDS = "list_commands",
+	SET_TICKRATE = "set_tickrate",
+	PUSH_STATE = "push_state"
 
 }
 
@@ -33,6 +36,14 @@ struct Console {
 
 	this(FontAtlas* font_atlas) {
 		this.atlas = font_atlas;
+
+		import std.traits : EnumMembers;
+		bind_command(ConsoleCommand.HELP,
+			(in char[] args) {
+				foreach (i, field; EnumMembers!ConsoleCommand) print!(field);
+				print!("Listing all commands:");
+		});
+
 	}
 
 	void bind_command(ConsoleCommand cmd, CommandDelegate cd) {
@@ -41,18 +52,21 @@ struct Console {
 
 	}
 
-	void print(in char[] text) {
-		buffers[0] ~= cast(char[])text;
+	void print(string format, Args...)(Args args) {
+		import std.format : sformat;
+		char[128] fmt_str;
+		char[] c = sformat(fmt_str, format, args);
+		buffers[0] ~= c;
 		shift_buffer(buffers);
 	}
 
 	void write(in char[] text) {
 
 		if (buffers[0].elements + text.length < BUFFER_WIDTH) {
-			buffers[0] ~= cast(char[])text;
+			buffers[0] ~= text;
 		} else {
 			shift_buffer(buffers);
-			buffers[0] ~= cast(char[])text;
+			buffers[0] ~= text;
 		}
 
 	}
@@ -81,27 +95,27 @@ struct Console {
 		const char[] slice = buffers[0][0..buffers[0].elements];
 
 		uint i = 0;
-		while (slice[i++] != ' ') {
-			if (i == buffers[0].elements) {
-				shift_buffer(buffers);
-				print("Unknown Command!"); 
-				return; 
-			}
+		while (i != buffers[0].elements && slice[i] != ' ') {
+			i++;
 		}
 
-		const char[] command = slice[0..i-1];
-		const char[] args = slice[i .. $];
+		const char[] command = slice[0..i];
+
+		uint begin, end;
+		if (i < buffers[0].elements) { begin = i+1; end = slice.length; }
+		else { begin = i; end = i; }
+		const char[] args = slice[begin .. end];
 
 		if (command in commands) {
+			shift_buffer(buffers);
 			commands[command](args);
-			history[0] ~= cast(char[])slice;
+			history[0] ~= slice;
 			history_index = 0;
 			++history_elements;
 			shift_buffer(history);
-			shift_buffer(buffers);
 		} else {
 			shift_buffer(buffers);
-			print("Unknown Command!");
+			print!("Unknown Command: %s")(command);
 		}
 
 	}

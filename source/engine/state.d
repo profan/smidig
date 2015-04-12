@@ -12,11 +12,12 @@ alias StateID = ulong;
 
 enum State {
 
-	MENU = 0,
-	GAME = 1,
-	JOIN = 2,
-	LOBBY = 3,
-	WAIT = 4
+	MENU,
+	JOIN,
+	GAME,
+	OPTIONS,
+	LOBBY,
+	WAIT
 
 } //State
 
