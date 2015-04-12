@@ -113,15 +113,18 @@ struct Console {
 
 		if (!enabled) return;
 
-		int x = window.width - (atlas.char_width * BUFFER_WIDTH) - atlas.char_width, y = 32;
+		int x = window.width - (atlas.char_width * BUFFER_WIDTH) - atlas.char_width, y = 16;
 		int color = 0xFFFFFF;
 
-		draw_rectangle(window, state, DrawFlags.FILL, x - atlas.char_width, y - atlas.char_height - 4, atlas.char_width * BUFFER_WIDTH, 16, 0x000000, 125);
+		draw_rectangle(window, state, DrawFlags.FILL, x - atlas.char_width, y - 4, atlas.char_width * BUFFER_WIDTH, atlas.char_height * BUFFER_LINES, 0x000000, 125);
 
-		foreach(ref buf; buffers) {
+		atlas.render_text(window, ">", x, y + atlas.char_height, 1, 1, color);
+		atlas.render_text(window, buffers[0][0..buffers[0].elements], x + atlas.char_width*2, y + atlas.char_height, 1, 1, color);
+		y += 12;
+		foreach(ref buf; buffers[1..$]) {
 
 			if (buf.elements != 0) {
-				atlas.render_text(window, buf[0..buf.elements], x, y, 1, 1, color);
+				atlas.render_text(window, buf[0..buf.elements], x, y + atlas.char_height, 1, 1, color);
 			}
 			y += 12;
 
