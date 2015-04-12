@@ -390,6 +390,14 @@ class OptionsState : GameState {
 
 	void draw(Window* window) {
 
+		int bgcolor = 0xca8142;
+		draw_rectangle(window, ui_state, DrawFlags.FILL, 0, 0, window.width, window.height, bgcolor);
+
+		int itemcolor = 0x8bca42;
+		uint item_width = window.width / 2, item_height = 32;
+		if(do_button(ui_state, 12, window, true, window.width/2, window.height - item_height/2, item_width, item_height, itemcolor, 255, "To Menu", 0x428bca)) {
+			statehan.pop_state();
+		} //back to menu
 	}
 
 } //OptionsState
