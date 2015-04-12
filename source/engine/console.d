@@ -16,17 +16,20 @@ enum ConsoleCommand {
 
 alias void delegate(in char[] arguments) CommandDelegate;
 
+
 struct Console {
 
 	enum BUFFER_WIDTH = 80;
 	enum BUFFER_LINES = 30;
 
+	alias StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] ConsoleBuffer;
+
 	FontAtlas* atlas;
 	bool enabled = false;
-	StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] buffers;
+	ConsoleBuffer buffers;
+	ConsoleBuffer history;
 	
 	CommandDelegate[ConsoleCommand] commands;
-	ubyte[4] pad;
 
 	this(FontAtlas* font_atlas) {
 		this.atlas = font_atlas;
@@ -40,7 +43,7 @@ struct Console {
 
 	void print(in char[] text) {
 		buffers[0] ~= cast(char[])text;
-		shift_buffer();
+		shift_buffer(buffers);
 	}
 
 	void write(in char[] text) {
@@ -48,7 +51,7 @@ struct Console {
 		if (buffers[0].elements + text.length < BUFFER_WIDTH) {
 			buffers[0] ~= cast(char[])text;
 		} else {
-			shift_buffer();
+			shift_buffer(buffers);
 			buffers[0] ~= cast(char[])text;
 		}
 
@@ -79,7 +82,7 @@ struct Console {
 		uint i = 0;
 		while (slice[i++] != ' ') {
 			if (i == buffers[0].elements) {
-				shift_buffer();
+				shift_buffer(buffers);
 				print("Unknown Command!"); 
 				return; 
 			}
@@ -90,20 +93,39 @@ struct Console {
 
 		if (command in commands) {
 			commands[command](args);
-			shift_buffer();
+			history[0] ~= cast(char[])slice;
+			shift_buffer(history);
+			shift_buffer(buffers);
 		} else {
-			shift_buffer();
+			shift_buffer(buffers);
 			print("Unknown Command!");
 		}
 
 	}
 
-	void shift_buffer() {
+	size_t history_index = 0;
+	void get_prev() {
 
-		for (int i = buffers.length-1; i >= 0; --i) {
-			if (i == buffers.length -1) continue;
-			buffers[i+1] = buffers[i];
-			buffers[i].elements = 0;
+		if(!enabled) return;
+		if (history_index != 0)
+			buffers[0] = history[--history_index];
+
+	}
+
+	void get_next() {
+		
+		if(!enabled) return;
+		if (history_index+1 < BUFFER_LINES)
+			buffers[0] = history[++history_index];
+
+	}
+
+	void shift_buffer(ref ConsoleBuffer buf_to_shift) {
+
+		for (int i = buf_to_shift.length-1; i >= 0; --i) {
+			if (i == buf_to_shift.length -1) continue;
+			buf_to_shift[i+1] = buf_to_shift[i];
+			buf_to_shift[i].elements = 0;
 		}
 
 	}

@@ -511,6 +511,8 @@ struct Game {
 		evhan.bind_keyevent(SDL_SCANCODE_BACKSPACE, &console.del);
 		evhan.bind_keyevent(SDL_SCANCODE_DELETE, &console.del);
 		evhan.bind_keyevent(SDL_SCANCODE_RETURN, &console.run);
+		evhan.bind_keyevent(SDL_SCANCODE_DOWN, &console.get_prev);
+		evhan.bind_keyevent(SDL_SCANCODE_UP, &console.get_next);
 
 		
 		import core.thread : Thread;
