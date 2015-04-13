@@ -13,7 +13,7 @@ enum : ComponentType[string] {
 }
 
 mixin template NetIdentifier() {
-	@networked NetVar!(ComponentType) identifier = Identifier[typeof(this).stringof];
+	@networked() NetVar!(ComponentType) identifier = Identifier[typeof(this).stringof];
 }
 
 interface UpdateSystem : ComponentSystem!(0) {
@@ -49,8 +49,8 @@ struct TransformComponent {
 	import blindfire.gl : Vec2f, Transform;
 
 	mixin NetIdentifier;
-	@networked NetVar!(Vec2f) velocity;
-	@networked NetVar!(Transform) transform;
+	@networked() NetVar!(Vec2f) velocity;
+	@networked() NetVar!(Transform) transform;
 
 } //TransformComponent
 

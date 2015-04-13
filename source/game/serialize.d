@@ -8,10 +8,11 @@ import blindfire.gl;
 import blindfire.sys;
 import blindfire.defs;
 
-enum networked = "networked";
+struct Networked {};
+Networked networked() { return Networked(); }
 
-template isAttribute(alias curAttr, alias Attr) {
-	enum isAttribute = is(typeof(curAttr) == typeof(Attr));
+template isAttribute(alias curAttr, alias AttrType) {
+	enum isAttribute = is(typeof(curAttr) == AttrType);
 }
 
 template hasAttribute(T, alias Member, alias Attribute, Attributes...) {
@@ -58,7 +59,7 @@ template NetVarToSym(T, alias Member) {
 
 template SerializeEachMember(T, alias data, alias object, members...) {
 
-	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
+	static if (members.length > 0 && hasAttribute!(T, members[0], Networked, getAttributes!(T, members[0]))) {
 
 		enum SerializeEachMember =
 			Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ members[0] ~ ".bytes;"
@@ -79,7 +80,7 @@ template SerializeEachMember(T, alias data, alias object, members...) {
 
 template DeSerializeEachMember(T, alias data, alias object, members...) {
 
-	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
+	static if (members.length > 0 && hasAttribute!(T, members[0], Networked, getAttributes!(T, members[0]))) {
 
 		enum DeSerializeEachMember = Identifier!(object) ~ "." ~ members[0] ~ ".variable" ~ " = " ~
 				Identifier!(data) ~ ".read!(" ~ mixin("typeof("~Identifier!(object)~"."~members[0]~".variable).stringof") ~ ")();" 
@@ -119,7 +120,7 @@ template DeSerialize(T, alias data, alias object) {
 
 template TotalNetSize(T, members...) {
 
-	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
+	static if (members.length > 0 && hasAttribute!(T, members[0], Networked, getAttributes!(T, members[0]))) {
 
 		enum TotalNetSize = typeof(__traits(getMember, T, members[0]).bytes).sizeof + TotalNetSize!(T, members[1 .. $]);
 
