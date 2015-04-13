@@ -4,6 +4,7 @@ import gfm.math : Vector, Matrix;
 import profan.ecs : ClientID, LocalEntityID;
 
 //OpenGL maths related
+alias Vec2i = Vector!(int, 2);
 alias Vec2f = Vector!(float, 2);
 alias Vec3f = Vector!(float, 3);
 alias Vec4f = Vector!(float, 4);

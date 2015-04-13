@@ -19,6 +19,24 @@ import blindfire.net;
 import blindfire.gl;
 import blindfire.ui;
 
+import blindfire.text : FontAtlas;
+import blindfire.console : Console;
+
+void render_string(string format, Args...)(FontAtlas* atlas, Window* window, ref Vec2i offset, Args args) {
+	render_string!(format)(*atlas, window, offset, args);
+}
+
+void render_string(string format, Args...)(ref FontAtlas atlas, Window* window, ref Vec2i offset, Args args) {
+
+	import std.format : sformat;
+
+	char[format.length*2] buf;
+	const char[] str = sformat(buf, format, args);
+	atlas.render_text(window, str, offset.x, offset.y, 1, 1, 0xffffff);
+	offset.y += 16;
+
+}
+
 final class MenuState : GameState {
 	
 	UIState* ui_state;
@@ -204,12 +222,16 @@ final class MatchState : GameState {
 	SelectionBox sbox;
 	EntityManager em;
 
-	EntityID player;
+	Console* console;
+	FontAtlas* debug_atlas;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid, Console* console, FontAtlas* atlas) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
+
+		this.console = console;
+		this.debug_atlas = atlas;
 
 		this.em = new EntityManager();
 		this.em.add_system(new TransformManager());
@@ -260,12 +282,6 @@ final class MatchState : GameState {
 		auto type = UpdateType.CREATE;
 		data ~= (cast(ubyte*)&type)[0..type.sizeof];
 
-		auto x = uniform(128, 256);
-		auto y = uniform(128, 256);
-
-		player = create_unit(em, Vec2f(x, y), cast(EntityID*)null, s, t);
-		network_unit(player, x, y);
-
 		for (uint i = 0; i < 50; ++i) {
 			int n_x = uniform(0, 640);
 			int n_y = uniform(0, 480);
@@ -280,8 +296,8 @@ final class MatchState : GameState {
 
 	override void leave() {
 
-		//delete the player entity's components
-		em.unregister_component(player);
+		//remove all things
+		//em.clear();
 
 		//disconnect since when in this state, we will have been connected.
 		send(network_thread, Command.DISCONNECT);
@@ -302,6 +318,13 @@ final class MatchState : GameState {
 
 	}
 
+	void draw_debug(Window* window) {
+
+		auto offset = Vec2i(16, 128);
+		debug_atlas.render_string!("client id: %d")(window, offset, em.client_uuid);
+
+	}
+
 	override void draw(Window* window) {
 
 		em.tick!(DrawSystem)(window);
@@ -313,6 +336,8 @@ final class MatchState : GameState {
 		if(do_button(ui_state, 5, window, true, window.width/2, window.height - item_height/2, item_width, item_height, itemcolor, 255, "Quit", 0x428bca)) {
 			statehan.pop_state();
 		} //back to menu
+
+		draw_debug(window);
 
 	}
 
@@ -421,18 +446,16 @@ struct Game {
 	EventHandler* evhan;
 	GameStateHandler state;
 	UIState ui_state;
-	
+
 	Tid network_thread;
 
 	import blindfire.memory : LinearAllocator;
 	LinearAllocator resource_allocator;
 	LinearAllocator system_allocator;
 
-	import blindfire.text : FontAtlas;
 	float frametime, updatetime, drawtime;
 	FontAtlas debug_atlas;
 
-	import blindfire.console : Console;
 	Console* console;
 
 	this(Window* window, EventHandler* evhan) {
@@ -458,25 +481,13 @@ struct Game {
 	}
 
 	void draw_debug() {
-		
-		import std.format : sformat;
 
 		console.draw(window);
 
-		int offset_x = 16;
-		int offset_y = 32;
-
-		void render_string(string format, T)(T args) {
-			char[64] buf;
-			const char[] str = sformat(buf, format, args);
-			debug_atlas.render_text(
-				window, str, offset_x, offset_y, 1, 1, 0xffffff);
-			offset_y += 16;
-		}
-
-		render_string!("frametime: %f ms")(frametime);
-		render_string!("update: %f ms")(updatetime);
-		render_string!("draw: %f ms")(drawtime);
+		auto offset = Vec2i(16, 32);
+		debug_atlas.render_string!("frametime: %f ms")(window, offset, frametime);
+		debug_atlas.render_string!("update: %f ms")(window, offset, updatetime);
+		debug_atlas.render_string!("draw: %f ms")(window, offset, drawtime);
 
 	}
 
@@ -529,9 +540,9 @@ struct Game {
 	
 		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 
-		alias ra = system_allocator;	
+		alias ra = system_allocator;
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, window), State.MENU);
-		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, window, network_thread), State.GAME);
+		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, window, network_thread, console, &debug_atlas), State.GAME);
 		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
 		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread), State.LOBBY);
 		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);
