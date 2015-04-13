@@ -25,13 +25,16 @@ struct Console {
 	enum BUFFER_LINES = 30;
 
 	alias StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] ConsoleBuffer;
+	CommandDelegate[ConsoleCommand] commands;
 
 	FontAtlas* atlas;
 	bool enabled = false;
 	ConsoleBuffer buffers;
+
 	ConsoleBuffer history;
-	
-	CommandDelegate[ConsoleCommand] commands;
+	size_t history_index = 0;
+	size_t history_elements = 0;
+	ubyte[4] pad;	
 
 	this(FontAtlas* font_atlas) {
 		this.atlas = font_atlas;
@@ -52,20 +55,31 @@ struct Console {
 	}
 
 	void print(string format, Args...)(Args args) {
+
 		import std.format : sformat;
+
 		char[128] fmt_str;
 		char[] c = sformat(fmt_str, format, args);
-		buffers[0] ~= c;
+		write(c);
 		shift_buffer(buffers);
+
 	}
 
 	void write(in char[] text) {
 
-		if (buffers[0].elements + text.length < BUFFER_WIDTH) {
+		import std.algorithm : min;
+		size_t elements = buffers[0].elements;
+
+		if (elements + text.length < BUFFER_WIDTH) {
 			buffers[0] ~= text;
 		} else {
-			shift_buffer(buffers);
-			buffers[0] ~= text;
+			size_t written = 0;
+			while (written < text.length) {
+				auto s = text[written .. min($, BUFFER_WIDTH-buffers[0].elements)];
+				buffers[0] ~= s;
+				written += s.length;
+				shift_buffer(buffers);
+			}
 		}
 
 	}
@@ -120,9 +134,6 @@ struct Console {
 
 	}
 
-	size_t history_index = 0;
-	size_t history_elements = 0;
-	ubyte[4] pad;
 	void get_prev() {
 
 		if(!enabled) return;
