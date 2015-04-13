@@ -108,8 +108,8 @@ struct FontAtlas {
 
 		}
 		
-		this.char_width = face.glyph.metrics.width >> 6;
-		this.char_height = face.glyph.metrics.height >> 6;
+		this.char_width = cast(typeof(char_width))face.glyph.metrics.width >> 6;
+		this.char_height = cast(typeof(char_height))face.glyph.metrics.height >> 6;
 		atlas.unbind();
 
 	}

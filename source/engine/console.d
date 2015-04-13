@@ -100,7 +100,7 @@ struct Console {
 
 		const char[] command = slice[0..i];
 
-		uint begin, end;
+		size_t begin, end;
 		if (i < buffers[0].elements) { begin = i+1; end = slice.length; }
 		else { begin = i; end = i; }
 		const char[] args = slice[begin .. end];

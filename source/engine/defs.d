@@ -1,12 +1,7 @@
 module blindfire.defs;
 
 import gfm.math : Vector, Matrix;
-
-//Networking Identifiers
-alias ClientID = ubyte;
-
-//ECS ID
-alias LocalEntityID = ulong;
+import profan.ecs : ClientID, LocalEntityID;
 
 //OpenGL maths related
 alias Vec2f = Vector!(float, 2);
