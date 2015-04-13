@@ -79,7 +79,7 @@ struct FontAtlas {
 		}
 
 		atlas = Texture(w, h, GL_RED, GL_RED, 1);
-		atlas.bind();
+		atlas.bind(0);
 
 		int x = 0;
 		for (uint i = 32; i < 128; ++i) {
