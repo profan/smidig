@@ -8,6 +8,8 @@ import derelict.opengl3.gl3;
 
 import blindfire.gl;
 import blindfire.window : Window;
+import blindfire.resource : ResourceManager;
+import blindfire.game : Resource;
 
 struct CharacterInfo {
 
@@ -37,21 +39,24 @@ struct FontAtlas {
 
 	this(in char[] font_name, uint font_size) {
 
+		auto rm = ResourceManager.get();
+		shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
+
 		glGenVertexArrays(1, &vao);
 		glGenBuffers(1, &vbo);
 
 		FT_Library ft;
+		FT_Face face;
+
 		if (FT_Init_FreeType(&ft)) { 
 			writefln("[FontAtlas] Could not init freetype.");
 		}
 
-		scope(exit) { FT_Done_FreeType(ft); }
-
-		FT_Face face;
 		if (FT_New_Face(ft, font_name.ptr, 0, &face)) { 
 			writefln("[FontAtlas] Could not open font.");
 		}
 
+		scope(exit) { FT_Done_FreeType(ft); }
 		scope(exit) { FT_Done_Face(face); }
 
 		FT_Set_Pixel_Sizes(face, 0, font_size);	
@@ -73,14 +78,8 @@ struct FontAtlas {
 
 		}
 
-		import blindfire.game : Resource;
-		import blindfire.resource : ResourceManager;
-
-		auto rm = ResourceManager.get();
-		shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
-
 		atlas = Texture(w, h, GL_RED, GL_RED, 1);
-		glBindTexture(GL_TEXTURE_2D, atlas.texture);
+		atlas.bind();
 
 		int x = 0;
 		for (uint i = 32; i < 128; ++i) {
@@ -111,7 +110,7 @@ struct FontAtlas {
 		
 		this.char_width = face.glyph.metrics.width >> 6;
 		this.char_height = face.glyph.metrics.height >> 6;
-		glBindTexture(GL_TEXTURE_2D, 0);	
+		atlas.unbind();
 
 	}
 	
