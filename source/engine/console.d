@@ -19,7 +19,6 @@ enum ConsoleCommand {
 
 alias void delegate(in char[] arguments) CommandDelegate;
 
-
 struct Console {
 
 	enum BUFFER_WIDTH = 80;
@@ -110,13 +109,14 @@ struct Console {
 			shift_buffer(buffers);
 			commands[command](args);
 			history[0] ~= slice;
-			history_index = 0;
 			++history_elements;
 			shift_buffer(history);
 		} else {
 			shift_buffer(buffers);
 			print!("Unknown Command: %s")(command);
 		}
+			
+		history_index = 0;
 
 	}
 
