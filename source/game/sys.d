@@ -70,7 +70,7 @@ struct CollisionComponent {
 
 	double radius;
 	void delegate(EntityID) on_collision;
-	@dependency TransformComponent* mc;
+	@dependency() TransformComponent* mc;
 
 } //CollisionComponent
 
@@ -223,7 +223,7 @@ struct NetworkComponent {
 
 	//things, this kind of thing ought to be more general, wtb polymorphism
 	bool local = true;
-	@dependency TransformComponent* tc;
+	@dependency() TransformComponent* tc;
 
 
 } //NetworkComponent
@@ -257,7 +257,7 @@ struct SpriteComponent {
 	Mesh mesh;
 	Shader* shader;
    	Texture* texture;
-	@dependency TransformComponent* tc;
+	@dependency() TransformComponent* tc;
 
 } //SpriteComponent
 
@@ -303,7 +303,7 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 struct OrderComponent {
 
 	bool selected = false;
-	@dependency TransformComponent* tc;
+	@dependency() TransformComponent* tc;
 	Order[10] orders;
 
 } //OrderComponent
