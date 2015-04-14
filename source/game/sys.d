@@ -9,10 +9,6 @@ import blindfire.serialize : networked;
 import blindfire.gl : Vec2f, Transform;
 import blindfire.net : NetVar;
 
-enum EntityType {
-	UNIT
-}
-
 alias ComponentType = uint;
 enum : ComponentType[string] {
 	ComponentIdentifier = [
@@ -167,18 +163,23 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 						while (!done && input_stream.current < data.length) {
 							
 							EntityID entity_id = input_stream.read!EntityID();
-							ComponentType component_type = input_stream.read!ComponentType();
+							ubyte num_components = input_stream.read!ubyte();
 
-							switch (component_type) {
+							for (uint i = 0; i < num_components; ++i) {
 
-								case ComponentIdentifier[TransformComponent.stringof]: //TransformComponent
+								ComponentType component_type = input_stream.read!ComponentType();
 
-									deserialize!TransformComponent(input_stream, components[entity_id].tc);
-									break;
+								switch (component_type) {
+									case ComponentIdentifier[TransformComponent.stringof]: //TransformComponent
 
-								default:
-									writefln("[GAME] Unhandled Component from %s, id: %d", entity_id.owner, component_type);
-									done = true; //all bets are off at this point
+										deserialize!TransformComponent(input_stream, components[entity_id].tc);
+										break;
+
+									default:
+										writefln("[GAME] Unhandled Component from %s, id: %d", entity_id.owner, component_type);
+										done = true; //all bets are off at this point
+								}
+
 							}
 
 						}
@@ -203,10 +204,12 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 		foreach (id, ref comp; components) {
 
+			ubyte num_components = 1;
 			if (comp.local) {
 
 				//write which entity it belongs to
 				send_data ~= (cast(ubyte*)&id)[0..id.sizeof];
+				send_data ~= (cast(ubyte*)&num_components)[0..num_components.sizeof];
 
 				//write the fields to be serialized in the entity's components.
 				serialize(send_data, comp.tc);
