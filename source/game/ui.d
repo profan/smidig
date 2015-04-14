@@ -12,6 +12,19 @@ import blindfire.defs;
 import blindfire.text;
 import blindfire.gl;
 
+enum LayoutType {
+	LINEAR
+}
+
+struct Layout {
+
+	LayoutType type;
+	this(LayoutType type) {
+		this.type = type;
+	}
+
+}
+
 struct UIState {
 
 	uint active_item = 0, hot_item = 0;
@@ -104,17 +117,19 @@ enum DrawFlags {
 
 GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
 
-	GLfloat[4] gl_color = [cast(float)cast(ubyte)(color>>16)/255, cast(float)cast(ubyte)(color>>8)/255, cast(float)cast(ubyte)(color)/255, cast(float)cast(ubyte)(alpha)/255];
+	GLfloat[4] gl_color = [ //mask out r, g, b components from int
+		cast(float)cast(ubyte)(color>>16)/255,
+		cast(float)cast(ubyte)(color>>8)/255,
+		cast(float)cast(ubyte)(color)/255,
+		cast(float)cast(ubyte)(alpha)/255
+	];
+
 	return gl_color;
 
 }
 
-void draw_circle(Window* window, DrawFlags flags, int x, int y, int radius, int color, ubyte alpha = 255) {
-	
-}
-
 //Immediate Mode GUI (IMGUI, see Muratori)
-void draw_rectangle(Window* window, UIState* state, DrawFlags flags, float x, float y, float width, float height, int color, ubyte alpha = 255) {
+void draw_rectangle(UIState* state, Window* window, float x, float y, float width, float height, int color, ubyte alpha = 255) {
 
 	auto transform = Mat4f.translation(Vec3f(x, y, 0.0f)) * Mat4f.scaling(Vec3f(width, height, 1.0f));
 	GLfloat[4] gl_color = int_to_glcolor(color, alpha);
@@ -131,7 +146,7 @@ void draw_rectangle(Window* window, UIState* state, DrawFlags flags, float x, fl
 
 }
 
-void draw_label(Window* window, UIState* ui, in char[] label, int x, int y, int width, int height, int color) {
+void draw_label(UIState* ui, Window* window, in char[] label, int x, int y, int width, int height, int color) {
 
 	int cw = ui.font_atlas.char_width;
 	float label_width = (label.length * cw);
@@ -142,7 +157,9 @@ void draw_label(Window* window, UIState* ui, in char[] label, int x, int y, int 
 int darken(int color, uint percentage) {
 
 	uint adjustment = 255 / percentage;
-	ubyte r = cast(ubyte)(color>>16), g = cast(ubyte)(color>>8), b = cast(ubyte)(color);
+	ubyte r = cast(ubyte)(color>>16);
+	ubyte g = cast(ubyte)(color>>8);
+	ubyte b = cast(ubyte)(color);
 	r -= adjustment;
 	g -= adjustment;
 	b -= adjustment;
@@ -156,7 +173,7 @@ struct TextSpec {
 	int text_color;
 }
 
-bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, int width, int height, int color, ubyte alpha = 255, in char[] label = "", int text_color = 0xFFFFFF) {
+bool do_button(UIState* ui, uint id, Window* window, int x, int y, int width, int height, int color, ubyte alpha = 255, in char[] label = "", int text_color = 0xFFFFFF) {
 
 	bool result = false;
 	bool inside = point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
@@ -188,14 +205,17 @@ bool do_button(UIState* ui, uint id, Window* window, bool filled, int x, int y, 
 
 	}
 
-	draw_rectangle(window, ui, (filled) ? DrawFlags.FILL : DrawFlags.NONE, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
-	draw_rectangle(window, ui, (filled) ? DrawFlags.FILL : DrawFlags.NONE, m_x - width/2, m_y - height/2, width, height, color, alpha);
-	if (label != "") draw_label(window, ui, label, m_x, m_y, width, height, text_color);
+	//draw both layers of button
+	ui.draw_rectangle(window, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
+	ui.draw_rectangle(window, m_x - width/2, m_y - height/2, width, height, color, alpha);
+	if (label != "") ui.draw_label(window, label, m_x, m_y, width, height, text_color);
 
 	return result;
 
 }
 
 bool is_btn_down(UIState* ui, uint button) {
+
 	return (ui.mouse_buttons >> button-1) & 1;
+
 }

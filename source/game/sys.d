@@ -263,7 +263,6 @@ struct SpriteComponent {
 
 class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 
-	import blindfire.ui : draw_circle, DrawFlags;
 	import blindfire.action : SelectionBox;
 	import blindfire.util : point_in_rect;
 
