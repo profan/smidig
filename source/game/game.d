@@ -440,7 +440,7 @@ struct Game {
 	LinearAllocator system_allocator;
 
 	float frametime, updatetime, drawtime;
-	FontAtlas debug_atlas;
+	FontAtlas* debug_atlas;
 
 	Console* console;
 
@@ -511,8 +511,8 @@ struct Game {
 		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
 
 		//font atlases and such
-		this.debug_atlas = FontAtlas("fonts/OpenSans-Regular.ttf", 12);
-		this.console = system_allocator.alloc!(Console)(&debug_atlas);
+		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12);
+		this.console = system_allocator.alloc!(Console)(debug_atlas);
 
 	}
 
@@ -528,7 +528,7 @@ struct Game {
 
 		alias ra = system_allocator;
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, window), State.MENU);
-		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, window, network_thread, console, &debug_atlas), State.GAME);
+		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, window, network_thread, console, debug_atlas), State.GAME);
 		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
 		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread), State.LOBBY);
 		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);

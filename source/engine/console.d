@@ -34,7 +34,6 @@ struct Console {
 	ConsoleBuffer history;
 	size_t history_index = 0;
 	size_t history_elements = 0;
-	ubyte[4] pad;	
 
 	this(FontAtlas* font_atlas) {
 		this.atlas = font_atlas;
