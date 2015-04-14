@@ -31,6 +31,11 @@ struct Layout {
 
 }
 
+enum DrawCommand {
+	Rectangle,
+	Label
+}
+
 struct RectangleDrawCommand {
 
 }

@@ -283,7 +283,7 @@ final class MatchState : GameState {
 	override void leave() {
 
 		//remove all things
-		em.clear_all_components();
+		em.clear_systems();
 
 		//disconnect since when in this state, we will have been connected.
 		send(network_thread, Command.DISCONNECT);
