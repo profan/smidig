@@ -230,7 +230,6 @@ struct NetworkComponent {
 
 class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 
-	import blindfire.ui : draw_rectangle, DrawFlags;
 	import blindfire.window : Window;
 
 	void update(Window* window) {

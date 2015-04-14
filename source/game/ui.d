@@ -19,9 +19,23 @@ enum LayoutType {
 struct Layout {
 
 	LayoutType type;
-	this(LayoutType type) {
+	int width, height;
+	int offset_x, offset_y;
+	this(LayoutType type, int offset_x, int offset_y, int width, int height) {
 		this.type = type;
+		this.offset_x = offset_x;
+		this.offset_y = offset_y;
+		this.width = width;
+		this.height = height;
 	}
+
+}
+
+struct RectangleDrawCommand {
+
+}
+
+struct LabelDrawCommand {
 
 }
 
@@ -106,14 +120,6 @@ void reset_ui(ref UIState ui) {
 	}
 
 }
-
-enum DrawFlags {
-
-	NONE = 0,
-	FILL = 1 << 0,
-	BORDER = 1 << 1
-
-} //RectangleType
 
 GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
 

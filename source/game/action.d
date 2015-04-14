@@ -1,11 +1,8 @@
 module blindfire.action;
 
-import blindfire.ui : UIState, draw_rectangle, DrawFlags;
+import blindfire.ui : UIState, draw_rectangle;
 import blindfire.window : Window;
 import blindfire.gl : Vec2f;
-
-import std.stdio : writefln;
-
 
 struct SelectionBox {
 
