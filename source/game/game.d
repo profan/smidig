@@ -21,21 +21,7 @@ import blindfire.ui;
 
 import blindfire.text : FontAtlas;
 import blindfire.console : Console;
-
-void render_string(string format, Args...)(FontAtlas* atlas, Window* window, ref Vec2i offset, Args args) {
-	render_string!(format)(*atlas, window, offset, args);
-}
-
-void render_string(string format, Args...)(ref FontAtlas atlas, Window* window, ref Vec2i offset, Args args) {
-
-	import std.format : sformat;
-
-	char[format.length*2] buf;
-	const char[] str = sformat(buf, format, args);
-	atlas.render_text(window, str, offset.x, offset.y, 1, 1, 0xffffff);
-	offset.y += 16;
-
-}
+import blindfire.util : render_string;
 
 final class MenuState : GameState {
 	
@@ -297,7 +283,7 @@ final class MatchState : GameState {
 	override void leave() {
 
 		//remove all things
-		//em.clear();
+		em.clear_all_components();
 
 		//disconnect since when in this state, we will have been connected.
 		send(network_thread, Command.DISCONNECT);

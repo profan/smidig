@@ -1,7 +1,9 @@
 module blindfire.netgame;
 
 import std.concurrency : Tid, receiveTimeout;
+import std.datetime : dur;
 
+import blindfire.net;
 import blindfire.netmsg;
 import blindfire.log;
 
