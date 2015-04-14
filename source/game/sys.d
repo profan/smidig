@@ -4,16 +4,14 @@ import std.concurrency : send, receiveTimeout, Tid;
 import std.stdio : writefln;
 
 import profan.ecs;
-import blindfire.netmsg : ComponentType;
-
-enum : ComponentType[string] {
-	Identifier = [
-		"TransformComponent" : ComponentType.TRANSFORM_COMPONENT
-	]
-}
+import blindfire.engine.stream : InputStream;
+import blindfire.netmsg : ComponentIdentifier, ComponentType;
+import blindfire.serialize : networked;
+import blindfire.gl : Vec2f, Transform;
+import blindfire.net : NetVar;
 
 mixin template NetIdentifier() {
-	@networked NetVar!(ComponentType) identifier = Identifier[typeof(this).stringof];
+	@networked NetVar!(uint) identifier = ComponentIdentifier[typeof(this).stringof];
 }
 
 interface UpdateSystem : ComponentSystem!(0) {
@@ -43,10 +41,6 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 } //TransformManager
 
 struct TransformComponent {
-
-	import blindfire.net : NetVar;
-	import blindfire.serialize : networked;
-	import blindfire.gl : Vec2f, Transform;
 
 	mixin NetIdentifier;
 	@networked NetVar!(Vec2f) velocity;
@@ -98,7 +92,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import profan.collections : StaticArray;
 	import blindfire.serialize : serialize, deserialize;
 	import blindfire.net : Command, ClientID;
-	import blindfire.netmsg : InputStream, UpdateType, EntityType;
+	import blindfire.netmsg : UpdateType, EntityType;
 	import blindfire.ents : create_unit;
 	import blindfire.gl : Vec2f, Mat3f, Transform;
 	import blindfire.game : Resource;
@@ -165,7 +159,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 							EntityID entity_id = input_stream.read!EntityID();
 							ComponentType component_type = input_stream.read!ComponentType();
 							switch (component_type) {
-								case ComponentType.TRANSFORM_COMPONENT: //TransformComponent
+								case ComponentIdentifier[TransformComponent.stringof]: //TransformComponent
 
 									deserialize!TransformComponent(input_stream, components[entity_id].tc);
 									break;

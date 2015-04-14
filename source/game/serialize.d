@@ -1,12 +1,13 @@
 module blindfire.serialize;
 
 import profan.collections : StaticArray;
-import blindfire.net : NetVar;
 import std.bitmanip;
 
 import blindfire.gl;
 import blindfire.sys;
 import blindfire.defs;
+import blindfire.net : NetVar;
+import blindfire.engine.stream : InputStream;
 
 enum networked = "networked";
 
@@ -139,7 +140,6 @@ template MemberSize(T) {
 	enum MemberSize = TotalNetSize!(T, __traits(allMembers, T));
 }
 
-import profan.ecs : EntityID;
 void serialize(B, T)(ref B data, T* object) {
 
 	mixin Serialize!(T, data, object);
@@ -147,7 +147,6 @@ void serialize(B, T)(ref B data, T* object) {
 
 }
 
-import blindfire.netmsg : InputStream;
 void deserialize(T)(ref InputStream data, T* object) {
 
 	mixin DeSerialize!(T, data, object);
