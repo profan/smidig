@@ -5,9 +5,9 @@ import std.datetime : dur;
 
 import blindfire.engine.stream : InputStream;
 
-import blindfire.net;
+import blindfire.engine.net;
 import blindfire.netmsg;
-import blindfire.log;
+import blindfire.engine.log;
 
 enum SessionState {
 	INACTIVE, //not waiting for players, not running

@@ -12,9 +12,8 @@ import derelict.util.loader;
 import derelict.util.exception;
 
 import blindfire.game;
-import blindfire.memory;
-import blindfire.window;
-import blindfire.eventhandler;
+import blindfire.engine.window;
+import blindfire.engine.eventhandler;
 
 
 const uint DEFAULT_WINDOW_WIDTH = 640;

@@ -1,4 +1,4 @@
-module blindfire.text;
+module blindfire.engine.text;
 
 import std.algorithm : max;
 import std.stdio : writefln;
@@ -6,10 +6,9 @@ import std.stdio : writefln;
 import derelict.freetype.ft;
 import derelict.opengl3.gl3;
 
-import blindfire.gl;
-import blindfire.window : Window;
-import blindfire.resource : ResourceManager;
-import blindfire.game : Resource;
+import blindfire.engine.gl;
+import blindfire.engine.window : Window;
+import blindfire.engine.resource : ResourceManager;
 
 struct CharacterInfo {
 
@@ -37,10 +36,9 @@ struct FontAtlas {
 	int atlas_width, atlas_height;
 	int char_width, char_height;
 
-	this(in char[] font_name, uint font_size) {
+	this(in char[] font_name, uint font_size, Shader* text_shader) {
 
-		auto rm = ResourceManager.get();
-		shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
+		shader = text_shader;
 
 		glGenVertexArrays(1, &vao);
 		glGenBuffers(1, &vbo);

@@ -1,8 +1,9 @@
 module blindfire.action;
 
+import blindfire.engine.window : Window;
+import blindfire.engine.gl : Vec2f;
+
 import blindfire.ui : UIState, draw_rectangle;
-import blindfire.window : Window;
-import blindfire.gl : Vec2f;
 
 struct SelectionBox {
 

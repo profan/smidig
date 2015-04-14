@@ -9,19 +9,20 @@ import derelict.opengl3.gl3;
 import derelict.opengl3.gl;
 import derelict.freetype.ft;
 
-import blindfire.window;
-import blindfire.eventhandler;
+import blindfire.engine.window;
+import blindfire.engine.eventhandler;
+import blindfire.engine.console : Console;
+import blindfire.engine.text : FontAtlas;
+import blindfire.engine.util : render_string;
+import blindfire.engine.resource;
+import blindfire.engine.state;
+import blindfire.engine.defs;
+import blindfire.engine.net;
+import blindfire.engine.gl;
+
 import blindfire.graphics;
-import blindfire.resource;
-import blindfire.state;
-import blindfire.defs;
-import blindfire.net;
-import blindfire.gl;
 import blindfire.ui;
 
-import blindfire.console : Console;
-import blindfire.text : FontAtlas;
-import blindfire.util : render_string;
 
 final class MenuState : GameState {
 	
@@ -426,7 +427,7 @@ enum Resource {
 
 struct Game {
 
-	import std.uuid : randomUUID;
+	import blindfire.engine.memory : LinearAllocator;
 
 	Window* window;
 	EventHandler* evhan;
@@ -435,7 +436,6 @@ struct Game {
 
 	Tid network_thread;
 
-	import blindfire.memory : LinearAllocator;
 	LinearAllocator resource_allocator;
 	LinearAllocator system_allocator;
 
@@ -490,7 +490,7 @@ struct Game {
 
 	void load_resources() {
 
-		import blindfire.gl;
+		import blindfire.engine.gl;
 
 		alias ra = resource_allocator;
 		auto rm = ResourceManager.get();
@@ -511,7 +511,7 @@ struct Game {
 		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
 
 		//font atlases and such
-		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12);
+		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12, text_shader);
 		this.console = system_allocator.alloc!(Console)(debug_atlas);
 
 	}
@@ -555,7 +555,7 @@ struct Game {
 		auto iter = TickDuration.from!("msecs")(16);
 		auto last = TickDuration.from!("msecs")(0);
 
-		import blindfire.console : ConsoleCommand;
+		import blindfire.engine.console : ConsoleCommand;
 		console.bind_command(ConsoleCommand.SET_TICKRATE, 
 			(in char[] args) {
 				int tickrate = to!int(args);

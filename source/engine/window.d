@@ -1,4 +1,4 @@
-module blindfire.window;
+module blindfire.engine.window;
 
 import std.utf : toUTFz;
 import std.stdio : writefln;

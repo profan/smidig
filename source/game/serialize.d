@@ -1,13 +1,11 @@
 module blindfire.serialize;
 
-import profan.collections : StaticArray;
-import std.bitmanip;
-
-import blindfire.gl;
-import blindfire.sys;
-import blindfire.defs;
-import blindfire.net : NetVar;
+import blindfire.engine.gl;
+import blindfire.engine.defs;
+import blindfire.engine.net : NetVar;
 import blindfire.engine.stream : InputStream;
+
+import blindfire.sys;
 
 enum networked = "networked";
 

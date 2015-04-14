@@ -1,4 +1,4 @@
-module blindfire.defs;
+module blindfire.engine.defs;
 
 import gfm.math : Vector, Matrix;
 

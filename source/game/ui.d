@@ -6,11 +6,11 @@ import core.stdc.stdlib;
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl;
 
-import blindfire.window;
-import blindfire.util;
-import blindfire.defs;
-import blindfire.text;
-import blindfire.gl;
+import blindfire.engine.window;
+import blindfire.engine.util;
+import blindfire.engine.defs;
+import blindfire.engine.text;
+import blindfire.engine.gl;
 
 enum LayoutType {
 	LINEAR
@@ -96,7 +96,13 @@ struct UIState {
 			writefln("[GAME] OpenGL ERROR: %d", status);
 		}
 
-		font_atlas = FontAtlas("fonts/OpenSans-Bold.ttf", 22);
+
+		import blindfire.engine.resource : ResourceManager;
+		import blindfire.game : Resource;
+		auto rm = ResourceManager.get();
+	
+		auto text_shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
+		font_atlas = FontAtlas("fonts/OpenSans-Bold.ttf", 22, text_shader);
 
 	}
 

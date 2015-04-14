@@ -1,12 +1,7 @@
-module blindfire.state;
+module blindfire.engine.state;
 
-import std.stdio : writefln;
-
-import derelict.sdl2.sdl;
-import derelict.sdl2.ttf;
-
-import blindfire.eventhandler;
-import blindfire.window;
+import blindfire.engine.eventhandler;
+import blindfire.engine.window;
 
 alias StateID = ulong;
 

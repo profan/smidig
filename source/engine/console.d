@@ -1,10 +1,10 @@
-module blindfire.console;
+module blindfire.engine.console;
 
 import std.stdio : writefln;
 import derelict.sdl2.sdl;
 
-import blindfire.text : FontAtlas;
-import blindfire.window : Window;
+import blindfire.engine.text : FontAtlas;
+import blindfire.engine.window : Window;
 
 import profan.collections : StaticArray;
 

@@ -1,4 +1,4 @@
-module blindfire.log;
+module blindfire.engine.log;
 
 import core.stdc.stdio : printf;
 import std.stdio : writefln;

@@ -1,1 +1,1 @@
-module blindfire.scene;
+module blindfire.engine.scene;

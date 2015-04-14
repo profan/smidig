@@ -1,4 +1,4 @@
-module blindfire.net;
+module blindfire.engine.net;
 
 import core.time : dur;
 import std.string : format;
@@ -8,10 +8,10 @@ import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.typecons : Tuple;
 import std.conv : to;
 
-import blindfire.log : Logger;
-import profan.collections : StaticArray;
+import blindfire.engine.log : Logger;
+import blindfire.engine.defs : ClientID;
 
-import blindfire.defs : ClientID;
+import profan.collections : StaticArray;
 
 enum MessageType : uint {
 

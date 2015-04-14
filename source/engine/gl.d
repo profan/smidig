@@ -1,4 +1,4 @@
-module blindfire.gl;
+module blindfire.engine.gl;
 
 import core.vararg;
 import core.stdc.stdio;
@@ -9,7 +9,7 @@ import std.file : read;
 import derelict.opengl3.gl3;
 
 import gfm.math;
-import blindfire.defs;
+import blindfire.engine.defs;
 
 struct VAO {
 
@@ -94,7 +94,6 @@ struct Text {
 	}
 
 	~this() {
-
 	}
 
 } //Text

@@ -1,6 +1,6 @@
-module blindfire.resource;
+module blindfire.engine.resource;
 
-import blindfire.gl : Texture;
+import blindfire.engine.gl : Texture;
 
 //some resource loading shenanigans, this will probably become some horrid singleton or global.
 

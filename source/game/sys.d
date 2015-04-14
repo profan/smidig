@@ -2,12 +2,14 @@ module blindfire.sys;
 
 import std.concurrency : send, receiveTimeout, Tid;
 import std.stdio : writefln;
-
 import profan.ecs;
+
+import blindfire.engine.window : Window;
+import blindfire.engine.gl : Vec2f, Mat3f, Transform, Shader, Texture, Mesh;
+import blindfire.engine.net : NetVar, Command, ClientID;
 import blindfire.engine.stream : InputStream;
+
 import blindfire.serialize : networked;
-import blindfire.gl : Vec2f, Transform;
-import blindfire.net : NetVar;
 
 alias ComponentType = uint;
 enum : ComponentType[string] {
@@ -27,8 +29,6 @@ interface UpdateSystem : ComponentSystem!(0) {
 }
 
 interface DrawSystem : ComponentSystem!(1) {
-
-	import blindfire.window : Window;
 
 	void update(Window* window);
 
@@ -97,10 +97,8 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 	import std.datetime : dur;
 	import profan.collections : StaticArray;
 	import blindfire.serialize : serialize, deserialize, DeSerializeMembers;
-	import blindfire.net : Command, ClientID;
 	import blindfire.netmsg : UpdateType, EntityType;
 	import blindfire.ents : create_unit;
-	import blindfire.gl : Vec2f, Mat3f, Transform;
 	import blindfire.game : Resource;
 
 	Tid network_thread;
@@ -137,8 +135,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 						switch (entity_type) {
 							case EntityType.UNIT: //create_unit
 
-								import blindfire.resource : ResourceManager;
-								import blindfire.gl : Shader, Texture;
+								import blindfire.engine.resource : ResourceManager;
 
 								Vec2f position = input_stream.read!Vec2f();
 								create_unit!(true)(em, position, &entity_id, 
@@ -236,8 +233,6 @@ struct NetworkComponent {
 
 class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 
-	import blindfire.window : Window;
-
 	void update(Window* window) {
 
 		foreach (id, ref comp; components) with (comp) {
@@ -255,7 +250,7 @@ class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 
 struct SpriteComponent {
 
-	import blindfire.gl : Mesh, Shader, Texture;
+	import blindfire.engine.gl : Mesh, Shader, Texture;
 
 	//some drawing stuff?
 	//texture and vao?
@@ -268,8 +263,8 @@ struct SpriteComponent {
 
 class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 
+	import blindfire.engine.util : point_in_rect;
 	import blindfire.action : SelectionBox;
-	import blindfire.util : point_in_rect;
 	import std.math : atan2;
 
 	SelectionBox* sbox;

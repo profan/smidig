@@ -1,4 +1,4 @@
-module blindfire.memory;
+module blindfire.engine.memory;
 
 import std.stdio : writefln;
 import core.stdc.stdlib : malloc, free;

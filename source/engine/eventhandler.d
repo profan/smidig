@@ -1,6 +1,4 @@
-module blindfire.eventhandler;
-
-import std.stdio : writefln;
+module blindfire.engine.eventhandler;
 
 import derelict.sdl2.sdl;
 

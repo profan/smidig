@@ -3,8 +3,9 @@ module blindfire.ents;
 import std.stdio : writefln;
 import std.uuid : UUID;
 
-import blindfire.gl : Mesh, Shader, Texture, Transform, Vertex;
-import blindfire.defs : Vec2f, Vec3f;
+import blindfire.engine.gl : Mesh, Shader, Texture, Transform, Vertex;
+import blindfire.engine.defs : Vec2f, Vec3f;
+
 import blindfire.sys;
 import profan.ecs;
 
