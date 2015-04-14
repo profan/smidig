@@ -169,8 +169,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 							ComponentType component_type = input_stream.read!ComponentType();
 
 							switch (component_type) {
-								case ComponentIdentifier[TransformComponent.stringof]: //TransformComponent
-
+								case ComponentIdentifier[TransformComponent.stringof]:
 									deserialize!TransformComponent(input_stream, components[entity_id].tc);
 									break;
 
@@ -271,6 +270,7 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 
 	import blindfire.action : SelectionBox;
 	import blindfire.util : point_in_rect;
+	import std.math : atan2;
 
 	SelectionBox* sbox;
 
@@ -289,8 +289,6 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 			} else if (sbox.active) {
 				selected = false;
 			}
-
-			import std.math;
 
 			if (comp.selected && sbox.order_set) with (comp.tc) {
 				velocity = -(Vec2f(x, y) - Vec2f(sbox.to_x, sbox.to_y)).normalized();
