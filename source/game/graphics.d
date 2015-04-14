@@ -6,7 +6,7 @@ import derelict.sdl2.sdl;
 import derelict.sdl2.ttf;
 import derelict.opengl3.gl;
 
-import blindfire.window;
+import blindfire.window : Window;
 import blindfire.gl;
 
 Texture create_font_texture(Window* window, in char* font_path, in char* font_text, int font_size, int font_color) {

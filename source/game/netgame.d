@@ -13,15 +13,29 @@ enum SessionState {
 	WAITING, //waiting for players, in lobby
 }
 
+alias void delegate() OnConnectDelegate;
+alias void delegate() OnDisconnectDelegate;
+
 class NetworkManager {
 
+	enum Event {
+		CONNECT,
+		DISCONNECT
+	}
+
+	Tid network_thread;
 	SessionState state;
 
-	this() {
+	this(Tid network_thread) {
 		state = SessionState.INACTIVE;
 	}
 
 	void handle_messages() {
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+		(Command cmd) {
+
+		});
 
 	}
 

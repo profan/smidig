@@ -19,8 +19,8 @@ import blindfire.net;
 import blindfire.gl;
 import blindfire.ui;
 
-import blindfire.text : FontAtlas;
 import blindfire.console : Console;
+import blindfire.text : FontAtlas;
 import blindfire.util : render_string;
 
 final class MenuState : GameState {
