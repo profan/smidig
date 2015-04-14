@@ -1,11 +1,14 @@
 Game Ideas Document
+====================
 
 Preparation Phase for a Match
+-----------------------------
 
 	Each player prepares himself for the match by selecting equipment for his units, or selecting a preset made previously,
 	this stage of the preparation may be enabled or disabled depending on the type of Game Mode.
 
 Game Modes (descending order of priority)
+-----------------------------------------
 
  * Versus (1v1, or Teams)
 
@@ -18,6 +21,7 @@ Game Modes (descending order of priority)
  * Objective
 
 Abilities
+---------
 
 	Units
 
@@ -27,6 +31,7 @@ Abilities
 			.. Chest-high walls be damned.
 
 Effects
+---------
 
 	Projectiles
 
@@ -49,12 +54,14 @@ Effects
 			Should animate accordingly to display that they're moving, legs moving and so on.
 
 Equipment
+---------
 
 	* Shield
 
 		Protects the user from eventual projectiles if facing the right way, can break after taking large amounts of damage.
 
 Weapons
+---------
 
 	Projectile Based
 
@@ -101,6 +108,7 @@ Weapons
 			Used for clearing areas, will send shrapnel fragments flying, dangerous if used in open spaces in proximity to user.
 
 Deployable Items
+------------------
 
  * Projectile Deflector
 	

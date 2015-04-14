@@ -7,3 +7,5 @@ blindfire
 fonts/
 *.dll
 *.exe
+docs/
+core
