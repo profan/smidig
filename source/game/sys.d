@@ -124,6 +124,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 			writefln("[GAME] Received world update, %d bytes", data.length);
 			UpdateType type = input_stream.read!UpdateType();
+
 			while (!done && input_stream.current < data.length) {
 
 				switch (type) {
@@ -159,30 +160,27 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 						break;
 
 					case UpdateType.UPDATE:
-						
-						while (!done && input_stream.current < data.length) {
 							
-							EntityID entity_id = input_stream.read!EntityID();
-							ubyte num_components = input_stream.read!ubyte();
+						EntityID entity_id = input_stream.read!EntityID();
+						ubyte num_components = input_stream.read!ubyte();
 
-							for (uint i = 0; i < num_components; ++i) {
+						for (uint i = 0; i < num_components; ++i) {
 
-								ComponentType component_type = input_stream.read!ComponentType();
+							ComponentType component_type = input_stream.read!ComponentType();
 
-								switch (component_type) {
-									case ComponentIdentifier[TransformComponent.stringof]: //TransformComponent
+							switch (component_type) {
+								case ComponentIdentifier[TransformComponent.stringof]: //TransformComponent
 
-										deserialize!TransformComponent(input_stream, components[entity_id].tc);
-										break;
+									deserialize!TransformComponent(input_stream, components[entity_id].tc);
+									break;
 
-									default:
-										writefln("[GAME] Unhandled Component from %s, id: %d", entity_id.owner, component_type);
-										done = true; //all bets are off at this point
-								}
-
+								default:
+									writefln("[GAME] Unhandled Component from %s, id: %d", entity_id.owner, component_type);
+									done = true; //all bets are off at this point
 							}
 
 						}
+
 
 						break;
 
