@@ -5,10 +5,20 @@ import std.stdio : writefln;
 
 import profan.ecs;
 import blindfire.engine.stream : InputStream;
-import blindfire.netmsg : ComponentIdentifier, ComponentType;
 import blindfire.serialize : networked;
 import blindfire.gl : Vec2f, Transform;
 import blindfire.net : NetVar;
+
+enum EntityType {
+	UNIT
+}
+
+alias ComponentType = uint;
+enum : ComponentType[string] {
+	ComponentIdentifier = [
+		TransformComponent.stringof : 0
+	]
+}
 
 mixin template NetIdentifier() {
 	@networked NetVar!(uint) identifier = ComponentIdentifier[typeof(this).stringof];
