@@ -450,7 +450,7 @@ struct Game {
 		this.evhan = evhan;
 		this.ui_state = UIState();
 		this.state = new GameStateHandler();
-		this.resource_allocator = LinearAllocator(8112);
+		this.resource_allocator = LinearAllocator(8192);
 		this.system_allocator = LinearAllocator(16384);
 		
 	}
