@@ -41,6 +41,10 @@ template Identifier(alias Sym) {
 	enum Identifier = __traits(identifier, Sym);
 }
 
+template StringIdentifier(alias T, alias Member) {
+	enum StringIdentifier = typeof(Symbol!(T, Member)).stringof;
+}
+
 template Symbol(alias T, alias Member) {
 	enum Symbol = __traits(getMember, T, Member);
 }
@@ -138,6 +142,50 @@ template TotalNetSize(T, members...) {
 
 template MemberSize(T) {
 	enum MemberSize = TotalNetSize!(T, __traits(allMembers, T));
+}
+
+template DeSerializeAll(T, alias data, members...) {
+
+	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
+
+		enum DeSerializeAll = 
+			"case " ~ "ComponentIdentifier[" ~ T.stringof ~ "]: " ~
+			"deserialize!" ~ StringIdentifier!(T, members[0]) ~ "(" ~ Identifier!(data) ~
+			", components[entity_id]." ~ members[0] ~ "); break;" ~ DeSerializeAll!(T, data, members[1 .. $]);
+
+	} else static if (members.length > 0) {
+
+		enum DeSerializeAll = DeSerializeAll!(T, data, members[1 .. $]);
+
+	} else {
+
+		enum DeSerializeAll = "";
+
+	}
+
+}
+
+string DeSerializeMembers(T, alias input_stream)() {
+
+	string str = "";
+	enum s = cast(T*)null;
+	foreach (i, m; s.tupleof) {
+	
+		enum member = s.tupleof[i].stringof[8..$];
+		alias typeof(m) type;
+		static if (hasAttribute!(T, member, networked, getAttributes!(T, member))) {
+			str ~= "case: ComponentIdentifier[" ~ T.stringof ~ "]:" ~
+				"deserialize!" ~ type.stringof ~ "(" ~ Identifier!(input_stream) ~
+				", components[entity_id]." ~ member ~ "); break;";
+		}
+	}
+
+	return str;
+
+}
+
+mixin template DeSerializeMembers(T, alias data) {
+	enum DeSerializeMembers = DeSerializeAll!(T, data, __traits(allMembers, T));
 }
 
 void serialize(B, T)(ref B data, T* object) {

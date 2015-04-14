@@ -90,7 +90,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 	import std.datetime : dur;
 	import profan.collections : StaticArray;
-	import blindfire.serialize : serialize, deserialize;
+	import blindfire.serialize : serialize, deserialize, DeSerializeMembers;
 	import blindfire.net : Command, ClientID;
 	import blindfire.netmsg : UpdateType, EntityType;
 	import blindfire.ents : create_unit;
@@ -158,7 +158,9 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 							
 							EntityID entity_id = input_stream.read!EntityID();
 							ComponentType component_type = input_stream.read!ComponentType();
+
 							switch (component_type) {
+
 								case ComponentIdentifier[TransformComponent.stringof]: //TransformComponent
 
 									deserialize!TransformComponent(input_stream, components[entity_id].tc);
@@ -217,7 +219,7 @@ struct NetworkComponent {
 
 	//things, this kind of thing ought to be more general, wtb polymorphism
 	bool local = true;
-	@dependency() TransformComponent* tc;
+	@dependency() @networked TransformComponent* tc;
 
 
 } //NetworkComponent
