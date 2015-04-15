@@ -20,8 +20,7 @@ class NetworkManager {
 	}
 
 	enum State {
-		SESSION_ACTIVE,
-		
+		SESSION_ACTIVE
 	}
 
 	Tid network_thread;

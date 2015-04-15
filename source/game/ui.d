@@ -12,6 +12,8 @@ import blindfire.engine.defs;
 import blindfire.engine.text;
 import blindfire.engine.gl;
 
+import profan.collections;
+
 enum LayoutType {
 	LINEAR
 }
@@ -50,6 +52,8 @@ struct UIState {
 	int mouse_x, mouse_y;
 	uint mouse_buttons;
 
+	StaticArray!(char, 64) entered_text;
+
 	//encapsulate this, this is TEMPORARY
 	GLuint box_vao;
 	GLuint box_vbo;
@@ -57,6 +61,22 @@ struct UIState {
 	uint box_num_vertices;
 
 	FontAtlas font_atlas;
+
+	void update_ui(ref SDL_Event ev) {
+
+		mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+
+		switch (ev.type) {
+
+			case SDL_TEXTINPUT:
+				entered_text ~= ev.text.text[0..1];
+				break;
+			default:
+				break;
+
+		}
+
+	}
 
 	void init() {
 
@@ -113,6 +133,7 @@ struct UIState {
 	}
 
 } //UIState
+
 
 void before_ui(ref UIState ui) {
 
@@ -190,10 +211,45 @@ struct TextSpec {
 	int text_color;
 }
 
+bool mouse_in_rect(UIState* ui, int x, int y, int width, int height) {
+
+	return point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
+
+}
+
+void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, int height, ref StaticArray!(char, 64) text_box, int color, int text_color) {
+
+	bool inside = ui.mouse_in_rect(x, y, width, height);
+
+	if (inside) ui.hot_item = id;
+
+	if (ui.hot_item == id) {
+		
+		if (ui.active_item == 0 && is_btn_down(ui, 1)) {
+			ui.active_item = id;
+			SDL_StartTextInput();
+		}
+
+		text_box ~= ui.entered_text[0..ui.entered_text.elements];
+		ui.entered_text.elements = 0;
+		ui.active_item = 0;
+
+	} else if (ui.active_item == id) {
+
+		SDL_StopTextInput();
+
+	}
+
+	int cw = ui.font_atlas.char_width;
+	ui.draw_rectangle(window, x - width/2, y - height/2, width, height, color);
+	ui.font_atlas.render_text(window, text_box[0..text_box.elements], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
+
+}
+
 bool do_button(UIState* ui, uint id, Window* window, int x, int y, int width, int height, int color, ubyte alpha = 255, in char[] label = "", int text_color = 0xFFFFFF) {
 
 	bool result = false;
-	bool inside = point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
+	bool inside = ui.mouse_in_rect(x, y, width, height);
 
 	if (inside) ui.hot_item = id;
 

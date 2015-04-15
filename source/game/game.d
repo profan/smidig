@@ -400,13 +400,17 @@ class OptionsState : GameState {
 
 	}
 
+	StaticArray!(char, 64) player_name;
 	void draw(Window* window) {
 
 		int bgcolor = 0xca8142;
-		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, bgcolor);
-
 		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
+
+		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, bgcolor);
+		ui_state.draw_label(window, "Player Name", window.width/2, window.height/4, 0, 0, 0x428bca);
+		ui_state.do_textbox(13, window, window.width/2, window.height/2, item_width, item_height, player_name, darken(bgcolor, 10), darken(0x428bca, 25));
+
 		if(do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, itemcolor, 255, "To Menu", 0x428bca)) {
 			statehan.pop_state();
 		} //back to menu
@@ -455,10 +459,6 @@ struct Game {
 		
 	}
 
-	void update_ui(ref SDL_Event ev) {
-		ui_state.mouse_buttons = SDL_GetMouseState(&ui_state.mouse_x, &ui_state.mouse_y);
-	}
-	
 	void update(double dt) {
 
 		//wow
@@ -535,7 +535,7 @@ struct Game {
 		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state), State.OPTIONS);
 		state.push_state(State.MENU);
 
-		evhan.add_listener(&this.update_ui);
+		evhan.add_listener(&ui_state.update_ui);
 		evhan.bind_keyevent(SDL_SCANCODE_RALT, &window.toggle_wireframe);
 		evhan.bind_keyevent(SDL_SCANCODE_LCTRL, () => send(network_thread, Command.PING));
 		evhan.bind_keyevent(SDL_SCANCODE_LALT, () => send(network_thread, Command.STATS));

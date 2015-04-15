@@ -149,7 +149,7 @@ alias Self = Tuple!(Address, Peer);
 
 struct NetworkState {
 	ConnectionState* state;
-	ubyte* client_uuid;
+	ClientID* client_uuid;
 
 	string toString() {
 		return to!string(*state) ~ " " ~ to!string(*client_uuid);
@@ -264,7 +264,7 @@ struct NetworkPeer {
 
 		Peer host_peer; //reference to current host, not used if self is host, otherwise queried for certain information.
 
-		ubyte id_counter;
+		ClientID id_counter;
 		Address from; //used to keep track of who message was received from
 		void[4096] data = void;
 		while (open) {
