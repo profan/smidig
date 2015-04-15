@@ -48,7 +48,7 @@ struct LabelDrawCommand {
 
 struct UIState {
 
-	uint active_item = 0, hot_item = 0;
+	uint active_item = 0, hot_item = 0, kbd_item = 0;
 	int mouse_x, mouse_y;
 	uint mouse_buttons;
 
@@ -69,7 +69,8 @@ struct UIState {
 		switch (ev.type) {
 
 			case SDL_TEXTINPUT:
-				entered_text ~= ev.text.text[0..1];
+				if (kbd_item != 0)
+					entered_text ~= ev.text.text[0..1];
 				break;
 			default:
 				break;
@@ -220,22 +221,24 @@ bool mouse_in_rect(UIState* ui, int x, int y, int width, int height) {
 void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, int height, ref StaticArray!(char, 64) text_box, int color, int text_color) {
 
 	bool inside = ui.mouse_in_rect(x, y, width, height);
-
 	if (inside) ui.hot_item = id;
+	else ui.hot_item = 0;
 
-	if (ui.hot_item == id) {
+	if (ui.hot_item == id || (ui.kbd_item == id && !is_btn_down(ui, 1))) {
 		
-		if (ui.active_item == 0 && is_btn_down(ui, 1)) {
-			ui.active_item = id;
+		if (inside && ui.kbd_item == 0 && is_btn_down(ui, 1)) {
+			ui.kbd_item = id;
 			SDL_StartTextInput();
 		}
 
-		text_box ~= ui.entered_text[0..ui.entered_text.elements];
-		ui.entered_text.elements = 0;
-		ui.active_item = 0;
+		if (ui.kbd_item == id) {
+			text_box ~= ui.entered_text[0..ui.entered_text.elements];
+			ui.entered_text.elements = 0;
+		}
 
-	} else if (ui.active_item == id) {
+	} else if (ui.hot_item == 0 && is_btn_down(ui, 1)) {
 
+		ui.kbd_item = 0;
 		SDL_StopTextInput();
 
 	}
