@@ -9,13 +9,18 @@ import blindfire.engine.defs : Vec2f, Vec3f;
 import blindfire.sys;
 import profan.ecs;
 
-auto create_wall(bool net = false)(EntityManager em, Vec2f pos, Vec2f bottom_right, EntityID* id, Shader* shader, Texture* texture) {
+enum IsRemote {
+	Yes = true,
+	No = false,
+}
+
+auto create_wall(IsRemote remote = IsRemote.No)(EntityManager em, Vec2f pos, Vec2f bottom_right, EntityID* id, Shader* shader, Texture* texture) {
 
 }
 
-auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id, Shader* shader, Texture* texture) {
+auto create_unit(IsRemote is_remote = IsRemote.No)(EntityManager em, Vec2f pos, EntityID* id, Shader* shader, Texture* texture) {
 
-	static if (net) {
+	static if (is_remote) {
 		auto unit = em.create_entity(*id);
 	} else {
 		auto unit = em.create_entity();
@@ -53,8 +58,8 @@ auto create_unit(bool net = false)(EntityManager em, Vec2f pos, EntityID* id, Sh
 	
 	em.register_component!NetworkComponent(unit);
 
-	static if (net) {
-		em.get_component!NetworkComponent(unit).local = false;
+	static if (is_remote) {
+		em.get_component!NetworkComponent(unit).local = IsRemote.Yes;
 	}
 
 	return unit;

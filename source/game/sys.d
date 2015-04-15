@@ -10,6 +10,7 @@ import blindfire.engine.net : NetVar, Command, ClientID;
 import blindfire.engine.stream : InputStream;
 
 import blindfire.serialize : networked;
+import blindfire.ents : IsRemote;
 
 alias ComponentType = uint;
 enum : ComponentType[string] {
@@ -145,7 +146,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 								import blindfire.engine.resource : ResourceManager;
 
 								Vec2f position = input_stream.read!Vec2f();
-								create_unit!(true)(em, position, &entity_id, 
+								create_unit!(IsRemote.Yes)(em, position, &entity_id, 
 										ResourceManager.get().get_resource!(Shader)(Resource.BASIC_SHADER),
 										ResourceManager.get().get_resource!(Texture)(Resource.UNIT_TEXTURE));
 								break;
@@ -206,7 +207,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 		foreach (id, ref comp; components) {
 
 			ubyte num_components = 1;
-			if (comp.local) {
+			if (comp.local == IsRemote.No) {
 
 				//write which entity it belongs to
 				send_data ~= (cast(ubyte*)&id)[0..id.sizeof];
@@ -232,7 +233,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 struct NetworkComponent {
 
 	//things, this kind of thing ought to be more general, wtb polymorphism
-	bool local = true;
+	IsRemote local = IsRemote.No;
 	@dependency() @networked TransformComponent* tc;
 
 
