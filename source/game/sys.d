@@ -58,8 +58,15 @@ class CollisionManager : ComponentManager!(UpdateSystem, CollisionComponent, 2) 
 
 	void update() {
 
-		foreach (id, ref comp; components) {
-			//check collisions, do callback
+		foreach (ref id, ref comp; components) {
+			foreach (ref other_id, ref other_comp; components) {
+				if (id == other_id) continue;
+
+				if (comp.mc.transform.position.distanceTo(other_comp.mc.transform.position) < (comp.radius + other_comp.radius)) {
+					comp.mc.velocity = Vec2f(-comp.mc.velocity.x, -comp.mc.velocity.y);
+				}
+
+			}
 		}
 
 	}
