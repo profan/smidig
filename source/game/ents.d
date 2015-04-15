@@ -1,7 +1,6 @@
 module blindfire.ents;
 
 import std.stdio : writefln;
-import std.uuid : UUID;
 
 import blindfire.engine.gl : Mesh, Shader, Texture, Transform, Vertex;
 import blindfire.engine.defs : Vec2f, Vec3f;

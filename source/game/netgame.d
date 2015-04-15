@@ -9,12 +9,6 @@ import blindfire.engine.net;
 import blindfire.netmsg;
 import blindfire.engine.log;
 
-enum SessionState {
-	INACTIVE, //not waiting for players, not running
-	RUNNING, //game running
-	WAITING, //waiting for players, in lobby
-}
-
 alias void delegate() OnConnectDelegate;
 alias void delegate() OnDisconnectDelegate;
 
@@ -25,11 +19,16 @@ class NetworkManager {
 		DISCONNECT
 	}
 
+	enum State {
+		SESSION_ACTIVE,
+		
+	}
+
 	Tid network_thread;
-	SessionState state;
+	Session session;
 
 	this(Tid network_thread) {
-		state = SessionState.INACTIVE;
+		this.session = Session(this);
 	}
 
 	void handle_messages() {
@@ -71,7 +70,12 @@ class NetworkManager {
 
 } //NetworkManager
 
-class Session {
+struct Session {
+
+	enum State {
+		RUNNING,
+		WAITING
+	}
 
 	NetworkManager nm;
 

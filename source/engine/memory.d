@@ -106,10 +106,18 @@ struct LinearAllocator {
 
 struct StackAllocator {
 
+	struct Header {
+		size_t size;
+	}
+
 	void* buffer;
 	void* current;
 
 	this(size_t size) {
+
+	}
+
+	auto alloc(T, Args...)(Args args) {
 
 	}
 

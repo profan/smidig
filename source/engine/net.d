@@ -292,12 +292,15 @@ struct NetworkPeer {
 								UpdateMessage umsg = *(cast(UpdateMessage*)(data));
 
 								if (umsg.client_uuid !in peers) {
-									logger.log("Unconnected client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
+									logger.log("Unconnected client %s sent update message, payload size: %d bytes", 
+										umsg.client_uuid, umsg.data_size);
 									break;
 								}
 
 								logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
-								send(game_thread, Command.UPDATE, cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup); //this cast is not useless, DO NOT REMOVE THIS UNLESS YOU ACTUALLY FIX THE PROBLEM
+								send(game_thread, Command.UPDATE, 
+									cast(immutable(ubyte)[])data[umsg.sizeof..umsg.sizeof+umsg.data_size].idup); 
+									//this cast is not useless, DO NOT REMOVE THIS UNLESS YOU ACTUALLY FIX THE PROBLEM
 								break;
 
 							case MessageType.DISCONNECT:
