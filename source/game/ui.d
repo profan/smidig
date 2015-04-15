@@ -232,7 +232,9 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 		}
 
 		if (ui.kbd_item == id) {
-			text_box ~= ui.entered_text[0..ui.entered_text.elements];
+			if (text_box.elements + ui.entered_text.elements < text_box.array.length) {
+				text_box ~= ui.entered_text[0..ui.entered_text.elements];
+			}
 			ui.entered_text.elements = 0;
 		}
 

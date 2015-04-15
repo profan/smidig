@@ -409,7 +409,11 @@ class OptionsState : GameState {
 
 		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, bgcolor);
 		ui_state.draw_label(window, "Player Name", window.width/2, window.height/4, 0, 0, 0x428bca);
-		ui_state.do_textbox(13, window, window.width/2, window.height/2, item_width, item_height, player_name, darken(bgcolor, 10), darken(0x428bca, 25));
+		ui_state.do_textbox(13, window, window.width/2, window.height/4+item_height, item_width, item_height, player_name, darken(bgcolor, 10), darken(0x428bca, 25));
+
+		if(do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, itemcolor, 255, "Save", 0x428bca)) {
+			//do some saving? :D
+		} //save options
 
 		if(do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, itemcolor, 255, "To Menu", 0x428bca)) {
 			statehan.pop_state();
