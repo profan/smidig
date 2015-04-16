@@ -83,7 +83,7 @@ struct UIState {
 
 			case SDL_TEXTINPUT:
 				if (kbd_item != 0)
-					entered_text ~= ev.text.text[0..1];
+					entered_text ~= ev.text.text[0];
 				break;
 			default:
 				break;
@@ -123,7 +123,7 @@ struct UIState {
 
 		AttribLocation[1] attrs = [AttribLocation(0, "position")];
 		char[16][3] uniforms = ["transform", "perspective", "color"];
-		box_shader = Shader("shaders/rectangle", attrs[0..attrs.length], uniforms[0..uniforms.length]);
+		box_shader = Shader("shaders/rectangle", attrs[0..$], uniforms[0..$]);
 
 		int status = glGetError();
 		if (status != GL_NO_ERROR) {

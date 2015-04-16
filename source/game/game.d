@@ -501,12 +501,12 @@ struct Game {
 		//shaders
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
-		auto shader = ra.alloc!(Shader)("shaders/basic", attributes[0..attributes.length], uniforms[0..uniforms.length]);
+		auto shader = ra.alloc!(Shader)("shaders/basic", attributes[0..$], uniforms[0..$]);
 		rm.set_resource!(Shader)(shader, Resource.BASIC_SHADER);
 
 		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
 		char[16][2] text_uniforms = ["color", "projection"];
-		auto text_shader = ra.alloc!(Shader)("shaders/text", text_attribs[0..text_attribs.length], text_uniforms[0..text_uniforms.length]); 
+		auto text_shader = ra.alloc!(Shader)("shaders/text", text_attribs[0..$], text_uniforms[0..$]); 
 		rm.set_resource!(Shader)(text_shader, Resource.TEXT_SHADER);
 
 		//textures
