@@ -409,6 +409,7 @@ class OptionsState : GameState {
 
 		if(do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, ITEM_COLOR, 255, "Save", 0x428bca)) {
 			config_map.set("username", player_name[0..player_name.elements]);
+			config_map.save_file();
 		} //save options
 
 		if(do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "To Menu", 0x428bca)) {

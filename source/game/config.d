@@ -11,13 +11,17 @@ struct ConfigMap {
 	alias Key = immutable char[];
 	alias Value = char[];
 
-	private char[] file_name;
+	private const char[] file_name;
 	private Value[Key] config;
 
 	this(in char[] file_name) {
 
-		auto data = load_file(file_name);
-		parse_file(data);
+		this.file_name = file_name[];
+
+		if (exists(file_name)) {
+			auto data = load_file(file_name);
+			parse_file(data);
+		}
 
 	}
 
@@ -47,7 +51,12 @@ struct ConfigMap {
 
 	void save_file() {
 
-		
+		string buf = "";
+		foreach (key, value; config) {
+			buf ~= (key ~ ":" ~ value ~ "\n");
+		}
+
+		write(file_name, buf);
 
 	}
 
@@ -56,7 +65,13 @@ struct ConfigMap {
 	}
 
 	const(Value) get(in Key key) const {
-		return config[key];
+
+		if (key in config) {
+			return config[key];
+		}
+
+		return "";
+
 	}
 
 } //ConfigMap
