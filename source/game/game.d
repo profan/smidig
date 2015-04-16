@@ -21,6 +21,7 @@ import blindfire.engine.net;
 import blindfire.engine.gl;
 
 import blindfire.graphics;
+import blindfire.config;
 import blindfire.ui;
 
 
@@ -382,25 +383,30 @@ class OptionsState : GameState {
 	EventHandler* evhan;
 	UIState* ui_state;
 
-	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui) {
+	ConfigMap* config_map;
+
+	//options
+	StaticArray!(char, 64) player_name;
+
+	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf) {
 		this.statehan = state_handler;
 		this.evhan = event_handler;
 		this.ui_state = ui;
+		this.config_map = conf;
 	}
 
 	void enter() {
-
+		player_name ~= config_map.get("username");
 	}
 
 	void leave() {
-
+		player_name.elements = 0;
 	}
 
 	void update(double dt) {
 
 	}
 
-	StaticArray!(char, 64) player_name;
 	void draw(Window* window) {
 
 		int bgcolor = 0xca8142;
@@ -443,6 +449,7 @@ struct Game {
 	UIState ui_state;
 
 	Tid network_thread;
+	ConfigMap config_map;
 
 	LinearAllocator resource_allocator;
 	LinearAllocator system_allocator;
@@ -460,6 +467,8 @@ struct Game {
 		this.state = new GameStateHandler();
 		this.resource_allocator = LinearAllocator(8192);
 		this.system_allocator = LinearAllocator(16384);
+
+		this.config_map = ConfigMap("game.cfg");
 		
 	}
 
@@ -536,7 +545,7 @@ struct Game {
 		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
 		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread), State.LOBBY);
 		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);
-		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state), State.OPTIONS);
+		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map), State.OPTIONS);
 		state.push_state(State.MENU);
 
 		evhan.add_listener(&ui_state.update_ui);
