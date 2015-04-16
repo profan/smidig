@@ -73,7 +73,8 @@ struct UIState {
 			case SDL_KEYDOWN:
 				switch (ev.key.keysym.scancode) {
 					case SDL_SCANCODE_BACKSPACE, SDL_SCANCODE_DELETE:
-						kbd_special = ev.key.keysym.scancode;
+						if (kbd_item != 0)
+							kbd_special = ev.key.keysym.scancode;
 						break;
 					default:
 						break;
