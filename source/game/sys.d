@@ -200,7 +200,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 		//handle entity creation and destruction here
 
 		//recieve some stuff, send some stuff
-		send_data.elements = 0; //reset point to add to
+		send_data.length = 0; //reset point to add to
 		UpdateType type = UpdateType.UPDATE;
 		send_data ~= (cast(ubyte*)&type)[0..type.sizeof];
 
@@ -220,11 +220,11 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 		}
 
-		writefln("[GAME] Sending %d bytes to NET", send_data.elements);
+		//writefln("[GAME] Sending %d bytes to NET", send_data.elements);
 
 		//make a version which uses double buffers or something and never allocs
 		//currently takes a slice of the internal array to as far as the buffer was actually filled
-		send(network_thread, Command.UPDATE, send_data[0..send_data.elements].idup);
+		send(network_thread, Command.UPDATE, send_data[0..$].idup);
 
 	}
 

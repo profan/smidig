@@ -261,7 +261,7 @@ final class MatchState : GameState {
 			data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
 		}
 	
-		data.elements = 0;
+		data.length = 0;
 		auto type = UpdateType.CREATE;
 		data ~= (cast(ubyte*)&type)[0..type.sizeof];
 
@@ -273,7 +273,7 @@ final class MatchState : GameState {
 		}
 
 		//TODO move this into create_unit?
-		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data[0..data.elements].idup);
+		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data[0..$].idup);
 
 	}
 
@@ -303,7 +303,7 @@ final class MatchState : GameState {
 
 	void draw_debug(Window* window) {
 
-		auto offset = Vec2i(16, 128);
+		auto offset = Vec2i(16, 96);
 		debug_atlas.render_string!("client id: %d")(window, offset, em.client_uuid);
 
 	}
@@ -393,7 +393,7 @@ class OptionsState : GameState {
 	}
 
 	void leave() {
-		player_name.elements = 0;
+		player_name.length = 0;
 	}
 
 	void update(double dt) {
@@ -408,7 +408,7 @@ class OptionsState : GameState {
 		ui_state.do_textbox(13, window, window.width/2, window.height/4+item_height, item_width, item_height, player_name, darken(BG_COLOR, 10), darken(0x428bca, 25));
 
 		if(do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, ITEM_COLOR, 255, "Save", 0x428bca)) {
-			config_map.set("username", player_name[0..player_name.elements]);
+			config_map.set("username", player_name[0..$]);
 			config_map.save_file();
 		} //save options
 
@@ -458,7 +458,6 @@ struct Game {
 		this.state = new GameStateHandler();
 		this.resource_allocator = LinearAllocator(8192);
 		this.system_allocator = LinearAllocator(16384);
-
 		this.config_map = ConfigMap("game.cfg");
 		
 	}

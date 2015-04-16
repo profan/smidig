@@ -244,17 +244,17 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 		}
 
 		if (ui.kbd_item == id) {
-			if (text_box.elements + ui.entered_text.elements < text_box.array.length) {
-				text_box ~= ui.entered_text[0..ui.entered_text.elements];
+			if (text_box.length + ui.entered_text.length < text_box.array.length) {
+				text_box ~= ui.entered_text[0..$];
 			}
 
 			if (ui.kbd_special != 0) {
 				if (ui.kbd_special == SDL_SCANCODE_BACKSPACE || ui.kbd_special == SDL_SCANCODE_DELETE) {
-					if (text_box.elements > 0) text_box.elements -= 1;
+					if (text_box.length > 0) text_box.length =  text_box.length - 1;
 					ui.kbd_special = 0;
 				}
 			}
-			ui.entered_text.elements = 0;
+			ui.entered_text.length = 0;
 		}
 
 	} else if (ui.hot_item == 0 && is_btn_down(ui, 1)) {
@@ -266,7 +266,7 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 
 	int cw = ui.font_atlas.char_width;
 	ui.draw_rectangle(window, x - width/2, y - height/2, width, height, color);
-	ui.font_atlas.render_text(window, text_box[0..text_box.elements], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
+	ui.font_atlas.render_text(window, text_box[0..$], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
 
 }
 

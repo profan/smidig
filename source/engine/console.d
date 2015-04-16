@@ -67,14 +67,14 @@ struct Console {
 	void write(in char[] text) {
 
 		import std.algorithm : min;
-		size_t elements = buffers[0].elements;
+		size_t elements = buffers[0].length;
 
 		if (elements + text.length < BUFFER_WIDTH) {
 			buffers[0] ~= text;
 		} else {
 			size_t written = 0;
 			while (written < text.length) {
-				auto s = text[written .. min($, BUFFER_WIDTH-buffers[0].elements)];
+				auto s = text[written .. min($, BUFFER_WIDTH-buffers[0].length)];
 				buffers[0] ~= s;
 				written += s.length;
 				shift_buffer(buffers);
@@ -85,8 +85,8 @@ struct Console {
 
 	void del() {
 
-		if (enabled && buffers[0].elements != 0) {
-			 buffers[0].elements--;
+		if (enabled && buffers[0].length != 0) {
+			 buffers[0].length = buffers[0].length - 1;
 		}
 
 	}
@@ -103,18 +103,18 @@ struct Console {
 
 		if (!enabled) return;
 
-		if (buffers[0].elements == 0) return;
-		const char[] slice = buffers[0][0..buffers[0].elements];
+		if (buffers[0].length == 0) return;
+		const char[] slice = buffers[0][0..$];
 
 		uint i = 0;
-		while (i != buffers[0].elements && slice[i] != ' ') {
+		while (i != buffers[0].length && slice[i] != ' ') {
 			i++;
 		}
 
 		const char[] command = slice[0..i];
 
 		size_t begin, end;
-		if (i < buffers[0].elements) { begin = i+1; end = slice.length; }
+		if (i < buffers[0].length) { begin = i+1; end = slice.length; }
 		else { begin = i; end = i; }
 		const char[] args = slice[begin .. end];
 
@@ -154,7 +154,7 @@ struct Console {
 		for (int i = buf_to_shift.length-1; i >= 0; --i) {
 			if (i == buf_to_shift.length -1) continue;
 			buf_to_shift[i+1] = buf_to_shift[i];
-			buf_to_shift[i].elements = 0;
+			buf_to_shift[i].length = 0;
 		}
 
 	}
@@ -167,12 +167,12 @@ struct Console {
 		int color = 0xFFFFFF;
 
 		atlas.render_text(window, ">", x, y + atlas.char_height, 1, 1, color);
-		atlas.render_text(window, buffers[0][0..buffers[0].elements], x + atlas.char_width*2, y + atlas.char_height, 1, 1, color);
+		atlas.render_text(window, buffers[0][0..$], x + atlas.char_width*2, y + atlas.char_height, 1, 1, color);
 		y += 12;
 		foreach(ref buf; buffers[1..$]) {
 
-			if (buf.elements != 0) {
-				atlas.render_text(window, buf[0..buf.elements], x, y + atlas.char_height, 1, 1, color);
+			if (buf.length != 0) {
+				atlas.render_text(window, buf[0..$], x, y + atlas.char_height, 1, 1, color);
 			}
 			y += 12;
 

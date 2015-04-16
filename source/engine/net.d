@@ -207,7 +207,7 @@ struct NetworkPeer {
 		StaticArray!(ubyte, 4096) send_data;
 		send_data ~= cast(ubyte[msg.sizeof])msg;
 		send_data ~= cast(ubyte[])data;
-		auto success = socket.sendTo(cast(void[])send_data[0..send_data.elements], target);
+		auto success = socket.sendTo(cast(void[])send_data[0..$], target);
 		string type_str = to!string(msg.type);
 		logger.log((success == Socket.ERROR)
 			? format("Failed to send %s packet.", type_str)
