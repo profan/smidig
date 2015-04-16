@@ -52,7 +52,7 @@ struct ConfigMap {
 	}
 
 	void set(in Key key, in Value value) {
-		
+		config[key] = value.dup;
 	}
 
 	const(Value) get(in Key key) const {
