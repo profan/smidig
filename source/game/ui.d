@@ -52,6 +52,8 @@ struct UIState {
 	int mouse_x, mouse_y;
 	uint mouse_buttons;
 
+	uint kbd_mod;
+	uint kbd_special;
 	StaticArray!(char, 64) entered_text;
 
 	//encapsulate this, this is TEMPORARY
@@ -67,6 +69,16 @@ struct UIState {
 		mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
 
 		switch (ev.type) {
+
+			case SDL_KEYDOWN:
+				switch (ev.key.keysym.scancode) {
+					case SDL_SCANCODE_BACKSPACE, SDL_SCANCODE_DELETE:
+						kbd_special = ev.key.keysym.scancode;
+						break;
+					default:
+						break;
+				}
+				break;
 
 			case SDL_TEXTINPUT:
 				if (kbd_item != 0)
@@ -234,6 +246,13 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 		if (ui.kbd_item == id) {
 			if (text_box.elements + ui.entered_text.elements < text_box.array.length) {
 				text_box ~= ui.entered_text[0..ui.entered_text.elements];
+			}
+
+			if (ui.kbd_special != 0) {
+				if (ui.kbd_special == SDL_SCANCODE_BACKSPACE || ui.kbd_special == SDL_SCANCODE_DELETE) {
+					if (text_box.elements > 0) text_box.elements -= 1;
+					ui.kbd_special = 0;
+				}
 			}
 			ui.entered_text.elements = 0;
 		}
