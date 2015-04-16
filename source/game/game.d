@@ -24,6 +24,9 @@ import blindfire.graphics;
 import blindfire.config;
 import blindfire.ui;
 
+const int BG_COLOR = 0xca8142;
+const int MENU_COLOR = 0x428bca;
+const int ITEM_COLOR = 0x8bca42;
 
 final class MenuState : GameState {
 	
@@ -52,30 +55,26 @@ final class MenuState : GameState {
 
 	override void draw(Window* window) {
 
-		int bgcolor = 0xca8142;
-		int menucolor = 0x428bca;
-		int itemcolor = 0x8bca42;
-
 		uint width = 512, height = window.height - window.height/3;
-		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, bgcolor);
-		ui_state.draw_rectangle(window, window.width/2-width/2, window.height/2-height/2, width, height, menucolor);
+		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
+		ui_state.draw_rectangle(window, window.width/2-width/2, window.height/2-height/2, width, height, MENU_COLOR);
 
-		ui_state.draw_label(window, "Project Blindfire", window.width/2, window.height/4, 0, 0, bgcolor);
+		ui_state.draw_label(window, "Project Blindfire", window.width/2, window.height/4, 0, 0, BG_COLOR);
 
 		uint item_width = height / 2, item_height = 32;
-		if (do_button(ui_state, 1, window, window.width/2, window.height/2 - item_height/2, item_width, item_height, itemcolor, 255, "Join Game", menucolor)) {
+		if (do_button(ui_state, 1, window, window.width/2, window.height/2 - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Join Game", MENU_COLOR)) {
 			statehan.push_state(State.JOIN);
 		} //join
 
-		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, itemcolor, 255, "Create Game", menucolor)) {
+		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", MENU_COLOR)) {
 			statehan.push_state(State.LOBBY);
 		} //create
 
-		if (do_button(ui_state, 12, window, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, itemcolor, 255, "Options", menucolor)) {
+		if (do_button(ui_state, 12, window, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, ITEM_COLOR, 255, "Options", MENU_COLOR)) {
 			statehan.push_state(State.OPTIONS);
 		} //create
 
-		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, itemcolor, 255, "Quit Game", menucolor)) {
+		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", MENU_COLOR)) {
 			window.alive = false;
 		} //quit
 		
@@ -122,9 +121,8 @@ final class JoiningState : GameState {
 
 	override void draw(Window* window) {
 
-		int itemcolor = 0x8bca42;
 		uint item_width = window.width/2, item_height = 32;
-		if (do_button(ui_state, 4, window, window.width/2, window.height/2 - item_height, item_width, item_height, itemcolor)) {
+		if (do_button(ui_state, 4, window, window.width/2, window.height/2 - item_height, item_width, item_height, ITEM_COLOR)) {
 			statehan.pop_state();
 		} //back to menu, cancel
 
@@ -174,20 +172,17 @@ final class LobbyState : GameState {
 
 	void draw(Window* window) {
 
-		int bgcolor = 0xbc8142;
-		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, bgcolor);
-
-		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
+		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
 
 		//bottom left for quit button
-		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, "Start Game", 0x428bca)) {
+		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
 			send(network_thread, Command.CREATE);
 			statehan.pop_state();
 			statehan.push_state(State.GAME);
 		}
 
-		if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, itemcolor, 255, "Quit Game", 0x428bca)) {
+		if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
 			send(network_thread, Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
@@ -319,9 +314,8 @@ final class MatchState : GameState {
 
 		sbox.draw(window, ui_state);
 
-		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, 5, window, window.width/2, window.height - item_height/2, item_width, item_height, itemcolor, 255, "Quit", 0x428bca)) {
+		if(do_button(ui_state, 5, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Quit", 0x428bca)) {
 			statehan.pop_state();
 		} //back to menu
 
@@ -366,9 +360,8 @@ final class WaitingState : GameState {
 
 	override void draw(Window* window) {
 
-		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, 6, window, window.width/2, window.height - item_height/2, item_width, item_height, itemcolor, 255, "Cancel", 0x428bca)) {
+		if(do_button(ui_state, 6, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Cancel", 0x428bca)) {
 			send(network_thread, Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
@@ -409,19 +402,16 @@ class OptionsState : GameState {
 
 	void draw(Window* window) {
 
-		int bgcolor = 0xca8142;
-		int itemcolor = 0x8bca42;
 		uint item_width = window.width / 2, item_height = 32;
-
-		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, bgcolor);
+		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
 		ui_state.draw_label(window, "Player Name", window.width/2, window.height/4, 0, 0, 0x428bca);
-		ui_state.do_textbox(13, window, window.width/2, window.height/4+item_height, item_width, item_height, player_name, darken(bgcolor, 10), darken(0x428bca, 25));
+		ui_state.do_textbox(13, window, window.width/2, window.height/4+item_height, item_width, item_height, player_name, darken(BG_COLOR, 10), darken(0x428bca, 25));
 
-		if(do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, itemcolor, 255, "Save", 0x428bca)) {
+		if(do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, ITEM_COLOR, 255, "Save", 0x428bca)) {
 			config_map.set("username", player_name[0..player_name.elements]);
 		} //save options
 
-		if(do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, itemcolor, 255, "To Menu", 0x428bca)) {
+		if(do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "To Menu", 0x428bca)) {
 			statehan.pop_state();
 		} //back to menu
 	}
