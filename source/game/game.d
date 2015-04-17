@@ -284,7 +284,7 @@ final class MatchState : GameState {
 		}
 
 		//TODO move this into create_unit?
-		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data[0..$].idup);
+		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data[].idup);
 
 	}
 
@@ -419,7 +419,7 @@ class OptionsState : GameState {
 		ui_state.do_textbox(13, window, window.width/2, window.height/4+item_height, item_width, item_height, player_name, darken(BG_COLOR, 10), darken(0x428bca, 25));
 
 		if(do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, ITEM_COLOR, 255, "Save", 0x428bca)) {
-			config_map.set("username", player_name[0..$]);
+			config_map.set("username", player_name[]);
 			config_map.save_file();
 		} //save options
 
@@ -513,12 +513,12 @@ struct Game {
 		//shaders
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
-		auto shader = ra.alloc!(Shader)("shaders/basic", attributes[0..$], uniforms[0..$]);
+		auto shader = ra.alloc!(Shader)("shaders/basic", attributes[], uniforms[]);
 		rm.set_resource!(Shader)(shader, Resource.BASIC_SHADER);
 
 		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
 		char[16][2] text_uniforms = ["color", "projection"];
-		auto text_shader = ra.alloc!(Shader)("shaders/text", text_attribs[0..$], text_uniforms[0..$]); 
+		auto text_shader = ra.alloc!(Shader)("shaders/text", text_attribs[], text_uniforms[]); 
 		rm.set_resource!(Shader)(text_shader, Resource.TEXT_SHADER);
 
 		//textures

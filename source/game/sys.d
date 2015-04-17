@@ -224,7 +224,7 @@ class NetworkManager : ComponentManager!(UpdateSystem, NetworkComponent) {
 
 		//make a version which uses double buffers or something and never allocs
 		//currently takes a slice of the internal array to as far as the buffer was actually filled
-		send(network_thread, Command.UPDATE, send_data[0..$].idup);
+		send(network_thread, Command.UPDATE, send_data[].idup);
 
 	}
 

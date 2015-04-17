@@ -123,7 +123,7 @@ struct UIState {
 
 		AttribLocation[1] attrs = [AttribLocation(0, "position")];
 		char[16][3] uniforms = ["transform", "perspective", "color"];
-		box_shader = Shader("shaders/rectangle", attrs[0..$], uniforms[0..$]);
+		box_shader = Shader("shaders/rectangle", attrs[], uniforms[]);
 
 		int status = glGetError();
 		if (status != GL_NO_ERROR) {
@@ -245,8 +245,8 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 		}
 
 		if (ui.kbd_item == id) {
-			if (text_box.length + ui.entered_text.length < text_box.array.length) {
-				text_box ~= ui.entered_text[0..$];
+			if (text_box.length + ui.entered_text.length < text_box.capacity) {
+				text_box ~= ui.entered_text[];
 			}
 
 			if (ui.kbd_special != 0) {

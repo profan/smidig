@@ -104,7 +104,7 @@ struct Console {
 		if (!enabled) return;
 
 		if (buffers[0].length == 0) return;
-		const char[] slice = buffers[0][0..$];
+		const char[] slice = buffers[0][];
 
 		uint i = 0;
 		while (i != buffers[0].length && slice[i] != ' ') {
@@ -167,12 +167,12 @@ struct Console {
 		int color = 0xFFFFFF;
 
 		atlas.render_text(window, ">", x, y + atlas.char_height, 1, 1, color);
-		atlas.render_text(window, buffers[0][0..$], x + atlas.char_width*2, y + atlas.char_height, 1, 1, color);
+		atlas.render_text(window, buffers[0][], x + atlas.char_width*2, y + atlas.char_height, 1, 1, color);
 		y += 12;
 		foreach(ref buf; buffers[1..$]) {
 
 			if (buf.length != 0) {
-				atlas.render_text(window, buf[0..$], x, y + atlas.char_height, 1, 1, color);
+				atlas.render_text(window, buf[], x, y + atlas.char_height, 1, 1, color);
 			}
 			y += 12;
 
