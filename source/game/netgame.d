@@ -12,7 +12,7 @@ import blindfire.engine.log;
 alias void delegate() OnConnectDelegate;
 alias void delegate() OnDisconnectDelegate;
 
-class NetworkManager {
+class GameNetworkManager {
 
 	enum Event {
 		CONNECT,
@@ -24,10 +24,9 @@ class NetworkManager {
 	}
 
 	Tid network_thread;
-	Session session;
 
 	this(Tid network_thread) {
-		this.session = Session(this);
+	
 	}
 
 	void handle_messages() {
@@ -76,9 +75,9 @@ struct Session {
 		WAITING
 	}
 
-	NetworkManager nm;
+	GameNetworkManager nm;
 
-	this(NetworkManager nm) {
+	this(GameNetworkManager nm) {
 		
 	}
 

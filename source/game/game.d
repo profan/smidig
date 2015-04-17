@@ -21,6 +21,7 @@ import blindfire.engine.net;
 import blindfire.engine.gl;
 
 import blindfire.graphics;
+import blindfire.netgame;
 import blindfire.config;
 import blindfire.ui;
 
@@ -175,6 +176,14 @@ final class LobbyState : GameState {
 		uint item_width = window.width / 2, item_height = 32;
 		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
 
+		uint offset_x = window.width/3, offset_y = window.height/3;
+
+		ui_state.draw_label(window, "Players", offset_x, offset_y, 0, 0, 0x428bca);
+		offset_y += item_height * 2;
+
+		//list players here
+		
+
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
 			send(network_thread, Command.CREATE);
@@ -198,9 +207,10 @@ final class MatchState : GameState {
 	import blindfire.ents : create_unit;
 	import blindfire.sys;
 
-	UIState* ui_state;
 	GameStateHandler statehan;
+	UIState* ui_state;
 	Tid network_thread;
+	GameNetworkManager net_man;
 
 	SelectionBox sbox;
 	EntityManager em;
@@ -208,10 +218,11 @@ final class MatchState : GameState {
 	Console* console;
 	FontAtlas* debug_atlas;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window, Tid net_tid, Console* console, FontAtlas* atlas) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Tid net_tid, Console* console, FontAtlas* atlas) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
+		this.net_man = net_man;
 
 		this.console = console;
 		this.debug_atlas = atlas;
@@ -440,6 +451,7 @@ struct Game {
 	UIState ui_state;
 
 	Tid network_thread;
+	GameNetworkManager net_man;
 	ConfigMap config_map;
 
 	LinearAllocator resource_allocator;
@@ -528,10 +540,11 @@ struct Game {
 		ui_state.init();
 	
 		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
+		net_man = system_allocator.alloc!(GameNetworkManager)(network_thread);
 
 		alias ra = system_allocator;
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, window), State.MENU);
-		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, window, network_thread, console, debug_atlas), State.GAME);
+		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, network_thread, console, debug_atlas), State.GAME);
 		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
 		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread), State.LOBBY);
 		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);
