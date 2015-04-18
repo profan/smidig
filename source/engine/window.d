@@ -14,10 +14,12 @@ alias Mat4f = Matrix!(float, 4, 4);
 
 struct Window {
 
-	bool alive;
-	char* c_title; //keep this here so the char* for toStringz doesn't point to nowhere!
-	SDL_Window* window;
-	SDL_GLContext glcontext;
+	private {
+		bool alive;
+		char* c_title; //keep this here so the char* for toStringz doesn't point to nowhere!
+		SDL_Window* window;
+		SDL_GLContext glcontext;
+	}
 
 	//gl related data
 	Mat4f view_projection;
@@ -76,14 +78,17 @@ struct Window {
 
 	}
 
-	@property const(char*) title() { return c_title; }
+	@property const(char*) title() const { return c_title; }
 	@property void title(in char[] new_title) {
 		c_title = toUTFz!(char*)(new_title);
 		SDL_SetWindowTitle(window, c_title);
 	}
 
-	@property uint width() { return window_width; }
-	@property uint height() { return window_height; }
+	@property uint width() const { return window_width; }
+	@property uint height() const { return window_height; }
+
+	@property bool is_alive() const { return alive; }
+	@property void is_alive(bool status) { alive = status; }
 
 	void render_clear() {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

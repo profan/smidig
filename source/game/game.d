@@ -33,11 +33,14 @@ final class MenuState : GameState {
 	
 	UIState* ui_state;
 	GameStateHandler statehan;
+
+	GameNetworkManager net_man;
 	
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Window* window) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man) {
 
 		this.statehan = statehan;
 		this.ui_state = state;
+		this.net_man = net_man;
 
 	}
 	
@@ -76,7 +79,7 @@ final class MenuState : GameState {
 		} //create
 
 		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", MENU_COLOR)) {
-			window.alive = false;
+			window.is_alive = false;
 		} //quit
 		
 	}
@@ -89,10 +92,13 @@ final class JoiningState : GameState {
 	GameStateHandler statehan;
 	Tid network_thread;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
+	GameNetworkManager net_man;
+
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, GameNetworkManager net_man) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
+		this.net_man = net_man;
 	}
 
 	override void enter() {
@@ -139,10 +145,13 @@ final class LobbyState : GameState {
 	GameStateHandler statehan;
 	Tid network_thread;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
+	GameNetworkManager net_man;
+
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, GameNetworkManager net_man) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
+		this.net_man = net_man;
 	}
 
 	void enter() {
@@ -208,9 +217,9 @@ final class MatchState : GameState {
 	import blindfire.sys;
 
 	GameStateHandler statehan;
+	GameNetworkManager net_man;
 	UIState* ui_state;
 	Tid network_thread;
-	GameNetworkManager net_man;
 
 	SelectionBox sbox;
 	EntityManager em;
@@ -343,10 +352,13 @@ final class WaitingState : GameState {
 	GameStateHandler statehan;
 	Tid network_thread;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid) {
+	GameNetworkManager net_man;
+
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, GameNetworkManager net_man) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.network_thread = net_tid;
+		this.net_man = net_man;
 	}
 
 	override void enter() {
@@ -543,11 +555,11 @@ struct Game {
 		net_man = system_allocator.alloc!(GameNetworkManager)(network_thread);
 
 		alias ra = system_allocator;
-		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, window), State.MENU);
+		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, net_man), State.MENU);
 		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, network_thread, console, debug_atlas), State.GAME);
-		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread), State.JOIN);
-		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread), State.LOBBY);
-		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread), State.WAIT);
+		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread, net_man), State.JOIN);
+		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread, net_man), State.LOBBY);
+		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread, net_man), State.WAIT);
 		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map), State.OPTIONS);
 		state.push_state(State.MENU);
 
@@ -593,7 +605,7 @@ struct Game {
 
 		sw.start();
 		auto start_time = sw.peek();
-		while(window.alive) {
+		while(window.is_alive) {
 
 			ft_sw.start();
 			if (sw.peek() - last > iter) {
