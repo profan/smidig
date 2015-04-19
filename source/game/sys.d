@@ -106,10 +106,6 @@ class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 
 struct SpriteComponent {
 
-	import blindfire.engine.gl : Mesh, Shader, Texture;
-
-	//some drawing stuff?
-	//texture and vao?
 	Mesh mesh;
 	Shader* shader;
    	Texture* texture;
@@ -120,8 +116,6 @@ struct SpriteComponent {
 class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 
 	import blindfire.engine.util : point_in_rect;
-	import blindfire.action : SelectionBox;
-	import std.math : atan2;
 
 	SelectionBox* sbox;
 
@@ -133,6 +127,7 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 	void update() {
 
 		foreach (ref id, ref comp; components) with (comp) {
+
 			float x = tc.transform.position.x;
 			float y = tc.transform.position.y;
 			if (sbox.active && point_in_rect(cast(int)x, cast(int)y, sbox.x, sbox.y, sbox.w, sbox.h)) {

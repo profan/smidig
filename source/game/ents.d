@@ -31,7 +31,6 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 
 	em.register_component!SpriteComponent(unit);
 	SpriteComponent* sc = em.get_component!SpriteComponent(unit);
-
 	
 	int w = texture.width;
 	int h = texture.height;

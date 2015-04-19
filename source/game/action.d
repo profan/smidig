@@ -32,12 +32,6 @@ struct SelectionBox {
 	int w = 0, h = 0;
 	int to_x = 0, to_y = 0;
 	
-	EntityManager em;
-
-	this(EntityManager em) {
-		this.em = em;
-	}
-
 	void set_order(int new_x, int new_y) {
 		order_set = true;
 		to_x = new_x;

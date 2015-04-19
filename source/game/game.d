@@ -213,7 +213,7 @@ final class MatchState : GameState {
 		this.em.add_system(new ActionManager());
 		this.em.add_system(new SelectionManager());
 
-		this.sbox = SelectionBox(em);
+		this.sbox = SelectionBox();
 
 		//where do these bindings actually belong? WHO KNOWS
 		evhan.bind_mousebtn(1, &sbox.set_active, KeyState.DOWN);
