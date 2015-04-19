@@ -6,7 +6,6 @@ import std.datetime : dur;
 import blindfire.engine.stream : InputStream;
 
 import blindfire.engine.net;
-import blindfire.netmsg;
 import blindfire.engine.log;
 
 alias void delegate() OnConnectDelegate;
@@ -17,6 +16,12 @@ struct PlayerData {
 	char[64] player_name;
 
 } //PlayerData 
+
+enum UpdateType {
+
+	JOIN
+
+}
 
 class GameNetworkManager {
 
@@ -31,8 +36,8 @@ class GameNetworkManager {
 
 	Tid network_thread;
 
-	this(Tid network_thread) {
-	
+	this(Tid net_tid) {
+		this.network_thread = net_tid;
 	}
 
 	void handle_messages() {
@@ -40,6 +45,28 @@ class GameNetworkManager {
 		auto result = receiveTimeout(dur!("nsecs")(1),
 		(Command cmd) {
 
+			writefln("[GAME] Recieved %s from net thread.", to!string(cmd));
+
+			switch (cmd) with (Command){
+
+				case CREATE:
+					break;
+
+				case DISCONNECT:
+					break;
+
+				default:
+					writefln("[GAME] Unhandled message from net thread: %s", to!string(cmd));
+					break;
+
+			}
+
+		},
+		(Command cmd, ClientID assigned_id) {
+			if (cmd == Command.ASSIGN_ID) {
+				writefln("[GAME] Recieved id assignment: %d from net thread.", assigned_id);
+				//assign the id!
+			}
 		},
 		(Command cmd, immutable(ubyte)[] data) {
 
@@ -53,11 +80,8 @@ class GameNetworkManager {
 
 				switch (type) {
 
-					case UpdateType.CREATE, UpdateType.UPDATE, UpdateType.DESTROY:
-						break;
-
 					default:
-						writefln("[GAME_NET] Unhandled Update Type: %d", type);
+						writefln("[GAME_NET] Unhandled Update Type: %s", to!string(type));
 						done = true; //halt, or would get stuck in a loop.
 
 				}
@@ -68,9 +92,9 @@ class GameNetworkManager {
 
 	}
 
-	void send_message(Command cmd) {
+	void send_message(Args...)(Args args) {
 
-		send(network_thread, cmd);
+		send(network_thread, args);
 
 	}
 
