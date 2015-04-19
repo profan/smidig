@@ -8,12 +8,7 @@ import blindfire.engine.defs : Vec2f, Vec3f;
 import blindfire.sys;
 import profan.ecs;
 
-enum IsRemote {
-	Yes = true,
-	No = false,
-}
-
-auto create_wall(IsRemote remote = IsRemote.No)(EntityManager em, Vec2f pos, Vec2f bottom_right, EntityID* id, Shader* shader, Texture* texture) {
+auto create_wall(EntityManager em, Vec2f pos, Vec2f bottom_right, Shader* shader, Texture* texture) {
 
 }
 

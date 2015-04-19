@@ -251,11 +251,8 @@ final class MatchState : GameState {
 
 	}
 
-	StaticArray!(ubyte, 4096) data;
-
 	override void enter() {
 
-		import blindfire.netmsg : UpdateType, EntityType;
 		import std.random : uniform;
 
 		auto result = receiveTimeout(dur!("nsecs")(1),
@@ -270,7 +267,6 @@ final class MatchState : GameState {
 		Shader* s = rm.get_resource!(Shader)(Resource.BASIC_SHADER);
 		Texture* t = rm.get_resource!(Texture)(Resource.UNIT_TEXTURE);
 
-		data.length = 0;
 		for (uint i = 0; i < 10; ++i) {
 			int n_x = uniform(0, 640);
 			int n_y = uniform(0, 480);
