@@ -9,6 +9,8 @@ import blindfire.engine.gl : Vec2f, Mat3f, Transform, Shader, Texture, Mesh;
 import blindfire.engine.net : NetVar, Command, ClientID;
 import blindfire.engine.stream : InputStream;
 
+import blindfire.action;
+
 interface UpdateSystem : ComponentSystem!(0) {
 
 	void update();
@@ -130,7 +132,7 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 	//TODO make sure this only works for local units that the player is in control of later, probably easy to fix
 	void update() {
 
-		foreach (id, ref comp; components) with (comp) {
+		foreach (ref id, ref comp; components) with (comp) {
 			float x = tc.transform.position.x;
 			float y = tc.transform.position.y;
 			if (sbox.active && point_in_rect(cast(int)x, cast(int)y, sbox.x, sbox.y, sbox.w, sbox.h)) {
@@ -140,8 +142,10 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 			}
 
 			if (comp.selected && sbox.order_set) with (comp.tc) {
-				velocity = -(Vec2f(x, y) - Vec2f(sbox.to_x, sbox.to_y)).normalized();
-				transform.rotation.z = atan2(sbox.to_y - y - 32/2, sbox.to_x - x-32/2);
+
+				//emit order command
+				comp.ac.action = new MoveAction(id, Vec2f(sbox.to_x, sbox.to_y));
+
 			}
 
 		}
@@ -155,13 +159,62 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 struct OrderComponent {
 
 	bool selected = false;
+	@dependency ActionComponent* ac;
 	@dependency TransformComponent* tc;
-	Order[10] orders;
 
 } //OrderComponent
 
-struct Order {
+class ActionManager : ComponentManager!(UpdateSystem, ActionComponent, 7) {
 
-	//enum value and some data?
+	void update() {
 
-} //Order
+		foreach (ref id, ref comp; components) {
+			if (comp.action !is null) {
+				comp.action.execute(em);
+				comp.action = null;
+			}
+		}
+
+	}
+
+} //ActionManager
+
+struct ActionComponent {
+
+	Action action;
+
+} //ActionComponent
+
+class SelectionManager : ComponentManager!(UpdateSystem, SelectionComponent, 6) {
+
+	import std.math : atan2;
+
+	void update() {
+
+		foreach (ref id, ref comp; components) with (comp) {
+			
+			auto pos = tc.transform.position;
+			if (order_set) {
+				tc.velocity = -(pos - target_position).normalized();
+				tc.transform.rotation.z = atan2(target_position.y - pos.y - 32/2, target_position.x - pos.x-32/2);
+				order_set = false;
+			}
+
+		}
+
+	}
+
+} //SelectionManager
+
+struct SelectionComponent {
+
+	bool order_set = false;
+	Vec2f target_position;
+	@dependency TransformComponent* tc;
+
+	void set_target(Vec2f new_pos) {
+		target_position = new_pos;
+		order_set = true;
+	}
+
+} //SelectionComponent

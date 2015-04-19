@@ -7,6 +7,10 @@ import blindfire.engine.stream : InputStream;
 import blindfire.engine.log;
 import blindfire.engine.net;
 
+import profan.ecs : EntityManager;
+
+alias void delegate() OnGameStartDelegate;
+alias void delegate() OnGameEndDelegate;
 alias void delegate() OnConnectDelegate;
 alias void delegate() OnDisconnectDelegate;
 
@@ -18,7 +22,7 @@ struct PlayerData {
 
 interface Action {
 
-	void execute();
+	void execute(EntityManager em);
 
 } //Action
 
@@ -57,11 +61,13 @@ class GameNetworkManager {
 	bool lockstep_turn() {
 
 		if (next_turn()) {
+
 			send_pending_actions();
 
 			if (turn_id >= 3) {
 				process_actions();
 			}
+
 		}
 
 		return false;
@@ -116,7 +122,7 @@ class GameNetworkManager {
 			bool done = false;
 			auto input_stream = InputStream(cast(ubyte*)data.ptr, data.length);
 
-			writefln("[GAME_NET] Received packet, %d bytes", data.length);
+			writefln("[GAME] Received packet, %d bytes", data.length);
 
 			UpdateType type = input_stream.read!UpdateType();
 			while (!done && input_stream.current < data.length) {
@@ -124,7 +130,7 @@ class GameNetworkManager {
 				switch (type) {
 
 					default:
-						writefln("[GAME_NET] Unhandled Update Type: %s", to!string(type));
+						writefln("[GAME] Unhandled Update Type: %s", to!string(type));
 						done = true; //halt, or would get stuck in a loop.
 
 				}

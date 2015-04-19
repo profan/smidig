@@ -25,10 +25,13 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 	cc.radius = texture.width/2; //arbitrary number :D
 
 	em.register_component!InputComponent(unit);
+	em.register_component!ActionComponent(unit);
+	em.register_component!SelectionComponent(unit);
 	em.register_component!OrderComponent(unit);
 
 	em.register_component!SpriteComponent(unit);
 	SpriteComponent* sc = em.get_component!SpriteComponent(unit);
+
 	
 	int w = texture.width;
 	int h = texture.height;

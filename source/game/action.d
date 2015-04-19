@@ -1,9 +1,29 @@
 module blindfire.action;
 
 import blindfire.engine.window : Window;
-import blindfire.engine.gl : Vec2f;
+import blindfire.engine.defs : Vec2f;
 
 import blindfire.ui : UIState, draw_rectangle;
+import blindfire.netgame : Action;
+import blindfire.sys;
+
+import profan.ecs;
+
+class MoveAction : Action {
+
+	EntityID entity;
+	Vec2f position;
+
+	this(EntityID entity, Vec2f pos) {
+		this.entity = entity;
+		this.position = pos;
+	}
+
+	void execute(EntityManager em) {
+		em.get_component!(SelectionComponent)(entity).set_target(position);
+	}
+
+} //MoveAction
 
 struct SelectionBox {
 
@@ -11,6 +31,12 @@ struct SelectionBox {
 	int x = 0, y = 0;
 	int w = 0, h = 0;
 	int to_x = 0, to_y = 0;
+	
+	EntityManager em;
+
+	this(EntityManager em) {
+		this.em = em;
+	}
 
 	void set_order(int new_x, int new_y) {
 		order_set = true;
