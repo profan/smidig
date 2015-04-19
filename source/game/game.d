@@ -241,7 +241,6 @@ final class MatchState : GameState {
 		this.em.add_system(new CollisionManager());
 		this.em.add_system(new SpriteManager());
 		this.em.add_system(new InputManager());
-		this.em.add_system(new NetworkManager(network_thread));
 		this.em.add_system(new OrderManager(&sbox));
 
 		//where do these bindings actually belong? WHO KNOWS
@@ -271,29 +270,12 @@ final class MatchState : GameState {
 		Shader* s = rm.get_resource!(Shader)(Resource.BASIC_SHADER);
 		Texture* t = rm.get_resource!(Texture)(Resource.UNIT_TEXTURE);
 
-		void network_unit(EntityID id, int x, int y) {
-			data ~= (cast(ubyte*)&id)[0..id.sizeof];
-
-			auto ent_type = EntityType.UNIT;
-			data ~= (cast(ubyte*)&ent_type)[0..ent_type.sizeof];
-
-			auto vec2 = Vec2f(x, y);
-			data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
-		}
-	
 		data.length = 0;
-		auto type = UpdateType.CREATE;
-		data ~= (cast(ubyte*)&type)[0..type.sizeof];
-
-		for (uint i = 0; i < 50; ++i) {
+		for (uint i = 0; i < 10; ++i) {
 			int n_x = uniform(0, 640);
 			int n_y = uniform(0, 480);
-			auto id = create_unit(em, Vec2f(n_x, n_y), cast(EntityID*)null, s, t);
-			network_unit(id, n_x, n_y);
+			auto id = create_unit(em, Vec2f(n_x, n_y), s, t);
 		}
-
-		//TODO move this into create_unit?
-		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data[].idup);
 
 	}
 

@@ -17,13 +17,9 @@ auto create_wall(IsRemote remote = IsRemote.No)(EntityManager em, Vec2f pos, Vec
 
 }
 
-auto create_unit(IsRemote is_remote = IsRemote.No)(EntityManager em, Vec2f pos, EntityID* id, Shader* shader, Texture* texture) {
+auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) {
 
-	static if (is_remote) {
-		auto unit = em.create_entity(*id);
-	} else {
-		auto unit = em.create_entity();
-	}
+	auto unit = em.create_entity();
 
 	TransformComponent mc = {velocity: Vec2f(0, 0), transform: Transform(pos)};
 	mc.transform.origin = Vec3f(-texture.width/2, -texture.height/2, 0.0f);
@@ -55,12 +51,6 @@ auto create_unit(IsRemote is_remote = IsRemote.No)(EntityManager em, Vec2f pos, 
 	sc.texture = texture;
 	sc.shader = shader;
 	
-	em.register_component!NetworkComponent(unit);
-
-	static if (is_remote) {
-		em.get_component!NetworkComponent(unit).local = IsRemote.Yes;
-	}
-
 	return unit;
 
 }
