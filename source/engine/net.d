@@ -144,7 +144,6 @@ struct NetVar(T) {
 
 } //NetVar
 
-
 alias Self = Tuple!(Address, Peer);
 
 struct NetworkState {
