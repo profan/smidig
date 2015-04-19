@@ -1,12 +1,11 @@
 module blindfire.netgame;
 
-import std.concurrency : Tid, receiveTimeout;
+import std.concurrency : Tid, receiveTimeout, send;
 import std.datetime : dur;
 
 import blindfire.engine.stream : InputStream;
-
-import blindfire.engine.net;
 import blindfire.engine.log;
+import blindfire.engine.net;
 
 alias void delegate() OnConnectDelegate;
 alias void delegate() OnDisconnectDelegate;
@@ -15,13 +14,19 @@ struct PlayerData {
 
 	char[64] player_name;
 
-} //PlayerData 
+} //PlayerData
+
+interface Action {
+
+	void execute();
+
+} //Action
 
 enum UpdateType {
 
 	JOIN
 
-}
+} //UpdateType
 
 alias TurnID = uint;
 
@@ -41,6 +46,12 @@ class GameNetworkManager {
 
 	this(Tid net_tid) {
 		this.network_thread = net_tid;
+	}
+
+	bool next_turn() {
+
+		//ready to go to next turn? return true? :D
+
 	}
 
 	void handle_messages() {
@@ -98,6 +109,12 @@ class GameNetworkManager {
 	void send_message(Args...)(Args args) {
 
 		send(network_thread, args);
+
+	}
+
+	void send_action(in Action action) {
+
+		//magics
 
 	}
 
