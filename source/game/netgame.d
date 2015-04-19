@@ -12,6 +12,12 @@ import blindfire.engine.log;
 alias void delegate() OnConnectDelegate;
 alias void delegate() OnDisconnectDelegate;
 
+struct PlayerData {
+
+	char[64] player_name;
+
+} //PlayerData 
+
 class GameNetworkManager {
 
 	enum Event {
@@ -62,11 +68,20 @@ class GameNetworkManager {
 
 	}
 
-	void send_message(ubyte[] data) {
+	void send_message(Command cmd) {
+
+		send(network_thread, cmd);
 
 	}
 
-} //NetworkManager
+	void send_message(in ubyte[] data) {
+
+		//copy data, send.
+		send(network_thread, data.idup);
+
+	}
+
+} //GameNetworkManager
 
 struct Session {
 

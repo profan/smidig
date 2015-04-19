@@ -25,7 +25,7 @@ struct Window {
 	Mat4f view_projection;
 
 	//window data
-	uint window_width, window_height;
+	private uint window_width, window_height;
 
 	this(in char[] title, uint width, uint height) {
 
@@ -65,8 +65,6 @@ struct Window {
 		DerelictGL3.reload();
 		alive = true;
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		view_projection = Mat4f.orthographic(0.0f, width, height, 0.0f, 0.0f, 1.0f);
 
 	}
