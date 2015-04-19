@@ -209,8 +209,7 @@ final class MatchState : GameState {
 		this.em.add_system(new CollisionManager());
 		this.em.add_system(new SpriteManager());
 		this.em.add_system(new InputManager());
-		this.em.add_system(new OrderManager(&sbox));
-		this.em.add_system(new ActionManager());
+		this.em.add_system(new OrderManager(&sbox, net_man.tm));
 		this.em.add_system(new SelectionManager());
 
 		this.sbox = SelectionBox();
@@ -248,6 +247,7 @@ final class MatchState : GameState {
 
 	override void update(double dt) {
 
+		net_man.process_actions(em);
 		em.tick!(UpdateSystem)();
 
 	}

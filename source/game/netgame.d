@@ -34,6 +34,26 @@ enum UpdateType {
 
 alias TurnID = uint;
 
+class TurnManager {
+
+	Action[] pending_actions;
+
+	void create_action(T, Args...)(Args args) {
+		pending_actions ~= new T(args);
+	}
+
+	void do_pending_actions(EntityManager em) {
+
+		foreach (ref action; pending_actions) {
+			action.execute(em);
+		}
+
+		pending_actions.length = 0;
+
+	}
+
+} //TurnManager
+
 class GameNetworkManager {
 
 	enum Event {
@@ -51,11 +71,12 @@ class GameNetworkManager {
 	uint ticks_per_turn = 4;
 
 	TurnID turn_id;
-
 	Tid network_thread;
+	TurnManager tm;
 
 	this(Tid net_tid) {
 		this.network_thread = net_tid;
+		this.tm = new TurnManager();
 	}
 
 	bool lockstep_turn() {
@@ -85,7 +106,9 @@ class GameNetworkManager {
 
 	}
 
-	void process_actions() {
+	void process_actions(EntityManager em) {
+
+		tm.do_pending_actions(em);
 
 	}
 

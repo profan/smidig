@@ -9,6 +9,14 @@ import blindfire.sys;
 
 import profan.ecs;
 
+class NoAction : Action {
+
+	void execute(EntityManager em) {
+
+	}
+
+} //NoAction
+
 class MoveAction : Action {
 
 	EntityID entity;
