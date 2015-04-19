@@ -415,6 +415,7 @@ struct Game {
 		debug_atlas.render_string!("frametime: %f ms")(window, offset, frametime);
 		debug_atlas.render_string!("update: %f ms")(window, offset, updatetime);
 		debug_atlas.render_string!("draw: %f ms")(window, offset, drawtime);
+		debug_atlas.render_string!("turn id: %d")(window, offset, net_man.turn_id);
 
 	}
 
@@ -522,6 +523,8 @@ struct Game {
 		while(window.is_alive) {
 
 			ft_sw.start();
+
+			net_man.handle_messages();
 			if (sw.peek() - last > iter) {
 
 				ut_sw.start();

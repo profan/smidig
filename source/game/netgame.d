@@ -23,6 +23,8 @@ enum UpdateType {
 
 }
 
+alias TurnID = uint;
+
 class GameNetworkManager {
 
 	enum Event {
@@ -34,6 +36,7 @@ class GameNetworkManager {
 		SESSION_ACTIVE
 	}
 
+	TurnID turn_id;
 	Tid network_thread;
 
 	this(Tid net_tid) {
@@ -47,7 +50,7 @@ class GameNetworkManager {
 
 			writefln("[GAME] Recieved %s from net thread.", to!string(cmd));
 
-			switch (cmd) with (Command){
+			switch (cmd) with (Command) {
 
 				case CREATE:
 					break;
