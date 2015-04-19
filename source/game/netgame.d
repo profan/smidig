@@ -41,16 +41,45 @@ class GameNetworkManager {
 		SESSION_ACTIVE
 	}
 
+	float turn_length = 0.2f;
+	float tick_length = 0.05f;
+	uint ticks_per_second = 20;
+	uint ticks_per_turn = 4;
+
 	TurnID turn_id;
+
 	Tid network_thread;
 
 	this(Tid net_tid) {
 		this.network_thread = net_tid;
 	}
 
+	bool lockstep_turn() {
+
+		if (next_turn()) {
+			send_pending_actions();
+
+			if (turn_id >= 3) {
+				process_actions();
+			}
+		}
+
+		return false;
+
+	}
+
 	bool next_turn() {
 
 		//ready to go to next turn? return true? :D
+		return false;
+
+	}
+
+	void send_pending_actions() {
+
+	}
+
+	void process_actions() {
 
 	}
 
