@@ -55,7 +55,7 @@ struct Console {
 
 	void print(string format, Args...)(Args args) {
 
-		import std.format : sformat;
+		import std.string : sformat;
 
 		char[128] fmt_str;
 		char[] c = sformat(fmt_str, format, args);

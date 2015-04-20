@@ -14,7 +14,7 @@ void render_string(string format, Args...)(FontAtlas* atlas, Window* window, ref
 
 void render_string(string format, Args...)(ref FontAtlas atlas, Window* window, ref Vec2i offset, Args args) {
 
-	import std.format : sformat;
+	import std.string : sformat;
 
 	char[format.length*2] buf;
 	const char[] str = sformat(buf, format, args);

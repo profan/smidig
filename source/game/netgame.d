@@ -7,6 +7,8 @@ import blindfire.engine.stream : InputStream;
 import blindfire.engine.log;
 import blindfire.engine.net;
 
+import blindfire.action;
+
 import profan.ecs : EntityManager;
 
 alias void delegate() OnGameStartDelegate;
@@ -28,7 +30,7 @@ interface Action {
 
 enum UpdateType {
 
-	JOIN
+	ACTION
 
 } //UpdateType
 
@@ -108,6 +110,13 @@ class GameNetworkManager {
 
 	void process_actions(EntityManager em) {
 
+		void[] buf = [];
+		foreach (action; tm.pending_actions) {
+			auto type = UpdateType.ACTION;
+			buf ~= (&type)[0..type.sizeof];
+			buf ~= (&action)[0..action.classinfo.init.length];
+			send(network_thread, Command.UPDATE, cast(immutable(ubyte[]))buf.idup);
+		}
 		tm.do_pending_actions(em);
 
 	}
@@ -151,6 +160,11 @@ class GameNetworkManager {
 			while (!done && input_stream.current < data.length) {
 
 				switch (type) {
+
+					case UpdateType.ACTION:
+						MoveAction action = input_stream.read!MoveAction();
+						action.execute(null);
+						break;
 
 					default:
 						writefln("[GAME] Unhandled Update Type: %s", to!string(type));

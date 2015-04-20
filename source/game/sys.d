@@ -47,8 +47,8 @@ class CollisionManager : ComponentManager!(UpdateSystem, CollisionComponent, 2) 
 
 	void update() {
 
-		foreach (ref id, ref comp; components) {
-			foreach (ref other_id, ref other_comp; components) {
+		foreach (id, ref comp; components) {
+			foreach (other_id, ref other_comp; components) {
 				if (id == other_id) continue;
 
 				if (comp.mc.transform.position.distanceTo(other_comp.mc.transform.position) < (comp.radius + other_comp.radius)) {
@@ -129,7 +129,7 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 	//TODO make sure this only works for local units that the player is in control of later, probably easy to fix
 	void update() {
 
-		foreach (ref id, ref comp; components) with (comp) {
+		foreach (id, ref comp; components) with (comp) {
 
 			float x = tc.transform.position.x;
 			float y = tc.transform.position.y;
@@ -167,7 +167,7 @@ class SelectionManager : ComponentManager!(UpdateSystem, SelectionComponent, 6) 
 
 	void update() {
 
-		foreach (ref id, ref comp; components) with (comp) {
+		foreach (id, ref comp; components) with (comp) {
 			
 			auto pos = tc.transform.position;
 			if (order_set) {

@@ -289,6 +289,10 @@ final class WaitingState : GameState {
 	}
 
 	override void enter() {
+
+		statehan.pop_state();
+		statehan.push_state(State.LOBBY);
+
 	}
 
 	override void leave() {
