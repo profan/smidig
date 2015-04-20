@@ -1,9 +1,10 @@
 module blindfire.engine.memory;
 
-import std.stdio : writefln;
-import core.stdc.stdlib : malloc, free;
-import std.conv : emplace;
 import core.memory : GC;
+import core.stdc.stdlib : malloc, free;
+
+import std.stdio : writefln;
+import std.conv : emplace;
 
 interface Instance {
 	void destroy_object();
@@ -35,6 +36,8 @@ class MemoryObject(T) : Instance {
 
 struct LinearAllocator {
 
+	bool composed = false;
+
 	void* buffer;
 	void* current;
 	size_t total_size;
@@ -43,9 +46,9 @@ struct LinearAllocator {
 	size_t pointer_count = 0;
 	Instance[100] allocated_pointers = void;
 
-	this(size_t stack_size) {
+	this(size_t size) {
 
-		this.total_size = stack_size;
+		this.total_size = size;
 		this.buffer = malloc(total_size);
 
 		//lets make this GC aware while we're there
@@ -56,6 +59,17 @@ struct LinearAllocator {
 
 	}
 
+	this(size_t size, ref LinearAllocator master) {
+
+		this.composed = true;
+		this.total_size = size;
+		this.buffer = master.alloc(total_size, uint.sizeof);
+		this.current = buffer;
+
+	}
+
+	@disable this(this);
+
 	~this() {
 
 		GC.removeRange(buffer);
@@ -64,47 +78,62 @@ struct LinearAllocator {
 			destroy(allocated_pointers[i]);
 		}
 
-		free(buffer);
-		writefln("[LinearAllocator] freed %d bytes, %d bytes allocated in %d elements.", total_size, allocated_size, pointer_count);
+		if (!composed) {
+			free(buffer);
+			writefln("[LinearAllocator] freed %d bytes, %d bytes allocated in %d elements.", total_size, allocated_size, pointer_count);
+		}
+
+	}
+
+	void* alloc(size_t size, size_t alignment) {
+
+		auto align_offset = get_aligned(current, alignment);
+	
+		allocated_size += align_offset;
+		current += align_offset;
+		void* allocated_start = current;
+
+		allocated_size += size;
+		current += size;
+
+		return allocated_start;
 
 	}
 
 	auto alloc(T, Args...)(Args args) {
 
-		//allocate space for item being allocated
-		size_t item_size = get_size!(T)();
-		auto item_alignment = get_aligned!(T)(current);
+		auto alloc_item(T, InnerArgs...)(InnerArgs item_args) {
 
-		//align item
-		allocated_size += item_alignment;
-		current += item_alignment;
+			size_t item_size = get_size!(T)();
+			auto item_alignment = get_aligned!(T)(current);
 
-		auto memory = buffer[allocated_size .. allocated_size+item_size];
-		allocated_size += item_size;
-		current += item_size;
+			//align item
+			allocated_size += item_alignment;
+			current += item_alignment;
 
-		auto element = emplace!(T, Args)(memory, args);
+			auto memory = buffer[allocated_size .. allocated_size+item_size];
+			allocated_size += item_size;
+			current += item_size;
 
-		//now allocate wrapper which runs destructors.
-		size_t wrapper_size = get_size!(MemoryObject!T)();
-		auto wrapper_alignment = get_aligned!(MemoryObject!T)(current);
+			return emplace!(T)(memory, item_args);
 
-		//align wrapper
-		allocated_size += wrapper_alignment;
-		current += wrapper_alignment;
+		}
 
-		auto wrapper_memory = buffer[allocated_size .. allocated_size+wrapper_size];
-		allocated_size += wrapper_size;
-		current += wrapper_size;
+		auto element = alloc_item!(T, Args)(args);
+		allocated_pointers[pointer_count++] = alloc_item!(MemoryObject!T)(element);
 
-		allocated_pointers[pointer_count++] = emplace!(MemoryObject!T)(wrapper_memory, element);
 		return element;
 
 	}
 
 } //LinearAllocator
 
+
 struct StackAllocator {
+
+	struct Handle(T) {
+		MemoryObject!T obj;
+	}
 
 	struct Header {
 		size_t size;
@@ -112,21 +141,37 @@ struct StackAllocator {
 
 	void* buffer;
 	void* current;
+	size_t total_size;
 
 	this(size_t size) {
 
+		this.total_size = size;
+
+		this.buffer = malloc(total_size);
+		this.current = buffer;
+
+		GC.addRange(buffer, total_size);
+
+	}
+
+	@disable this(this);
+
+	~this() {
+		
 	}
 
 	auto alloc(T, Args...)(Args args) {
+
+		auto item_size = get_size!(T)();
+		auto item_alignment = get_aligned!(T)(current);
 
 	}
 
 } //StackAllocator
 
 //returns an aligned offset in bytes from current to allocate from.
-ptrdiff_t get_aligned(T)(void* current) {
+ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) {
 
-	auto alignment = T.alignof;
 	ptrdiff_t diff = alignment - (cast(ptrdiff_t)current & (alignment-1));
 	return diff;
 

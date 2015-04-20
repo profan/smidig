@@ -398,6 +398,7 @@ struct Game {
 	GameNetworkManager net_man;
 	ConfigMap config_map;
 
+	LinearAllocator master_allocator;
 	LinearAllocator resource_allocator;
 	LinearAllocator system_allocator;
 
@@ -412,8 +413,10 @@ struct Game {
 		this.evhan = evhan;
 		this.ui_state = UIState();
 		this.state = new GameStateHandler();
-		this.resource_allocator = LinearAllocator(8192);
-		this.system_allocator = LinearAllocator(16384);
+
+		this.master_allocator = LinearAllocator(65536);
+		this.resource_allocator = LinearAllocator(8192, master_allocator);
+		this.system_allocator = LinearAllocator(16384, master_allocator);
 		this.config_map = ConfigMap("game.cfg");
 		
 	}
