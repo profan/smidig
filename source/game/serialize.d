@@ -6,6 +6,8 @@ import blindfire.engine.net : NetVar;
 import blindfire.engine.stream : InputStream;
 
 import blindfire.sys;
+import blindfire.action;
+import profan.ecs;
 
 enum networked = "networked";
 
@@ -59,6 +61,58 @@ template NetVarToSym(T, alias Member) {
 	enum NetVarToSym = Symbol!(T, Member).variable;
 }
 
+mixin template DoSerializable() {
+
+	void serialize(ref StaticArray!(ubyte, 2048) buf) {
+		mixin(MakeTypeSerializable!(typeof(this), typeof(this).tupleof));
+	}
+
+}
+
+template MakeSerializable(Types...) {
+
+	static if (Types.length > 0) {
+
+		enum Type = Types[0].stringof;
+		enum MakeSerializable = 
+			"void serialize(StaticArray!(ubyte,2048) buf) {"
+			~ MakeTypeSerializable!(Types[0], Types[0].tupleof) 
+			~ "}" ~ MakeSerializable!(Types[1..$]);
+
+	} else {
+
+		enum MakeSerializable = "";
+
+	}
+
+}
+
+template MakeTypeSerializable(T, members...) {
+
+	static if (members.length > 0) {
+
+		enum MakeTypeSerializable = AddSerialization!(T, members[0]) ~ MakeTypeSerializable!(T, members[1..$]);
+
+	} else {
+
+		enum MakeTypeSerializable = "";
+
+	}
+
+}
+
+template SizeString(alias Symbol) {
+
+	enum SizeString = to!string(Symbol.sizeof);
+
+}
+
+template AddSerialization(T, alias Member) {
+
+	enum AddSerialization = "buf ~= (cast(ubyte*)&" ~ Member.stringof ~ ")[0.."~SizeString!(Member)~"];";
+
+}
+
 template SerializeEachMember(T, alias data, alias object, members...) {
 
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
@@ -85,7 +139,7 @@ template DeSerializeEachMember(T, alias data, alias object, members...) {
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
 
 		enum DeSerializeEachMember = Identifier!(object) ~ "." ~ members[0] ~ " = " ~
-				Identifier!(data) ~ ".read!(" ~ StringIdentifier!(object, members[0]) ~ ")();" 
+				Identifier!(data) ~ ".read!(" ~ mixin("typeof("~Identifier!(object)~"."~members[0]~").stringof") ~ ")();" 
 				~ DeSerializeEachMember!(T, data, object, members[1 .. $]);
 
 
@@ -113,7 +167,7 @@ template ReadHeader() {
 }
 
 template Serialize(T, alias data, alias object) {
-	enum Serialize = SerializeEachMember!(T, data, object, __traits(allMembers, T));
+	enum Serialize = SerializeEachMember!(T, data, object, T.tupleof);
 }
 
 template DeSerialize(T, alias data, alias object) {

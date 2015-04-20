@@ -12,16 +12,27 @@ import profan.ecs;
 
 class NoAction : Action {
 
+	mixin DoSerializable!();
+
 	void execute(EntityManager em) {
 
 	}
 
 } //NoAction
 
+import blindfire.serialize : DoSerializable, MakeTypeSerializable;
+import profan.collections : StaticArray;
+
 class MoveAction : Action {
 
 	@networked EntityID entity;
 	@networked Vec2f position;
+
+	mixin DoSerializable!();
+
+	this() {
+
+	}
 
 	this(EntityID entity, Vec2f pos) {
 		this.entity = entity;

@@ -22,8 +22,11 @@ struct PlayerData {
 
 } //PlayerData
 
+alias TempBuf = StaticArray!(ubyte, 2048);
+
 interface Action {
 
+	void serialize(ref TempBuf buf);
 	void execute(EntityManager em);
 
 } //Action
@@ -50,7 +53,7 @@ class TurnManager {
 			action.execute(em);
 		}
 
-		pending_actions.length = 0;
+		pending_actions = [];
 
 	}
 
@@ -111,15 +114,17 @@ class GameNetworkManager {
 	StaticArray!(ubyte, 2048) buf;
 	void process_actions(EntityManager em) {
 
-		import blindfire.serialize : serialize;
-
 		buf.length = 0;
 		foreach (action; tm.pending_actions) {
 			auto type = UpdateType.ACTION;
-			buf ~= cast(ubyte[type.sizeof])(&type)[0..type.sizeof];
-			serialize(buf, &action);
+			buf ~= (cast(ubyte*)&type)[0..type.sizeof];
+			action.serialize(buf);
+		}
+	
+		if (buf.length > 0)	{
 			send(network_thread, Command.UPDATE, cast(immutable(ubyte[]))buf[].idup);
 		}
+
 		tm.do_pending_actions(em);
 
 	}
@@ -167,7 +172,7 @@ class GameNetworkManager {
 					import blindfire.serialize : deserialize;
 
 					case UpdateType.ACTION:
-						MoveAction action;
+						MoveAction action = new MoveAction();
 						deserialize!(MoveAction)(input_stream, &action);
 						action.execute(null);
 						break;
