@@ -123,27 +123,6 @@ template AddSerialization(T, alias Member) {
 
 }
 
-template SerializeEachMember(T, alias data, alias object, members...) {
-
-	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
-
-		enum SerializeEachMember =
-			Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ members[0]
-				~ SerializeEachMember!(T, data, object, members[1 .. $]);
-
-
-	} else static if (members.length > 0) {
-
-		enum SerializeEachMember = SerializeEachMember!(T, data, object, members[1 .. $]);
-
-	} else {
-
-		enum SerializeEachMember = "";
-
-	}
-
-}
-
 template DeSerializeEachMember(T, alias data, alias object, members...) {
 
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
@@ -164,16 +143,6 @@ template DeSerializeEachMember(T, alias data, alias object, members...) {
 	}
 
 
-}
-
-//write identifier(type of component) and entity id, header of component message.
-template WriteHeader(T, alias data, alias object) {
-	enum WriteHeader =
-		Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ "identifier_bytes;";
-}
-
-template ReadHeader() {
-	enum ReadHeader = "";
 }
 
 template Serialize(T, alias data, alias object) {
@@ -204,50 +173,6 @@ template TotalNetSize(T, members...) {
 
 template MemberSize(T) {
 	enum MemberSize = TotalNetSize!(T, __traits(allMembers, T));
-}
-
-template DeSerializeAll(T, alias data, members...) {
-
-	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
-
-		enum DeSerializeAll = 
-			"case " ~ "ComponentIdentifier[" ~ T.stringof ~ "]: " ~
-			"deserialize!" ~ StringIdentifier!(T, members[0]) ~ "(" ~ Identifier!(data) ~
-			", components[entity_id]." ~ members[0] ~ "); break;" ~ DeSerializeAll!(T, data, members[1 .. $]);
-
-	} else static if (members.length > 0) {
-
-		enum DeSerializeAll = DeSerializeAll!(T, data, members[1 .. $]);
-
-	} else {
-
-		enum DeSerializeAll = "";
-
-	}
-
-}
-
-string DeSerializeMembers(T, alias input_stream)() {
-
-	string str = "";
-	enum s = cast(T*)null;
-	foreach (i, m; s.tupleof) {
-	
-		enum member = s.tupleof[i].stringof[8..$];
-		alias typeof(m) type;
-		static if (hasAttribute!(T, member, networked, getAttributes!(T, member))) {
-			str ~= "case: ComponentIdentifier[" ~ T.stringof ~ "]:" ~
-				"deserialize!" ~ type.stringof ~ "(" ~ Identifier!(input_stream) ~
-				", components[entity_id]." ~ member ~ "); break;";
-		}
-	}
-
-	return str;
-
-}
-
-mixin template DeSerializeMembers(T, alias data) {
-	enum DeSerializeMembers = DeSerializeAll!(T, data, __traits(allMembers, T));
 }
 
 void serialize(B, T)(ref B data, T* object) {
