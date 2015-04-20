@@ -14,6 +14,7 @@ auto create_wall(EntityManager em, Vec2f pos, Vec2f bottom_right, Shader* shader
 
 auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) {
 
+	assert (em !is null);
 	auto unit = em.create_entity();
 
 	TransformComponent mc = {velocity: Vec2f(0, 0), transform: Transform(pos)};

@@ -96,6 +96,9 @@ final class JoiningState : GameState {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.net_man = net_man;
+
+		net_man.on_connect ~= &on_connect;
+
 	}
 
 	override void enter() {
@@ -108,6 +111,13 @@ final class JoiningState : GameState {
 	}
 
 	override void update(double dt) {
+
+	}
+
+	void on_connect() {
+
+		statehan.pop_state();
+		statehan.push_state(State.LOBBY);
 
 	}
 
@@ -226,18 +236,6 @@ final class MatchState : GameState {
 
 	override void enter() {
 
-		import std.random : uniform;
-
-		auto rm = ResourceManager.get();
-		Shader* s = rm.get_resource!(Shader)(Resource.BASIC_SHADER);
-		Texture* t = rm.get_resource!(Texture)(Resource.UNIT_TEXTURE);
-
-		for (uint i = 0; i < 10; ++i) {
-			int n_x = uniform(0, 640);
-			int n_y = uniform(0, 480);
-			auto id = create_unit(em, Vec2f(n_x, n_y), s, t);
-		}
-
 	}
 
 	override void leave() {
@@ -249,7 +247,7 @@ final class MatchState : GameState {
 
 	override void update(double dt) {
 
-		net_man.process_actions(em);
+		net_man.process_actions();
 		em.tick!(UpdateSystem)();
 
 	}
@@ -271,6 +269,20 @@ final class MatchState : GameState {
 			statehan.pop_state();
 		} //back to menu
 
+
+		if(do_button(ui_state, 6, window, window.width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Create Units", 0x428bca)) {
+			
+			import std.random : uniform;
+			import blindfire.action : CreateUnitAction;
+
+			for (uint i = 0; i < 10; ++i) {
+				int n_x = uniform(0, 640);
+				int n_y = uniform(0, 480);
+				net_man.tm.create_action!(CreateUnitAction)(Vec2f(n_x, n_y));
+			}
+
+		}
+
 		draw_debug(window);
 
 	}
@@ -291,9 +303,6 @@ final class WaitingState : GameState {
 	}
 
 	override void enter() {
-
-		statehan.pop_state();
-		statehan.push_state(State.LOBBY);
 
 	}
 
@@ -534,7 +543,7 @@ struct Game {
 
 			ft_sw.start();
 
-			net_man.handle_messages(null);
+			net_man.handle_messages();
 			if (sw.peek() - last > iter) {
 
 				ut_sw.start();

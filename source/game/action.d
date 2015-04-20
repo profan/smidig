@@ -6,6 +6,7 @@ import blindfire.engine.defs : Vec2f;
 import blindfire.serialize : networked;
 import blindfire.ui : UIState, draw_rectangle;
 import blindfire.netgame : Action, ActionType;
+import blindfire.game : Resource;
 import blindfire.sys;
 
 import profan.ecs;
@@ -14,7 +15,8 @@ enum : ActionType[string] {
 
 	ActionIdentifier = [
 		NoAction.stringof : 0,
-		MoveAction.stringof : 1
+		MoveAction.stringof : 1,
+		CreateUnitAction.stringof : 2
 	]
 
 }
@@ -53,6 +55,32 @@ class MoveAction : Action {
 	}
 
 } //MoveAction
+
+class CreateUnitAction : Action {
+
+	import blindfire.engine.resource : ResourceManager;
+	import blindfire.ents : create_unit;
+
+	@networked Vec2f position;
+
+	mixin DoSerializable!();
+
+	this() {
+
+	}
+
+	this(Vec2f position) {
+		this.position = position;
+	}
+
+	void execute(EntityManager em) {
+		auto rm = ResourceManager.get();
+		create_unit(em, position, 
+					rm.get_resource!Shader(Resource.BASIC_SHADER), 
+					rm.get_resource!Texture(Resource.UNIT_TEXTURE));
+	}
+
+} //CreateUnitAction
 
 struct SelectionBox {
 

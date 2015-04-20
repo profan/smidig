@@ -11,8 +11,6 @@ import blindfire.action;
 
 import profan.ecs : EntityManager;
 
-alias void delegate() OnGameStartDelegate;
-alias void delegate() OnGameEndDelegate;
 alias void delegate() OnConnectDelegate;
 alias void delegate() OnDisconnectDelegate;
 
@@ -40,7 +38,6 @@ enum UpdateType {
 } //UpdateType
 
 alias TurnID = uint;
-
 class TurnManager {
 
 	Action[] pending_actions;
@@ -83,6 +80,8 @@ class GameNetworkManager {
 
 	EntityManager em;
 
+	OnConnectDelegate[] on_connect;
+
 	this(Tid net_tid) {
 		this.network_thread = net_tid;
 		this.tm = new TurnManager();
@@ -95,7 +94,7 @@ class GameNetworkManager {
 			send_pending_actions();
 
 			if (turn_id >= 3) {
-				process_actions();
+				//process_actions();
 			}
 
 		}
@@ -116,7 +115,7 @@ class GameNetworkManager {
 	}
 
 	StaticArray!(ubyte, 2048) buf;
-	void process_actions(EntityManager em) {
+	void process_actions() {
 
 		buf.length = 0;
 		foreach (action; tm.pending_actions) {
@@ -138,7 +137,7 @@ class GameNetworkManager {
 
 	}
 
-	void handle_messages(EntityManager em) {
+	void handle_messages() {
 
 		auto result = receiveTimeout(dur!("nsecs")(1),
 		(Command cmd) {
@@ -148,6 +147,11 @@ class GameNetworkManager {
 			switch (cmd) with (Command) {
 
 				case CREATE:
+
+					foreach (del; on_connect) {
+						del();
+					}
+
 					break;
 
 				case DISCONNECT:
@@ -185,7 +189,7 @@ class GameNetworkManager {
 						auto str = "";
 
 						foreach (type, id; ActionIdentifier) {
-							str ~= "case " ~ to!string(id) ~ ":" ~
+							str ~= "case " ~ to!string(id) ~ ": " ~
 								type ~ " action = new " ~ type ~ "();" ~
 								"deserialize!("~type~")(input_stream, &action);" ~
 								"action.execute(em); break;";
