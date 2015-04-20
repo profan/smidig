@@ -59,7 +59,7 @@ struct LinearAllocator {
 
 	}
 
-	this(size_t size, ref LinearAllocator master) {
+	this(size_t size, LinearAllocator* master) {
 
 		this.composed = true;
 		this.total_size = size;
@@ -72,15 +72,16 @@ struct LinearAllocator {
 
 	~this() {
 
-		GC.removeRange(buffer);
 		for (size_t i = 0; i < pointer_count; ++i) {
 			allocated_pointers[i].destroy_object();
 			destroy(allocated_pointers[i]);
 		}
 
+		writefln("[LinearAllocator] freed %d bytes, %d bytes allocated in %d elements.", total_size, allocated_size, pointer_count);
+
 		if (!composed) {
+			GC.removeRange(buffer);
 			free(buffer);
-			writefln("[LinearAllocator] freed %d bytes, %d bytes allocated in %d elements.", total_size, allocated_size, pointer_count);
 		}
 
 	}
@@ -91,8 +92,8 @@ struct LinearAllocator {
 	
 		allocated_size += align_offset;
 		current += align_offset;
-		void* allocated_start = current;
 
+		void* allocated_start = current;
 		allocated_size += size;
 		current += size;
 
@@ -100,24 +101,24 @@ struct LinearAllocator {
 
 	}
 
+	auto alloc_item(T, Args...)(Args args) {
+
+		size_t item_size = get_size!(T)();
+		auto item_alignment = get_aligned!(T)(current);
+
+		//align item
+		allocated_size += item_alignment;
+		current += item_alignment;
+
+		auto memory = buffer[allocated_size .. allocated_size+item_size];
+		allocated_size += item_size;
+		current += item_size;
+
+		return emplace!(T)(memory, args);
+
+	}
+
 	auto alloc(T, Args...)(Args args) {
-
-		auto alloc_item(T, InnerArgs...)(InnerArgs item_args) {
-
-			size_t item_size = get_size!(T)();
-			auto item_alignment = get_aligned!(T)(current);
-
-			//align item
-			allocated_size += item_alignment;
-			current += item_alignment;
-
-			auto memory = buffer[allocated_size .. allocated_size+item_size];
-			allocated_size += item_size;
-			current += item_size;
-
-			return emplace!(T)(memory, item_args);
-
-		}
 
 		auto element = alloc_item!(T, Args)(args);
 		allocated_pointers[pointer_count++] = alloc_item!(MemoryObject!T)(element);

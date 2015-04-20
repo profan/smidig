@@ -399,8 +399,8 @@ struct Game {
 	ConfigMap config_map;
 
 	LinearAllocator master_allocator;
-	LinearAllocator resource_allocator;
-	LinearAllocator system_allocator;
+	LinearAllocator* resource_allocator;
+	LinearAllocator* system_allocator;
 
 	float frametime, updatetime, drawtime;
 	FontAtlas* debug_atlas;
@@ -415,8 +415,10 @@ struct Game {
 		this.state = new GameStateHandler();
 
 		this.master_allocator = LinearAllocator(65536);
-		this.resource_allocator = LinearAllocator(8192, master_allocator);
-		this.system_allocator = LinearAllocator(16384, master_allocator);
+
+		alias ma = master_allocator;
+		this.resource_allocator = ma.alloc!(LinearAllocator)(8192, &master_allocator);
+		this.system_allocator = ma.alloc!(LinearAllocator)(16384, &master_allocator);
 		this.config_map = ConfigMap("game.cfg");
 		
 	}
