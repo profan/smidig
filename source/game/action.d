@@ -5,10 +5,19 @@ import blindfire.engine.defs : Vec2f;
 
 import blindfire.serialize : networked;
 import blindfire.ui : UIState, draw_rectangle;
-import blindfire.netgame : Action;
+import blindfire.netgame : Action, ActionType;
 import blindfire.sys;
 
 import profan.ecs;
+
+enum : ActionType[string] {
+
+	ActionIdentifier = [
+		NoAction.stringof : 0,
+		MoveAction.stringof : 1
+	]
+
+}
 
 class NoAction : Action {
 

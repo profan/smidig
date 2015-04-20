@@ -10,6 +10,7 @@ import blindfire.action;
 import profan.ecs;
 
 enum networked = "networked";
+enum ignore = "ignore";
 
 template isAttribute(alias curAttr, alias Attr) {
 	enum isAttribute = is(typeof(curAttr) == typeof(Attr)) && curAttr == Attr;
@@ -63,6 +64,11 @@ template NetVarToSym(T, alias Member) {
 
 mixin template DoSerializable() {
 
+	immutable ActionType type = ActionIdentifier[typeof(this).stringof];
+	ActionType identifier() const {
+		return type;
+	}
+
 	void serialize(ref StaticArray!(ubyte, 2048) buf) {
 		mixin(MakeTypeSerializable!(typeof(this), typeof(this).tupleof));
 	}
@@ -89,9 +95,13 @@ template MakeSerializable(Types...) {
 
 template MakeTypeSerializable(T, members...) {
 
-	static if (members.length > 0) {
+	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0].stringof))) {
 
 		enum MakeTypeSerializable = AddSerialization!(T, members[0]) ~ MakeTypeSerializable!(T, members[1..$]);
+
+	} else static if (members.length > 0) {
+
+		enum MakeTypeSerializable = MakeTypeSerializable!(T, members[1..$]);
 
 	} else {
 

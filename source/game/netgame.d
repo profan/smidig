@@ -24,8 +24,10 @@ struct PlayerData {
 
 alias TempBuf = StaticArray!(ubyte, 2048);
 
+alias ActionType = uint;
 interface Action {
 
+	ActionType identifier() const;
 	void serialize(ref TempBuf buf);
 	void execute(EntityManager em);
 
@@ -116,9 +118,14 @@ class GameNetworkManager {
 
 		buf.length = 0;
 		foreach (action; tm.pending_actions) {
+
 			auto type = UpdateType.ACTION;
 			buf ~= (cast(ubyte*)&type)[0..type.sizeof];
+
+			auto id = action.identifier();
+			buf ~= (cast(ubyte*)&id)[0..ActionType.sizeof];
 			action.serialize(buf);
+
 		}
 	
 		if (buf.length > 0)	{
@@ -159,6 +166,8 @@ class GameNetworkManager {
 		},
 		(Command cmd, immutable(ubyte)[] data) {
 
+			import blindfire.serialize : deserialize;
+
 			bool done = false;
 			auto input_stream = InputStream(cast(ubyte*)data.ptr, data.length);
 
@@ -169,12 +178,33 @@ class GameNetworkManager {
 
 				switch (type) {
 
-					import blindfire.serialize : deserialize;
+					string handle_action() {
+
+						auto str = "";
+
+						foreach (type, id; ActionIdentifier) {
+							str ~= "case " ~ to!string(id) ~ ":" ~
+								type ~ " action = new " ~ type ~ "();" ~
+								"deserialize!("~type~")(input_stream, &action);" ~
+								"action.execute(null); break;";
+						}
+
+						return str;
+
+					}
 
 					case UpdateType.ACTION:
-						MoveAction action = new MoveAction();
-						deserialize!(MoveAction)(input_stream, &action);
-						action.execute(null);
+
+						ActionType action_type = input_stream.read!(ActionType)();
+						switch (action_type) {
+
+							mixin(handle_action());
+
+							default:
+								writefln("[GAME] Unhandled action type: %s", to!string(action_type));
+								break;
+						}
+
 						break;
 
 					default:
