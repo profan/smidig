@@ -247,7 +247,6 @@ final class MatchState : GameState {
 
 	override void update(double dt) {
 
-		net_man.process_actions();
 		em.tick!(UpdateSystem)();
 
 	}
@@ -544,6 +543,8 @@ struct Game {
 			ft_sw.start();
 
 			net_man.handle_messages();
+			net_man.process_actions();
+
 			if (sw.peek() - last > iter) {
 
 				ut_sw.start();

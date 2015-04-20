@@ -344,6 +344,9 @@ struct NetworkPeer {
 							case Command.DISCONNECT:
 								handle_disconnect();
 								break;
+							case Command.TERMINATE:
+								open = false;
+								break;
 							default:
 								logger.log("Unhandled Command: %s", to!string(cmd));
 						}
