@@ -220,6 +220,8 @@ final class MatchState : GameState {
 		evhan.bind_mousebtn(3, &sbox.set_order, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
 
+		net_man.em = em;
+
 	}
 
 	override void enter() {
@@ -532,7 +534,7 @@ struct Game {
 
 			ft_sw.start();
 
-			net_man.handle_messages();
+			net_man.handle_messages(null);
 			if (sw.peek() - last > iter) {
 
 				ut_sw.start();

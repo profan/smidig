@@ -81,6 +81,8 @@ class GameNetworkManager {
 	Tid network_thread;
 	TurnManager tm;
 
+	EntityManager em;
+
 	this(Tid net_tid) {
 		this.network_thread = net_tid;
 		this.tm = new TurnManager();
@@ -136,7 +138,7 @@ class GameNetworkManager {
 
 	}
 
-	void handle_messages() {
+	void handle_messages(EntityManager em) {
 
 		auto result = receiveTimeout(dur!("nsecs")(1),
 		(Command cmd) {
@@ -186,7 +188,7 @@ class GameNetworkManager {
 							str ~= "case " ~ to!string(id) ~ ":" ~
 								type ~ " action = new " ~ type ~ "();" ~
 								"deserialize!("~type~")(input_stream, &action);" ~
-								"action.execute(null); break;";
+								"action.execute(em); break;";
 						}
 
 						return str;
