@@ -64,7 +64,7 @@ template SerializeEachMember(T, alias data, alias object, members...) {
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
 
 		enum SerializeEachMember =
-			Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ members[0] ~ ".bytes;"
+			Identifier!(data) ~ " ~= " ~ Identifier!(object) ~ "." ~ members[0]
 				~ SerializeEachMember!(T, data, object, members[1 .. $]);
 
 
@@ -84,8 +84,8 @@ template DeSerializeEachMember(T, alias data, alias object, members...) {
 
 	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
 
-		enum DeSerializeEachMember = Identifier!(object) ~ "." ~ members[0] ~ ".variable" ~ " = " ~
-				Identifier!(data) ~ ".read!(" ~ mixin("typeof("~Identifier!(object)~"."~members[0]~".variable).stringof") ~ ")();" 
+		enum DeSerializeEachMember = Identifier!(object) ~ "." ~ members[0] ~ " = " ~
+				Identifier!(data) ~ ".read!(" ~ StringIdentifier!(object, members[0]) ~ ")();" 
 				~ DeSerializeEachMember!(T, data, object, members[1 .. $]);
 
 
@@ -117,7 +117,7 @@ template Serialize(T, alias data, alias object) {
 }
 
 template DeSerialize(T, alias data, alias object) {
-	enum DeSerialize = DeSerializeEachMember!(T, data, object, __traits(allMembers, T)[1 .. $]); //this is until the identifier shit is fix
+	enum DeSerialize = DeSerializeEachMember!(T, data, object, __traits(allMembers, T)); //this is until the identifier shit is fix
 }
 
 template TotalNetSize(T, members...) {

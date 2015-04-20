@@ -3,6 +3,7 @@ module blindfire.action;
 import blindfire.engine.window : Window;
 import blindfire.engine.defs : Vec2f;
 
+import blindfire.serialize : networked;
 import blindfire.ui : UIState, draw_rectangle;
 import blindfire.netgame : Action;
 import blindfire.sys;
@@ -19,8 +20,8 @@ class NoAction : Action {
 
 class MoveAction : Action {
 
-	EntityID entity;
-	Vec2f position;
+	@networked EntityID entity;
+	@networked Vec2f position;
 
 	this(EntityID entity, Vec2f pos) {
 		this.entity = entity;

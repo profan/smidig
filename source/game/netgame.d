@@ -108,14 +108,17 @@ class GameNetworkManager {
 
 	}
 
+	StaticArray!(ubyte, 2048) buf;
 	void process_actions(EntityManager em) {
 
-		void[] buf = [];
+		import blindfire.serialize : serialize;
+
+		buf.length = 0;
 		foreach (action; tm.pending_actions) {
 			auto type = UpdateType.ACTION;
-			buf ~= (&type)[0..type.sizeof];
-			buf ~= (&action)[0..action.classinfo.init.length];
-			send(network_thread, Command.UPDATE, cast(immutable(ubyte[]))buf.idup);
+			buf ~= cast(ubyte[type.sizeof])(&type)[0..type.sizeof];
+			serialize(buf, &action);
+			send(network_thread, Command.UPDATE, cast(immutable(ubyte[]))buf[].idup);
 		}
 		tm.do_pending_actions(em);
 
@@ -161,8 +164,11 @@ class GameNetworkManager {
 
 				switch (type) {
 
+					import blindfire.serialize : deserialize;
+
 					case UpdateType.ACTION:
-						MoveAction action = input_stream.read!MoveAction();
+						MoveAction action;
+						deserialize!(MoveAction)(input_stream, &action);
 						action.execute(null);
 						break;
 
