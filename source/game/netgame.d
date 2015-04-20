@@ -75,9 +75,8 @@ class GameNetworkManager {
 	uint ticks_per_turn = 4;
 
 	TurnID turn_id;
-	Tid network_thread;
+	private Tid network_thread;
 	TurnManager tm;
-
 	EntityManager em;
 
 	OnConnectDelegate[] on_connect;
@@ -231,9 +230,9 @@ class GameNetworkManager {
 
 	}
 
-	void send_action(in Action action) {
+	void send_action(T, Args...)(Args args) {
 
-		//magics
+		tm.create_action!(T)(args);
 
 	}
 

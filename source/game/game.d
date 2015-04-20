@@ -277,7 +277,7 @@ final class MatchState : GameState {
 			for (uint i = 0; i < 10; ++i) {
 				int n_x = uniform(0, 640);
 				int n_y = uniform(0, 480);
-				net_man.tm.create_action!(CreateUnitAction)(Vec2f(n_x, n_y));
+				net_man.send_action!(CreateUnitAction)(Vec2f(n_x, n_y));
 			}
 
 		}
