@@ -404,7 +404,6 @@ struct Game {
 
 	float frametime, updatetime, drawtime;
 	FontAtlas* debug_atlas;
-
 	Console* console;
 
 	this(Window* window, EventHandler* evhan) {

@@ -94,6 +94,7 @@ struct Text {
 	}
 
 	~this() {
+
 	}
 
 } //Text
@@ -109,7 +110,7 @@ struct Mesh {
 	GLuint[NUM_BUFFERS] vbo; //vertex array buffers
 	uint draw_count;
 
-	this(Vertex* vertices, uint vertices_count) {
+	this(Vertex* vertices, uint vertices_count) nothrow @nogc {
 
 		this.draw_count = vertices_count;
 
@@ -146,7 +147,7 @@ struct Mesh {
 
 	}
 
-	void draw() {
+	void draw() nothrow @nogc {
 
 		glBindVertexArray(vao); //set vertex array to use
 
@@ -186,7 +187,7 @@ struct Texture {
 
 	}
 
-	this(int width, int height, GLenum input_format, GLenum output_format, GLenum unpack_alignment) {
+	this(int width, int height, GLenum input_format, GLenum output_format, GLenum unpack_alignment) nothrow @nogc {
 
 		this.width = width;
 		this.height = height;
@@ -207,7 +208,7 @@ struct Texture {
 
 	}
 
-	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) {
+	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) nothrow @nogc {
 
 		this.width = width;
 		this.height = height;
@@ -234,21 +235,21 @@ struct Texture {
 
 		GLenum status = glGetError();
 		if (status != GL_NO_ERROR) {
-			writefln("[OpenGL] Texture loading error: %d", status);
+			printf("[OpenGL] Texture loading error: %d", status);
 		}
 
 	}
 
 	@disable this(this);
 
-	~this() {
+	~this() nothrow @nogc {
 
 		glDeleteTextures(1, &texture);
 
 	}
 
 	//since OpenGL lets you bind multiple textures at once, maximum(32?)
-	void bind(int unit) {
+	void bind(int unit) nothrow @nogc {
 
 		assert(unit >= 0 && unit <= 31);
 		glActiveTexture(GL_TEXTURE0 + unit); //since this is sequential, this works
@@ -256,7 +257,7 @@ struct Texture {
 
 	}
 
-	void unbind() {
+	void unbind() nothrow @nogc {
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 

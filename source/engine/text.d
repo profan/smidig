@@ -1,5 +1,7 @@
 module blindfire.engine.text;
 
+import core.stdc.stdio : printf;
+
 import std.algorithm : max;
 import std.stdio : writefln;
 
@@ -36,7 +38,7 @@ struct FontAtlas {
 	int atlas_width, atlas_height;
 	int char_width, char_height;
 
-	this(in char[] font_name, uint font_size, Shader* text_shader) {
+	this(in char[] font_name, uint font_size, Shader* text_shader) nothrow @nogc {
 
 		shader = text_shader;
 
@@ -47,11 +49,11 @@ struct FontAtlas {
 		FT_Face face;
 
 		if (FT_Init_FreeType(&ft)) { 
-			writefln("[FontAtlas] Could not init freetype.");
+			printf("[FontAtlas] Could not init freetype.");
 		}
 
 		if (FT_New_Face(ft, font_name.ptr, 0, &face)) { 
-			writefln("[FontAtlas] Could not open font.");
+			printf("[FontAtlas] Could not open font.");
 		}
 
 		scope(exit) { FT_Done_FreeType(ft); }
@@ -64,7 +66,7 @@ struct FontAtlas {
 		for (uint i = 32; i < 128; ++i) {
 
 			if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
-				writefln("[FontAtlas] Character %c failed to load.", i);
+				printf("[FontAtlas] Character %c failed to load.", i);
 				continue;
 			}
 

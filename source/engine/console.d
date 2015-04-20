@@ -47,6 +47,12 @@ struct Console {
 
 	}
 
+	@disable this(this);
+
+	~this() {
+
+	}
+
 	void bind_command(ConsoleCommand cmd, CommandDelegate cd) {
 
 		commands[cmd] = cd;

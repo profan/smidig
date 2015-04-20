@@ -36,7 +36,7 @@ class MemoryObject(T) : Instance {
 
 struct LinearAllocator {
 
-	bool composed = false;
+	bool composed;
 
 	void* buffer;
 	void* current;
@@ -47,6 +47,9 @@ struct LinearAllocator {
 	Instance[100] allocated_pointers = void;
 
 	this(size_t size) {
+
+		this.composed = false;
+		//since we're allocating the memory here, we're not part of another allocator's space.
 
 		this.total_size = size;
 		this.buffer = malloc(total_size);
@@ -157,7 +160,7 @@ struct StackAllocator {
 
 	@disable this(this);
 
-	~this() {
+	~this() nothrow {
 		
 	}
 
