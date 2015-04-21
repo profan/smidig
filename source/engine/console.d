@@ -17,7 +17,7 @@ enum ConsoleCommand {
 
 }
 
-alias void delegate(in char[] arguments) CommandDelegate;
+alias void delegate(Console* console, in char[] arguments) CommandDelegate;
 
 struct Console {
 
@@ -40,9 +40,9 @@ struct Console {
 
 		import std.traits : EnumMembers;
 		bind_command(ConsoleCommand.HELP,
-			(in char[] args) {
-				foreach (i, field; EnumMembers!ConsoleCommand) print!(field);
-				print!("Listing all commands:");
+			(Console* console, in char[] args) {
+				foreach (i, field; EnumMembers!ConsoleCommand) console.print!(field);
+				console.print!("Listing all commands:");
 		});
 
 	}
@@ -126,7 +126,7 @@ struct Console {
 
 		if (command in commands) {
 			shift_buffer(buffers);
-			commands[command](args);
+			commands[command](&this, args);
 			history[0] ~= slice;
 			++history_elements;
 			shift_buffer(history);

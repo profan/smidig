@@ -3,6 +3,7 @@ module blindfire.engine.net;
 import core.time : dur;
 import std.string : format;
 import std.stdio : writefln;
+import std.datetime : StopWatch;
 import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException;
 import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.typecons : Tuple;
@@ -12,9 +13,6 @@ import blindfire.engine.log : Logger;
 import blindfire.engine.defs : ClientID;
 
 import profan.collections : StaticArray;
-
-
-import std.datetime : StopWatch;
 
 struct NetworkStats {
 

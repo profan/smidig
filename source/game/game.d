@@ -523,13 +523,13 @@ struct Game {
 
 		import blindfire.engine.console : ConsoleCommand;
 		console.bind_command(ConsoleCommand.SET_TICKRATE, 
-			(in char[] args) {
+			(Console* console, in char[] args) {
 				int tickrate = to!int(args);
 				iter = TickDuration.from!("msecs")(1000/tickrate);
 		});
 
 		console.bind_command(ConsoleCommand.PUSH_STATE, 
-			(in char[] args) {
+			(Console* console, in char[] args) {
 				int new_state = to!int(args);
 				if (new_state >= State.min && new_state <= State.max) {
 					state.push_state(cast(State)new_state);
