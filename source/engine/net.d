@@ -35,7 +35,6 @@ struct NetworkStats {
 
 __gshared NetworkStats network_stats;
 
-import core.stdc.stdlib : exit;
 private void update_stats(ref NetworkStats stats, size_t bytes_in) {
 
 	stats.total_bytes_in += bytes_in;
@@ -239,7 +238,7 @@ struct NetworkPeer {
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
 		StaticArray!(ubyte, 4096) send_data;
 		send_data ~= cast(ubyte[msg.sizeof])msg;
-		send_data ~= cast(ubyte[])data;
+		send_data ~= data;
 		auto success = socket.sendTo(cast(void[])send_data[], target);
 		string type_str = to!string(msg.type);
 		logger.log((success == Socket.ERROR)
