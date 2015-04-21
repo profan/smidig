@@ -15,7 +15,7 @@ import profan.collections : StaticArray;
 
 
 import std.datetime : StopWatch;
-/* Network Statistics Variables */
+
 struct NetworkStats {
 
 	StopWatch timer;
@@ -35,14 +35,17 @@ struct NetworkStats {
 
 __gshared NetworkStats network_stats;
 
-private void update_stats(ref NetworkStats stats, size_t bytes_in) {
+private void update_stats(ref NetworkStats stats) {
 
-	stats.total_bytes_in += bytes_in;
 	if (stats.timer.peek().seconds == 0) return;
 
 	stats.bytes_in_per_second = cast(float)stats.total_bytes_in / cast(float)stats.timer.peek().seconds;
 	stats.bytes_in_per_second = stats.bytes_in_per_second * 0.9f + stats.last_bytes_in * 0.1f;
 	stats.last_bytes_in = stats.bytes_in_per_second;
+
+	stats.bytes_out_per_second = cast(float)stats.total_bytes_out / cast(float)stats.timer.peek().seconds;
+	stats.bytes_out_per_second = stats.bytes_out_per_second * 0.9f + stats.last_bytes_out * 0.1f;
+	stats.last_bytes_out = stats.bytes_out_per_second;
 
 }
 
@@ -228,22 +231,28 @@ struct NetworkPeer {
 	}
 
 	void send_packet(T, Args...)(MessageType type, Address target, Args args) {
-		auto success = socket.sendTo(cast(void[T.sizeof])T(type, args), target);
+		auto bytes_sent = socket.sendTo(cast(void[T.sizeof])T(type, args), target);
 		string type_str = to!string(type);
-		logger.log((success == Socket.ERROR)
+		logger.log((bytes_sent == Socket.ERROR)
 			? format("Failed to send %s packet.", type_str)
 			: "Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
+
+		network_stats.total_bytes_out += bytes_sent;
+
 	}
 
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
 		StaticArray!(ubyte, 4096) send_data;
 		send_data ~= cast(ubyte[msg.sizeof])msg;
 		send_data ~= data;
-		auto success = socket.sendTo(cast(void[])send_data[], target);
+		auto bytes_sent = socket.sendTo(cast(void[])send_data[], target);
 		string type_str = to!string(msg.type);
-		logger.log((success == Socket.ERROR)
+		logger.log((bytes_sent == Socket.ERROR)
 			? format("Failed to send %s packet.", type_str)
 			: "Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
+
+		network_stats.total_bytes_out += bytes_sent;
+
 	}
 
 
@@ -305,9 +314,10 @@ struct NetworkPeer {
 			auto bytes = socket.receiveFrom(data, from);
 			if (bytes != -1) {
 				logger.log("Received %d bytes", bytes);
+				network_stats.total_bytes_in += bytes;
 			}
 				
-			network_stats.update_stats((bytes == -1) ? 0 : bytes);
+			network_stats.update_stats();
 
 			bool msg; //if msg is set, theres a packet to be handled.
 			MessageType type;

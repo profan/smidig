@@ -265,7 +265,6 @@ final class MatchState : GameState {
 			statehan.pop_state();
 		} //back to menu
 
-
 		if(do_button(ui_state, 6, window, window.width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Create Units", 0x428bca)) {
 			
 			import std.random : uniform;
