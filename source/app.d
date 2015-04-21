@@ -15,7 +15,6 @@ import blindfire.game;
 import blindfire.engine.window;
 import blindfire.engine.eventhandler;
 
-
 const uint DEFAULT_WINDOW_WIDTH = 640;
 const uint DEFAULT_WINDOW_HEIGHT = 480;
 

@@ -124,7 +124,9 @@ struct LinearAllocator {
 	auto alloc(T, Args...)(Args args) {
 
 		auto element = alloc_item!(T, Args)(args);
-		allocated_pointers[pointer_count++] = alloc_item!(MemoryObject!T)(element);
+		static if (is(T == struct) || is(T == class)) {
+			allocated_pointers[pointer_count++] = alloc_item!(MemoryObject!T)(element);
+		}
 
 		return element;
 
@@ -186,7 +188,7 @@ size_t get_size(T)() {
 
 	static if (is(T == class)) {
 		return __traits(classInstanceSize, T);
-	} else if (is(T == struct)) {
+	} else {
 		return T.sizeof;
 	}
 
