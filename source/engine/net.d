@@ -13,6 +13,35 @@ import blindfire.engine.defs : ClientID;
 
 import profan.collections : StaticArray;
 
+
+import std.datetime : StopWatch;
+/* Network Statistics Variables */
+struct NetworkStats {
+
+	StopWatch timer;
+	size_t current_second;
+
+	size_t bytes_in_per_second;
+	size_t bytes_out_per_second;
+
+	size_t messages_in_per_second;
+	size_t messages_out_per_second;
+
+} //NetworkStats
+
+__gshared NetworkStats network_stats;
+
+void update_stats(ref NetworkStats stats, size_t bytes_in) {
+
+	if (stats.timer.peek().seconds == stats.current_second) {
+		stats.bytes_in_per_second += bytes_in;
+	} else {
+		stats.current_second = stats.timer.peek().seconds;
+		stats.bytes_in_per_second = bytes_in;
+	}
+
+}
+
 enum MessageType : uint {
 
 	CONNECT,
@@ -260,6 +289,7 @@ struct NetworkPeer {
 
 		open = true;
 		logger.log("Listening on localhost:%d", port);
+		network_stats.timer.start();
 
 		Peer host_peer; //reference to current host, not used if self is host, otherwise queried for certain information.
 
@@ -269,7 +299,10 @@ struct NetworkPeer {
 		while (open) {
 
 			auto bytes = socket.receiveFrom(data, from);
-			if (bytes != -1) logger.log("Received %d bytes", bytes);
+			if (bytes != -1) {
+				logger.log("Received %d bytes", bytes);
+				network_stats.update_stats(bytes);
+			}
 
 			bool msg; //if msg is set, theres a packet to be handled.
 			MessageType type;
@@ -281,6 +314,7 @@ struct NetworkPeer {
 			}
 
 			final switch (state) {
+				
 				case ConnectionState.CONNECTED:
 
 					if (msg) {

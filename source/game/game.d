@@ -438,6 +438,10 @@ struct Game {
 		debug_atlas.render_string!("update: %f ms")(window, offset, updatetime);
 		debug_atlas.render_string!("draw: %f ms")(window, offset, drawtime);
 		debug_atlas.render_string!("turn id: %d")(window, offset, net_man.turn_id);
+		debug_atlas.render_string!("bytes in/sec: %d")(window, offset,
+				blindfire.engine.net.network_stats.bytes_in_per_second);
+		debug_atlas.render_string!("bytes out/sec: %d")(window, offset,
+				blindfire.engine.net.network_stats.bytes_out_per_second);
 
 	}
 
