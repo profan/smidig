@@ -63,3 +63,6 @@ interface GameState {
 
 } //GameState
 
+unittest {
+	//test some things
+}

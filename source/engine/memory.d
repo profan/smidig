@@ -6,11 +6,11 @@ import core.stdc.stdlib : malloc, free;
 import std.stdio : writefln;
 import std.conv : emplace;
 
-interface Instance {
+private interface Instance {
 	void destroy_object();
 }
 
-class MemoryObject(T) : Instance {
+private class MemoryObject(T) : Instance {
 
 	static if (is(T == struct)) {
 		T* object;
@@ -134,6 +134,9 @@ struct LinearAllocator {
 
 } //LinearAllocator
 
+unittest {
+
+}
 
 struct StackAllocator {
 
@@ -142,12 +145,22 @@ struct StackAllocator {
 	}
 
 	struct Header {
+
+		this(size_t bytes) {
+			this.size = bytes;
+		}
+
 		size_t size;
+
 	}
 
 	void* buffer;
 	void* current;
 	size_t total_size;
+	size_t allocated_size;
+	
+	size_t pointer_count = 0;
+	Instance[100] allocated_pointers = void;
 
 	this(size_t size) {
 
@@ -166,17 +179,48 @@ struct StackAllocator {
 		
 	}
 
+	auto alloc_item(T, Args...)(Args args) {
+
+		size_t item_size = get_size!(T)();
+		auto item_alignment = get_aligned!(T)(current);
+
+		//align item
+		allocated_size += item_alignment;
+		current += item_alignment;
+
+		auto memory = buffer[allocated_size .. allocated_size+item_size];
+		allocated_size += item_size;
+		current += item_size;
+
+		return emplace!(T)(memory, args);
+
+	}
+
 	auto alloc(T, Args...)(Args args) {
 
-		auto item_size = get_size!(T)();
-		auto item_alignment = get_aligned!(T)(current);
+		auto element = alloc_item(T, Args)(args);
+		auto header = alloc_item(Header)(get_size!Header());
+
+		return element;
+
+	}
+
+	void dealloc() {
+
+		auto header_size = get_size!Header();
+		auto header = *cast(Header*)(current - header_size);
+		current = current - (header_size - header.size);
 
 	}
 
 } //StackAllocator
 
+unittest {
+
+}
+
 //returns an aligned offset in bytes from current to allocate from.
-ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) {
+private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) {
 
 	ptrdiff_t diff = alignment - (cast(ptrdiff_t)current & (alignment-1));
 	return (diff == T.alignof) ? 0 : diff;

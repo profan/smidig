@@ -35,6 +35,11 @@ struct AttribLocation {
 
 }
 
+//some kind of line-based graph, for visual profiling of performance.
+struct Graph {
+
+} //Graph
+
 struct Text {
 
 	import derelict.sdl2.sdl;
