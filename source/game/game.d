@@ -253,7 +253,7 @@ final class MatchState : GameState {
 
 	void draw_debug(Window* window) {
 
-		auto offset = Vec2i(16, 96);
+		auto offset = Vec2i(16, 128);
 		debug_atlas.render_string!("client id: %d")(window, offset, em.client_uuid);
 
 	}
@@ -438,9 +438,9 @@ struct Game {
 		debug_atlas.render_string!("update: %f ms")(window, offset, updatetime);
 		debug_atlas.render_string!("draw: %f ms")(window, offset, drawtime);
 		debug_atlas.render_string!("turn id: %d")(window, offset, net_man.turn_id);
-		debug_atlas.render_string!("bytes in/sec: %d")(window, offset,
+		debug_atlas.render_string!("bytes in/sec: %f")(window, offset,
 				blindfire.engine.net.network_stats.bytes_in_per_second);
-		debug_atlas.render_string!("bytes out/sec: %d")(window, offset,
+		debug_atlas.render_string!("bytes out/sec: %f")(window, offset,
 				blindfire.engine.net.network_stats.bytes_out_per_second);
 
 	}

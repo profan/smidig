@@ -19,26 +19,31 @@ import std.datetime : StopWatch;
 struct NetworkStats {
 
 	StopWatch timer;
-	size_t current_second;
+	float last_bytes_in = 0.0f;
+	float last_bytes_out = 0.0f;
 
-	size_t bytes_in_per_second;
-	size_t bytes_out_per_second;
+	size_t total_bytes_in = 1;
+	size_t total_bytes_out = 0;
 
-	size_t messages_in_per_second;
-	size_t messages_out_per_second;
+	float bytes_in_per_second = 0.0f;
+	float bytes_out_per_second = 0.0f;
+
+	float messages_in_per_second = 0.0f;
+	float messages_out_per_second = 0.0f;
 
 } //NetworkStats
 
 __gshared NetworkStats network_stats;
 
+import core.stdc.stdlib : exit;
 void update_stats(ref NetworkStats stats, size_t bytes_in) {
 
-	if (stats.timer.peek().seconds == stats.current_second) {
-		stats.bytes_in_per_second += bytes_in;
-	} else {
-		stats.current_second = stats.timer.peek().seconds;
-		stats.bytes_in_per_second = bytes_in;
-	}
+	stats.total_bytes_in += bytes_in;
+	if (stats.timer.peek().seconds == 0) return;
+
+	stats.bytes_in_per_second = cast(float)stats.total_bytes_in / cast(float)stats.timer.peek().seconds;
+	stats.bytes_in_per_second = stats.bytes_in_per_second * 0.9f + stats.last_bytes_in * 0.1f;
+	stats.last_bytes_in = stats.bytes_in_per_second;
 
 }
 
@@ -301,8 +306,9 @@ struct NetworkPeer {
 			auto bytes = socket.receiveFrom(data, from);
 			if (bytes != -1) {
 				logger.log("Received %d bytes", bytes);
-				network_stats.update_stats(bytes);
 			}
+				
+			network_stats.update_stats((bytes == -1) ? 0 : bytes);
 
 			bool msg; //if msg is set, theres a packet to be handled.
 			MessageType type;
