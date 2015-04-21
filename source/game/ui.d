@@ -48,13 +48,15 @@ struct LabelDrawCommand {
 
 struct UIState {
 
+	enum MAX_FIELD_SIZE = 64;
+
 	uint active_item = 0, hot_item = 0, kbd_item = 0;
 	int mouse_x, mouse_y;
 	uint mouse_buttons;
 
 	uint kbd_mod;
 	uint kbd_special;
-	StaticArray!(char, 64) entered_text;
+	StaticArray!(char, MAX_FIELD_SIZE) entered_text;
 
 	//encapsulate this, this is TEMPORARY
 	GLuint box_vao;
@@ -130,11 +132,10 @@ struct UIState {
 			writefln("[GAME] OpenGL ERROR: %d", status);
 		}
 
-
 		import blindfire.engine.resource : ResourceManager;
 		import blindfire.game : Resource;
-		auto rm = ResourceManager.get();
-	
+
+		auto rm = ResourceManager.get();	
 		auto text_shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
 		font_atlas = FontAtlas("fonts/OpenSans-Bold.ttf", 22, text_shader);
 
@@ -267,7 +268,7 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 
 	int cw = ui.font_atlas.char_width;
 	ui.draw_rectangle(window, x - width/2, y - height/2, width, height, color);
-	ui.font_atlas.render_text(window, text_box[0..$], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
+	ui.font_atlas.render_text(window, text_box[], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
 
 }
 

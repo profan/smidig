@@ -64,7 +64,7 @@ template NetVarToSym(T, alias Member) {
 
 mixin template DoSerializable() {
 
-	immutable ActionType type = ActionIdentifier[typeof(this).stringof];
+	__gshared immutable ActionType type = ActionIdentifier[typeof(this).stringof];
 	ActionType identifier() const {
 		return type;
 	}
