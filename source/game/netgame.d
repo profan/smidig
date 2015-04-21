@@ -79,6 +79,7 @@ class GameNetworkManager {
 	TurnManager tm;
 	EntityManager em;
 
+	ClientID client_id;
 	OnConnectDelegate[] on_connect;
 
 	this(Tid net_tid) {
@@ -166,7 +167,7 @@ class GameNetworkManager {
 		(Command cmd, ClientID assigned_id) {
 			if (cmd == Command.ASSIGN_ID) {
 				writefln("[GAME] Recieved id assignment: %d from net thread.", assigned_id);
-				//assign the id!
+				this.client_id = assigned_id;
 			}
 		},
 		(Command cmd, immutable(ubyte)[] data) {
