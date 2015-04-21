@@ -177,7 +177,7 @@ struct StackAllocator {
 ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) {
 
 	ptrdiff_t diff = alignment - (cast(ptrdiff_t)current & (alignment-1));
-	return diff;
+	return (diff == T.alignof) ? 0 : diff;
 
 }
 

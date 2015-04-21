@@ -14,6 +14,7 @@ import blindfire.engine.eventhandler;
 import blindfire.engine.console : Console;
 import blindfire.engine.text : FontAtlas;
 import blindfire.engine.util : render_string;
+import blindfire.engine.memory : LinearAllocator;
 import blindfire.engine.resource;
 import blindfire.engine.state;
 import blindfire.engine.defs;
@@ -206,6 +207,8 @@ final class MatchState : GameState {
 	Console* console;
 	FontAtlas* debug_atlas;
 
+	LinearAllocator entity_allocator;
+
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas) {
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -214,13 +217,16 @@ final class MatchState : GameState {
 		this.console = console;
 		this.debug_atlas = atlas;
 
-		this.em = new EntityManager();
-		this.em.add_system(new TransformManager());
-		this.em.add_system(new CollisionManager());
-		this.em.add_system(new SpriteManager());
-		this.em.add_system(new InputManager());
-		this.em.add_system(new OrderManager(&sbox, net_man.tm));
-		this.em.add_system(new SelectionManager());
+		this.entity_allocator = LinearAllocator(1024 * 1024 * 32); //32 megabytes :D
+
+		alias ea = entity_allocator;
+		this.em = ea.alloc!(EntityManager)();
+		this.em.add_system(ea.alloc!(TransformManager)());
+		this.em.add_system(ea.alloc!(CollisionManager)());
+		this.em.add_system(ea.alloc!(SpriteManager)());
+		this.em.add_system(ea.alloc!(InputManager)());
+		this.em.add_system(ea.alloc!(OrderManager)(&sbox, net_man.tm));
+		this.em.add_system(ea.alloc!(SelectionManager)());
 
 		this.sbox = SelectionBox();
 
@@ -252,6 +258,11 @@ final class MatchState : GameState {
 	}
 
 	void draw_debug(Window* window) {
+
+		auto offset = Vec2i(16, 144);
+
+		float allocated_percent = cast(float)entity_allocator.allocated_size / entity_allocator.total_size;
+		debug_atlas.render_string!("entity allocator - alllocated: %f %%")(window, offset, allocated_percent);
 
 	}
 
@@ -382,8 +393,6 @@ enum Resource {
 }
 
 struct Game {
-
-	import blindfire.engine.memory : LinearAllocator;
 
 	Window* window;
 	EventHandler* evhan;
