@@ -22,7 +22,7 @@ struct NetworkStats {
 	float last_bytes_in = 0.0f;
 	float last_bytes_out = 0.0f;
 
-	size_t total_bytes_in = 1;
+	size_t total_bytes_in = 0;
 	size_t total_bytes_out = 0;
 
 	float bytes_in_per_second = 0.0f;
@@ -36,7 +36,7 @@ struct NetworkStats {
 __gshared NetworkStats network_stats;
 
 import core.stdc.stdlib : exit;
-void update_stats(ref NetworkStats stats, size_t bytes_in) {
+private void update_stats(ref NetworkStats stats, size_t bytes_in) {
 
 	stats.total_bytes_in += bytes_in;
 	if (stats.timer.peek().seconds == 0) return;
