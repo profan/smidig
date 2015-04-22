@@ -45,19 +45,23 @@ final class MenuState : GameState {
 
 	}
 	
-	override void enter() {
+	void enter() {
 
 	}
 
-	override void leave() {
+	void leave() {
 
 	}
 
-	override void update(double dt) {
+	void on_command(Command cmd) {
+
+	}
+
+	void update(double dt) {
 	
 	}
 
-	override void draw(Window* window) {
+	void draw(Window* window) {
 
 		uint width = 512, height = window.height - window.height/3;
 		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
@@ -96,32 +100,38 @@ final class JoiningState : GameState {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.net_man = net_man;
-
-		net_man.on_connect ~= &on_connect;
-
 	}
 
-	override void enter() {
+	void enter() {
 		InternetAddress addr = new InternetAddress("localhost", 12000);
 		net_man.send_message(Command.CONNECT, cast(shared)addr);
 	}
 
-	override void leave() {
+	void leave() {
 
 	}
 
-	override void update(double dt) {
+	void on_command(Command cmd) {
+
+		switch (cmd) with (Command) {
+
+			case CREATE:
+				statehan.pop_state();
+				statehan.push_state(State.LOBBY);
+				break;
+
+			default:
+				writefln("[GAME] Unhandled message: %s", to!string(cmd));
+
+		}
 
 	}
 
-	void on_connect() {
-
-		statehan.pop_state();
-		statehan.push_state(State.LOBBY);
+	void update(double dt) {
 
 	}
 
-	override void draw(Window* window) {
+	void draw(Window* window) {
 
 		uint item_width = window.width/2, item_height = 32;
 		if (do_button(ui_state, 4, window, window.width/2, window.height/2 - item_height, item_width, item_height, ITEM_COLOR)) {
@@ -153,6 +163,10 @@ final class LobbyState : GameState {
 	}
 
 	void leave() {
+
+	}
+
+	void on_command(Command cmd) {
 
 	}
 
@@ -239,18 +253,22 @@ final class MatchState : GameState {
 
 	}
 
-	override void enter() {
+	void enter() {
 
 	}
 
-	override void leave() {
+	void leave() {
 
 		//remove all things
 		em.clear_systems();
 
 	}
 
-	override void update(double dt) {
+	void on_command(Command cmd) {
+
+	}
+
+	void update(double dt) {
 
 		em.tick!(UpdateSystem)();
 
@@ -265,7 +283,7 @@ final class MatchState : GameState {
 
 	}
 
-	override void draw(Window* window) {
+	void draw(Window* window) {
 
 		em.tick!(DrawSystem)(window);
 		sbox.draw(window, ui_state);
@@ -314,12 +332,16 @@ final class WaitingState : GameState {
 	override void leave() {
 	
 	}
+
+	void on_command(Command cmd) {
+
+	}
 	
-	override void update(double dt) {
+	void update(double dt) {
 
 	}
 
-	override void draw(Window* window) {
+	void draw(Window* window) {
 
 		uint item_width = window.width / 2, item_height = 32;
 		if (do_button(ui_state, 6, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Cancel", 0x428bca)) {
@@ -331,7 +353,7 @@ final class WaitingState : GameState {
 
 } //WaitingState
 
-class OptionsState : GameState {
+final class OptionsState : GameState {
 
 	GameStateHandler statehan;
 	EventHandler* evhan;
@@ -355,6 +377,10 @@ class OptionsState : GameState {
 
 	void leave() {
 		player_name.length = 0;
+	}
+
+	void on_command(Command cmd) {
+
 	}
 
 	void update(double dt) {
@@ -412,16 +438,13 @@ struct Game {
 
 	this(Window* window, EventHandler* evhan) {
 
-		this.window = window;
-		this.evhan = evhan;
-		this.ui_state = UIState();
-		this.state = new GameStateHandler();
-
 		this.master_allocator = LinearAllocator(65536);
+		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(32768, &master_allocator);
+		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, &master_allocator);
 
-		alias ma = master_allocator;
-		this.resource_allocator = ma.alloc!(LinearAllocator)(8192, &master_allocator);
-		this.system_allocator = ma.alloc!(LinearAllocator)(16384, &master_allocator);
+		this.evhan = evhan;
+		this.window = window;
+		this.ui_state = UIState();
 		this.config_map = ConfigMap("game.cfg");
 		
 	}
@@ -496,11 +519,12 @@ struct Game {
 
 		//upload vertices for ui to gpu, set up shaders.
 		ui_state.init();
-	
-		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
-		net_man = system_allocator.alloc!(GameNetworkManager)(network_thread);
 
 		alias ra = system_allocator;
+		state = ra.alloc!(GameStateHandler)();
+		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
+		net_man = system_allocator.alloc!(GameNetworkManager)(network_thread, state);
+
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, net_man), State.MENU);
 		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas), State.GAME);
 		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, net_man), State.JOIN);

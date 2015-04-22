@@ -67,7 +67,7 @@ enum ConnectionState {
 
 enum Command {
 
-	//set ecs id
+	//set network id
 	ASSIGN_ID,
 
 	CREATE,

@@ -4,6 +4,7 @@ import std.concurrency : Tid, receiveTimeout, send;
 import std.datetime : dur;
 
 import blindfire.engine.stream : InputStream;
+import blindfire.engine.state : GameState, GameStateHandler;
 import blindfire.engine.log;
 import blindfire.engine.net;
 
@@ -75,16 +76,17 @@ class GameNetworkManager {
 	uint ticks_per_turn = 4;
 
 	TurnID turn_id;
-	private Tid network_thread;
 	TurnManager tm;
 	EntityManager em;
+	private Tid network_thread;
 
 	ClientID client_id;
-	OnConnectDelegate[] on_connect;
+	GameStateHandler game_state_handler;
 
-	this(Tid net_tid) {
+	this(Tid net_tid, GameStateHandler state_han) {
 		this.network_thread = net_tid;
 		this.tm = new TurnManager();
+		this.game_state_handler = state_han;
 	}
 
 	bool lockstep_turn() {
@@ -144,17 +146,19 @@ class GameNetworkManager {
 
 			writefln("[GAME] Recieved %s from net thread.", to!string(cmd));
 
+			auto active_game_state = game_state_handler.peek();
 			switch (cmd) with (Command) {
 
 				case CREATE:
+					active_game_state.on_command(cmd);
+					break;
 
-					foreach (del; on_connect) {
-						del();
-					}
-
+				case CONNECT:
+					active_game_state.on_command(cmd);
 					break;
 
 				case DISCONNECT:
+					active_game_state.on_command(cmd);
 					break;
 
 				default:
