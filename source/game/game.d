@@ -439,7 +439,7 @@ struct Game {
 	this(Window* window, EventHandler* evhan) {
 
 		this.master_allocator = LinearAllocator(65536);
-		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(32768, &master_allocator);
+		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, &master_allocator);
 		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, &master_allocator);
 
 		this.evhan = evhan;

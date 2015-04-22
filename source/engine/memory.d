@@ -34,6 +34,17 @@ private class MemoryObject(T) : Instance {
 
 }
 
+mixin template AllocatorInvariant() {
+
+	invariant {
+
+		assert(current >= buffer, "current buffer pos should always be greater than block start");
+		assert(allocated_size <= ((current - buffer) + total_size), "allocated size should always be less or equal to size of block.");
+
+	}
+
+}
+
 struct LinearAllocator {
 
 	bool composed;
@@ -92,6 +103,8 @@ struct LinearAllocator {
 	void* alloc(size_t size, size_t alignment) {
 
 		auto align_offset = get_aligned(current, alignment);
+
+		assert(allocated_size + (align_offset + size) < total_size);
 	
 		allocated_size += align_offset;
 		current += align_offset;
@@ -131,6 +144,8 @@ struct LinearAllocator {
 		return element;
 
 	}
+
+	mixin AllocatorInvariant!();
 
 } //LinearAllocator
 
@@ -246,6 +261,8 @@ struct StackAllocator {
 		current -= (header_size - header.size);
 
 	}
+
+	mixin AllocatorInvariant!();
 
 } //StackAllocator
 
