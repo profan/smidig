@@ -136,6 +136,7 @@ struct FontAtlas {
 		}
 
 		Point[] coords = (cast(Point*)stack_allocator.alloc(Point.sizeof * text.length * 6))[0..text.length*6];
+		scope(exit) stack_allocator.dealloc(Point.sizeof * text.length * 6); //pop it
 
 		int n = 0; //how many to draw?
 		foreach (ch; text) {
@@ -191,7 +192,6 @@ struct FontAtlas {
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, cast(void*)0);
 		glDrawArrays(GL_TRIANGLES, 0, n);
 
-		stack_allocator.dealloc(Point.sizeof * text.length * 6); //pop shit
 		glBindVertexArray(0);
 		shader.unbind();
 		atlas.unbind();
