@@ -176,8 +176,10 @@ struct StackAllocator {
 
 	@disable this(this);
 
-	~this() nothrow {
-		
+	~this() {
+
+		writefln("[StackAllocator] freed %d bytes, %d bytes allocated.", total_size, allocated_size);
+
 	}
 
 	auto alloc_item(T, Args...)(Args args) {

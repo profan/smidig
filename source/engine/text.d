@@ -43,7 +43,7 @@ struct FontAtlas {
 
 	this(in char[] font_name, uint font_size, Shader* text_shader) {
 
-		this.stack_allocator = StackAllocator(1024 * 1024 * 8);
+		this.stack_allocator = StackAllocator(1024 * 8);
 
 		shader = text_shader;
 
