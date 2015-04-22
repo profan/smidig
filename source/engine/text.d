@@ -191,7 +191,7 @@ struct FontAtlas {
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, cast(void*)0);
 		glDrawArrays(GL_TRIANGLES, 0, n);
 
-		stack_allocator.dealloc(); //pop shit
+		stack_allocator.dealloc(Point.sizeof * text.length * 6); //pop shit
 		glBindVertexArray(0);
 		shader.unbind();
 		atlas.unbind();

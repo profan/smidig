@@ -197,7 +197,7 @@ struct StackAllocator {
 
 	}
 
-	void* alloc(size_t bytes) {
+	void* alloc(bool header = false)(size_t bytes) {
 
 		assert (allocated_size + bytes <= total_size, "tried to allocate TOO DAMN MUCH");
 
@@ -209,7 +209,9 @@ struct StackAllocator {
 		allocated_size += bytes;
 		current += bytes;
 
-		auto header = alloc_item!(Header)(bytes);
+		static if (header) {
+			auto header = alloc_item!(Header)(bytes);
+		}
 
 		return block;
 
@@ -221,6 +223,13 @@ struct StackAllocator {
 		auto header = alloc_item!(Header)(get_size!T());
 
 		return element;
+
+	}
+
+	void dealloc(size_t size) {
+
+		allocated_size -= size;
+		current -= size;
 
 	}
 
