@@ -165,6 +165,7 @@ struct StackAllocator {
 	this(size_t size) {
 
 		this.total_size = size;
+		this.allocated_size = 0;
 
 		this.buffer = malloc(total_size);
 		this.current = buffer;
@@ -196,10 +197,28 @@ struct StackAllocator {
 
 	}
 
+	void* alloc(size_t bytes) {
+
+		assert (allocated_size + bytes <= total_size, "tried to allocate TOO DAMN MUCH");
+
+		auto item_alignment = get_aligned!(void*)(current);
+		allocated_size += item_alignment;
+		current += item_alignment;
+
+		auto block = current;
+		allocated_size += bytes;
+		current += bytes;
+
+		auto header = alloc_item!(Header)(bytes);
+
+		return block;
+
+	}
+
 	auto alloc(T, Args...)(Args args) {
 
-		auto element = alloc_item(T, Args)(args);
-		auto header = alloc_item(Header)(get_size!Header());
+		auto element = alloc_item!(T, Args)(args);
+		auto header = alloc_item!(Header)(get_size!T());
 
 		return element;
 
@@ -209,7 +228,9 @@ struct StackAllocator {
 
 		auto header_size = get_size!Header();
 		auto header = *cast(Header*)(current - header_size);
-		current = current - (header_size - header.size);
+
+		allocated_size -= (header_size - header.size);
+		current -= (header_size - header.size);
 
 	}
 

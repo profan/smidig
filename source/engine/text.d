@@ -38,7 +38,12 @@ struct FontAtlas {
 	int atlas_width, atlas_height;
 	int char_width, char_height;
 
-	this(in char[] font_name, uint font_size, Shader* text_shader) nothrow @nogc {
+	import blindfire.engine.memory;
+	StackAllocator stack_allocator;
+
+	this(in char[] font_name, uint font_size, Shader* text_shader) {
+
+		this.stack_allocator = StackAllocator(1024 * 1024 * 8);
 
 		shader = text_shader;
 
@@ -130,9 +135,7 @@ struct FontAtlas {
 			GLfloat t;
 		}
 
-		import core.stdc.stdlib :free, malloc;
-		Point* coords_alloc = cast(Point*)malloc((Point.sizeof * text.length)*6); //move this to stack allocator
-		Point[] coords = coords_alloc[0..text.length*6];
+		Point[] coords = (cast(Point*)stack_allocator.alloc(Point.sizeof * text.length * 6))[0..text.length*6];
 
 		int n = 0; //how many to draw?
 		foreach (ch; text) {
@@ -188,7 +191,7 @@ struct FontAtlas {
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, cast(void*)0);
 		glDrawArrays(GL_TRIANGLES, 0, n);
 
-		free(coords_alloc);
+		stack_allocator.dealloc(); //pop shit
 		glBindVertexArray(0);
 		shader.unbind();
 		atlas.unbind();

@@ -53,7 +53,6 @@ final class MenuState : GameState {
 
 	}
 
-
 	override void update(double dt) {
 	
 	}
@@ -272,11 +271,11 @@ final class MatchState : GameState {
 		sbox.draw(window, ui_state);
 
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, 5, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Quit", 0x428bca)) {
+		if (do_button(ui_state, 5, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Quit", 0x428bca)) {
 			statehan.pop_state();
 		} //back to menu
 
-		if(do_button(ui_state, 6, window, window.width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Create Units", 0x428bca)) {
+		if (do_button(ui_state, 6, window, window.width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Create Units", 0x428bca)) {
 			
 			import std.random : uniform;
 			import blindfire.action : CreateUnitAction;
@@ -323,7 +322,7 @@ final class WaitingState : GameState {
 	override void draw(Window* window) {
 
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, 6, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Cancel", 0x428bca)) {
+		if (do_button(ui_state, 6, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Cancel", 0x428bca)) {
 			net_man.send_message(Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
@@ -369,12 +368,12 @@ class OptionsState : GameState {
 		ui_state.draw_label(window, "Player Name", window.width/2, window.height/4, 0, 0, 0x428bca);
 		ui_state.do_textbox(13, window, window.width/2, window.height/4+item_height, item_width, item_height, player_name, darken(BG_COLOR, 10), darken(0x428bca, 25));
 
-		if(do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, ITEM_COLOR, 255, "Save", 0x428bca)) {
+		if (do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, ITEM_COLOR, 255, "Save", 0x428bca)) {
 			config_map.set("username", player_name[]);
 			config_map.save_file();
 		} //save options
 
-		if(do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "To Menu", 0x428bca)) {
+		if (do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "To Menu", 0x428bca)) {
 			statehan.pop_state();
 		} //back to menu
 	}
