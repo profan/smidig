@@ -20,19 +20,23 @@ alias void delegate(Console* console, in char[] arguments) CommandDelegate;
 
 struct Console {
 
-	enum BUFFER_WIDTH = 80;
-	enum BUFFER_LINES = 30;
+	private {
 
-	alias StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] ConsoleBuffer;
-	CommandDelegate[ConsoleCommand] commands;
+		enum BUFFER_WIDTH = 80;
+		enum BUFFER_LINES = 30;
+		alias StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] ConsoleBuffer;
+		CommandDelegate[ConsoleCommand] commands;
 
-	FontAtlas* atlas;
-	ConsoleBuffer buffers;
-	ConsoleBuffer history;
+		FontAtlas* atlas;
+		ConsoleBuffer buffers;
+		ConsoleBuffer history;
 
-	bool enabled = false;
-	size_t history_index = 0;
-	size_t history_elements = 0;
+		bool enabled = false;
+		size_t history_index = 0;
+		size_t history_elements = 0;
+
+	}
+	
 
 	this(FontAtlas* font_atlas) {
 
