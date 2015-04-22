@@ -11,7 +11,6 @@ import profan.collections : StaticArray;
 enum ConsoleCommand {
 
 	HELP = "help",
-	LIST_COMMANDS = "list_commands",
 	SET_TICKRATE = "set_tickrate",
 	PUSH_STATE = "push_state"
 
@@ -28,17 +27,18 @@ struct Console {
 	CommandDelegate[ConsoleCommand] commands;
 
 	FontAtlas* atlas;
-	bool enabled = false;
 	ConsoleBuffer buffers;
-
 	ConsoleBuffer history;
+
+	bool enabled = false;
 	size_t history_index = 0;
 	size_t history_elements = 0;
 
 	this(FontAtlas* font_atlas) {
-		this.atlas = font_atlas;
 
 		import std.traits : EnumMembers;
+		this.atlas = font_atlas;
+
 		bind_command(ConsoleCommand.HELP,
 			(Console* console, in char[] args) {
 				foreach (i, field; EnumMembers!ConsoleCommand) console.print!(field);
