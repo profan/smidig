@@ -533,6 +533,9 @@ struct NetworkPeer {
 
 			}
 
+			import core.thread : Thread;
+			Thread.sleep(dur!("usecs")(1));
+
 		}
 
 	}
