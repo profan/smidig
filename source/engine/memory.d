@@ -178,7 +178,9 @@ struct StackAllocator {
 
 	~this() {
 
-		writefln("[StackAllocator] freed %d bytes, %d bytes allocated.", total_size, allocated_size);
+		if (total_size > 0) {
+			writefln("[StackAllocator] freed %d bytes, %d bytes allocated.", total_size, allocated_size);
+		}
 
 	}
 
