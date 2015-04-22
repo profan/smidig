@@ -34,6 +34,28 @@ private class MemoryObject(T) : Instance {
 
 }
 
+mixin template AllocatorCommon() {
+
+	auto alloc_item(T, Args...)(Args args) {
+
+		size_t item_size = get_size!(T)();
+		auto item_alignment = get_aligned!(T)(current);
+
+		//align item
+		allocated_size += item_alignment;
+		current += item_alignment;
+
+		auto memory = buffer[allocated_size .. allocated_size+item_size];
+		allocated_size += item_size;
+		current += item_size;
+
+		return emplace!(T)(memory, args);
+
+	}
+
+}
+
+
 mixin template AllocatorInvariant() {
 
 	invariant {
@@ -100,6 +122,8 @@ struct LinearAllocator {
 
 	}
 
+	mixin AllocatorCommon!();
+
 	void* alloc(size_t size, size_t alignment) {
 
 		auto align_offset = get_aligned(current, alignment);
@@ -114,23 +138,6 @@ struct LinearAllocator {
 		current += size;
 
 		return allocated_start;
-
-	}
-
-	auto alloc_item(T, Args...)(Args args) {
-
-		size_t item_size = get_size!(T)();
-		auto item_alignment = get_aligned!(T)(current);
-
-		//align item
-		allocated_size += item_alignment;
-		current += item_alignment;
-
-		auto memory = buffer[allocated_size .. allocated_size+item_size];
-		allocated_size += item_size;
-		current += item_size;
-
-		return emplace!(T)(memory, args);
 
 	}
 
@@ -199,22 +206,7 @@ struct StackAllocator {
 
 	}
 
-	auto alloc_item(T, Args...)(Args args) {
-
-		size_t item_size = get_size!(T)();
-		auto item_alignment = get_aligned!(T)(current);
-
-		//align item
-		allocated_size += item_alignment;
-		current += item_alignment;
-
-		auto memory = buffer[allocated_size .. allocated_size+item_size];
-		allocated_size += item_size;
-		current += item_size;
-
-		return emplace!(T)(memory, args);
-
-	}
+	mixin AllocatorCommon!();
 
 	void* alloc(bool header = false)(size_t bytes) {
 
