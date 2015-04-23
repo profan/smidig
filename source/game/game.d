@@ -230,7 +230,7 @@ final class MatchState : GameState {
 		this.console = console;
 		this.debug_atlas = atlas;
 
-		this.entity_allocator = LinearAllocator(1024 * 1024 * 32); //32 megabytes :D
+		this.entity_allocator = LinearAllocator(1024 * 1024 * 32, "EntityAllocator"); //32 megabytes :D
 
 		alias ea = entity_allocator;
 		this.em = ea.alloc!(EntityManager)();
@@ -438,9 +438,9 @@ struct Game {
 
 	this(Window* window, EventHandler* evhan) {
 
-		this.master_allocator = LinearAllocator(65536);
-		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, &master_allocator);
-		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, &master_allocator);
+		this.master_allocator = LinearAllocator(65536, "MasterAllocator");
+		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, "ResourceAllocator", &master_allocator);
+		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, "SystemAllocator", &master_allocator);
 
 		this.evhan = evhan;
 		this.window = window;
@@ -518,7 +518,7 @@ struct Game {
 		load_resources();
 
 		//upload vertices for ui to gpu, set up shaders.
-		ui_state.init();
+		ui_state.init(system_allocator);
 
 		alias ra = system_allocator;
 		state = ra.alloc!(GameStateHandler)();

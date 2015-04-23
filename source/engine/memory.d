@@ -34,7 +34,7 @@ private class MemoryObject(T) : Instance {
 
 }
 
-mixin template AllocatorCommon() {
+private mixin template AllocatorCommon() {
 
 	auto alloc_item(T, Args...)(Args args) {
 
@@ -55,8 +55,7 @@ mixin template AllocatorCommon() {
 
 }
 
-
-mixin template AllocatorInvariant() {
+private mixin template AllocatorInvariant() {
 
 	invariant {
 
@@ -75,11 +74,12 @@ struct LinearAllocator {
 	void* current;
 	size_t total_size;
 	size_t allocated_size = 0;
+	immutable char[] name;
 
 	size_t pointer_count = 0;
 	Instance[100] allocated_pointers = void;
 
-	this(size_t size) {
+	this(size_t size, string name) {
 
 		this.composed = false;
 		//since we're allocating the memory here, we're not part of another allocator's space.
@@ -92,15 +92,17 @@ struct LinearAllocator {
 
 		//set pointer to top
 		this.current = buffer;
+		this.name = name;
 
 	}
 
-	this(size_t size, LinearAllocator* master) {
+	this(size_t size, string name, LinearAllocator* master) {
 
 		this.composed = true;
 		this.total_size = size;
 		this.buffer = master.alloc(total_size, uint.sizeof);
 		this.current = buffer;
+		this.name = name;
 
 	}
 
@@ -113,7 +115,7 @@ struct LinearAllocator {
 			destroy(allocated_pointers[i]);
 		}
 
-		writefln("[LinearAllocator] freed %d bytes, %d bytes allocated in %d elements.", total_size, allocated_size, pointer_count);
+		writefln("[LinearAllocator:%s] freed %d bytes, %d bytes allocated in %d elements.", name, total_size, allocated_size, pointer_count);
 
 		if (!composed) {
 			GC.removeRange(buffer);
@@ -180,11 +182,12 @@ struct StackAllocator {
 	void* current;
 	size_t total_size;
 	size_t allocated_size;
+	immutable char[] name;
 	
 	size_t pointer_count = 0;
 	Instance[100] allocated_pointers = void;
 
-	this(size_t size) {
+	this(size_t size, string name) {
 
 		this.total_size = size;
 		this.allocated_size = 0;
@@ -193,6 +196,7 @@ struct StackAllocator {
 		this.current = buffer;
 
 		GC.addRange(buffer, total_size);
+		this.name = name;
 
 	}
 
@@ -201,7 +205,7 @@ struct StackAllocator {
 	~this() {
 
 		if (total_size > 0) {
-			writefln("[StackAllocator] freed %d bytes, %d bytes allocated.", total_size, allocated_size);
+			writefln("[StackAllocator:%s] freed %d bytes, %d bytes allocated.", name, total_size, allocated_size);
 		}
 
 	}

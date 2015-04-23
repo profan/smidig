@@ -64,7 +64,10 @@ struct UIState {
 	Shader box_shader;
 	uint box_num_vertices;
 
-	FontAtlas font_atlas;
+	FontAtlas* font_atlas;
+
+	import blindfire.engine.memory;
+	LinearAllocator* ui_allocator;
 
 	void update_ui(ref SDL_Event ev) {
 
@@ -94,7 +97,10 @@ struct UIState {
 
 	}
 
-	void init() {
+	void init(LinearAllocator* allocator) {
+		
+		ui_allocator = allocator;
+		assert (ui_allocator !is null);
 
 		//upload the vertex data, transform it when actually drawing
 		Vec3f[6] vertices = [
@@ -137,7 +143,7 @@ struct UIState {
 
 		auto rm = ResourceManager.get();	
 		auto text_shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
-		font_atlas = FontAtlas("fonts/OpenSans-Bold.ttf", 22, text_shader);
+		font_atlas = ui_allocator.alloc!(FontAtlas)("fonts/OpenSans-Bold.ttf", 22, text_shader);
 
 	}
 
