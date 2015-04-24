@@ -534,6 +534,7 @@ GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) {
 
 }
 
+/* OpenGL color related functions, darkening and stuff. */
 GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
 
 	GLfloat[4] gl_color = [ //mask out r, g, b components from int
@@ -546,4 +547,20 @@ GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
 	return gl_color;
 
 }
+
+int darken(int color, uint percentage) {
+
+	uint adjustment = 255 / percentage;
+	ubyte r = cast(ubyte)(color>>16);
+	ubyte g = cast(ubyte)(color>>8);
+	ubyte b = cast(ubyte)(color);
+	r -= adjustment;
+	g -= adjustment;
+	b -= adjustment;
+	int result = (r << 16) | (g << 8) | b;
+
+	return result;
+
+}
+
 

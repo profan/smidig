@@ -200,20 +200,6 @@ void draw_label(UIState* ui, Window* window, in char[] label, int x, int y, int 
 
 }
 
-int darken(int color, uint percentage) {
-
-	uint adjustment = 255 / percentage;
-	ubyte r = cast(ubyte)(color>>16);
-	ubyte g = cast(ubyte)(color>>8);
-	ubyte b = cast(ubyte)(color);
-	r -= adjustment;
-	g -= adjustment;
-	b -= adjustment;
-	int result = (r << 16) | (g << 8) | b;
-	return result;
-
-}
-
 struct TextSpec {
 	char[] label;
 	int text_color;
