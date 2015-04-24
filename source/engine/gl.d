@@ -533,3 +533,17 @@ GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) {
 	return program;
 
 }
+
+GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
+
+	GLfloat[4] gl_color = [ //mask out r, g, b components from int
+		cast(float)cast(ubyte)(color>>16)/255,
+		cast(float)cast(ubyte)(color>>8)/255,
+		cast(float)cast(ubyte)(color)/255,
+		cast(float)cast(ubyte)(alpha)/255
+	];
+
+	return gl_color;
+
+}
+

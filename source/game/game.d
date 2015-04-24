@@ -606,7 +606,7 @@ struct Game {
 			}
 
 			dt_sw.start();
-			window.render_clear();
+			window.render_clear(0x428bca);
 			draw();
 			window.render_present();
 			drawtime = dt_sw.peek().msecs;

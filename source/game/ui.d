@@ -174,19 +174,6 @@ void reset_ui(ref UIState ui) {
 
 }
 
-GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
-
-	GLfloat[4] gl_color = [ //mask out r, g, b components from int
-		cast(float)cast(ubyte)(color>>16)/255,
-		cast(float)cast(ubyte)(color>>8)/255,
-		cast(float)cast(ubyte)(color)/255,
-		cast(float)cast(ubyte)(alpha)/255
-	];
-
-	return gl_color;
-
-}
-
 //Immediate Mode GUI (IMGUI, see Muratori)
 void draw_rectangle(UIState* state, Window* window, float x, float y, float width, float height, int color, ubyte alpha = 255) {
 

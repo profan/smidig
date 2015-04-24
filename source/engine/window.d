@@ -88,9 +88,14 @@ struct Window {
 	@property bool is_alive() const { return alive; }
 	@property void is_alive(bool status) { alive = status; }
 
-	void render_clear() {
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	void render_clear(int color) {
+
+		import blindfire.engine.gl : int_to_glcolor;
+
+		auto col = int_to_glcolor(color, 255);
+		glClearColor(col[0], col[1], col[2], col[3]);
 		glClear(GL_COLOR_BUFFER_BIT);
+
 	}
 
 	void render_present() {
