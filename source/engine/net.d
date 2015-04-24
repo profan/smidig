@@ -442,6 +442,7 @@ struct NetworkPeer {
 								send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, cast(ClientID)255);
 								state = switch_state(ConnectionState.WAITING);
 								send(game_thread, Command.CONNECT);
+								peers[0] = Peer(0, target);
 								break;
 							default:
 								logger.log("Unhandled Command: %s", to!string(cmd));
