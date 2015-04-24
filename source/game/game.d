@@ -325,11 +325,11 @@ final class WaitingState : GameState {
 		this.net_man = net_man;
 	}
 
-	override void enter() {
+	void enter() {
 
 	}
 
-	override void leave() {
+	void leave() {
 	
 	}
 
