@@ -406,11 +406,16 @@ final class OptionsState : GameState {
 
 } //OptionsState
 
-enum Resource {
+enum Resource : ResourceID {
 
 	//shaders
 	BASIC_SHADER,
 	TEXT_SHADER,
+
+	//textures
+
+	//cursor
+	CURSOR_TEXTURE,
 
 	//units
 	UNIT_TEXTURE
@@ -435,6 +440,7 @@ struct Game {
 	float frametime, updatetime, drawtime;
 	FontAtlas* debug_atlas;
 	Console* console;
+	Cursor* cursor;
 
 	this(Window* window, EventHandler* evhan) {
 
@@ -481,6 +487,7 @@ struct Game {
 		ui_state.reset_ui();
 	
 		draw_debug();
+		cursor.draw(window.view_projection, Vec2f(evhan.last_x[0], evhan.last_y[0]));
 
 	}
 
@@ -509,6 +516,11 @@ struct Game {
 		//font atlases and such
 		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12, text_shader);
 		this.console = system_allocator.alloc!(Console)(debug_atlas);
+
+		auto cursor_texture = ra.alloc!(Texture)("resource/img/other_cursor.png");
+		rm.set_resource!(Texture)(cursor_texture, Resource.CURSOR_TEXTURE);
+		this.cursor = system_allocator.alloc!(Cursor)(cursor_texture, shader);
+		SDL_ShowCursor(SDL_DISABLE);
 
 	}
 

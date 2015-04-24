@@ -53,6 +53,50 @@ struct Graph {
 
 } //Graph
 
+struct Cursor {
+
+	Mesh mesh;
+	Shader* shader;
+	Texture* texture;
+	
+	this(Texture* cursor_texture, Shader* cursor_shader) {
+
+		this.texture = cursor_texture;
+		int w = texture.width, h = texture.height;
+
+		//cartesian coordinate system, inverted y component to not draw upside down.
+		Vertex[6] vertices = [
+			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+			Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
+			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
+
+			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+			Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
+			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
+		];
+
+		this.mesh = Mesh(vertices.ptr, vertices.length);
+		this.shader = cursor_shader;
+
+	}
+
+	void draw(ref Mat4f projection, Vec2f position) {
+		
+		auto tf = Transform(position);
+
+		shader.bind();
+		texture.bind(0);
+		shader.update(projection, tf);
+		mesh.draw();
+		texture.unbind();
+		shader.unbind();
+
+	}
+
+	@disable this(this);
+
+} //Cursor
+
 struct Text {
 
 	import derelict.sdl2.sdl;
