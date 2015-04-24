@@ -103,19 +103,9 @@ struct UIState {
 		assert (ui_allocator !is null);
 
 		//upload the vertex data, transform it when actually drawing
-		Vec3f[6] vertices = [
 
-			Vec3f(0.0f, 0.0f, 0.0f), // top left
-			Vec3f(1.0f, 0.0f, 0.0f), // top right
-			Vec3f(1.0f, 1.0f, 0.0f), // bottom right
-
-			Vec3f(0.0f, 0.0f, 0.0f), // top left
-			Vec3f(0.0f, 1.0f, 0.0f), // bottom left
-			Vec3f(1.0f, 1.0f, 0.0f) // bottom right
-
-		];
-
-		box_num_vertices = vertices.length;
+		Vec3f[6] vertices = create_rectangle_vec3f(1.0f, 1.0f);
+		this.box_num_vertices = vertices.length;
 
 		glGenVertexArrays(1, &box_vao);
 		glBindVertexArray(box_vao);

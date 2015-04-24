@@ -2,7 +2,7 @@ module blindfire.ents;
 
 import std.stdio : writefln;
 
-import blindfire.engine.gl : Mesh, Shader, Texture, Transform, Vertex;
+import blindfire.engine.gl : Mesh, Shader, Texture, Transform, Vertex, create_rectangle_vec3f2f;
 import blindfire.engine.defs : Vec2f, Vec3f;
 
 import blindfire.sys;
@@ -34,16 +34,7 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 	
 	int w = texture.width;
 	int h = texture.height;
-	Vertex[6] vertices = [
-		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-		Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
-		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
-
-		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-		Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
-		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
-	];
-
+	Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
 	sc.mesh = Mesh(vertices.ptr, vertices.length);
 	sc.texture = texture;
 	sc.shader = shader;

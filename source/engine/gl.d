@@ -65,16 +65,7 @@ struct Cursor {
 		int w = texture.width, h = texture.height;
 
 		//cartesian coordinate system, inverted y component to not draw upside down.
-		Vertex[6] vertices = [
-			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-			Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
-			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
-
-			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-			Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
-			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
-		];
-
+		Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
 		this.mesh = Mesh(vertices.ptr, vertices.length);
 		this.shader = cursor_shader;
 
@@ -130,16 +121,7 @@ struct Text {
 		int w = texture.width, h = texture.height;
 
 		//cartesian coordinate system, inverted y component to not draw upside down.
-		Vertex[6] vertices = [
-			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-			Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
-			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
-
-			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-			Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
-			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
-		];
-
+		Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
 		this.mesh = Mesh(vertices.ptr, vertices.length);
 		this.shader = text_shader;
 	
@@ -563,4 +545,36 @@ int darken(int color, uint percentage) {
 
 }
 
+/* Primitives? */
 
+auto create_rectangle_vec3f(float w, float h) {
+
+	Vec3f[6] vertices = [
+		Vec3f(0.0f, 0.0f, 0.0f), // top left
+		Vec3f(w, 0.0f, 0.0f), // top right
+		Vec3f(w, h, 0.0f), // bottom right
+
+		Vec3f(0.0f, 0.0f, 0.0f), // top left
+		Vec3f(0.0f, h, 0.0f), // bottom left
+		Vec3f(w, h, 0.0f) // bottom right
+	];
+
+	return vertices;
+
+}
+
+auto create_rectangle_vec3f2f(float w, float h) {
+
+	Vertex[6] vertices = [
+		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+		Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
+		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
+
+		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+		Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
+		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
+	];
+
+	return vertices;
+
+}
