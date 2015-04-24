@@ -9,7 +9,6 @@ import blindfire.engine.log;
 import blindfire.engine.net;
 
 import blindfire.action;
-
 import profan.ecs : EntityManager;
 
 alias void delegate() OnConnectDelegate;
@@ -163,7 +162,6 @@ class GameNetworkManager {
 
 				default:
 					writefln("[GAME] Unhandled message from net thread: %s", to!string(cmd));
-					break;
 
 			}
 
@@ -206,13 +204,14 @@ class GameNetworkManager {
 					case UpdateType.ACTION:
 
 						ActionType action_type = input_stream.read!(ActionType)();
+
 						switch (action_type) {
 
 							mixin(handle_action());
 
 							default:
 								writefln("[GAME] Unhandled action type: %s", to!string(action_type));
-								break;
+
 						}
 
 						break;

@@ -53,15 +53,15 @@ enum MessageType : uint {
 	DISCONNECT,
 	UPDATE,
 	PING,
-	PONG,
+	PONG
 
 } //MessageType
 
 enum ConnectionState {
 
-	CONNECTED,
-	UNCONNECTED,
-	WAITING
+	CONNECTED, //not accepting connections, active
+	UNCONNECTED, //not accepting connections, can create
+	WAITING //accepting connections, has created session or is in created lobby
 
 } //ConnectionState
 
@@ -76,7 +76,11 @@ enum Command {
 	TERMINATE,
 	UPDATE,
 	STATS,
-	PING
+	PING,
+
+	//replacement commands
+	SET_CONNECTED,
+	SET_UNCONNECTED
 
 } //Command
 
@@ -307,6 +311,7 @@ struct NetworkPeer {
 		ClientID id_counter;
 		Address from; //used to keep track of who message was received from
 		void[4096] data = void;
+
 		while (open) {
 
 			auto bytes = socket.receiveFrom(data, from);

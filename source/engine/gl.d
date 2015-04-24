@@ -11,6 +11,19 @@ import derelict.opengl3.gl3;
 import gfm.math;
 import blindfire.engine.defs;
 
+mixin template OpenGLError() {
+
+	invariant {
+
+		GLenum status = glGetError();
+		if (status != GL_NO_ERROR) {
+			writefln("[OpenGL : %s] Error: %d", typeof(this).stringof, status);
+		}
+
+	}
+
+} //OpenGLError
+
 struct VAO {
 
 	GLuint vao;
@@ -45,12 +58,16 @@ struct Text {
 	import derelict.sdl2.sdl;
 	import derelict.sdl2.ttf;
 
-	enum MAX_SIZE = 64;
-	char[MAX_SIZE] content;
+	private {
 
-	Mesh mesh;
-	Texture texture;
-	Shader* shader;
+		enum MAX_SIZE = 64;
+		char[MAX_SIZE] content;
+
+		Mesh mesh;
+		Texture texture;
+		Shader* shader;
+
+	}
 
 	@property int width() { return texture.width; }
 	@property int height() { return texture.height; }
@@ -60,15 +77,14 @@ struct Text {
 
 	this(TTF_Font* font, char[64] initial_text, int font_color, Shader* text_shader)  {
 
-		content = initial_text;
+		this.content = initial_text;
 		SDL_Color color = {cast(ubyte)(font_color>>16), cast(ubyte)(font_color>>8), cast(ubyte)(font_color)};
 		SDL_Surface* surf = TTF_RenderUTF8_Blended(font, initial_text.ptr, color);
 		scope(exit) SDL_FreeSurface(surf);
 
-		texture = Texture(surf.pixels, surf.w, surf.h, GL_RGBA, GL_RGBA);
+		this.texture = Texture(surf.pixels, surf.w, surf.h, GL_RGBA, GL_RGBA);
+		int w = texture.width, h = texture.height;
 
-		int w = texture.width;
-		int h = texture.height;
 		//cartesian coordinate system, inverted y component to not draw upside down.
 		Vertex[6] vertices = [
 			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
@@ -80,8 +96,8 @@ struct Text {
 			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
 		];
 
-		mesh = Mesh(vertices.ptr, vertices.length);
-		shader = text_shader;
+		this.mesh = Mesh(vertices.ptr, vertices.length);
+		this.shader = text_shader;
 	
 	}
 
@@ -101,6 +117,8 @@ struct Text {
 	~this() {
 
 	}
+
+	mixin OpenGLError!();
 
 } //Text
 
@@ -162,6 +180,8 @@ struct Mesh {
 
 	}
 
+	mixin OpenGLError!();
+
 } //Mesh
 
 //use SDL2 for loading textures, since we're already using it for windowing.
@@ -197,8 +217,8 @@ struct Texture {
 		this.width = width;
 		this.height = height;
 
-		glGenTextures(1, &texture);	
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glGenTextures(1, &this.texture);
+		glBindTexture(GL_TEXTURE_2D, this.texture);
 		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -219,10 +239,10 @@ struct Texture {
 		this.height = height;
 	
 		//generate single texture, put handle in texture
-		glGenTextures(1, &texture);
+		glGenTextures(1, &this.texture);
 
 		//normal 2d texture, bind to our texture handle
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, this.texture);
 
 		//set texture parameters in currently bound texture, controls texture wrapping (or GL_CLAMP?)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -237,12 +257,6 @@ struct Texture {
 
 		//UNBIND
 		glBindTexture(GL_TEXTURE_2D, 0);
-
-		GLenum status = glGetError();
-		if (status != GL_NO_ERROR) {
-			printf("[OpenGL] Texture loading error: %d", status);
-		}
-
 	}
 
 	@disable this(this);
@@ -268,8 +282,9 @@ struct Texture {
 
 	}
 
-} //Texture
+	mixin OpenGLError!();
 
+} //Texture
 struct Transform {
 
 	Vec2f position;
@@ -328,8 +343,10 @@ struct Shader {
 
 	this (in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
 
-		char* vs = load_shader(file_name ~ ".vs");	
-		char* fs = load_shader(file_name ~ ".fs");	
+		assert(uniforms.length <= bound_uniforms.length);
+
+		char* vs = load_shader(file_name ~ ".vs");
+		char* fs = load_shader(file_name ~ ".fs");
 		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER);
 		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER);
 
@@ -389,6 +406,8 @@ struct Shader {
 		glUseProgram(0);
 
 	}
+
+	mixin OpenGLError!();
 
 } //Shader
 
