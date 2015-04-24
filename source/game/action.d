@@ -116,7 +116,7 @@ struct SelectionBox {
 	void draw(Window* window, UIState* state) {
 
 		if (active) {
-			state.draw_rectangle(window, x, y, w, h, 0x428bca, 30);
+			state.draw_rectangle(window, x, y, w, h, 0x842bca, 30);
 		}
 		
 		order_set = false;

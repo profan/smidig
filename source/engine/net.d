@@ -49,6 +49,7 @@ private void update_stats(ref NetworkStats stats) {
 
 enum MessageType : uint {
 
+	START,
 	CONNECT,
 	DISCONNECT,
 	UPDATE,
@@ -80,7 +81,10 @@ enum Command {
 
 	//replacement commands
 	SET_CONNECTED,
-	SET_UNCONNECTED
+	SET_UNCONNECTED,
+
+	//notifications to game thread
+	NOTIFY_CONNECTION
 
 } //Command
 
@@ -437,6 +441,7 @@ struct NetworkPeer {
 								auto target = cast(InternetAddress)to_addr;
 								send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, cast(ClientID)255);
 								state = switch_state(ConnectionState.WAITING);
+								send(game_thread, Command.CONNECT);
 								break;
 							default:
 								logger.log("Unhandled Command: %s", to!string(cmd));
@@ -487,6 +492,11 @@ struct NetworkPeer {
 									Peer new_peer = {client_uuid: id_counter, addr: from};
 									send_packet!(ConnectMessage)(MessageType.CONNECT, from, client_uuid, id_counter++);
 									peers[cast(ClientID)(id_counter-1)] = new_peer;
+
+									if (is_host) {
+										send(game_thread, Command.NOTIFY_CONNECTION, id_counter-1);
+									}
+
 								} else {
 									logger.log("Already in connected peers.");
 								}
@@ -494,22 +504,26 @@ struct NetworkPeer {
 								if (!is_host) {
 									host_peer = Peer(cmsg.client_uuid, from);
 									client_uuid = cmsg.assigned_id;
-									send(game_thread, Command.CREATE);
 									send(game_thread, Command.ASSIGN_ID, cmsg.assigned_id);
 								}
 
-								state = switch_state(ConnectionState.CONNECTED);
 								break;
 
 							case MessageType.PING:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								logger.log("Client %S sent ping, sending pong.", cmsg.client_uuid);
+								logger.log("Client %s sent ping, sending pong.", cmsg.client_uuid);
 								send_packet!(BasicMessage)(MessageType.PONG, from, client_uuid);
 								break;
 
 							case MessageType.PONG:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								logger.log("Client %S sent pong.", cmsg.client_uuid);
+								logger.log("Client %s sent pong.", cmsg.client_uuid);
+								break;
+
+							case MessageType.START:
+								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								logger.log("Client %s sent start.", cmsg.client_uuid);
+								send(game_thread, Command.SET_CONNECTED);
 								break;
 
 							default:
@@ -523,6 +537,12 @@ struct NetworkPeer {
 					(Command cmd) {
 						logger.log("Received command: %s", to!string(cmd));
 						switch (cmd) {
+							case Command.SET_CONNECTED:
+								foreach (peer; peers) {
+									send_packet!(BasicMessage)(MessageType.START, from, peer.client_uuid);
+								}
+								state = switch_state(ConnectionState.CONNECTED);
+								break;
 							case Command.DISCONNECT:
 								handle_disconnect();
 								break;

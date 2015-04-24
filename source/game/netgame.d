@@ -166,11 +166,15 @@ class GameNetworkManager {
 			}
 
 		},
-		(Command cmd, ClientID assigned_id) {
+		(Command cmd, ClientID id) {
+
 			if (cmd == Command.ASSIGN_ID) {
-				writefln("[GAME] Recieved id assignment: %d from net thread.", assigned_id);
-				this.client_id = assigned_id;
+				writefln("[GAME] Recieved id assignment: %d from net thread.", id);
+				this.client_id = id;
+			} else if (cmd == Command.NOTIFY_CONNECTION) {
+				writefln("[GAME] Client %d connected. ", id);
 			}
+
 		},
 		(Command cmd, immutable(ubyte)[] data) {
 

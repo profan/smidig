@@ -75,6 +75,7 @@ final class MenuState : GameState {
 		} //join
 
 		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", MENU_COLOR)) {
+			net_man.send_message(Command.CREATE);
 			statehan.push_state(State.LOBBY);
 		} //create
 
@@ -115,7 +116,7 @@ final class JoiningState : GameState {
 
 		switch (cmd) with (Command) {
 
-			case CREATE:
+			case CONNECT:
 				statehan.pop_state();
 				statehan.push_state(State.LOBBY);
 				break;
@@ -158,8 +159,6 @@ final class LobbyState : GameState {
 
 	void enter() {
 
-		net_man.send_message(Command.CREATE);
-
 	}
 
 	void leave() {
@@ -167,6 +166,11 @@ final class LobbyState : GameState {
 	}
 
 	void on_command(Command cmd) {
+
+		if (cmd == Command.SET_CONNECTED) {
+			statehan.pop_state();
+			statehan.push_state(State.GAME);
+		}
 
 	}
 
@@ -189,7 +193,7 @@ final class LobbyState : GameState {
 
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
-			net_man.send_message(Command.CREATE);
+			net_man.send_message(Command.SET_CONNECTED);
 			statehan.pop_state();
 			statehan.push_state(State.GAME);
 		}
@@ -290,6 +294,7 @@ final class MatchState : GameState {
 
 		uint item_width = window.width / 2, item_height = 32;
 		if (do_button(ui_state, 5, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Quit", 0x428bca)) {
+			net_man.send_message(Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
 
