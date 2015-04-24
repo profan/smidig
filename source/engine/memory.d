@@ -262,6 +262,39 @@ struct StackAllocator {
 
 } //StackAllocator
 
+struct FreeListAllocator {
+
+	void* buffer;
+	void* current;
+
+	size_t total_size;
+	size_t allocated_size;
+
+	immutable char[] name;
+
+	this(size_t size, string name) {
+
+		this.total_size = size;
+		this.allocated_size = 0;
+
+		this.buffer = malloc(total_size);
+		this.current = buffer;
+
+		GC.addRange(buffer, total_size);
+		this.name = name;
+
+	}
+
+	~this() {
+
+	}
+	
+	@disable this(this);
+
+	mixin AllocatorInvariant!();
+
+} //FreeListAllocator
+
 unittest {
 
 }

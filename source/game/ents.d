@@ -35,7 +35,7 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 	int w = texture.width;
 	int h = texture.height;
 	Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
-	sc.mesh = Mesh(vertices.ptr, vertices.length);
+	sc.mesh = Mesh(vertices);
 	sc.texture = texture;
 	sc.shader = shader;
 	

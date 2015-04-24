@@ -66,7 +66,7 @@ struct Cursor {
 
 		//cartesian coordinate system, inverted y component to not draw upside down.
 		Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
-		this.mesh = Mesh(vertices.ptr, vertices.length);
+		this.mesh = Mesh(vertices);
 		this.shader = cursor_shader;
 
 	}
@@ -122,7 +122,7 @@ struct Text {
 
 		//cartesian coordinate system, inverted y component to not draw upside down.
 		Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
-		this.mesh = Mesh(vertices.ptr, vertices.length);
+		this.mesh = Mesh(vertices);
 		this.shader = text_shader;
 	
 	}
@@ -159,9 +159,9 @@ struct Mesh {
 	GLuint[NUM_BUFFERS] vbo; //vertex array buffers
 	uint draw_count;
 
-	this(Vertex* vertices, uint vertices_count) nothrow @nogc {
+	this(in Vertex[] vertices) nothrow @nogc {
 
-		this.draw_count = vertices_count;
+		this.draw_count = vertices.length;
 
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
@@ -171,7 +171,7 @@ struct Mesh {
 
 		//vertex position buffer
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[POSITION_VB]); //tells OpenGL to interpret this as an array 
-		glBufferData(GL_ARRAY_BUFFER, vertices_count * vertices[0].sizeof, vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_STATIC_DRAW);
 		//upload to GPU, send size in bytes and pointer to array, also tell GPU it will never be modified
 
 		glEnableVertexAttribArray(0);
