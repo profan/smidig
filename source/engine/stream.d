@@ -2,6 +2,11 @@ module blindfire.engine.stream;
 
 struct InputStream {
 
+	enum ReadMode {
+		Read,
+		Peek
+	}
+
 	size_t size;
 	size_t current = 0;
 	ubyte* buffer;
@@ -11,9 +16,11 @@ struct InputStream {
 		this.size = length;
 	}
 
-	T read(T)() nothrow @nogc {
+	T read(T, ReadMode mode = ReadMode.Read)() nothrow @nogc {
 		T obj = *(cast(T*)(buffer[current..current+T.sizeof].ptr));
-		current += T.sizeof;
+		static if (mode != ReadMode.Peek) {
+			current += T.sizeof;
+		}
 		return obj;
 	}
 

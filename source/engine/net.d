@@ -77,7 +77,6 @@ enum Command {
 	DISCONNECT,
 	TERMINATE,
 	UPDATE,
-	STATS,
 	PING,
 
 	//replacement commands
@@ -293,7 +292,7 @@ struct NetworkPeer {
 
 	}
 
-	ConnectionState switch_state(ConnectionState new_state) {
+	auto switch_state(ConnectionState new_state) {
 		logger.log("Switching state to: %s", to!string(new_state));
 
 		//set this back to false!
@@ -306,9 +305,7 @@ struct NetworkPeer {
 
 	//rewritten
 
-	void handle_connected_net(InputStream stream) { //is connected.
-
-		auto type = stream.read!MessageType();
+	void handle_connected_net(MessageType type, InputStream stream, Address from) { //is connected.
 
 		switch (type) {
 			default:
@@ -322,9 +319,7 @@ struct NetworkPeer {
 
 	}
 
-	void handle_unconnected_net(InputStream stream) { //not yet connected, not trying to establish a connection.
-
-		auto type = stream.read!MessageType();
+	void handle_unconnected_net(MessageType type, InputStream stream, Address from) { //not yet connected, not trying to establish a connection.
 
 		switch (type) {
 			default:
@@ -336,13 +331,25 @@ struct NetworkPeer {
 
 	void handle_unconnected() {
 
+		void handle_command(Command cmd) {
+			switch (cmd) with (Command) {
+				default:
+					handle_common(cmd);
+			}
+		}
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+			&handle_command
+		);
+
 	}
 
-	void handle_waiting_net(InputStream stream) { //waiting to successfully establish a connection.
-
-		auto type = stream.read!MessageType();
+	void handle_waiting_net(MessageType type, InputStream stream, Address from) { //waiting to successfully establish a connection.
 
 		switch (type) {
+			case MessageType.CONNECT:
+				auto msg = stream.read!ConnectMessage();
+				break;
 			default:
 				logger.log("Unhandled message type: %s", to!string(type));
 		}
@@ -353,9 +360,12 @@ struct NetworkPeer {
 	void handle_waiting() {
 
 		void handle_command(Command cmd) {
-			switch (cmd) {
+			switch (cmd) with (Command) {
+				case DISCONNECT:
+					handle_disconnect();
+					break;
 				default:
-					logger.log("Unhandled command: %s", to!string(cmd));
+					handle_common(cmd);
 			}
 		}
 
@@ -365,6 +375,20 @@ struct NetworkPeer {
 
 	}
 
+	void handle_common(Command cmd) {
+
+		switch (cmd) {
+			case Command.PING:
+				//pew pew
+				break;
+			case Command.TERMINATE:
+				open = false;
+				break;
+			default:
+				logger.log("Common - Unhandled command: %s", to!string(cmd));
+		}
+
+	}
 
 	void listen() {
 
@@ -377,11 +401,11 @@ struct NetworkPeer {
 
 		Peer host_peer;
 		ClientID id_counter;
-
 		Address from;
 
-		import core.stdc.stdlib : malloc;
+		import core.stdc.stdlib : malloc, free;
 		void[] data = malloc(MAX_PACKET_SIZE)[0..MAX_PACKET_SIZE];
+		scope (exit) { free(data.ptr); }
 
 		void update_stats(size_t bytes) {
 			if (bytes != -1) {
@@ -398,16 +422,25 @@ struct NetworkPeer {
 
 			auto stream = InputStream(cast(ubyte*)data.ptr, data.length);
 			bool packet_coming = (data.length >= MessageType.sizeof);
+		
+			MessageType type;
+			if (packet_coming) type = stream.read!(MessageType, InputStream.ReadMode.Peek)();
 
 			final switch (state) with (ConnectionState) {
 				case CONNECTED:
-					(packet_coming) ? { handle_connected_net(stream); handle_connected(); } : handle_connected();
+					(packet_coming) ? {
+						handle_connected_net(type, stream, from); handle_connected();
+					} : handle_connected();
 					break;
 				case UNCONNECTED:
-					(packet_coming) ? { handle_unconnected_net(stream); handle_unconnected(); } : handle_unconnected();
+					(packet_coming) ? {
+						handle_unconnected_net(type, stream, from); handle_unconnected();
+					} : handle_unconnected();
 					break;
 				case WAITING:
-					(packet_coming) ? { handle_waiting_net(stream); handle_waiting(); } : handle_waiting();
+					(packet_coming) ? {
+						handle_waiting_net(type, stream, from); handle_waiting();
+					} : handle_waiting();
 					break;
 			}
 

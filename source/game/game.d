@@ -541,6 +541,7 @@ struct Game {
 		state = ra.alloc!(GameStateHandler)();
 		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map);
+		scope(exit) { net_man.send_message(Command.TERMINATE); }
 
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, net_man), State.MENU);
 		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas), State.GAME);
@@ -553,7 +554,6 @@ struct Game {
 		evhan.add_listener(&ui_state.update_ui);
 		evhan.bind_keyevent(SDL_SCANCODE_RALT, &window.toggle_wireframe);
 		evhan.bind_keyevent(SDL_SCANCODE_LCTRL, () => send(network_thread, Command.PING));
-		evhan.bind_keyevent(SDL_SCANCODE_LALT, () => send(network_thread, Command.STATS));
 
 		evhan.add_listener(&console.handle_event);
 		evhan.bind_keyevent(SDL_SCANCODE_TAB, &console.toggle);
@@ -626,8 +626,6 @@ struct Game {
 			}
 
 		}
-
-		net_man.send_message(Command.TERMINATE);
 
 	}
 
