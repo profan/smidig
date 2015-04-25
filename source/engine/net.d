@@ -344,9 +344,11 @@ struct NetworkPeer {
 	void handle_connected_net(MessageType type, ref InputStream stream, Address from) { //is connected.
 
 		switch (type) {
+
 			case MessageType.CONNECT:
 				handle_connect(stream, from);
 				break;
+
 			case MessageType.DISCONNECT:
 
 				auto cmsg = stream.read!BasicMessage();								
@@ -363,6 +365,7 @@ struct NetworkPeer {
 			case MessageType.UPDATE:
 				
 				auto umsg = stream.read!UpdateMessage();
+				logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
 
 				if (umsg.client_uuid !in peers) {
 					logger.log("Unconnected client %s sent update message, payload size: %d bytes",
@@ -370,7 +373,6 @@ struct NetworkPeer {
 					break;
 				}
 
-				logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
 				send(game_thread, Command.UPDATE,
 					 cast(immutable(ubyte)[])stream.pointer[0..umsg.data_size].idup);
 				//this cast is not useless, DO NOT REMOVE THIS UNLESS YOU ACTUALLY FIX THE PROBLEM
@@ -383,27 +385,39 @@ struct NetworkPeer {
 	}
 
 	void handle_connected_command(Command cmd) {
+
 		switch (cmd) with (Command) {
+
 			case DISCONNECT:
 				handle_disconnect();
 				break;
+
 			default:
 				handle_common(cmd);
 		}
+
 	}
 
 	void handle_connected_command_update(Command cmd, immutable(ubyte)[] data) {
+
 		switch (cmd) with (Command) {
-			case UPDATE:	
+
+			case UPDATE:
+
 				logger.log("Sending Game State Update: %d bytes", data.length);
+
 				foreach (id, peer; peers) {
 					auto msg = UpdateMessage(MessageType.UPDATE, client_uuid, cast(uint)data.length);
 					send_data_packet(msg, data, peer.addr);
 				}
+
 				break;
+
 			default:
 				handle_common(cmd);
+
 		}
+
 	}
 
 	void handle_connected() {
@@ -425,30 +439,41 @@ struct NetworkPeer {
 	}
 
 	void handle_unconnected_command(Command cmd) {
+
 		switch (cmd) with (Command) {
+
 			case CREATE: //new session, become ze host
-				state = switch_state(ConnectionState.CONNECTED);
+
 				client_uuid = 0;
 				id_counter = 0;
 				is_host = true;
+
+				state = switch_state(ConnectionState.CONNECTED);
 				send(game_thread, Command.ASSIGN_ID, id_counter++);
 				break;
+
 			default:
 				handle_common(cmd);
 		}
+
 	}
 
 	void handle_unconnected_command_addr(Command cmd, shared(InternetAddress) addr) {
+
 		switch (cmd) with (Command) {
+
 			case CONNECT:
+
 				auto target = cast(InternetAddress)addr;
-				send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, DEFAULT_CLIENT_ID);
+				peers[0] = Peer(0, target); //add "host" to peers
 				state = switch_state(ConnectionState.WAITING);
-				peers[0] = Peer(0, target);
+				send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, DEFAULT_CLIENT_ID);
 				break;
+
 			default:
 				handle_common(cmd, addr);
 		}
+
 	}
 
 	void handle_unconnected() {
@@ -463,23 +488,31 @@ struct NetworkPeer {
 	void handle_waiting_net(MessageType type, ref InputStream stream, Address from) { //waiting to successfully establish a connection.
 
 		switch (type) {
+
 			case MessageType.CONNECT:
 				handle_connect(stream, from);
 				break;
+
 			default:
 				logger.log("Unhandled message type: %s", to!string(type));
+
 		}
 
 	}
 
 	void handle_waiting_command(Command cmd) {
+
 		switch (cmd) with (Command) {
+
 			case DISCONNECT:
 				handle_disconnect();
 				break;
+
 			default:
 				handle_common(cmd);
+
 		}
+
 	}
 
 	void handle_waiting() {
@@ -493,15 +526,19 @@ struct NetworkPeer {
 	void handle_common(Command cmd) {
 
 		switch (cmd) {
+
 			case Command.PING:
 				//send ping to all connected peers
 				peers.each!(peer => send_packet!(BasicMessage)(MessageType.PING, peer.addr, client_uuid));
 				break;
+
 			case Command.TERMINATE:
 				open = false;
 				break;
+
 			default:
 				logger.log("Common - Unhandled command: %s", to!string(cmd));
+
 		}
 
 	}
@@ -516,11 +553,14 @@ struct NetworkPeer {
 	}
 
 	void update_stats(size_t bytes_in) {
+
 		if (bytes_in != -1) {
 			logger.log("Received %d bytes", bytes_in);
 			network_stats.total_bytes_in += bytes_in;	
 		}
+
 		network_stats.update_stats();
+
 	}
 
 	void listen() {
@@ -554,18 +594,22 @@ struct NetworkPeer {
 			}
 
 			final switch (state) with (ConnectionState) {
+
 				case CONNECTED:
 					if (packet_ready) { handle_connected_net(type, stream, from); }
 					handle_connected();
 					break;
+
 				case UNCONNECTED:
 					if (packet_ready) { handle_unconnected_net(type, stream, from); }
 					handle_unconnected();
 					break;
+
 				case WAITING:
 					if (packet_ready) { handle_waiting_net(type, stream, from); }
 					handle_waiting();
 					break;
+
 			}
 
 		}
