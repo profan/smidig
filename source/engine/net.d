@@ -200,7 +200,7 @@ struct NetworkState {
 
 struct NetworkPeer {
 
-	enum DEFAULT_CLIENT_ID = 255;
+	enum DEFAULT_CLIENT_ID = ClientID.max;
 	enum MAX_PACKET_SIZE = 65507;
 
 	bool open;
@@ -372,6 +372,10 @@ struct NetworkPeer {
 		void handle_command_addr(Command cmd, shared(InternetAddress) addr) {
 			switch (cmd) with (Command) {
 				case CONNECT:
+					auto target = cast(InternetAddress)addr;
+					send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, DEFAULT_CLIENT_ID);
+					state = switch_state(ConnectionState.WAITING);
+					peers[0] = Peer(0, target);
 					break;
 				default:
 					handle_common(cmd, addr);
@@ -469,28 +473,30 @@ struct NetworkPeer {
 			auto bytes = socket.receiveFrom(data, from);
 			update_stats(bytes);
 
-			auto stream = InputStream(cast(ubyte*)data.ptr, bytes);
-			bool packet_coming = (bytes != -1 && bytes >= MessageType.sizeof);
+			bool packet_ready = (bytes != -1 && bytes >= MessageType.sizeof);
 		
+			InputStream stream;
 			MessageType type;
-			if (packet_coming) {
+
+			if (packet_ready) {
+				stream = InputStream(cast(ubyte*)data.ptr, bytes);
 				type = stream.read!(MessageType, InputStream.ReadMode.Peek)();
 				logger.log("Received message of type: %s", to!string(type));
 			}
 
 			final switch (state) with (ConnectionState) {
 				case CONNECTED:
-					(packet_coming) ? {
+					(packet_ready) ? {
 						handle_connected_net(type, stream, from); handle_connected();
 					} : handle_connected();
 					break;
 				case UNCONNECTED:
-					(packet_coming) ? {
+					(packet_ready) ? {
 						handle_unconnected_net(type, stream, from); handle_unconnected();
 					} : handle_unconnected();
 					break;
 				case WAITING:
-					(packet_coming) ? {
+					(packet_ready) ? {
 						handle_waiting_net(type, stream, from); handle_waiting();
 					} : handle_waiting();
 					break;
