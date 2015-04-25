@@ -540,7 +540,7 @@ struct Game {
 		alias ra = system_allocator;
 		state = ra.alloc!(GameStateHandler)();
 		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
-		net_man = system_allocator.alloc!(GameNetworkManager)(network_thread, state, &config_map);
+		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map);
 
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, net_man), State.MENU);
 		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas), State.GAME);

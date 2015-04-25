@@ -11,6 +11,7 @@ import std.conv : to;
 
 import blindfire.engine.log : Logger;
 import blindfire.engine.defs : ClientID;
+import blindfire.engine.stream : InputStream;
 
 import profan.collections : StaticArray;
 
@@ -199,6 +200,8 @@ struct NetworkState {
 
 struct NetworkPeer {
 
+	enum MAX_PACKET_SIZE = 65507;
+
 	bool open;
 	UdpSocket socket;
 	ConnectionState state = ConnectionState.UNCONNECTED;
@@ -301,6 +304,68 @@ struct NetworkPeer {
 	}
 
 	//rewritten
+
+	void handle_connected() { //is connected.
+		
+	}
+
+	void handle_unconnected() { //not yet connected, not trying to establish a connection.
+		
+	}
+
+	void handle_waiting() { //waiting to successfully establish a connection.
+		
+	}
+
+	void listen() {
+
+		Address addr;
+		bind_to_port(addr);
+
+		open = true;
+		logger.log("Listening on - %s:%d", addr.toAddrString(), port);
+		network_stats.timer.start();
+
+		Peer host_peer;
+		ClientID id_counter;
+
+		Address from;
+
+		import core.stdc.stdlib : malloc;
+		void[] data = malloc(MAX_PACKET_SIZE)[0..MAX_PACKET_SIZE];
+
+		void update_stats(size_t bytes) {
+			if (bytes != -1) {
+				logger.log("Received %d bytes", bytes);
+				network_stats.total_bytes_in += bytes;	
+			} 
+			network_stats.update_stats();
+		}
+
+		while (open) {
+
+			auto bytes = socket.receiveFrom(data, from);
+			update_stats(bytes);
+
+			bool msg;
+
+			final switch (state) with (ConnectionState) {
+				case CONNECTED:
+					handle_connected();
+					break;
+				case UNCONNECTED:
+					handle_unconnected();
+					break;
+				case WAITING:
+					handle_waiting();
+					break;
+			}
+
+		}
+
+	}
+
+	/*
 	void listen() {
 
 		Address addr;
@@ -564,7 +629,7 @@ struct NetworkPeer {
 
 		}
 
-	}
+	}*/
 
 } //NetworkPeer
 

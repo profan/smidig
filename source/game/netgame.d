@@ -169,7 +169,8 @@ class GameNetworkManager {
 					char[64] username = name[0..min(name.length, 64)];
 					auto data = PlayerData(cast(ubyte)name.length, username);
 					buf ~= (cast(ubyte*)&data)[0..data.sizeof];
-					send_message(Command.UPDATE, cast(immutable(ubyte[]))buf[]);
+
+					send_message(Command.UPDATE, cast(immutable(ubyte[]))buf[].idup);
 
 					active_game_state.on_command(cmd);
 					break;
