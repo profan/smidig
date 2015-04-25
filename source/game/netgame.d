@@ -9,6 +9,7 @@ import blindfire.engine.log;
 import blindfire.engine.net;
 
 import blindfire.action;
+import blindfire.config;
 import profan.ecs : EntityManager;
 
 alias void delegate() OnConnectDelegate;
@@ -16,6 +17,7 @@ alias void delegate() OnDisconnectDelegate;
 
 struct PlayerData {
 
+	ubyte length;
 	char[64] player_name;
 
 } //PlayerData
@@ -33,7 +35,8 @@ interface Action {
 
 enum UpdateType {
 
-	ACTION
+	ACTION,
+	PLAYER_DATA
 
 } //UpdateType
 
@@ -81,11 +84,13 @@ class GameNetworkManager {
 
 	ClientID client_id;
 	GameStateHandler game_state_handler;
+	ConfigMap* config_map;
 
-	this(Tid net_tid, GameStateHandler state_han) {
+	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config) {
 		this.network_thread = net_tid;
 		this.tm = new TurnManager();
 		this.game_state_handler = state_han;
+		this.config_map = config;
 	}
 
 	bool lockstep_turn() {
@@ -153,6 +158,19 @@ class GameNetworkManager {
 					break;
 
 				case CONNECT:
+					//send player data
+					buf.length = 0;
+
+					auto type = UpdateType.PLAYER_DATA;
+					buf ~= (cast(ubyte*)&type)[0..type.sizeof];
+
+					import std.algorithm : min;
+					auto name = config_map.get("username");
+					char[64] username = name[0..min(name.length, 64)];
+					auto data = PlayerData(cast(ubyte)name.length, username);
+					buf ~= (cast(ubyte*)&data)[0..data.sizeof];
+					send_message(Command.UPDATE, cast(immutable(ubyte[]))buf[]);
+
 					active_game_state.on_command(cmd);
 					break;
 
@@ -204,6 +222,12 @@ class GameNetworkManager {
 						return str;
 
 					}
+
+					case UpdateType.PLAYER_DATA:
+						PlayerData player = input_stream.read!PlayerData();
+						writefln("[GAME] Handling player data - username: %s", 
+								 player.player_name[0..player.length]);
+						break;
 
 					case UpdateType.ACTION:
 
