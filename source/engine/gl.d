@@ -59,7 +59,7 @@ struct Cursor {
 	Shader* shader;
 	Texture* texture;
 	
-	this(Texture* cursor_texture, Shader* cursor_shader) {
+	this(Texture* cursor_texture, Shader* cursor_shader) nothrow @nogc {
 
 		this.texture = cursor_texture;
 		int w = texture.width, h = texture.height;
@@ -71,7 +71,7 @@ struct Cursor {
 
 	}
 
-	void draw(ref Mat4f projection, Vec2f position) {
+	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
 		
 		auto tf = Transform(position);
 
@@ -110,7 +110,7 @@ struct Text {
 	@property ref char[MAX_SIZE] text() { return content; }
 	@property void text(ref char[MAX_SIZE] new_text) { content = new_text[]; }
 
-	this(TTF_Font* font, char[64] initial_text, int font_color, Shader* text_shader)  {
+	this(TTF_Font* font, char[64] initial_text, int font_color, Shader* text_shader)  nothrow @nogc {
 
 		this.content = initial_text;
 		SDL_Color color = {cast(ubyte)(font_color>>16), cast(ubyte)(font_color>>8), cast(ubyte)(font_color)};
@@ -127,7 +127,7 @@ struct Text {
 	
 	}
 
-	void draw(ref Mat4f projection, Vec2f position) {
+	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
 
 		auto tf = Transform(position);
 
@@ -190,7 +190,7 @@ struct Mesh {
 
 	@disable this(this);
 
-	~this() {
+	~this() nothrow @nogc {
 
 		glDeleteVertexArrays(1, &vao);
 
@@ -319,14 +319,14 @@ struct Transform {
 
 	Vec3f origin;
 
-	this(in Vec2f pos, in Vec3f rotation = Vec3f(0.0f, 0.0f, 0.0f), in Vec2f scale = Vec2f(1.0f, 1.0f)) {
+	this(in Vec2f pos, in Vec3f rotation = Vec3f(0.0f, 0.0f, 0.0f), in Vec2f scale = Vec2f(1.0f, 1.0f)) nothrow @nogc {
 		this.position = pos;
 		this.rotation = rotation;
 		this.scale = scale;
 		this.origin = Vec3f(0.0f, 0.0f, 0.0f);
 	}
 
-	@property Mat4f transform() const {
+	@property Mat4f transform() const nothrow @nogc {
 
 		Mat4f originMatrix = Mat4f.translation(origin);
 		Mat4f posMatrix = Mat4f.translation(Vec3f(position, 0.0f) - origin);
@@ -346,7 +346,7 @@ struct Transform {
 
 struct Vertex {
 
-	this(in Vec3f pos, in Vec2f tex_coord) {
+	this(in Vec3f pos, in Vec2f tex_coord) nothrow @nogc {
 		this.pos = pos;
 		this.tex_coord = tex_coord;
 	}
@@ -390,7 +390,7 @@ struct Shader {
 
 	}
 
-	void update(ref Mat4f projection, ref Transform transform) {
+	void update(ref Mat4f projection, ref Transform transform) nothrow @nogc {
 
 		Mat4f model = transform.transform;
 
@@ -400,7 +400,7 @@ struct Shader {
 
 	}
 
-	void update(ref Mat4f projection, ref Mat4f transform) {
+	void update(ref Mat4f projection, ref Mat4f transform) nothrow @nogc {
 
 		//transpose matrix, since row major, not column
 		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, transform.ptr);
@@ -408,7 +408,7 @@ struct Shader {
 
 	}
 
-	void update(ref Mat4f projection) {
+	void update(ref Mat4f projection) nothrow @nogc {
 
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
@@ -421,13 +421,13 @@ struct Shader {
 	}
 
 
-	void bind() {
+	void bind() nothrow @nogc {
 
 		glUseProgram(program);
 
 	}
 
-	void unbind() {
+	void unbind() nothrow @nogc {
 
 		glUseProgram(0);
 
@@ -443,7 +443,7 @@ char* load_shader(in char[] file_name) {
 	return cast(char*)read(file_name);
 }
 
-bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) {
+bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) nothrow @nogc {
 
 	GLint result;
 
@@ -471,7 +471,7 @@ bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) {
 
 }
 
-GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) {
+GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) nothrow @nogc {
 
 	GLuint new_shader;
 	
@@ -488,7 +488,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) {
 
 }
 
-GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) {
+GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) nothrow @nogc {
 
 	GLuint program = glCreateProgram();
 
@@ -517,7 +517,7 @@ GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) {
 }
 
 /* OpenGL color related functions, darkening and stuff. */
-GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
+GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc {
 
 	GLfloat[4] gl_color = [ //mask out r, g, b components from int
 		cast(float)cast(ubyte)(color>>16)/255,
@@ -530,7 +530,7 @@ GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
 
 }
 
-int darken(int color, uint percentage) {
+int darken(int color, uint percentage) nothrow @nogc {
 
 	uint adjustment = 255 / percentage;
 	ubyte r = cast(ubyte)(color>>16);
@@ -547,7 +547,7 @@ int darken(int color, uint percentage) {
 
 /* Primitives? */
 
-auto create_rectangle_vec3f(float w, float h) {
+auto create_rectangle_vec3f(float w, float h) nothrow @nogc {
 
 	Vec3f[6] vertices = [
 		Vec3f(0.0f, 0.0f, 0.0f), // top left
@@ -563,7 +563,7 @@ auto create_rectangle_vec3f(float w, float h) {
 
 }
 
-auto create_rectangle_vec3f2f(float w, float h) {
+auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc {
 
 	Vertex[6] vertices = [
 		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
