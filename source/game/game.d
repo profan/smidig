@@ -561,7 +561,6 @@ struct Game {
 
 		evhan.add_listener(&ui_state.update_ui);
 		evhan.bind_keyevent(SDL_SCANCODE_RALT, &window.toggle_wireframe);
-		evhan.bind_keyevent(SDL_SCANCODE_LCTRL, () => send(network_thread, Command.PING));
 
 		evhan.add_listener(&console.handle_event);
 		evhan.bind_keyevent(SDL_SCANCODE_TAB, &console.toggle);
