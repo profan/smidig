@@ -16,6 +16,10 @@ struct InputStream {
 		this.size = length;
 	}
 
+	@property ubyte* pointer() {
+		return buffer + current;
+	}
+
 	T read(T, ReadMode mode = ReadMode.Read)() nothrow @nogc {
 		T obj = *(cast(T*)(buffer[current..current+T.sizeof].ptr));
 		static if (mode != ReadMode.Peek) {

@@ -251,7 +251,6 @@ struct NetworkPeer {
 			: "Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
 
 		network_stats.total_bytes_out += bytes_sent;
-
 	}
 
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
@@ -265,7 +264,6 @@ struct NetworkPeer {
 			: "Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
 
 		network_stats.total_bytes_out += bytes_sent;
-
 	}
 
 
@@ -318,10 +316,24 @@ struct NetworkPeer {
 			case MessageType.DISCONNECT:
 				auto msg = stream.read!BasicMessage();
 				break;
+			case MessageType.UPDATE:
+				//take slice from sizeof(header) to sizeof(header) + header.data_length and send
+				auto umsg = stream.read!UpdateMessage();
+
+				if (umsg.client_uuid !in peers) {
+					logger.log("Unconnected client %s sent update message, payload size: %d bytes",
+							   umsg.client_uuid, umsg.data_size);
+					break;
+				}
+
+				logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
+				send(game_thread, Command.UPDATE,
+					 cast(immutable(ubyte)[])stream.pointer[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
+				//this cast is not useless, DO NOT REMOVE THIS UNLESS YOU ACTUALLY FIX THE PROBLEM
+				break;
 			default:
 				logger.log("Unhandled message type: %s", to!string(type));
 		}
-		//much connected
 
 	}
 
@@ -337,8 +349,23 @@ struct NetworkPeer {
 			}
 		}
 
+		void handle_command_update(Command cmd, immutable(ubyte)[] data) {
+			switch (cmd) with (Command) {
+				case UPDATE:	
+					logger.log("Sending Game State Update: %d bytes", data.length);
+					foreach (id, peer; peers) {
+						auto msg = UpdateMessage(MessageType.UPDATE, client_uuid, cast(uint)data.length);
+						send_data_packet(msg, data, peer.addr);
+					}
+					break;
+				default:
+					handle_common(cmd);
+			}
+		}
+
 		auto result = receiveTimeout(dur!("nsecs")(1),
-			&handle_command
+			&handle_command,
+			&handle_command_update
 		);
 
 	}
@@ -349,7 +376,6 @@ struct NetworkPeer {
 			default:
 				logger.log("Unhandled message type: %s", to!string(type));
 		}
-		//wow such unconnected
 
 	}
 
@@ -398,7 +424,6 @@ struct NetworkPeer {
 			default:
 				logger.log("Unhandled message type: %s", to!string(type));
 		}
-		//handle shit
 
 	}
 
