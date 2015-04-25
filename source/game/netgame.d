@@ -3,7 +3,7 @@ module blindfire.netgame;
 import std.concurrency : Tid, receiveTimeout, send;
 import std.datetime : dur;
 
-import blindfire.engine.stream : InputStream;
+import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.state : GameState, GameStateHandler;
 import blindfire.engine.log;
 import blindfire.engine.net;
@@ -22,7 +22,7 @@ struct PlayerData {
 
 } //PlayerData
 
-alias TempBuf = StaticArray!(ubyte, 2048);
+alias TempBuf = OutputStream;
 
 alias ActionType = uint;
 interface Action {
@@ -120,22 +120,22 @@ class GameNetworkManager {
 
 	}
 
-	StaticArray!(ubyte, 2048) buf;
 	void process_actions() {
 
-		buf.length = 0;
+		ubyte[2048] buf;
+		auto stream = OutputStream(buf.ptr, buf.length);
 		foreach (action; tm.pending_actions) {
 
 			auto type = UpdateType.ACTION;
-			buf ~= (cast(ubyte*)&type)[0..type.sizeof];
+			stream.write(type);
 
 			auto id = action.identifier();
-			buf ~= (cast(ubyte*)&id)[0..ActionType.sizeof];
-			action.serialize(buf);
+			stream.write(id);
+			action.serialize(stream);
 
 		}
 	
-		if (buf.length > 0)	{
+		if (stream.current > 0) {
 			send(network_thread, Command.UPDATE, cast(immutable(ubyte[]))buf[].idup);
 		}
 
@@ -159,19 +159,21 @@ class GameNetworkManager {
 
 				case SET_CONNECTED:
 					//send player data
-					buf.length = 0;
+					
+					ubyte[4096] buf;
+					auto stream = OutputStream(buf.ptr, buf.length);
 
 					auto type = UpdateType.PLAYER_DATA;
-					buf ~= (cast(ubyte*)&type)[0..type.sizeof];
+					stream.write(type);
 
 					import std.algorithm : min;
 					auto name = config_map.get("username");
 					char[64] username;
 					username[0..min(name.length, 64)] = name[0..min(name.length, 64)];
 					auto data = PlayerData(cast(ubyte)name.length, username);
-					buf ~= (cast(ubyte*)&data)[0..data.sizeof];
+					stream.write(data);
 
-					send_message(Command.UPDATE, cast(immutable(ubyte[]))buf[].idup);
+					send_message(Command.UPDATE, cast(immutable(ubyte[]))stream[].idup);
 
 					active_game_state.on_command(cmd);
 					break;

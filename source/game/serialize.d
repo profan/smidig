@@ -3,7 +3,7 @@ module blindfire.serialize;
 import blindfire.engine.gl;
 import blindfire.engine.defs;
 import blindfire.engine.net : NetVar;
-import blindfire.engine.stream : InputStream;
+import blindfire.engine.stream : InputStream, OutputStream;
 
 import blindfire.sys;
 import blindfire.action;
@@ -69,7 +69,7 @@ mixin template DoSerializable() {
 		return type;
 	}
 
-	void serialize(ref StaticArray!(ubyte, 2048) buf) {
+	void serialize(ref OutputStream buf) {
 		mixin(MakeTypeSerializable!(typeof(this), typeof(this).tupleof));
 	}
 
@@ -81,7 +81,7 @@ template MakeSerializable(Types...) {
 
 		enum Type = Types[0].stringof;
 		enum MakeSerializable = 
-			"void serialize(StaticArray!(ubyte,2048) buf) {"
+			"void serialize(OutputStream buf) {"
 			~ MakeTypeSerializable!(Types[0], Types[0].tupleof) 
 			~ "}" ~ MakeSerializable!(Types[1..$]);
 
@@ -119,7 +119,7 @@ template SizeString(alias Symbol) {
 
 template AddSerialization(T, alias Member) {
 
-	enum AddSerialization = "buf ~= (cast(ubyte*)&" ~ Member.stringof ~ ")[0.."~SizeString!(Member)~"];";
+	enum AddSerialization = "buf.write("~Member.stringof~");";
 
 }
 

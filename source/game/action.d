@@ -1,6 +1,7 @@
 module blindfire.action;
 
 import blindfire.engine.window : Window;
+import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.defs : Vec2f;
 
 import blindfire.serialize : networked;

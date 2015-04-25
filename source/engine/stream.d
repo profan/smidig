@@ -72,7 +72,6 @@ struct OutputStream {
 	}
 
 	void write(T)(T obj) nothrow @nogc {
-
 		static if (isArray!(T)) {
 			size_t data_size = obj[0].sizeof * obj.length;
 			buffer[offset..offset+data_size] = (cast(ubyte*)obj.ptr)[0..data_size];
@@ -81,7 +80,6 @@ struct OutputStream {
 			buffer[offset..offset+obj.sizeof] = (cast(ubyte*)&obj)[0..obj.sizeof];
 			offset += obj.sizeof;
 		}
-
 	}
 
 }
