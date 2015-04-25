@@ -24,11 +24,11 @@ struct InputStream {
 		return buffer + offset;
 	}
 
-	@property size_t current() const {
+	@property size_t current() const nothrow @nogc {
 		return offset;
 	}
 
-	@property size_t length() const {
+	@property size_t length() const nothrow @nogc {
 		return size;
 	}
 
@@ -59,15 +59,15 @@ struct OutputStream {
 		return buffer + offset;
 	}
 
-	@property size_t current() const {
+	@property size_t current() const nothrow @nogc {
 		return offset;
 	}
 
-	@property size_t length() const {
+	@property size_t length() const nothrow @nogc {
 		return size;
 	}
 
-	ubyte[] opSlice() {
+	ubyte[] opSlice() nothrow @nogc {
 		return buffer[0..offset];
 	}
 
