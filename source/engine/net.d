@@ -337,35 +337,35 @@ struct NetworkPeer {
 
 	}
 
+	void handle_connected_command(Command cmd) {
+		switch (cmd) with (Command) {
+			case DISCONNECT:
+				handle_disconnect();
+				break;
+			default:
+				handle_common(cmd);
+		}
+	}
+
+	void handle_connected_command_update(Command cmd, immutable(ubyte)[] data) {
+		switch (cmd) with (Command) {
+			case UPDATE:	
+				logger.log("Sending Game State Update: %d bytes", data.length);
+				foreach (id, peer; peers) {
+					auto msg = UpdateMessage(MessageType.UPDATE, client_uuid, cast(uint)data.length);
+					send_data_packet(msg, data, peer.addr);
+				}
+				break;
+			default:
+				handle_common(cmd);
+		}
+	}
+
 	void handle_connected() {
 
-		void handle_command(Command cmd) {
-			switch (cmd) with (Command) {
-				case DISCONNECT:
-					handle_disconnect();
-					break;
-				default:
-					handle_common(cmd);
-			}
-		}
-
-		void handle_command_update(Command cmd, immutable(ubyte)[] data) {
-			switch (cmd) with (Command) {
-				case UPDATE:	
-					logger.log("Sending Game State Update: %d bytes", data.length);
-					foreach (id, peer; peers) {
-						auto msg = UpdateMessage(MessageType.UPDATE, client_uuid, cast(uint)data.length);
-						send_data_packet(msg, data, peer.addr);
-					}
-					break;
-				default:
-					handle_common(cmd);
-			}
-		}
-
 		auto result = receiveTimeout(dur!("nsecs")(1),
-			&handle_command,
-			&handle_command_update
+			&handle_connected_command,
+			&handle_connected_command_update
 		);
 
 	}
@@ -379,38 +379,38 @@ struct NetworkPeer {
 
 	}
 
+	void handle_unconnected_command(Command cmd) {
+		switch (cmd) with (Command) {
+			case CREATE: //new session, become ze host
+				state = switch_state(ConnectionState.CONNECTED);
+				client_uuid = 0;
+				id_counter = 0;
+				is_host = true;
+				send(game_thread, Command.ASSIGN_ID, id_counter++);
+				break;
+			default:
+				handle_common(cmd);
+		}
+	}
+
+	void handle_unconnected_command_addr(Command cmd, shared(InternetAddress) addr) {
+		switch (cmd) with (Command) {
+			case CONNECT:
+				auto target = cast(InternetAddress)addr;
+				send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, DEFAULT_CLIENT_ID);
+				state = switch_state(ConnectionState.WAITING);
+				peers[0] = Peer(0, target);
+				break;
+			default:
+				handle_common(cmd, addr);
+		}
+	}
+
 	void handle_unconnected() {
 
-		void handle_command(Command cmd) {
-			switch (cmd) with (Command) {
-				case CREATE: //new session, become ze host
-					state = switch_state(ConnectionState.CONNECTED);
-					client_uuid = 0;
-					id_counter = 0;
-					is_host = true;
-					send(game_thread, Command.ASSIGN_ID, id_counter++);
-					break;
-				default:
-					handle_common(cmd);
-			}
-		}
-
-		void handle_command_addr(Command cmd, shared(InternetAddress) addr) {
-			switch (cmd) with (Command) {
-				case CONNECT:
-					auto target = cast(InternetAddress)addr;
-					send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, DEFAULT_CLIENT_ID);
-					state = switch_state(ConnectionState.WAITING);
-					peers[0] = Peer(0, target);
-					break;
-				default:
-					handle_common(cmd, addr);
-			}
-		}
-
 		auto result = receiveTimeout(dur!("nsecs")(1),
-			&handle_command,
-			&handle_command_addr
+			&handle_unconnected_command,
+			&handle_unconnected_command_addr
 		);
 
 	}
@@ -427,20 +427,20 @@ struct NetworkPeer {
 
 	}
 
+	void handle_waiting_command(Command cmd) {
+		switch (cmd) with (Command) {
+			case DISCONNECT:
+				handle_disconnect();
+				break;
+			default:
+				handle_common(cmd);
+		}
+	}
+
 	void handle_waiting() {
 
-		void handle_command(Command cmd) {
-			switch (cmd) with (Command) {
-				case DISCONNECT:
-					handle_disconnect();
-					break;
-				default:
-					handle_common(cmd);
-			}
-		}
-
 		auto result = receiveTimeout(dur!("nsecs")(1),
-			&handle_command
+			&handle_waiting_command
 		);
 
 	}
@@ -470,6 +470,14 @@ struct NetworkPeer {
 
 	}
 
+	void update_stats(size_t bytes_in) {
+		if (bytes_in != -1) {
+			logger.log("Received %d bytes", bytes_in);
+			network_stats.total_bytes_in += bytes_in;	
+		}
+		network_stats.update_stats();
+	}
+
 	void listen() {
 
 		Address addr;
@@ -480,18 +488,9 @@ struct NetworkPeer {
 		network_stats.timer.start();
 
 		Address from;
-
 		import core.stdc.stdlib : malloc, free;
 		void[] data = malloc(MAX_PACKET_SIZE)[0..MAX_PACKET_SIZE];
 		scope (exit) { free(data.ptr); }
-
-		void update_stats(size_t bytes) {
-			if (bytes != -1) {
-				logger.log("Received %d bytes", bytes);
-				network_stats.total_bytes_in += bytes;	
-			} 
-			network_stats.update_stats();
-		}
 
 		while (open) {
 
