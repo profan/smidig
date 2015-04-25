@@ -116,7 +116,7 @@ final class JoiningState : GameState {
 
 		switch (cmd) with (Command) {
 
-			case CONNECT:
+			case SET_CONNECTED:
 				statehan.pop_state();
 				statehan.push_state(State.LOBBY);
 				break;
@@ -136,6 +136,7 @@ final class JoiningState : GameState {
 
 		uint item_width = window.width/2, item_height = 32;
 		if (do_button(ui_state, 4, window, window.width/2, window.height/2 - item_height, item_width, item_height, ITEM_COLOR)) {
+			net_man.send_message(Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu, cancel
 

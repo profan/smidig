@@ -12,7 +12,7 @@ import std.conv : to;
 
 import blindfire.engine.log : Logger;
 import blindfire.engine.defs : ClientID;
-import blindfire.engine.stream : InputStream;
+import blindfire.engine.stream : InputStream, OutputStream;
 
 import profan.collections : StaticArray;
 
@@ -254,9 +254,10 @@ struct NetworkPeer {
 	}
 
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
-		StaticArray!(ubyte, 4096) send_data;
-		send_data ~= cast(ubyte[msg.sizeof])msg;
-		send_data ~= data;
+		ubyte[4096] ubyte_data = void;
+		auto send_data = OutputStream(ubyte_data.ptr, ubyte_data.length);
+		send_data.write(msg);
+		send_data.write(data);
 		auto bytes_sent = socket.sendTo(cast(void[])send_data[], target);
 		string type_str = to!string(msg.type);
 		logger.log((bytes_sent == Socket.ERROR)
@@ -283,6 +284,40 @@ struct NetworkPeer {
 
 	}
 
+	void handle_connect(ref InputStream stream, Address from) {
+
+		auto cmsg = stream.read!ConnectMessage();
+		logger.log("Connection from %s at: %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
+		
+		ClientID id = cmsg.client_uuid;
+
+		if (id !in peers) {
+
+			Peer new_peer = {client_uuid: id_counter, addr: from};
+			send_packet!(ConnectMessage)(MessageType.CONNECT, from, client_uuid, id_counter++);
+			peers[cast(ClientID)(id_counter-1)] = new_peer;
+
+			if (is_host) {
+				send(game_thread, Command.NOTIFY_CONNECTION, id_counter-1);
+			}
+
+		} else {
+			logger.log("Already in connected peers.");
+		}
+
+		if (!is_host) {
+			host_peer = Peer(cmsg.client_uuid, from);
+			client_uuid = cmsg.assigned_id;
+			send(game_thread, Command.ASSIGN_ID, cmsg.assigned_id);
+		}
+
+		if (state == ConnectionState.WAITING) {
+			state = switch_state(ConnectionState.CONNECTED);
+			send(game_thread, Command.SET_CONNECTED);
+		}
+
+	}
+
 	void handle_disconnect() {
 
 		logger.log("Sending disconnect message.");
@@ -300,18 +335,17 @@ struct NetworkPeer {
 		//set this back to false!
 		if (new_state == ConnectionState.UNCONNECTED) {
 			is_host = false;
+			id_counter = 0;
 		}
 
 		return new_state;
 	}
 
-	//rewritten
-
-	void handle_connected_net(MessageType type, InputStream stream, Address from) { //is connected.
+	void handle_connected_net(MessageType type, ref InputStream stream, Address from) { //is connected.
 
 		switch (type) {
 			case MessageType.CONNECT:
-				auto msg = stream.read!ConnectMessage();
+				handle_connect(stream, from);
 				break;
 			case MessageType.DISCONNECT:
 				auto msg = stream.read!BasicMessage();
@@ -415,11 +449,11 @@ struct NetworkPeer {
 
 	}
 
-	void handle_waiting_net(MessageType type, InputStream stream, Address from) { //waiting to successfully establish a connection.
+	void handle_waiting_net(MessageType type, ref InputStream stream, Address from) { //waiting to successfully establish a connection.
 
 		switch (type) {
 			case MessageType.CONNECT:
-				auto msg = stream.read!ConnectMessage();
+				handle_connect(stream, from);
 				break;
 			default:
 				logger.log("Unhandled message type: %s", to!string(type));
@@ -510,19 +544,16 @@ struct NetworkPeer {
 
 			final switch (state) with (ConnectionState) {
 				case CONNECTED:
-					(packet_ready) ? {
-						handle_connected_net(type, stream, from); handle_connected();
-					} : handle_connected();
+					if (packet_ready) { handle_connected_net(type, stream, from); }
+					handle_connected();
 					break;
 				case UNCONNECTED:
-					(packet_ready) ? {
-						handle_unconnected_net(type, stream, from); handle_unconnected();
-					} : handle_unconnected();
+					if (packet_ready) { handle_unconnected_net(type, stream, from); }
+					handle_unconnected();
 					break;
 				case WAITING:
-					(packet_ready) ? {
-						handle_waiting_net(type, stream, from); handle_waiting();
-					} : handle_waiting();
+					if (packet_ready) { handle_waiting_net(type, stream, from); }
+					handle_waiting();
 					break;
 			}
 

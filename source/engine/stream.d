@@ -42,17 +42,42 @@ struct InputStream {
 
 struct OutputStream {
 
-	size_t size;
-	size_t current = 0;
-	ubyte* buffer;
+	private {
+		size_t size;
+		size_t offset = 0;
+		ubyte* buffer;
+	}
 
 	this(ubyte* data, size_t length) nothrow @nogc {
 		this.buffer = data;
 		this.size = length;
 	}
 
-	void write(T)() nothrow @nogc {
-		
+	@property const(ubyte*) pointer() nothrow @nogc const {
+		return buffer + offset;
+	}
+
+	@property size_t current() const {
+		return offset;
+	}
+
+	@property size_t length() const {
+		return size;
+	}
+
+	ubyte[] opSlice() {
+		return buffer[0..offset];
+	}
+
+	void write(T)(T obj) nothrow @nogc {
+		buffer[offset..offset+obj.sizeof] = (cast(ubyte*)&obj)[0..obj.sizeof];
+		offset += obj.sizeof;
+	}
+
+	void write(T : T[])(T[] arr) nothrow @nogc {
+		size_t data_size = arr[0].sizeof * arr.length;
+		buffer + offset = (cast(ubyte*)arr.ptr)[0..data_size];
+		offset += data_size;
 	}
 
 }

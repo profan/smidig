@@ -157,7 +157,7 @@ class GameNetworkManager {
 					active_game_state.on_command(cmd);
 					break;
 
-				case CONNECT:
+				case SET_CONNECTED:
 					//send player data
 					buf.length = 0;
 
@@ -166,7 +166,8 @@ class GameNetworkManager {
 
 					import std.algorithm : min;
 					auto name = config_map.get("username");
-					char[64] username = name[0..min(name.length, 64)];
+					char[64] username;
+					username[0..min(name.length, 64)] = name[0..min(name.length, 64)];
 					auto data = PlayerData(cast(ubyte)name.length, username);
 					buf ~= (cast(ubyte*)&data)[0..data.sizeof];
 
