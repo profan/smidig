@@ -86,11 +86,11 @@ class GameNetworkManager {
 	GameStateHandler game_state_handler;
 	ConfigMap* config_map;
 
-	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config) {
+	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm) {
 		this.network_thread = net_tid;
-		this.tm = new TurnManager();
 		this.game_state_handler = state_han;
 		this.config_map = config;
+		this.tm = tm;
 	}
 
 	bool lockstep_turn() {

@@ -437,6 +437,7 @@ struct Game {
 	Tid network_thread;
 	GameNetworkManager net_man;
 	ConfigMap config_map;
+	TurnManager tm;
 
 	LinearAllocator master_allocator;
 	LinearAllocator* resource_allocator;
@@ -540,7 +541,9 @@ struct Game {
 		alias ra = system_allocator;
 		state = ra.alloc!(GameStateHandler)();
 		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
-		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map);
+
+		tm = ra.alloc!(TurnManager)();
+		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm);
 		scope(exit) { net_man.send_message(Command.TERMINATE); }
 
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, net_man), State.MENU);
