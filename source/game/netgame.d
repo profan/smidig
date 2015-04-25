@@ -136,7 +136,7 @@ class GameNetworkManager {
 		}
 	
 		if (stream.current > 0) {
-			send(network_thread, Command.UPDATE, cast(immutable(ubyte[]))buf[].idup);
+			send(network_thread, Command.UPDATE, cast(immutable(ubyte[]))stream[].idup);
 		}
 
 		tm.do_pending_actions(em);

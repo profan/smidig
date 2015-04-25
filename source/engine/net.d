@@ -348,10 +348,20 @@ struct NetworkPeer {
 				handle_connect(stream, from);
 				break;
 			case MessageType.DISCONNECT:
-				auto msg = stream.read!BasicMessage();
+
+				auto cmsg = stream.read!BasicMessage();								
+				logger.log("Client %s sent disconnect message.", cmsg.client_uuid);
+
+				if (!is_host && host_peer.client_uuid == cmsg.client_uuid) { //if disconnecting client is the host, disconnect too.
+					state = switch_state(ConnectionState.UNCONNECTED);
+					send(game_thread, Command.DISCONNECT);
+				}
+
+				peers.remove(cmsg.client_uuid);
 				break;
+
 			case MessageType.UPDATE:
-				//take slice from sizeof(header) to sizeof(header) + header.data_length and send
+				
 				auto umsg = stream.read!UpdateMessage();
 
 				if (umsg.client_uuid !in peers) {
@@ -362,9 +372,10 @@ struct NetworkPeer {
 
 				logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
 				send(game_thread, Command.UPDATE,
-					 cast(immutable(ubyte)[])stream.pointer[umsg.sizeof..umsg.sizeof+umsg.data_size].idup);
+					 cast(immutable(ubyte)[])stream.pointer[0..umsg.data_size].idup);
 				//this cast is not useless, DO NOT REMOVE THIS UNLESS YOU ACTUALLY FIX THE PROBLEM
 				break;
+
 			default:
 				logger.log("Unhandled message type: %s", to!string(type));
 		}
