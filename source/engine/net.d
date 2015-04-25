@@ -7,6 +7,7 @@ import std.datetime : StopWatch;
 import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException;
 import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.typecons : Tuple;
+import std.algorithm : each;
 import std.conv : to;
 
 import blindfire.engine.log : Logger;
@@ -317,6 +318,17 @@ struct NetworkPeer {
 
 	void handle_connected() {
 
+		void handle_command(Command cmd) {
+			switch (cmd) with (Command) {
+				default:
+					handle_common(cmd);
+			}
+		}
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+			&handle_command
+		);
+
 	}
 
 	void handle_unconnected_net(MessageType type, InputStream stream, Address from) { //not yet connected, not trying to establish a connection.
@@ -379,7 +391,8 @@ struct NetworkPeer {
 
 		switch (cmd) {
 			case Command.PING:
-				//pew pew
+				//send ping to all connected peers
+				peers.each!(peer => send_packet!(BasicMessage)(MessageType.PING, peer.addr, client_uuid));
 				break;
 			case Command.TERMINATE:
 				open = false;
@@ -420,11 +433,14 @@ struct NetworkPeer {
 			auto bytes = socket.receiveFrom(data, from);
 			update_stats(bytes);
 
-			auto stream = InputStream(cast(ubyte*)data.ptr, data.length);
-			bool packet_coming = (data.length >= MessageType.sizeof);
+			auto stream = InputStream(cast(ubyte*)data.ptr, bytes);
+			bool packet_coming = (bytes != -1 && bytes >= MessageType.sizeof);
 		
 			MessageType type;
-			if (packet_coming) type = stream.read!(MessageType, InputStream.ReadMode.Peek)();
+			if (packet_coming) {
+				type = stream.read!(MessageType, InputStream.ReadMode.Peek)();
+				logger.log("Received message of type: %s", to!string(type));
+			}
 
 			final switch (state) with (ConnectionState) {
 				case CONNECTED:
