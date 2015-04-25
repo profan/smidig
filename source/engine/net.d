@@ -200,6 +200,7 @@ struct NetworkState {
 
 struct NetworkPeer {
 
+	enum DEFAULT_CLIENT_ID = 255;
 	enum MAX_PACKET_SIZE = 65507;
 
 	bool open;
@@ -229,7 +230,7 @@ struct NetworkPeer {
 		this.game_thread = game_tid;
 		
 		//unique network identifier
-		this.client_uuid = 255; //if it's still 255 when in session, something is wrong.
+		this.client_uuid = DEFAULT_CLIENT_ID; //if it's still 255 when in session, something is wrong.
 		this.port = port;
 
 		this.net_state = NetworkState();
@@ -305,17 +306,65 @@ struct NetworkPeer {
 
 	//rewritten
 
-	void handle_connected() { //is connected.
-		
+	void handle_connected_net(InputStream stream) { //is connected.
+
+		auto type = stream.read!MessageType();
+
+		switch (type) {
+			default:
+				logger.log("Unhandled message type: %s", to!string(type));
+		}
+		//much connected
+
 	}
 
-	void handle_unconnected() { //not yet connected, not trying to establish a connection.
-		
+	void handle_connected() {
+
 	}
 
-	void handle_waiting() { //waiting to successfully establish a connection.
-		
+	void handle_unconnected_net(InputStream stream) { //not yet connected, not trying to establish a connection.
+
+		auto type = stream.read!MessageType();
+
+		switch (type) {
+			default:
+				logger.log("Unhandled message type: %s", to!string(type));
+		}
+		//wow such unconnected
+
 	}
+
+	void handle_unconnected() {
+
+	}
+
+	void handle_waiting_net(InputStream stream) { //waiting to successfully establish a connection.
+
+		auto type = stream.read!MessageType();
+
+		switch (type) {
+			default:
+				logger.log("Unhandled message type: %s", to!string(type));
+		}
+		//handle shit
+
+	}
+
+	void handle_waiting() {
+
+		void handle_command(Command cmd) {
+			switch (cmd) {
+				default:
+					logger.log("Unhandled command: %s", to!string(cmd));
+			}
+		}
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+			&handle_command
+		);
+
+	}
+
 
 	void listen() {
 
@@ -347,17 +396,18 @@ struct NetworkPeer {
 			auto bytes = socket.receiveFrom(data, from);
 			update_stats(bytes);
 
-			bool msg;
+			auto stream = InputStream(cast(ubyte*)data.ptr, data.length);
+			bool packet_coming = (data.length >= MessageType.sizeof);
 
 			final switch (state) with (ConnectionState) {
 				case CONNECTED:
-					handle_connected();
+					(packet_coming) ? { handle_connected_net(stream); handle_connected(); } : handle_connected();
 					break;
 				case UNCONNECTED:
-					handle_unconnected();
+					(packet_coming) ? { handle_unconnected_net(stream); handle_unconnected(); } : handle_unconnected();
 					break;
 				case WAITING:
-					handle_waiting();
+					(packet_coming) ? { handle_waiting_net(stream); handle_waiting(); } : handle_waiting();
 					break;
 			}
 
