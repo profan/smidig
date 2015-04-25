@@ -271,6 +271,10 @@ final class MatchState : GameState {
 
 	void on_command(Command cmd) {
 
+		if (cmd == Command.DISCONNECT) {
+			statehan.pop_state();
+		}
+
 	}
 
 	void update(double dt) {

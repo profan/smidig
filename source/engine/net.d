@@ -380,6 +380,7 @@ struct NetworkPeer {
 
 			default:
 				logger.log("Unhandled message type: %s", to!string(type));
+
 		}
 
 	}
@@ -394,6 +395,7 @@ struct NetworkPeer {
 
 			default:
 				handle_common(cmd);
+
 		}
 
 	}
@@ -454,6 +456,7 @@ struct NetworkPeer {
 
 			default:
 				handle_common(cmd);
+
 		}
 
 	}
@@ -472,6 +475,7 @@ struct NetworkPeer {
 
 			default:
 				handle_common(cmd, addr);
+
 		}
 
 	}
