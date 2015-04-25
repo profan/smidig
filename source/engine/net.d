@@ -220,6 +220,9 @@ struct NetworkPeer {
 	NetworkState net_state;
 	Logger!("NET", NetworkState) logger;
 
+	Peer host_peer;
+	ClientID id_counter;
+
 	this(ushort port, Tid game_tid) {
 
 		//set socket to nonblocking, since one thread is used both for transmission and receiving, doesn't block on receive.
@@ -309,6 +312,12 @@ struct NetworkPeer {
 	void handle_connected_net(MessageType type, InputStream stream, Address from) { //is connected.
 
 		switch (type) {
+			case MessageType.CONNECT:
+				auto msg = stream.read!ConnectMessage();
+				break;
+			case MessageType.DISCONNECT:
+				auto msg = stream.read!BasicMessage();
+				break;
 			default:
 				logger.log("Unhandled message type: %s", to!string(type));
 		}
@@ -320,6 +329,9 @@ struct NetworkPeer {
 
 		void handle_command(Command cmd) {
 			switch (cmd) with (Command) {
+				case DISCONNECT:
+					handle_disconnect();
+					break;
 				default:
 					handle_common(cmd);
 			}
@@ -345,13 +357,30 @@ struct NetworkPeer {
 
 		void handle_command(Command cmd) {
 			switch (cmd) with (Command) {
+				case CREATE: //new session, become ze host
+					state = switch_state(ConnectionState.CONNECTED);
+					client_uuid = 0;
+					id_counter = 0;
+					is_host = true;
+					send(game_thread, Command.ASSIGN_ID, id_counter++);
+					break;
 				default:
 					handle_common(cmd);
 			}
 		}
 
+		void handle_command_addr(Command cmd, shared(InternetAddress) addr) {
+			switch (cmd) with (Command) {
+				case CONNECT:
+					break;
+				default:
+					handle_common(cmd, addr);
+			}
+		}
+
 		auto result = receiveTimeout(dur!("nsecs")(1),
-			&handle_command
+			&handle_command,
+			&handle_command_addr
 		);
 
 	}
@@ -403,6 +432,15 @@ struct NetworkPeer {
 
 	}
 
+	void handle_common(Command cmd, shared(InternetAddress) addr) {
+
+		switch (cmd) {
+			default:
+				logger.log("Common - Unhandled command: %s : %s", to!string(cmd), cast(InternetAddress)addr);
+		}
+
+	}
+
 	void listen() {
 
 		Address addr;
@@ -412,8 +450,6 @@ struct NetworkPeer {
 		logger.log("Listening on - %s:%d", addr.toAddrString(), port);
 		network_stats.timer.start();
 
-		Peer host_peer;
-		ClientID id_counter;
 		Address from;
 
 		import core.stdc.stdlib : malloc, free;
