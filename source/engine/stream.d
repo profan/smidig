@@ -1,5 +1,7 @@
 module blindfire.engine.stream;
 
+import std.traits : isArray;
+
 struct InputStream {
 
 	enum ReadMode {
@@ -70,14 +72,16 @@ struct OutputStream {
 	}
 
 	void write(T)(T obj) nothrow @nogc {
-		buffer[offset..offset+obj.sizeof] = (cast(ubyte*)&obj)[0..obj.sizeof];
-		offset += obj.sizeof;
-	}
 
-	void write(T : T[])(T[] arr) nothrow @nogc {
-		size_t data_size = arr[0].sizeof * arr.length;
-		buffer + offset = (cast(ubyte*)arr.ptr)[0..data_size];
-		offset += data_size;
+		static if (isArray!(T)) {
+			size_t data_size = obj[0].sizeof * obj.length;
+			buffer[offset..offset+data_size] = (cast(ubyte*)obj.ptr)[0..data_size];
+			offset += data_size;
+		} else {
+			buffer[offset..offset+obj.sizeof] = (cast(ubyte*)&obj)[0..obj.sizeof];
+			offset += obj.sizeof;
+		}
+
 	}
 
 }
