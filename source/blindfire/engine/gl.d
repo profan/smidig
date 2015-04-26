@@ -160,7 +160,7 @@ struct Mesh {
 
 	this(in Vertex[] vertices) nothrow @nogc {
 
-		this.draw_count = vertices.length;
+		this.draw_count = cast(uint)vertices.length;
 
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);

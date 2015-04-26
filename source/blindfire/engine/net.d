@@ -7,7 +7,6 @@ import std.datetime : StopWatch;
 import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException;
 import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.typecons : Tuple;
-import std.algorithm : each;
 import std.conv : to;
 
 import blindfire.engine.log : Logger;
@@ -244,7 +243,8 @@ struct NetworkPeer {
 	}
 
 	void send_packet(T, Args...)(MessageType type, Address target, Args args) {
-		auto bytes_sent = socket.sendTo(cast(void[T.sizeof])T(type, args), target);
+		auto obj = T(type, args);
+		auto bytes_sent = socket.sendTo((cast(void*)&obj)[0..obj.sizeof], target);
 		string type_str = to!string(type);
 		logger.log((bytes_sent == Socket.ERROR)
 			? format("Failed to send %s packet.", type_str)
@@ -533,7 +533,9 @@ struct NetworkPeer {
 
 			case Command.PING:
 				//send ping to all connected peers
-				peers.each!(peer => send_packet!(BasicMessage)(MessageType.PING, peer.addr, client_uuid));
+				foreach (ref peer; peers) {
+					send_packet!(BasicMessage)(MessageType.PING, peer.addr, client_uuid);
+				}
 				break;
 
 			case Command.TERMINATE:

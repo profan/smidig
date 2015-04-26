@@ -43,7 +43,7 @@ struct FontAtlas {
 
 	this(in char[] font_name, uint font_size, Shader* text_shader) {
 
-		this.stack_allocator = StackAllocator(1024 * 8, "FontAllocator");
+		this.stack_allocator = StackAllocator(1024 * 8, "FontAllocator"); //todo nogc this
 		this.shader = text_shader;
 
 		glGenVertexArrays(1, &vao);
@@ -120,7 +120,7 @@ struct FontAtlas {
 	
 	@disable this(this);
 
-	~this() {
+	~this() @nogc {
 		glDeleteBuffers(1, &vbo);
 		glDeleteVertexArrays(1, &vao);
 	}

@@ -79,7 +79,7 @@ struct LinearAllocator {
 	size_t pointer_count = 0;
 	Instance[100] allocated_pointers = void;
 
-	this(size_t size, string name) {
+	this(size_t size, string name) nothrow {
 
 		this.composed = false;
 		//since we're allocating the memory here, we're not part of another allocator's space.
@@ -96,7 +96,7 @@ struct LinearAllocator {
 
 	}
 
-	this(size_t size, string name, LinearAllocator* master) {
+	this(size_t size, string name, LinearAllocator* master) nothrow @nogc {
 
 		this.composed = true;
 		this.total_size = size;
@@ -126,7 +126,7 @@ struct LinearAllocator {
 
 	mixin AllocatorCommon!();
 
-	void* alloc(size_t size, size_t alignment) {
+	void* alloc(size_t size, size_t alignment) nothrow @nogc {
 
 		auto align_offset = get_aligned(current, alignment);
 
@@ -187,7 +187,7 @@ struct StackAllocator {
 	size_t pointer_count = 0;
 	Instance[100] allocated_pointers = void;
 
-	this(size_t size, string name) {
+	this(size_t size, string name) nothrow {
 
 		this.total_size = size;
 		this.allocated_size = 0;
@@ -241,14 +241,14 @@ struct StackAllocator {
 
 	}
 
-	void dealloc(size_t size) {
+	void dealloc(size_t size) nothrow @nogc {
 
 		allocated_size -= size;
 		current -= size;
 
 	}
 
-	void dealloc() {
+	void dealloc() nothrow @nogc {
 
 		auto header_size = get_size!Header();
 		auto header = *cast(Header*)(current - header_size);
@@ -272,7 +272,7 @@ struct FreeListAllocator {
 
 	immutable char[] name;
 
-	this(size_t size, string name) {
+	this(size_t size, string name) nothrow {
 
 		this.total_size = size;
 		this.allocated_size = 0;
@@ -300,7 +300,7 @@ unittest {
 }
 
 //returns an aligned offset in bytes from current to allocate from.
-private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) {
+private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) nothrow @nogc pure {
 
 	ptrdiff_t diff = alignment - (cast(ptrdiff_t)current & (alignment-1));
 	return (diff == T.alignof) ? 0 : diff;
@@ -308,7 +308,7 @@ private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alig
 }
 
 //returns size of type in memory
-size_t get_size(T)() {
+size_t get_size(T)() nothrow @nogc pure {
 
 	static if (is(T == class)) {
 		return __traits(classInstanceSize, T);
