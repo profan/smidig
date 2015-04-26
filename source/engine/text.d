@@ -12,7 +12,7 @@ import blindfire.engine.gl;
 import blindfire.engine.window : Window;
 import blindfire.engine.resource : ResourceManager;
 
-struct CharacterInfo {
+private struct CharacterInfo {
 
 	float advance_x; // advance.x
 	float advance_y; // advance.y

@@ -1,14 +1,13 @@
 module blindfire.engine.gl;
 
-import core.vararg;
-import core.stdc.stdio;
+import core.stdc.stdio : printf;
 import core.stdc.stdlib : malloc, free;
 import std.stdio : writefln;
 import std.file : read;
 
 import derelict.opengl3.gl3;
-
 import gfm.math;
+
 import blindfire.engine.defs;
 
 mixin template OpenGLError() {
@@ -346,7 +345,7 @@ struct Transform {
 
 struct Vertex {
 
-	this(in Vec3f pos, in Vec2f tex_coord) nothrow @nogc {
+	this(in Vec3f pos, in Vec2f tex_coord) nothrow @nogc pure {
 		this.pos = pos;
 		this.tex_coord = tex_coord;
 	}
@@ -517,7 +516,7 @@ GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) n
 }
 
 /* OpenGL color related functions, darkening and stuff. */
-GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc {
+GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc pure {
 
 	GLfloat[4] gl_color = [ //mask out r, g, b components from int
 		cast(float)cast(ubyte)(color>>16)/255,
@@ -530,7 +529,7 @@ GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc {
 
 }
 
-int darken(int color, uint percentage) nothrow @nogc {
+int darken(int color, uint percentage) nothrow @nogc pure {
 
 	uint adjustment = 255 / percentage;
 	ubyte r = cast(ubyte)(color>>16);
@@ -547,7 +546,7 @@ int darken(int color, uint percentage) nothrow @nogc {
 
 /* Primitives? */
 
-auto create_rectangle_vec3f(float w, float h) nothrow @nogc {
+auto create_rectangle_vec3f(float w, float h) nothrow @nogc pure {
 
 	Vec3f[6] vertices = [
 		Vec3f(0.0f, 0.0f, 0.0f), // top left
@@ -563,7 +562,7 @@ auto create_rectangle_vec3f(float w, float h) nothrow @nogc {
 
 }
 
-auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc {
+auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc pure {
 
 	Vertex[6] vertices = [
 		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
