@@ -14,7 +14,7 @@ import blindfire.engine.util : point_in_rect;
 import blindfire.netgame;
 import blindfire.action;
 
-Vec2f rotate(ref Vec2f vec, double radians) {
+Vec2f rotate(ref Vec2f vec, double radians) nothrow @nogc pure {
 
 	auto ca = cos(radians);
 	auto sa = sin(radians);

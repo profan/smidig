@@ -120,12 +120,12 @@ struct FontAtlas {
 	
 	@disable this(this);
 
-	~this() @nogc {
+	~this() nothrow @nogc {
 		glDeleteBuffers(1, &vbo);
 		glDeleteVertexArrays(1, &vao);
 	}
 
-	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
+	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) nothrow @nogc {
 		
 		struct Point {
 			GLfloat x;

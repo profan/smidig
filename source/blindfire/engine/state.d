@@ -26,7 +26,7 @@ class GameStateHandler {
 		//asd
 	}
 
-	void add_state(GameState state, State type) {
+	void add_state(GameState state, State type) nothrow {
 		states[type] = state;
 	}
 
@@ -52,7 +52,7 @@ class GameStateHandler {
 		stack[$-1].draw(window);
 	}
 
-	GameState peek() {
+	GameState peek() nothrow {
 		return stack[$-1];
 	}
 
