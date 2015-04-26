@@ -2,7 +2,7 @@ module blindfire.engine.stream;
 
 import std.traits : isArray;
 
-mixin template StreamImpl() {
+private mixin template StreamImpl() {
 
 	private {
 		size_t size;
@@ -19,11 +19,11 @@ mixin template StreamImpl() {
 		return buffer + offset;
 	}
 
-	@property size_t current() const nothrow @nogc {
+	@property size_t current() nothrow @nogc const {
 		return offset;
 	}
 
-	@property size_t length() const nothrow @nogc {
+	@property size_t length() nothrow @nogc const {
 		return size;
 	}
 
@@ -40,7 +40,7 @@ struct InputStream {
 		Peek
 	}
 
-	mixin StreamImpl!();
+	mixin StreamImpl;
 
 	T read(T, ReadMode mode = ReadMode.Read)() nothrow @nogc {
 		T obj = *(cast(T*)(buffer[offset..offset+T.sizeof].ptr));
@@ -54,9 +54,9 @@ struct InputStream {
 
 struct OutputStream {
 
-	mixin StreamImpl!();
+	mixin StreamImpl;
 
-	void write(T)(T obj) nothrow @nogc {
+	void write(T)(in T obj) nothrow @nogc {
 		static if (isArray!(T)) {
 			size_t data_size = obj[0].sizeof * obj.length;
 			buffer[offset..offset+data_size] = (cast(ubyte*)obj.ptr)[0..data_size];

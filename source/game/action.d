@@ -24,10 +24,10 @@ enum : ActionType[string] {
 
 class NoAction : Action {
 
-	mixin DoSerializable!();
+	mixin DoSerializable;
 
 	void execute(EntityManager em) {
-
+		//no-op
 	}
 
 } //NoAction
@@ -40,7 +40,7 @@ class MoveAction : Action {
 	@networked EntityID entity;
 	@networked Vec2f position;
 
-	mixin DoSerializable!();
+	mixin DoSerializable;
 
 	this() {
 
@@ -64,7 +64,7 @@ class CreateUnitAction : Action {
 
 	@networked Vec2f position;
 
-	mixin DoSerializable!();
+	mixin DoSerializable;
 
 	this() {
 
