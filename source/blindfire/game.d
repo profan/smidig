@@ -240,7 +240,7 @@ final class MatchState : GameState {
 		alias ea = entity_allocator;
 		this.em = ea.alloc!(EntityManager)();
 		this.em.add_system(ea.alloc!(TransformManager)());
-		this.em.add_system(ea.alloc!(CollisionManager)());
+		this.em.add_system(ea.alloc!(CollisionManager)(Vec2i(640, 480)));
 		this.em.add_system(ea.alloc!(SpriteManager)());
 		this.em.add_system(ea.alloc!(InputManager)());
 		this.em.add_system(ea.alloc!(OrderManager)(&sbox, net_man.tm));

@@ -1,16 +1,26 @@
 module blindfire.sys;
 
 import std.concurrency : send, receiveTimeout, Tid;
+import std.math : cos, sin, PI;
 import std.stdio : writefln;
 import profan.ecs;
 
 import blindfire.engine.window : Window;
-import blindfire.engine.gl : Vec2f, Mat3f, Transform, Shader, Texture, Mesh;
+import blindfire.engine.gl : Vec2i, Vec2f, Vec3f, Mat3f, Transform, Shader, Texture, Mesh;
 import blindfire.engine.net : NetVar, Command, ClientID;
 import blindfire.engine.stream : InputStream;
+import blindfire.engine.util : point_in_rect;
 
 import blindfire.netgame;
 import blindfire.action;
+
+Vec2f rotate(ref Vec2f vec, double radians) {
+
+	auto ca = cos(radians);
+	auto sa = sin(radians);
+	return Vec2f(ca*vec.x - sa*vec.y, sa*vec.x + ca*vec.y);
+
+}
 
 interface UpdateSystem : ComponentSystem!(0) {
 
@@ -45,9 +55,23 @@ struct TransformComponent {
 
 class CollisionManager : ComponentManager!(UpdateSystem, CollisionComponent, 2) {
 
+	Vec2i map_size;
+
+	this(Vec2i size) {
+		this.map_size = size;
+	}
+
 	void update() {
 
 		foreach (id, ref comp; components) {
+
+			with (comp.mc.transform) {
+				if (!point_in_rect(cast(int)position.x, cast(int)position.y, 0, 0, map_size.x, map_size.y)) {
+					comp.mc.velocity = Vec2f(-comp.mc.velocity.x, -comp.mc.velocity.y);
+					comp.mc.transform.rotation.z += 1*PI;
+				}
+			}
+
 			foreach (other_id, ref other_comp; components) {
 				if (id == other_id) continue;
 
