@@ -1,7 +1,7 @@
 module blindfire.sys;
 
 import std.concurrency : send, receiveTimeout, Tid;
-import std.math : cos, sin, PI;
+import std.math : cos, sin, PI, pow;
 import std.stdio : writefln;
 import profan.ecs;
 
@@ -14,11 +14,18 @@ import blindfire.engine.util : point_in_rect;
 import blindfire.netgame;
 import blindfire.action;
 
-Vec2f rotate(ref Vec2f vec, double radians) nothrow @nogc pure {
+T rotate(T)(ref T vec, double radians) nothrow @nogc pure if (is(T : Vector) && T._N == 2) {
 
 	auto ca = cos(radians);
 	auto sa = sin(radians);
-	return Vec2f(ca*vec.x - sa*vec.y, sa*vec.x + ca*vec.y);
+	return T(ca*vec.x - sa*vec.y, sa*vec.x + ca*vec.y);
+
+}
+
+T._T squaredDistanceTo(T)(ref T vec, ref T other_vec) nothrow @nogc pure if (is(T : Vector) && T._N == 2) {
+
+	return ((vec.x - other_vec.x)*(vec.x - other_vec.x)) -
+		((vec.y - other_vec.y)*(vec.y-other_vec.y));
 
 }
 
@@ -75,7 +82,7 @@ class CollisionManager : ComponentManager!(UpdateSystem, CollisionComponent, 2) 
 			foreach (other_id, ref other_comp; components) {
 				if (id == other_id) continue;
 
-				if (comp.mc.transform.position.distanceTo(other_comp.mc.transform.position) < (comp.radius + other_comp.radius)) {
+				if (comp.mc.transform.position.squaredDistanceTo(other_comp.mc.transform.position) < pow((comp.radius + other_comp.radius), 2)) {
 					comp.mc.velocity = Vec2f(-comp.mc.velocity.x, -comp.mc.velocity.y);
 				}
 
