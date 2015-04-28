@@ -55,7 +55,10 @@ enum MessageType : uint {
 	DISCONNECT,
 	UPDATE,
 	PING,
-	PONG
+	PONG,
+
+	GET_PEER_LIST,
+	SEND_PEER_LIST
 
 } //MessageType
 
@@ -63,7 +66,7 @@ enum ConnectionState {
 
 	CONNECTED, //not accepting connections, active
 	UNCONNECTED, //not accepting connections, can create
-	WAITING //accepting connections, has created session or is in created lobby
+	CONNECTING //accepting connections, has created session or is in created lobby
 
 } //ConnectionState
 
@@ -311,7 +314,7 @@ struct NetworkPeer {
 			send(game_thread, Command.ASSIGN_ID, cmsg.assigned_id);
 		}
 
-		if (state == ConnectionState.WAITING) {
+		if (state == ConnectionState.CONNECTING) {
 			state = switch_state(ConnectionState.CONNECTED);
 			send(game_thread, Command.SET_CONNECTED);
 		}
@@ -469,7 +472,7 @@ struct NetworkPeer {
 
 				auto target = cast(InternetAddress)addr;
 				peers[0] = Peer(0, target); //add "host" to peers
-				state = switch_state(ConnectionState.WAITING);
+				state = switch_state(ConnectionState.CONNECTING);
 				send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, DEFAULT_CLIENT_ID);
 				break;
 
@@ -489,7 +492,7 @@ struct NetworkPeer {
 
 	}
 
-	void handle_waiting_net(MessageType type, ref InputStream stream, Address from) { //waiting to successfully establish a connection.
+	void handle_connecting_net(MessageType type, ref InputStream stream, Address from) { //waiting to successfully establish a connection.
 
 		switch (type) {
 
@@ -504,7 +507,7 @@ struct NetworkPeer {
 
 	}
 
-	void handle_waiting_command(Command cmd) {
+	void handle_connecting_command(Command cmd) {
 
 		switch (cmd) with (Command) {
 
@@ -519,10 +522,10 @@ struct NetworkPeer {
 
 	}
 
-	void handle_waiting() {
+	void handle_connecting() {
 
 		auto result = receiveTimeout(dur!("nsecs")(1),
-			&handle_waiting_command
+			&handle_connecting_command
 		);
 
 	}
@@ -611,9 +614,9 @@ struct NetworkPeer {
 					handle_unconnected();
 					break;
 
-				case WAITING:
-					if (packet_ready) { handle_waiting_net(type, stream, from); }
-					handle_waiting();
+				case CONNECTING:
+					if (packet_ready) { handle_connecting_net(type, stream, from); }
+					handle_connecting();
 					break;
 
 			}
