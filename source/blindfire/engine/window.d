@@ -25,31 +25,42 @@ struct Window {
 	Mat4f view_projection;
 
 	//window data
-	private uint window_width, window_height;
+	private int window_width, window_height;
+
+	this(void* external_window) {
+		
+		SDL_Window* new_window = SDL_CreateWindowFrom(external_window);
+
+		this(new_window);
+
+	}
 
 	this(in char[] title, uint width, uint height) {
+
+		this.c_title = toUTFz!(char*)(title);
 
 		uint flags = 0;
 		flags |= SDL_WINDOW_OPENGL;
 		flags |= SDL_WINDOW_RESIZABLE;
 
-		this.c_title = toUTFz!(char*)(title);
-		this.window = SDL_CreateWindow(
-			c_title,
-			SDL_WINDOWPOS_UNDEFINED,
-			SDL_WINDOWPOS_UNDEFINED,
-			width, height,
-			flags);
-		
-		window_width = width;
-		window_height = height;
+		SDL_Window* new_window = SDL_CreateWindow(
+				c_title,
+				SDL_WINDOWPOS_UNDEFINED,
+				SDL_WINDOWPOS_UNDEFINED,
+				width, height,
+				flags);
+
+		this(new_window);
+
+	}
+
+	this(SDL_Window* in_window) {
+
+		this.window = in_window;
 		assert(window != null);
+		SDL_GetWindowSize(window, &window_width, &window_height);
 
-		//GLint major = 4, minor = 0;
-		//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
-		//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor);
 		glcontext = SDL_GL_CreateContext(window);
-
 		if (glcontext == null) {
 			GLenum glErr = glGetError();
 			printf("[OpenGL] Error: %s", glErr);
