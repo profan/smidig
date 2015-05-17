@@ -170,7 +170,7 @@ struct FontAtlas {
 
 		}
 	
-		import blindfire.ui : int_to_glcolor;
+		import blindfire.engine.gl : int_to_glcolor;
 		
 		glEnable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
