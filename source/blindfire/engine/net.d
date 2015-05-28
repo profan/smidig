@@ -3,6 +3,7 @@ module blindfire.engine.net;
 import core.time : dur;
 import std.string : format;
 import std.stdio : writefln;
+import std.datetime : StopWatch;
 import std.socket : Address, InternetAddress, Socket, UdpSocket, SocketException;
 import std.concurrency : receiveOnly, receiveTimeout, send, Tid;
 import std.typecons : Tuple;
@@ -10,30 +11,68 @@ import std.conv : to;
 
 import blindfire.engine.log : Logger;
 import blindfire.engine.defs : ClientID;
+import blindfire.engine.stream : InputStream, OutputStream;
 
 import profan.collections : StaticArray;
 
+struct NetworkStats {
+
+	StopWatch timer;
+	float last_bytes_in = 0.0f;
+	float last_bytes_out = 0.0f;
+
+	size_t total_bytes_in = 0;
+	size_t total_bytes_out = 0;
+
+	float bytes_in_per_second = 0.0f;
+	float bytes_out_per_second = 0.0f;
+
+	float messages_in_per_second = 0.0f;
+	float messages_out_per_second = 0.0f;
+
+} //NetworkStats
+
+__gshared NetworkStats network_stats;
+
+private void update_stats(ref NetworkStats stats) {
+
+	if (stats.timer.peek().seconds == 0) return;
+
+	stats.bytes_in_per_second = cast(float)stats.total_bytes_in / cast(float)stats.timer.peek().seconds;
+	stats.bytes_in_per_second = stats.bytes_in_per_second * 0.9f + stats.last_bytes_in * 0.1f;
+	stats.last_bytes_in = stats.bytes_in_per_second;
+
+	stats.bytes_out_per_second = cast(float)stats.total_bytes_out / cast(float)stats.timer.peek().seconds;
+	stats.bytes_out_per_second = stats.bytes_out_per_second * 0.9f + stats.last_bytes_out * 0.1f;
+	stats.last_bytes_out = stats.bytes_out_per_second;
+
+}
+
 enum MessageType : uint {
 
+	START,
 	CONNECT,
 	DISCONNECT,
 	UPDATE,
 	PING,
 	PONG,
 
+	GET_PEER_LIST,
+	SEND_PEER_LIST
+
 } //MessageType
 
 enum ConnectionState {
 
-	CONNECTED,
-	UNCONNECTED,
-	WAITING
+	CONNECTED, //not accepting connections, active
+	UNCONNECTED, //not accepting connections, can create
+	CONNECTING //accepting connections, has created session or is in created lobby
 
 } //ConnectionState
 
 enum Command {
 
-	//set ecs id
+	//set network id
 	ASSIGN_ID,
 
 	CREATE,
@@ -41,8 +80,14 @@ enum Command {
 	DISCONNECT,
 	TERMINATE,
 	UPDATE,
-	STATS,
-	PING
+	PING,
+
+	//replacement commands
+	SET_CONNECTED,
+	SET_UNCONNECTED,
+
+	//notifications to game thread
+	NOTIFY_CONNECTION
 
 } //Command
 
@@ -144,7 +189,6 @@ struct NetVar(T) {
 
 } //NetVar
 
-
 alias Self = Tuple!(Address, Peer);
 
 struct NetworkState {
@@ -157,6 +201,9 @@ struct NetworkState {
 }
 
 struct NetworkPeer {
+
+	enum DEFAULT_CLIENT_ID = ClientID.max;
+	enum MAX_PACKET_SIZE = 65507;
 
 	bool open;
 	UdpSocket socket;
@@ -175,6 +222,9 @@ struct NetworkPeer {
 	NetworkState net_state;
 	Logger!("NET", NetworkState) logger;
 
+	Peer host_peer;
+	ClientID id_counter;
+
 	this(ushort port, Tid game_tid) {
 
 		//set socket to nonblocking, since one thread is used both for transmission and receiving, doesn't block on receive.
@@ -185,7 +235,7 @@ struct NetworkPeer {
 		this.game_thread = game_tid;
 		
 		//unique network identifier
-		this.client_uuid = 255; //if it's still 255 when in session, something is wrong.
+		this.client_uuid = DEFAULT_CLIENT_ID; //if it's still 255 when in session, something is wrong.
 		this.port = port;
 
 		this.net_state = NetworkState();
@@ -196,22 +246,28 @@ struct NetworkPeer {
 	}
 
 	void send_packet(T, Args...)(MessageType type, Address target, Args args) {
-		auto success = socket.sendTo(cast(void[T.sizeof])T(type, args), target);
+		auto obj = T(type, args);
+		auto bytes_sent = socket.sendTo((cast(void*)&obj)[0..obj.sizeof], target);
 		string type_str = to!string(type);
-		logger.log((success == Socket.ERROR)
+		logger.log((bytes_sent == Socket.ERROR)
 			? format("Failed to send %s packet.", type_str)
 			: "Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
+
+		network_stats.total_bytes_out += bytes_sent;
 	}
 
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
-		StaticArray!(ubyte, 4096) send_data;
-		send_data ~= cast(ubyte[msg.sizeof])msg;
-		send_data ~= cast(ubyte[])data;
-		auto success = socket.sendTo(cast(void[])send_data[], target);
+		ubyte[4096] ubyte_data = void;
+		auto send_data = OutputStream(ubyte_data.ptr, ubyte_data.length);
+		send_data.write(msg);
+		send_data.write(data);
+		auto bytes_sent = socket.sendTo(cast(void[])send_data[], target);
 		string type_str = to!string(msg.type);
-		logger.log((success == Socket.ERROR)
+		logger.log((bytes_sent == Socket.ERROR)
 			? format("Failed to send %s packet.", type_str)
 			: "Sent %s packet to %s:%s", type_str, target.toAddrString(), target.toPortString());
+
+		network_stats.total_bytes_out += bytes_sent;
 	}
 
 
@@ -231,6 +287,40 @@ struct NetworkPeer {
 
 	}
 
+	void handle_connect(ref InputStream stream, Address from) {
+
+		auto cmsg = stream.read!ConnectMessage();
+		logger.log("Connection from %s at: %s:%s", cmsg.client_uuid, from.toAddrString(), from.toPortString());
+		
+		ClientID id = cmsg.client_uuid;
+
+		if (id !in peers) {
+
+			Peer new_peer = {client_uuid: id_counter, addr: from};
+			send_packet!(ConnectMessage)(MessageType.CONNECT, from, client_uuid, id_counter++);
+			peers[cast(ClientID)(id_counter-1)] = new_peer;
+
+			if (is_host) {
+				send(game_thread, Command.NOTIFY_CONNECTION, id_counter-1);
+			}
+
+		} else {
+			logger.log("Already in connected peers.");
+		}
+
+		if (!is_host) {
+			host_peer = Peer(cmsg.client_uuid, from);
+			client_uuid = cmsg.assigned_id;
+			send(game_thread, Command.ASSIGN_ID, cmsg.assigned_id);
+		}
+
+		if (state == ConnectionState.CONNECTING) {
+			state = switch_state(ConnectionState.CONNECTED);
+			send(game_thread, Command.SET_CONNECTED);
+		}
+
+	}
+
 	void handle_disconnect() {
 
 		logger.log("Sending disconnect message.");
@@ -242,18 +332,300 @@ struct NetworkPeer {
 
 	}
 
-	ConnectionState switch_state(ConnectionState new_state) {
+	auto switch_state(ConnectionState new_state) {
 		logger.log("Switching state to: %s", to!string(new_state));
 
 		//set this back to false!
 		if (new_state == ConnectionState.UNCONNECTED) {
 			is_host = false;
+			id_counter = 0;
 		}
 
 		return new_state;
 	}
 
-	//rewritten
+	void handle_connected_net(MessageType type, ref InputStream stream, Address from) { //is connected.
+
+		switch (type) {
+
+			case MessageType.CONNECT:
+				handle_connect(stream, from);
+				break;
+
+			case MessageType.DISCONNECT:
+
+				auto cmsg = stream.read!BasicMessage();								
+				logger.log("Client %s sent disconnect message.", cmsg.client_uuid);
+
+				if (!is_host && host_peer.client_uuid == cmsg.client_uuid) { //if disconnecting client is the host, disconnect too.
+					state = switch_state(ConnectionState.UNCONNECTED);
+					send(game_thread, Command.DISCONNECT);
+				}
+
+				peers.remove(cmsg.client_uuid);
+				break;
+
+			case MessageType.UPDATE:
+				
+				auto umsg = stream.read!UpdateMessage();
+				logger.log("Client %s sent update message, payload size: %d bytes", umsg.client_uuid, umsg.data_size);
+
+				if (umsg.client_uuid !in peers) {
+					logger.log("Unconnected client %s sent update message, payload size: %d bytes",
+							   umsg.client_uuid, umsg.data_size);
+					break;
+				}
+
+				send(game_thread, Command.UPDATE,
+					 cast(immutable(ubyte)[])stream.pointer[0..umsg.data_size].idup);
+				//this cast is not useless, DO NOT REMOVE THIS UNLESS YOU ACTUALLY FIX THE PROBLEM
+				break;
+
+			default:
+				logger.log("Unhandled message type: %s", to!string(type));
+
+		}
+
+	}
+
+	void handle_connected_command(Command cmd) {
+
+		switch (cmd) with (Command) {
+
+			case DISCONNECT:
+				handle_disconnect();
+				break;
+
+			default:
+				handle_common(cmd);
+
+		}
+
+	}
+
+	void handle_connected_command_update(Command cmd, immutable(ubyte)[] data) {
+
+		switch (cmd) with (Command) {
+
+			case UPDATE:
+
+				logger.log("Sending Game State Update: %d bytes", data.length);
+
+				foreach (id, peer; peers) {
+					auto msg = UpdateMessage(MessageType.UPDATE, client_uuid, cast(uint)data.length);
+					send_data_packet(msg, data, peer.addr);
+				}
+
+				break;
+
+			default:
+				handle_common(cmd);
+
+		}
+
+	}
+
+	void handle_connected() {
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+			&handle_connected_command,
+			&handle_connected_command_update
+		);
+
+	}
+
+	void handle_unconnected_net(MessageType type, InputStream stream, Address from) { //not yet connected, not trying to establish a connection.
+
+		switch (type) {
+			default:
+				logger.log("Unhandled message type: %s", to!string(type));
+		}
+
+	}
+
+	void handle_unconnected_command(Command cmd) {
+
+		switch (cmd) with (Command) {
+
+			case CREATE: //new session, become ze host
+
+				client_uuid = 0;
+				id_counter = 0;
+				is_host = true;
+
+				state = switch_state(ConnectionState.CONNECTED);
+				send(game_thread, Command.ASSIGN_ID, id_counter++);
+				break;
+
+			default:
+				handle_common(cmd);
+
+		}
+
+	}
+
+	void handle_unconnected_command_addr(Command cmd, shared(InternetAddress) addr) {
+
+		switch (cmd) with (Command) {
+
+			case CONNECT:
+
+				auto target = cast(InternetAddress)addr;
+				peers[0] = Peer(0, target); //add "host" to peers
+				state = switch_state(ConnectionState.CONNECTING);
+				send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, DEFAULT_CLIENT_ID);
+				break;
+
+			default:
+				handle_common(cmd, addr);
+
+		}
+
+	}
+
+	void handle_unconnected() {
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+			&handle_unconnected_command,
+			&handle_unconnected_command_addr
+		);
+
+	}
+
+	void handle_connecting_net(MessageType type, ref InputStream stream, Address from) { //waiting to successfully establish a connection.
+
+		switch (type) {
+
+			case MessageType.CONNECT:
+				handle_connect(stream, from);
+				break;
+
+			default:
+				logger.log("Unhandled message type: %s", to!string(type));
+
+		}
+
+	}
+
+	void handle_connecting_command(Command cmd) {
+
+		switch (cmd) with (Command) {
+
+			case DISCONNECT:
+				handle_disconnect();
+				break;
+
+			default:
+				handle_common(cmd);
+
+		}
+
+	}
+
+	void handle_connecting() {
+
+		auto result = receiveTimeout(dur!("nsecs")(1),
+			&handle_connecting_command
+		);
+
+	}
+
+	void handle_common(Command cmd) {
+
+		switch (cmd) {
+
+			case Command.PING:
+				//send ping to all connected peers
+				foreach (ref peer; peers) {
+					send_packet!(BasicMessage)(MessageType.PING, peer.addr, client_uuid);
+				}
+				break;
+
+			case Command.TERMINATE:
+				open = false;
+				break;
+
+			default:
+				logger.log("Common - Unhandled command: %s", to!string(cmd));
+
+		}
+
+	}
+
+	void handle_common(Command cmd, shared(InternetAddress) addr) {
+
+		switch (cmd) {
+			default:
+				logger.log("Common - Unhandled command: %s : %s", to!string(cmd), cast(InternetAddress)addr);
+		}
+
+	}
+
+	void update_stats(size_t bytes_in) {
+
+		if (bytes_in != -1) {
+			logger.log("Received %d bytes", bytes_in);
+			network_stats.total_bytes_in += bytes_in;	
+		}
+
+		network_stats.update_stats();
+
+	}
+
+	void listen() {
+
+		Address addr;
+		bind_to_port(addr);
+
+		open = true;
+		logger.log("Listening on - %s:%d", addr.toAddrString(), port);
+		network_stats.timer.start();
+
+		Address from;
+		import core.stdc.stdlib : malloc, free;
+		void[] data = malloc(MAX_PACKET_SIZE)[0..MAX_PACKET_SIZE];
+		scope (exit) { free(data.ptr); }
+
+		while (open) {
+
+			auto bytes = socket.receiveFrom(data, from);
+			update_stats(bytes);
+
+			bool packet_ready = (bytes != -1 && bytes >= MessageType.sizeof);
+		
+			InputStream stream;
+			MessageType type;
+
+			if (packet_ready) {
+				stream = InputStream(cast(ubyte*)data.ptr, bytes);
+				type = stream.read!(MessageType, InputStream.ReadMode.Peek)();
+				logger.log("Received message of type: %s", to!string(type));
+			}
+
+			final switch (state) with (ConnectionState) {
+
+				case CONNECTED:
+					if (packet_ready) { handle_connected_net(type, stream, from); }
+					handle_connected();
+					break;
+
+				case UNCONNECTED:
+					if (packet_ready) { handle_unconnected_net(type, stream, from); }
+					handle_unconnected();
+					break;
+
+				case CONNECTING:
+					if (packet_ready) { handle_connecting_net(type, stream, from); }
+					handle_connecting();
+					break;
+
+			}
+
+		}
+
+	}
+
+	/*
 	void listen() {
 
 		Address addr;
@@ -261,16 +633,23 @@ struct NetworkPeer {
 
 		open = true;
 		logger.log("Listening on localhost:%d", port);
+		network_stats.timer.start();
 
 		Peer host_peer; //reference to current host, not used if self is host, otherwise queried for certain information.
 
 		ClientID id_counter;
 		Address from; //used to keep track of who message was received from
 		void[4096] data = void;
+
 		while (open) {
 
 			auto bytes = socket.receiveFrom(data, from);
-			if (bytes != -1) logger.log("Received %d bytes", bytes);
+			if (bytes != -1) {
+				logger.log("Received %d bytes", bytes);
+				network_stats.total_bytes_in += bytes;
+			}
+				
+			network_stats.update_stats();
 
 			bool msg; //if msg is set, theres a packet to be handled.
 			MessageType type;
@@ -282,6 +661,7 @@ struct NetworkPeer {
 			}
 
 			final switch (state) {
+				
 				case ConnectionState.CONNECTED:
 
 					if (msg) {
@@ -345,6 +725,9 @@ struct NetworkPeer {
 							case Command.DISCONNECT:
 								handle_disconnect();
 								break;
+							case Command.TERMINATE:
+								open = false;
+								break;
 							default:
 								logger.log("Unhandled Command: %s", to!string(cmd));
 						}
@@ -383,6 +766,8 @@ struct NetworkPeer {
 								auto target = cast(InternetAddress)to_addr;
 								send_packet!(ConnectMessage)(MessageType.CONNECT, target, client_uuid, cast(ClientID)255);
 								state = switch_state(ConnectionState.WAITING);
+								send(game_thread, Command.CONNECT);
+								peers[0] = Peer(0, target);
 								break;
 							default:
 								logger.log("Unhandled Command: %s", to!string(cmd));
@@ -433,6 +818,11 @@ struct NetworkPeer {
 									Peer new_peer = {client_uuid: id_counter, addr: from};
 									send_packet!(ConnectMessage)(MessageType.CONNECT, from, client_uuid, id_counter++);
 									peers[cast(ClientID)(id_counter-1)] = new_peer;
+
+									if (is_host) {
+										send(game_thread, Command.NOTIFY_CONNECTION, id_counter-1);
+									}
+
 								} else {
 									logger.log("Already in connected peers.");
 								}
@@ -440,22 +830,26 @@ struct NetworkPeer {
 								if (!is_host) {
 									host_peer = Peer(cmsg.client_uuid, from);
 									client_uuid = cmsg.assigned_id;
-									send(game_thread, Command.CREATE);
 									send(game_thread, Command.ASSIGN_ID, cmsg.assigned_id);
 								}
 
-								state = switch_state(ConnectionState.CONNECTED);
 								break;
 
 							case MessageType.PING:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								logger.log("Client %S sent ping, sending pong.", cmsg.client_uuid);
+								logger.log("Client %s sent ping, sending pong.", cmsg.client_uuid);
 								send_packet!(BasicMessage)(MessageType.PONG, from, client_uuid);
 								break;
 
 							case MessageType.PONG:
 								BasicMessage cmsg = *(cast(BasicMessage*)(data));
-								logger.log("Client %S sent pong.", cmsg.client_uuid);
+								logger.log("Client %s sent pong.", cmsg.client_uuid);
+								break;
+
+							case MessageType.START:
+								BasicMessage cmsg = *(cast(BasicMessage*)(data));
+								logger.log("Client %s sent start.", cmsg.client_uuid);
+								send(game_thread, Command.SET_CONNECTED);
 								break;
 
 							default:
@@ -469,6 +863,12 @@ struct NetworkPeer {
 					(Command cmd) {
 						logger.log("Received command: %s", to!string(cmd));
 						switch (cmd) {
+							case Command.SET_CONNECTED:
+								foreach (peer; peers) {
+									send_packet!(BasicMessage)(MessageType.START, from, peer.client_uuid);
+								}
+								state = switch_state(ConnectionState.CONNECTED);
+								break;
 							case Command.DISCONNECT:
 								handle_disconnect();
 								break;
@@ -484,9 +884,12 @@ struct NetworkPeer {
 
 			}
 
+			import core.thread : Thread;
+			Thread.sleep(dur!("usecs")(1));
+
 		}
 
-	}
+	}*/
 
 } //NetworkPeer
 

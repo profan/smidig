@@ -1,7 +1,7 @@
 module blindfire.config;
 
-import std.file;
-import std.algorithm;
+import std.file : exists, read, write;
+import std.algorithm : splitter;
 import std.stdio : writefln;
 
 struct ConfigMap {
@@ -27,7 +27,7 @@ struct ConfigMap {
 
 	const(char[]) load_file(in char[] file_name) {
 
-		auto input = cast(const char[])std.file.read(file_name);
+		auto input = cast(const char[])read(file_name);
 		return input;
 
 	}

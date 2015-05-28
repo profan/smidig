@@ -11,39 +11,49 @@ import profan.collections : StaticArray;
 enum ConsoleCommand {
 
 	HELP = "help",
-	LIST_COMMANDS = "list_commands",
 	SET_TICKRATE = "set_tickrate",
 	PUSH_STATE = "push_state"
 
 }
 
-alias void delegate(in char[] arguments) CommandDelegate;
+alias void delegate(Console* console, in char[] arguments) CommandDelegate;
 
 struct Console {
 
-	enum BUFFER_WIDTH = 80;
-	enum BUFFER_LINES = 30;
+	private {
 
-	alias StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] ConsoleBuffer;
-	CommandDelegate[ConsoleCommand] commands;
+		enum BUFFER_WIDTH = 80;
+		enum BUFFER_LINES = 30;
+		alias StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] ConsoleBuffer;
+		CommandDelegate[ConsoleCommand] commands;
 
-	FontAtlas* atlas;
-	bool enabled = false;
-	ConsoleBuffer buffers;
+		FontAtlas* atlas;
+		ConsoleBuffer buffers;
+		ConsoleBuffer history;
 
-	ConsoleBuffer history;
-	size_t history_index = 0;
-	size_t history_elements = 0;
+		bool enabled = false;
+		size_t history_index = 0;
+		size_t history_elements = 0;
+
+	}
+	
 
 	this(FontAtlas* font_atlas) {
-		this.atlas = font_atlas;
 
 		import std.traits : EnumMembers;
+		this.atlas = font_atlas;
+
 		bind_command(ConsoleCommand.HELP,
-			(in char[] args) {
-				foreach (i, field; EnumMembers!ConsoleCommand) print!(field);
-				print!("Listing all commands:");
+			(Console* console, in char[] args) {
+				foreach (i, field; EnumMembers!ConsoleCommand) console.print!(field);
+				console.print!("Listing all commands:");
 		});
+
+	}
+
+	@disable this(this);
+
+	~this() {
 
 	}
 
@@ -55,7 +65,7 @@ struct Console {
 
 	void print(string format, Args...)(Args args) {
 
-		import std.format : sformat;
+		import std.string : sformat;
 
 		char[128] fmt_str;
 		char[] c = sformat(fmt_str, format, args);
@@ -120,7 +130,7 @@ struct Console {
 
 		if (command in commands) {
 			shift_buffer(buffers);
-			commands[command](args);
+			commands[command](&this, args);
 			history[0] ~= slice;
 			++history_elements;
 			shift_buffer(history);

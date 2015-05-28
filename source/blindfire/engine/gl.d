@@ -1,15 +1,27 @@
 module blindfire.engine.gl;
 
-import core.vararg;
-import core.stdc.stdio;
+import core.stdc.stdio : printf;
 import core.stdc.stdlib : malloc, free;
 import std.stdio : writefln;
 import std.file : read;
 
 import derelict.opengl3.gl3;
-
 import gfm.math;
+
 import blindfire.engine.defs;
+
+mixin template OpenGLError() {
+
+	invariant {
+
+		GLenum status = glGetError();
+		if (status != GL_NO_ERROR) {
+			writefln("[OpenGL : %s] Error: %d", typeof(this).stringof, status);
+		}
+
+	}
+
+} //OpenGLError
 
 struct VAO {
 
@@ -35,17 +47,61 @@ struct AttribLocation {
 
 }
 
+//some kind of line-based graph, for visual profiling of performance.
+struct Graph {
+
+} //Graph
+
+struct Cursor {
+
+	Mesh mesh;
+	Shader* shader;
+	Texture* texture;
+	
+	this(Texture* cursor_texture, Shader* cursor_shader) nothrow @nogc {
+
+		this.texture = cursor_texture;
+		int w = texture.width, h = texture.height;
+
+		//cartesian coordinate system, inverted y component to not draw upside down.
+		Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
+		this.mesh = Mesh(vertices);
+		this.shader = cursor_shader;
+
+	}
+
+	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
+		
+		auto tf = Transform(position);
+
+		shader.bind();
+		texture.bind(0);
+		shader.update(projection, tf);
+		mesh.draw();
+		texture.unbind();
+		shader.unbind();
+
+	}
+
+	@disable this(this);
+
+} //Cursor
+
 struct Text {
 
 	import derelict.sdl2.sdl;
 	import derelict.sdl2.ttf;
 
-	enum MAX_SIZE = 64;
-	char[MAX_SIZE] content;
+	private {
 
-	Mesh mesh;
-	Texture texture;
-	Shader* shader;
+		enum MAX_SIZE = 64;
+		char[MAX_SIZE] content;
+
+		Mesh mesh;
+		Texture texture;
+		Shader* shader;
+
+	}
 
 	@property int width() { return texture.width; }
 	@property int height() { return texture.height; }
@@ -53,34 +109,24 @@ struct Text {
 	@property ref char[MAX_SIZE] text() { return content; }
 	@property void text(ref char[MAX_SIZE] new_text) { content = new_text[]; }
 
-	this(TTF_Font* font, char[64] initial_text, int font_color, Shader* text_shader)  {
+	this(TTF_Font* font, char[64] initial_text, int font_color, Shader* text_shader)  nothrow @nogc {
 
-		content = initial_text;
+		this.content = initial_text;
 		SDL_Color color = {cast(ubyte)(font_color>>16), cast(ubyte)(font_color>>8), cast(ubyte)(font_color)};
 		SDL_Surface* surf = TTF_RenderUTF8_Blended(font, initial_text.ptr, color);
 		scope(exit) SDL_FreeSurface(surf);
 
-		texture = Texture(surf.pixels, surf.w, surf.h, GL_RGBA, GL_RGBA);
+		this.texture = Texture(surf.pixels, surf.w, surf.h, GL_RGBA, GL_RGBA);
+		int w = texture.width, h = texture.height;
 
-		int w = texture.width;
-		int h = texture.height;
 		//cartesian coordinate system, inverted y component to not draw upside down.
-		Vertex[6] vertices = [
-			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-			Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
-			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
-
-			Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-			Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
-			Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
-		];
-
-		mesh = Mesh(vertices.ptr, vertices.length);
-		shader = text_shader;
+		Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
+		this.mesh = Mesh(vertices);
+		this.shader = text_shader;
 	
 	}
 
-	void draw(ref Mat4f projection, Vec2f position) {
+	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
 
 		auto tf = Transform(position);
 
@@ -94,7 +140,10 @@ struct Text {
 	}
 
 	~this() {
+
 	}
+
+	mixin OpenGLError!();
 
 } //Text
 
@@ -109,9 +158,9 @@ struct Mesh {
 	GLuint[NUM_BUFFERS] vbo; //vertex array buffers
 	uint draw_count;
 
-	this(Vertex* vertices, uint vertices_count) {
+	this(in Vertex[] vertices) nothrow @nogc {
 
-		this.draw_count = vertices_count;
+		this.draw_count = cast(uint)vertices.length;
 
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
@@ -121,7 +170,7 @@ struct Mesh {
 
 		//vertex position buffer
 		glBindBuffer(GL_ARRAY_BUFFER, vbo[POSITION_VB]); //tells OpenGL to interpret this as an array 
-		glBufferData(GL_ARRAY_BUFFER, vertices_count * vertices[0].sizeof, vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_STATIC_DRAW);
 		//upload to GPU, send size in bytes and pointer to array, also tell GPU it will never be modified
 
 		glEnableVertexAttribArray(0);
@@ -140,13 +189,13 @@ struct Mesh {
 
 	@disable this(this);
 
-	~this() {
+	~this() nothrow @nogc {
 
 		glDeleteVertexArrays(1, &vao);
 
 	}
 
-	void draw() {
+	void draw() nothrow @nogc {
 
 		glBindVertexArray(vao); //set vertex array to use
 
@@ -155,6 +204,8 @@ struct Mesh {
 		glBindVertexArray(0); //unbind
 
 	}
+
+	mixin OpenGLError!();
 
 } //Mesh
 
@@ -186,13 +237,13 @@ struct Texture {
 
 	}
 
-	this(int width, int height, GLenum input_format, GLenum output_format, GLenum unpack_alignment) {
+	this(int width, int height, GLenum input_format, GLenum output_format, GLenum unpack_alignment) nothrow @nogc {
 
 		this.width = width;
 		this.height = height;
 
-		glGenTextures(1, &texture);	
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glGenTextures(1, &this.texture);
+		glBindTexture(GL_TEXTURE_2D, this.texture);
 		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -207,16 +258,16 @@ struct Texture {
 
 	}
 
-	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) {
+	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) nothrow @nogc {
 
 		this.width = width;
 		this.height = height;
 	
 		//generate single texture, put handle in texture
-		glGenTextures(1, &texture);
+		glGenTextures(1, &this.texture);
 
 		//normal 2d texture, bind to our texture handle
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, this.texture);
 
 		//set texture parameters in currently bound texture, controls texture wrapping (or GL_CLAMP?)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -231,24 +282,18 @@ struct Texture {
 
 		//UNBIND
 		glBindTexture(GL_TEXTURE_2D, 0);
-
-		GLenum status = glGetError();
-		if (status != GL_NO_ERROR) {
-			writefln("[OpenGL] Texture loading error: %d", status);
-		}
-
 	}
 
 	@disable this(this);
 
-	~this() {
+	~this() nothrow @nogc {
 
 		glDeleteTextures(1, &texture);
 
 	}
 
 	//since OpenGL lets you bind multiple textures at once, maximum(32?)
-	void bind(int unit) {
+	void bind(int unit) nothrow @nogc {
 
 		assert(unit >= 0 && unit <= 31);
 		glActiveTexture(GL_TEXTURE0 + unit); //since this is sequential, this works
@@ -256,14 +301,15 @@ struct Texture {
 
 	}
 
-	void unbind() {
+	void unbind() nothrow @nogc {
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 	}
 
-} //Texture
+	mixin OpenGLError!();
 
+} //Texture
 struct Transform {
 
 	Vec2f position;
@@ -272,14 +318,14 @@ struct Transform {
 
 	Vec3f origin;
 
-	this(in Vec2f pos, in Vec3f rotation = Vec3f(0.0f, 0.0f, 0.0f), in Vec2f scale = Vec2f(1.0f, 1.0f)) {
+	this(in Vec2f pos, in Vec3f rotation = Vec3f(0.0f, 0.0f, 0.0f), in Vec2f scale = Vec2f(1.0f, 1.0f)) nothrow @nogc {
 		this.position = pos;
 		this.rotation = rotation;
 		this.scale = scale;
 		this.origin = Vec3f(0.0f, 0.0f, 0.0f);
 	}
 
-	@property Mat4f transform() const {
+	@property Mat4f transform() const nothrow @nogc {
 
 		Mat4f originMatrix = Mat4f.translation(origin);
 		Mat4f posMatrix = Mat4f.translation(Vec3f(position, 0.0f) - origin);
@@ -299,7 +345,7 @@ struct Transform {
 
 struct Vertex {
 
-	this(in Vec3f pos, in Vec2f tex_coord) {
+	this(in Vec3f pos, in Vec2f tex_coord) nothrow @nogc pure {
 		this.pos = pos;
 		this.tex_coord = tex_coord;
 	}
@@ -322,8 +368,10 @@ struct Shader {
 
 	this (in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
 
-		char* vs = load_shader(file_name ~ ".vs");	
-		char* fs = load_shader(file_name ~ ".fs");	
+		assert(uniforms.length <= bound_uniforms.length);
+
+		char* vs = load_shader(file_name ~ ".vs");
+		char* fs = load_shader(file_name ~ ".fs");
 		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER);
 		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER);
 
@@ -341,7 +389,7 @@ struct Shader {
 
 	}
 
-	void update(ref Mat4f projection, ref Transform transform) {
+	void update(ref Mat4f projection, ref Transform transform) nothrow @nogc {
 
 		Mat4f model = transform.transform;
 
@@ -351,7 +399,7 @@ struct Shader {
 
 	}
 
-	void update(ref Mat4f projection, ref Mat4f transform) {
+	void update(ref Mat4f projection, ref Mat4f transform) nothrow @nogc {
 
 		//transpose matrix, since row major, not column
 		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, transform.ptr);
@@ -359,7 +407,7 @@ struct Shader {
 
 	}
 
-	void update(ref Mat4f projection) {
+	void update(ref Mat4f projection) nothrow @nogc {
 
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
@@ -372,17 +420,19 @@ struct Shader {
 	}
 
 
-	void bind() {
+	void bind() nothrow @nogc {
 
 		glUseProgram(program);
 
 	}
 
-	void unbind() {
+	void unbind() nothrow @nogc {
 
 		glUseProgram(0);
 
 	}
+
+	mixin OpenGLError!();
 
 } //Shader
 
@@ -392,7 +442,7 @@ char* load_shader(in char[] file_name) {
 	return cast(char*)read(file_name);
 }
 
-bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) {
+bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) nothrow @nogc {
 
 	GLint result;
 
@@ -420,7 +470,7 @@ bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) {
 
 }
 
-GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) {
+GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) nothrow @nogc {
 
 	GLuint new_shader;
 	
@@ -437,7 +487,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) {
 
 }
 
-GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) {
+GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) nothrow @nogc {
 
 	GLuint program = glCreateProgram();
 
@@ -462,5 +512,68 @@ GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) {
 	}
 
 	return program;
+
+}
+
+/* OpenGL color related functions, darkening and stuff. */
+GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc pure {
+
+	GLfloat[4] gl_color = [ //mask out r, g, b components from int
+		cast(float)cast(ubyte)(color>>16)/255,
+		cast(float)cast(ubyte)(color>>8)/255,
+		cast(float)cast(ubyte)(color)/255,
+		cast(float)cast(ubyte)(alpha)/255
+	];
+
+	return gl_color;
+
+}
+
+int darken(int color, uint percentage) nothrow @nogc pure {
+
+	uint adjustment = 255 / percentage;
+	ubyte r = cast(ubyte)(color>>16);
+	ubyte g = cast(ubyte)(color>>8);
+	ubyte b = cast(ubyte)(color);
+	r -= adjustment;
+	g -= adjustment;
+	b -= adjustment;
+	int result = (r << 16) | (g << 8) | b;
+
+	return result;
+
+}
+
+/* Primitives? */
+
+auto create_rectangle_vec3f(float w, float h) nothrow @nogc pure {
+
+	Vec3f[6] vertices = [
+		Vec3f(0.0f, 0.0f, 0.0f), // top left
+		Vec3f(w, 0.0f, 0.0f), // top right
+		Vec3f(w, h, 0.0f), // bottom right
+
+		Vec3f(0.0f, 0.0f, 0.0f), // top left
+		Vec3f(0.0f, h, 0.0f), // bottom left
+		Vec3f(w, h, 0.0f) // bottom right
+	];
+
+	return vertices;
+
+}
+
+auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc pure {
+
+	Vertex[6] vertices = [
+		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+		Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
+		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
+
+		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
+		Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
+		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
+	];
+
+	return vertices;
 
 }

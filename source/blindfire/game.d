@@ -1,7 +1,7 @@
 module blindfire.game;
 
 import std.stdio : writefln;
-import std.concurrency : send, spawn, receiveOnly, thisTid;
+import std.concurrency : spawn, thisTid;
 
 import derelict.sdl2.sdl;
 import derelict.sdl2.ttf;
@@ -14,6 +14,7 @@ import blindfire.engine.eventhandler;
 import blindfire.engine.console : Console;
 import blindfire.engine.text : FontAtlas;
 import blindfire.engine.util : render_string;
+import blindfire.engine.memory : LinearAllocator;
 import blindfire.engine.resource;
 import blindfire.engine.state;
 import blindfire.engine.defs;
@@ -44,20 +45,23 @@ final class MenuState : GameState {
 
 	}
 	
-	override void enter() {
+	void enter() {
 
 	}
 
-	override void leave() {
+	void leave() {
 
 	}
 
+	void on_command(Command cmd) {
 
-	override void update(double dt) {
+	}
+
+	void update(double dt) {
 	
 	}
 
-	override void draw(Window* window) {
+	void draw(Window* window) {
 
 		uint width = 512, height = window.height - window.height/3;
 		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
@@ -71,6 +75,7 @@ final class MenuState : GameState {
 		} //join
 
 		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", MENU_COLOR)) {
+			net_man.send_message(Command.CREATE);
 			statehan.push_state(State.LOBBY);
 		} //create
 
@@ -90,46 +95,48 @@ final class JoiningState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
-	Tid network_thread;
-
 	GameNetworkManager net_man;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, GameNetworkManager net_man) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man) {
 		this.statehan = statehan;
 		this.ui_state = state;
-		this.network_thread = net_tid;
 		this.net_man = net_man;
 	}
 
-	override void enter() {
+	void enter() {
 		InternetAddress addr = new InternetAddress("localhost", 12000);
-		send(network_thread, Command.CONNECT, cast(shared)addr);
+		net_man.send_message(Command.CONNECT, cast(shared)addr);
 	}
 
-	override void leave() {
+	void leave() {
 
 	}
 
-	override void update(double dt) {
-		
-		auto result = receiveTimeout(dur!("nsecs")(1),
-		(Command cmd) {
-			if (cmd == Command.CREATE) {
-				writefln("[GAME] Received %s from net thread.", to!string(cmd));
+	void on_command(Command cmd) {
+
+		switch (cmd) with (Command) {
+
+			case SET_CONNECTED:
 				statehan.pop_state();
 				statehan.push_state(State.LOBBY);
-			} else if (cmd == Command.DISCONNECT) {
-				writefln("[GAME] Received %s from net thread, going back to menu.", to!string(cmd));
-				statehan.pop_state();
-			}
-		});
+				break;
+
+			default:
+				writefln("[GAME] Unhandled message: %s", to!string(cmd));
+
+		}
 
 	}
 
-	override void draw(Window* window) {
+	void update(double dt) {
+
+	}
+
+	void draw(Window* window) {
 
 		uint item_width = window.width/2, item_height = 32;
 		if (do_button(ui_state, 4, window, window.width/2, window.height/2 - item_height, item_width, item_height, ITEM_COLOR)) {
+			net_man.send_message(Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu, cancel
 
@@ -143,20 +150,15 @@ final class LobbyState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
-	Tid network_thread;
-
 	GameNetworkManager net_man;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, GameNetworkManager net_man) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man) {
 		this.statehan = statehan;
 		this.ui_state = state;
-		this.network_thread = net_tid;
 		this.net_man = net_man;
 	}
 
 	void enter() {
-
-		send(network_thread, Command.CREATE);
 
 	}
 
@@ -164,19 +166,16 @@ final class LobbyState : GameState {
 
 	}
 
-	void update(double dt) {
+	void on_command(Command cmd) {
 
-		auto result = receiveTimeout(dur!("nsecs")(1),
-		(Command cmd) {
-			if (cmd == Command.CREATE) {
-				writefln("[GAME] Received %s from net thread.", to!string(cmd));
-				statehan.pop_state();
-				statehan.push_state(State.GAME);
-			} else if (cmd == Command.DISCONNECT) {
-				writefln("[GAME] Received %s from net thread, going back to menu.", to!string(cmd));
-				statehan.pop_state();
-			}
-		});
+		if (cmd == Command.SET_CONNECTED) {
+			statehan.pop_state();
+			statehan.push_state(State.GAME);
+		}
+
+	}
+
+	void update(double dt) {
 
 	}
 
@@ -195,13 +194,13 @@ final class LobbyState : GameState {
 
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
-			send(network_thread, Command.CREATE);
+			net_man.send_message(Command.SET_CONNECTED);
 			statehan.pop_state();
 			statehan.push_state(State.GAME);
 		}
 
 		if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
-			send(network_thread, Command.DISCONNECT);
+			net_man.send_message(Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
 
@@ -219,7 +218,6 @@ final class MatchState : GameState {
 	GameStateHandler statehan;
 	GameNetworkManager net_man;
 	UIState* ui_state;
-	Tid network_thread;
 
 	SelectionBox sbox;
 	EntityManager em;
@@ -227,22 +225,28 @@ final class MatchState : GameState {
 	Console* console;
 	FontAtlas* debug_atlas;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Tid net_tid, Console* console, FontAtlas* atlas) {
+	LinearAllocator entity_allocator;
+
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas) {
 		this.statehan = statehan;
 		this.ui_state = state;
-		this.network_thread = net_tid;
 		this.net_man = net_man;
 
 		this.console = console;
 		this.debug_atlas = atlas;
 
-		this.em = new EntityManager();
-		this.em.add_system(new TransformManager());
-		this.em.add_system(new CollisionManager());
-		this.em.add_system(new SpriteManager());
-		this.em.add_system(new InputManager());
-		this.em.add_system(new NetworkManager(network_thread));
-		this.em.add_system(new OrderManager(&sbox));
+		this.entity_allocator = LinearAllocator(1024 * 1024 * 32, "EntityAllocator"); //32 megabytes :D
+
+		alias ea = entity_allocator;
+		this.em = ea.alloc!(EntityManager)();
+		this.em.add_system(ea.alloc!(TransformManager)());
+		this.em.add_system(ea.alloc!(CollisionManager)(Vec2i(640, 480)));
+		this.em.add_system(ea.alloc!(SpriteManager)());
+		this.em.add_system(ea.alloc!(InputManager)());
+		this.em.add_system(ea.alloc!(OrderManager)(&sbox, net_man.tm));
+		this.em.add_system(ea.alloc!(SelectionManager)());
+
+		this.sbox = SelectionBox();
 
 		//where do these bindings actually belong? WHO KNOWS
 		evhan.bind_mousebtn(1, &sbox.set_active, KeyState.DOWN);
@@ -250,72 +254,30 @@ final class MatchState : GameState {
 		evhan.bind_mousebtn(3, &sbox.set_order, KeyState.UP);
 		evhan.bind_mousemov(&sbox.set_size);
 
-	}
-
-	StaticArray!(ubyte, 4096) data;
-
-	override void enter() {
-
-		import blindfire.netmsg : UpdateType, EntityType;
-		import std.random : uniform;
-
-		auto result = receiveTimeout(dur!("nsecs")(1),
-		(Command cmd, ClientID assigned_id) {
-			if (cmd == Command.ASSIGN_ID) {
-				writefln("[GAME] Recieved id assignment: %d from net thread.", assigned_id);
-				em.client_uuid = assigned_id;
-			}
-		});
-
-		auto rm = ResourceManager.get();
-		Shader* s = rm.get_resource!(Shader)(Resource.BASIC_SHADER);
-		Texture* t = rm.get_resource!(Texture)(Resource.UNIT_TEXTURE);
-
-		void network_unit(EntityID id, int x, int y) {
-			data ~= (cast(ubyte*)&id)[0..id.sizeof];
-
-			auto ent_type = EntityType.UNIT;
-			data ~= (cast(ubyte*)&ent_type)[0..ent_type.sizeof];
-
-			auto vec2 = Vec2f(x, y);
-			data ~= (cast(ubyte*)&vec2)[0..vec2.sizeof];
-		}
-	
-		data.length = 0;
-		auto type = UpdateType.CREATE;
-		data ~= (cast(ubyte*)&type)[0..type.sizeof];
-
-		for (uint i = 0; i < 50; ++i) {
-			int n_x = uniform(0, 640);
-			int n_y = uniform(0, 480);
-			auto id = create_unit(em, Vec2f(n_x, n_y), cast(EntityID*)null, s, t);
-			network_unit(id, n_x, n_y);
-		}
-
-		//TODO move this into create_unit?
-		send(network_thread, Command.UPDATE, cast(immutable(ubyte)[])data[].idup);
+		net_man.em = em;
 
 	}
 
-	override void leave() {
+	void enter() {
+
+	}
+
+	void leave() {
 
 		//remove all things
 		em.clear_systems();
 
-		//disconnect since when in this state, we will have been connected.
-		send(network_thread, Command.DISCONNECT);
+	}
+
+	void on_command(Command cmd) {
+
+		if (cmd == Command.DISCONNECT) {
+			statehan.pop_state();
+		}
 
 	}
 
-	override void update(double dt) {
-
-		auto result = receiveTimeout(dur!("nsecs")(1),
-		(Command cmd) {
-			if (cmd == Command.DISCONNECT) {
-				writefln("[GAME] Received %s from net thread, going back to menu.", to!string(cmd));
-				statehan.pop_state();
-			}
-		});
+	void update(double dt) {
 
 		em.tick!(UpdateSystem)();
 
@@ -323,21 +285,36 @@ final class MatchState : GameState {
 
 	void draw_debug(Window* window) {
 
-		auto offset = Vec2i(16, 96);
-		debug_atlas.render_string!("client id: %d")(window, offset, em.client_uuid);
+		auto offset = Vec2i(16, 144);
+
+		float allocated_percent = cast(float)entity_allocator.allocated_size / entity_allocator.total_size;
+		debug_atlas.render_string!("entity allocator - alllocated: %f %%")(window, offset, allocated_percent);
 
 	}
 
-	override void draw(Window* window) {
+	void draw(Window* window) {
 
 		em.tick!(DrawSystem)(window);
-
 		sbox.draw(window, ui_state);
 
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, 5, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Quit", 0x428bca)) {
+		if (do_button(ui_state, 5, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Quit", 0x428bca)) {
+			net_man.send_message(Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
+
+		if (do_button(ui_state, 6, window, window.width/2, window.height - cast(int)(item_height*1.5), item_width, item_height, ITEM_COLOR, 255, "Create Units", 0x428bca)) {
+			
+			import std.random : uniform;
+			import blindfire.action : CreateUnitAction;
+
+			for (uint i = 0; i < 10; ++i) {
+				int n_x = uniform(0, 640);
+				int n_y = uniform(0, 480);
+				net_man.send_action!(CreateUnitAction)(Vec2f(n_x, n_y));
+			}
+
+		}
 
 		draw_debug(window);
 
@@ -350,42 +327,35 @@ final class WaitingState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
-	Tid network_thread;
-
 	GameNetworkManager net_man;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, Tid net_tid, GameNetworkManager net_man) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man) {
 		this.statehan = statehan;
 		this.ui_state = state;
-		this.network_thread = net_tid;
 		this.net_man = net_man;
 	}
 
-	override void enter() {
+	void enter() {
+
 	}
 
-	override void leave() {
+	void leave() {
 	
 	}
-	
-	override void update(double dt) {
 
-		auto result = receiveTimeout(dur!("nsecs")(1),
-		(Command cmd) {
-			if (cmd == Command.CREATE) {
-				writefln("[GAME] Received %s from net thread.", to!string(cmd));
-				statehan.pop_state();
-				statehan.push_state(State.GAME);
-			}
-		});
+	void on_command(Command cmd) {
+
+	}
+	
+	void update(double dt) {
 
 	}
 
-	override void draw(Window* window) {
+	void draw(Window* window) {
 
 		uint item_width = window.width / 2, item_height = 32;
-		if(do_button(ui_state, 6, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Cancel", 0x428bca)) {
-			send(network_thread, Command.DISCONNECT);
+		if (do_button(ui_state, 6, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Cancel", 0x428bca)) {
+			net_man.send_message(Command.DISCONNECT);
 			statehan.pop_state();
 		} //back to menu
 
@@ -393,7 +363,7 @@ final class WaitingState : GameState {
 
 } //WaitingState
 
-class OptionsState : GameState {
+final class OptionsState : GameState {
 
 	GameStateHandler statehan;
 	EventHandler* evhan;
@@ -419,6 +389,10 @@ class OptionsState : GameState {
 		player_name.length = 0;
 	}
 
+	void on_command(Command cmd) {
+
+	}
+
 	void update(double dt) {
 
 	}
@@ -430,23 +404,28 @@ class OptionsState : GameState {
 		ui_state.draw_label(window, "Player Name", window.width/2, window.height/4, 0, 0, 0x428bca);
 		ui_state.do_textbox(13, window, window.width/2, window.height/4+item_height, item_width, item_height, player_name, darken(BG_COLOR, 10), darken(0x428bca, 25));
 
-		if(do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, ITEM_COLOR, 255, "Save", 0x428bca)) {
+		if (do_button(ui_state, 14, window, window.width/2, window.height/4+cast(int)(item_height*2.5), item_width, item_height, ITEM_COLOR, 255, "Save", 0x428bca)) {
 			config_map.set("username", player_name[]);
 			config_map.save_file();
 		} //save options
 
-		if(do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "To Menu", 0x428bca)) {
+		if (do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "To Menu", 0x428bca)) {
 			statehan.pop_state();
 		} //back to menu
 	}
 
 } //OptionsState
 
-enum Resource {
+enum Resource : ResourceID {
 
 	//shaders
 	BASIC_SHADER,
 	TEXT_SHADER,
+
+	//textures
+
+	//cursor
+	CURSOR_TEXTURE,
 
 	//units
 	UNIT_TEXTURE
@@ -454,8 +433,6 @@ enum Resource {
 }
 
 struct Game {
-
-	import blindfire.engine.memory : LinearAllocator;
 
 	Window* window;
 	EventHandler* evhan;
@@ -465,23 +442,26 @@ struct Game {
 	Tid network_thread;
 	GameNetworkManager net_man;
 	ConfigMap config_map;
+	TurnManager tm;
 
-	LinearAllocator resource_allocator;
-	LinearAllocator system_allocator;
+	LinearAllocator master_allocator;
+	LinearAllocator* resource_allocator;
+	LinearAllocator* system_allocator;
 
 	float frametime, updatetime, drawtime;
 	FontAtlas* debug_atlas;
-
 	Console* console;
+	Cursor* cursor;
 
 	this(Window* window, EventHandler* evhan) {
 
-		this.window = window;
+		this.master_allocator = LinearAllocator(65536, "MasterAllocator");
+		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, "ResourceAllocator", &master_allocator);
+		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, "SystemAllocator", &master_allocator);
+
 		this.evhan = evhan;
+		this.window = window;
 		this.ui_state = UIState();
-		this.state = new GameStateHandler();
-		this.resource_allocator = LinearAllocator(8192);
-		this.system_allocator = LinearAllocator(16384);
 		this.config_map = ConfigMap("game.cfg");
 		
 	}
@@ -501,6 +481,12 @@ struct Game {
 		debug_atlas.render_string!("frametime: %f ms")(window, offset, frametime);
 		debug_atlas.render_string!("update: %f ms")(window, offset, updatetime);
 		debug_atlas.render_string!("draw: %f ms")(window, offset, drawtime);
+		debug_atlas.render_string!("client id: %d")(window, offset, net_man.client_id);
+		debug_atlas.render_string!("turn id: %d")(window, offset, net_man.turn_id);
+		debug_atlas.render_string!("bytes in/sec: %f")(window, offset,
+				blindfire.engine.net.network_stats.bytes_in_per_second);
+		debug_atlas.render_string!("bytes out/sec: %f")(window, offset,
+				blindfire.engine.net.network_stats.bytes_out_per_second);
 
 	}
 
@@ -512,6 +498,7 @@ struct Game {
 		ui_state.reset_ui();
 	
 		draw_debug();
+		cursor.draw(window.view_projection, Vec2f(evhan.last_x[0], evhan.last_y[0]));
 
 	}
 
@@ -541,6 +528,11 @@ struct Game {
 		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12, text_shader);
 		this.console = system_allocator.alloc!(Console)(debug_atlas);
 
+		auto cursor_texture = ra.alloc!(Texture)("resource/img/other_cursor.png");
+		rm.set_resource!(Texture)(cursor_texture, Resource.CURSOR_TEXTURE);
+		this.cursor = system_allocator.alloc!(Cursor)(cursor_texture, shader);
+		SDL_ShowCursor(SDL_DISABLE);
+
 	}
 
 	void run() {
@@ -549,24 +541,26 @@ struct Game {
 		load_resources();
 
 		//upload vertices for ui to gpu, set up shaders.
-		ui_state.init();
-	
-		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
-		net_man = system_allocator.alloc!(GameNetworkManager)(network_thread);
+		ui_state.init(system_allocator);
 
 		alias ra = system_allocator;
+		state = ra.alloc!(GameStateHandler)();
+		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
+
+		tm = ra.alloc!(TurnManager)();
+		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm);
+		scope(exit) { net_man.send_message(Command.TERMINATE); }
+
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, net_man), State.MENU);
-		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, network_thread, console, debug_atlas), State.GAME);
-		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, network_thread, net_man), State.JOIN);
-		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, network_thread, net_man), State.LOBBY);
-		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, network_thread, net_man), State.WAIT);
+		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas), State.GAME);
+		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, net_man), State.JOIN);
+		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man), State.LOBBY);
+		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, net_man), State.WAIT);
 		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map), State.OPTIONS);
 		state.push_state(State.MENU);
 
 		evhan.add_listener(&ui_state.update_ui);
 		evhan.bind_keyevent(SDL_SCANCODE_RALT, &window.toggle_wireframe);
-		evhan.bind_keyevent(SDL_SCANCODE_LCTRL, () => send(network_thread, Command.PING));
-		evhan.bind_keyevent(SDL_SCANCODE_LALT, () => send(network_thread, Command.STATS));
 
 		evhan.add_listener(&console.handle_event);
 		evhan.bind_keyevent(SDL_SCANCODE_TAB, &console.toggle);
@@ -585,13 +579,13 @@ struct Game {
 
 		import blindfire.engine.console : ConsoleCommand;
 		console.bind_command(ConsoleCommand.SET_TICKRATE, 
-			(in char[] args) {
+			(Console* console, in char[] args) {
 				int tickrate = to!int(args);
 				iter = TickDuration.from!("msecs")(1000/tickrate);
 		});
 
 		console.bind_command(ConsoleCommand.PUSH_STATE, 
-			(in char[] args) {
+			(Console* console, in char[] args) {
 				int new_state = to!int(args);
 				if (new_state >= State.min && new_state <= State.max) {
 					state.push_state(cast(State)new_state);
@@ -608,6 +602,10 @@ struct Game {
 		while(window.is_alive) {
 
 			ft_sw.start();
+
+			net_man.handle_messages();
+			net_man.process_actions();
+
 			if (sw.peek() - last > iter) {
 
 				ut_sw.start();
@@ -620,7 +618,7 @@ struct Game {
 			}
 
 			dt_sw.start();
-			window.render_clear();
+			window.render_clear(0x428bca);
 			draw();
 			window.render_present();
 			drawtime = dt_sw.peek().msecs;
@@ -635,8 +633,6 @@ struct Game {
 			}
 
 		}
-
-		send(network_thread, Command.TERMINATE);
 
 	}
 

@@ -48,13 +48,15 @@ struct LabelDrawCommand {
 
 struct UIState {
 
+	enum MAX_FIELD_SIZE = 64;
+
 	uint active_item = 0, hot_item = 0, kbd_item = 0;
 	int mouse_x, mouse_y;
 	uint mouse_buttons;
 
 	uint kbd_mod;
 	uint kbd_special;
-	StaticArray!(char, 64) entered_text;
+	StaticArray!(char, MAX_FIELD_SIZE) entered_text;
 
 	//encapsulate this, this is TEMPORARY
 	GLuint box_vao;
@@ -62,7 +64,10 @@ struct UIState {
 	Shader box_shader;
 	uint box_num_vertices;
 
-	FontAtlas font_atlas;
+	FontAtlas* font_atlas;
+
+	import blindfire.engine.memory;
+	LinearAllocator* ui_allocator;
 
 	void update_ui(ref SDL_Event ev) {
 
@@ -92,22 +97,15 @@ struct UIState {
 
 	}
 
-	void init() {
+	void init(LinearAllocator* allocator) {
+		
+		ui_allocator = allocator;
+		assert (ui_allocator !is null);
 
 		//upload the vertex data, transform it when actually drawing
-		Vec3f[6] vertices = [
 
-			Vec3f(0.0f, 0.0f, 0.0f), // top left
-			Vec3f(1.0f, 0.0f, 0.0f), // top right
-			Vec3f(1.0f, 1.0f, 0.0f), // bottom right
-
-			Vec3f(0.0f, 0.0f, 0.0f), // top left
-			Vec3f(0.0f, 1.0f, 0.0f), // bottom left
-			Vec3f(1.0f, 1.0f, 0.0f) // bottom right
-
-		];
-
-		box_num_vertices = vertices.length;
+		Vec3f[6] vertices = create_rectangle_vec3f(1.0f, 1.0f);
+		this.box_num_vertices = vertices.length;
 
 		glGenVertexArrays(1, &box_vao);
 		glBindVertexArray(box_vao);
@@ -130,13 +128,12 @@ struct UIState {
 			writefln("[GAME] OpenGL ERROR: %d", status);
 		}
 
-
 		import blindfire.engine.resource : ResourceManager;
 		import blindfire.game : Resource;
-		auto rm = ResourceManager.get();
-	
+
+		auto rm = ResourceManager.get();	
 		auto text_shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
-		font_atlas = FontAtlas("fonts/OpenSans-Bold.ttf", 22, text_shader);
+		font_atlas = ui_allocator.alloc!(FontAtlas)("fonts/OpenSans-Bold.ttf", 22, text_shader);
 
 	}
 
@@ -167,19 +164,6 @@ void reset_ui(ref UIState ui) {
 
 }
 
-GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) {
-
-	GLfloat[4] gl_color = [ //mask out r, g, b components from int
-		cast(float)cast(ubyte)(color>>16)/255,
-		cast(float)cast(ubyte)(color>>8)/255,
-		cast(float)cast(ubyte)(color)/255,
-		cast(float)cast(ubyte)(alpha)/255
-	];
-
-	return gl_color;
-
-}
-
 //Immediate Mode GUI (IMGUI, see Muratori)
 void draw_rectangle(UIState* state, Window* window, float x, float y, float width, float height, int color, ubyte alpha = 255) {
 
@@ -203,20 +187,6 @@ void draw_label(UIState* ui, Window* window, in char[] label, int x, int y, int 
 	int cw = ui.font_atlas.char_width;
 	float label_width = (label.length * cw);
 	ui.font_atlas.render_text(window, label, (x - label_width/2) - cw*2.05f, y + (cw-cw/5), 1, 1, color);
-
-}
-
-int darken(int color, uint percentage) {
-
-	uint adjustment = 255 / percentage;
-	ubyte r = cast(ubyte)(color>>16);
-	ubyte g = cast(ubyte)(color>>8);
-	ubyte b = cast(ubyte)(color);
-	r -= adjustment;
-	g -= adjustment;
-	b -= adjustment;
-	int result = (r << 16) | (g << 8) | b;
-	return result;
 
 }
 
@@ -267,7 +237,7 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 
 	int cw = ui.font_atlas.char_width;
 	ui.draw_rectangle(window, x - width/2, y - height/2, width, height, color);
-	ui.font_atlas.render_text(window, text_box[0..$], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
+	ui.font_atlas.render_text(window, text_box[], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
 
 }
 

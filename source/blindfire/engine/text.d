@@ -1,5 +1,7 @@
 module blindfire.engine.text;
 
+import core.stdc.stdio : printf;
+
 import std.algorithm : max;
 import std.stdio : writefln;
 
@@ -10,7 +12,7 @@ import blindfire.engine.gl;
 import blindfire.engine.window : Window;
 import blindfire.engine.resource : ResourceManager;
 
-struct CharacterInfo {
+private struct CharacterInfo {
 
 	float advance_x; // advance.x
 	float advance_y; // advance.y
@@ -36,9 +38,13 @@ struct FontAtlas {
 	int atlas_width, atlas_height;
 	int char_width, char_height;
 
+	import blindfire.engine.memory;
+	StackAllocator stack_allocator;
+
 	this(in char[] font_name, uint font_size, Shader* text_shader) {
 
-		shader = text_shader;
+		this.stack_allocator = StackAllocator(1024 * 8, "FontAllocator"); //todo nogc this
+		this.shader = text_shader;
 
 		glGenVertexArrays(1, &vao);
 		glGenBuffers(1, &vbo);
@@ -47,11 +53,11 @@ struct FontAtlas {
 		FT_Face face;
 
 		if (FT_Init_FreeType(&ft)) { 
-			writefln("[FontAtlas] Could not init freetype.");
+			printf("[FontAtlas] Could not init freetype.");
 		}
 
 		if (FT_New_Face(ft, font_name.ptr, 0, &face)) { 
-			writefln("[FontAtlas] Could not open font.");
+			printf("[FontAtlas] Could not open font.");
 		}
 
 		scope(exit) { FT_Done_FreeType(ft); }
@@ -64,20 +70,20 @@ struct FontAtlas {
 		for (uint i = 32; i < 128; ++i) {
 
 			if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
-				writefln("[FontAtlas] Character %c failed to load.", i);
+				printf("[FontAtlas] Character %c failed to load.", i);
 				continue;
 			}
 
 			w += glyph.bitmap.width;
 			h = max(h, glyph.bitmap.rows);
 
-			atlas_width = w;
-			atlas_height = h;
+			this.atlas_width = w;
+			this.atlas_height = h;
 
 		}
 
-		atlas = Texture(w, h, GL_RED, GL_RED, 1);
-		atlas.bind(0);
+		this.atlas = Texture(w, h, GL_RED, GL_RED, 1);
+		this.atlas.bind(0);
 
 		int x = 0;
 		for (uint i = 32; i < 128; ++i) {
@@ -90,17 +96,17 @@ struct FontAtlas {
 			glTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, glyph.bitmap.width, glyph.bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, glyph.bitmap.buffer);
 
 			int ci = i - 32;
-			characters[ci].advance_x = glyph.advance.x >> 6;
-			characters[ci].advance_y = glyph.advance.y >> 6;
+			this.characters[ci].advance_x = glyph.advance.x >> 6;
+			this.characters[ci].advance_y = glyph.advance.y >> 6;
 
-			characters[ci].bitmap_width = glyph.bitmap.width;
-			characters[ci].bitmap_height = glyph.bitmap.rows;
+			this.characters[ci].bitmap_width = glyph.bitmap.width;
+			this.characters[ci].bitmap_height = glyph.bitmap.rows;
 
-			characters[ci].bitmap_left = glyph.bitmap_left;
-			characters[ci].bitmap_top = glyph.bitmap_top;
+			this.characters[ci].bitmap_left = glyph.bitmap_left;
+			this.characters[ci].bitmap_top = glyph.bitmap_top;
 
-			characters[ci].tx_offset = cast(float)x / w;
-			characters[ci].tx_offset_y = (top_distance/64 - (face.glyph.metrics.height>>6));
+			this.characters[ci].tx_offset = cast(float)x / w;
+			this.characters[ci].tx_offset_y = (top_distance/64 - (face.glyph.metrics.height>>6));
 
 			x += glyph.bitmap.width;
 
@@ -108,18 +114,18 @@ struct FontAtlas {
 		
 		this.char_width = cast(typeof(char_width))face.glyph.metrics.width >> 6;
 		this.char_height = cast(typeof(char_height))face.glyph.metrics.height >> 6;
-		atlas.unbind();
+		this.atlas.unbind();
 
 	}
 	
 	@disable this(this);
 
-	~this() {
+	~this() nothrow @nogc {
 		glDeleteBuffers(1, &vbo);
 		glDeleteVertexArrays(1, &vao);
 	}
 
-	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
+	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) nothrow @nogc {
 		
 		struct Point {
 			GLfloat x;
@@ -128,9 +134,8 @@ struct FontAtlas {
 			GLfloat t;
 		}
 
-		import core.stdc.stdlib :free, malloc;
-		Point* coords_alloc = cast(Point*)malloc((Point.sizeof * text.length)*6); //move this to stack allocator
-		Point[] coords = coords_alloc[0..text.length*6];
+		Point[] coords = (cast(Point*)stack_allocator.alloc(Point.sizeof * text.length * 6))[0..text.length*6];
+		scope(exit) stack_allocator.dealloc(Point.sizeof * text.length * 6); //pop it
 
 		int n = 0; //how many to draw?
 		foreach (ch; text) {
@@ -165,7 +170,7 @@ struct FontAtlas {
 
 		}
 	
-		import blindfire.ui : int_to_glcolor;
+		import blindfire.engine.gl : int_to_glcolor;
 		
 		glEnable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
@@ -186,11 +191,12 @@ struct FontAtlas {
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, cast(void*)0);
 		glDrawArrays(GL_TRIANGLES, 0, n);
 
-		free(coords_alloc);
 		glBindVertexArray(0);
 		shader.unbind();
 		atlas.unbind();
 
 	}
+
+	mixin OpenGLError!();
 
 }

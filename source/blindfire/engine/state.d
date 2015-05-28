@@ -2,6 +2,7 @@ module blindfire.engine.state;
 
 import blindfire.engine.eventhandler;
 import blindfire.engine.window;
+import blindfire.engine.net;
 
 alias StateID = ulong;
 
@@ -25,7 +26,7 @@ class GameStateHandler {
 		//asd
 	}
 
-	void add_state(GameState state, State type) {
+	void add_state(GameState state, State type) nothrow {
 		states[type] = state;
 	}
 
@@ -51,6 +52,10 @@ class GameStateHandler {
 		stack[$-1].draw(window);
 	}
 
+	GameState peek() nothrow {
+		return stack[$-1];
+	}
+
 } //GameStateHandler
 
 interface GameState {
@@ -61,5 +66,10 @@ interface GameState {
 	void update(double dt);
 	void draw(Window* window);
 
+	void on_command(Command cmd);
+
 } //GameState
 
+unittest {
+	//test some things
+}
