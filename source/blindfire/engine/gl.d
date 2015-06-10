@@ -2,6 +2,7 @@ module blindfire.engine.gl;
 
 import core.stdc.stdio : printf;
 import core.stdc.stdlib : malloc, free;
+import std.string : toStringz;
 import std.stdio : writefln;
 import std.file : read;
 
@@ -205,7 +206,7 @@ struct Mesh {
 
 	}
 
-	mixin OpenGLError!();
+	mixin OpenGLError;
 
 } //Mesh
 
@@ -214,8 +215,6 @@ struct Texture {
 
 	import derelict.sdl2.sdl;
 	import derelict.sdl2.image;
-
-	import std.string : toStringz;
 
 	GLuint texture; //OpenGL handle for texture
 	int width, height;
@@ -307,7 +306,7 @@ struct Texture {
 
 	}
 
-	mixin OpenGLError!();
+	mixin OpenGLError;
 
 } //Texture
 struct Transform {
@@ -372,8 +371,8 @@ struct Shader {
 
 		char* vs = load_shader(file_name ~ ".vs");
 		char* fs = load_shader(file_name ~ ".fs");
-		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER);
-		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER);
+		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER, file_name);
+		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER, file_name);
 
 		GLuint[2] shaders = [vshader, fshader];
 		program = create_shader_program(shaders, attribs);
@@ -413,7 +412,7 @@ struct Shader {
 
 	}
 
-	~this() {
+	~this() nothrow @nogc {
 
 		glDeleteProgram(program);
 
@@ -432,7 +431,7 @@ struct Shader {
 
 	}
 
-	mixin OpenGLError!();
+	mixin OpenGLError;
 
 } //Shader
 
@@ -442,7 +441,7 @@ char* load_shader(in char[] file_name) {
 	return cast(char*)read(file_name);
 }
 
-bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) nothrow @nogc {
+bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] shader_path) nothrow {
 
 	GLint result;
 
@@ -461,7 +460,7 @@ bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) nothrow @nog
 			glGetShaderInfoLog(shader, log.sizeof, null, log.ptr);
 		}
 
-		printf("[OpenGL] Error: %s\n", log.ptr);
+		printf("[OpenGL] Error in %s: %s\n", toStringz(shader_path), log.ptr);
 		return false;
 
 	}
@@ -470,7 +469,7 @@ bool check_shader_error(GLuint shader, GLuint flag, bool isProgram) nothrow @nog
 
 }
 
-GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) nothrow @nogc {
+GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type, in char[] shader_path) nothrow {
 
 	GLuint new_shader;
 	
@@ -478,7 +477,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) nothrow
 	glShaderSource(new_shader, 1, shader_source, null);
 	glCompileShader(new_shader);
 
-	if (!check_shader_error(new_shader, GL_COMPILE_STATUS, false)) {
+	if (!check_shader_error(new_shader, GL_COMPILE_STATUS, false, shader_path)) {
 		glDeleteShader(new_shader);
 		return 0;
 	}
@@ -487,7 +486,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type) nothrow
 
 }
 
-GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) nothrow @nogc {
+GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) nothrow {
 
 	GLuint program = glCreateProgram();
 
@@ -500,13 +499,13 @@ GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) n
 	}
 
 	glLinkProgram(program);
-	if (!check_shader_error(program, GL_LINK_STATUS, true)) {
+	if (!check_shader_error(program, GL_LINK_STATUS, true, "")) {
 		glDeleteShader(program);
 		return 0;
 	}
 
 	glValidateProgram(program);
-	if (!check_shader_error(program, GL_VALIDATE_STATUS, true)) {
+	if (!check_shader_error(program, GL_VALIDATE_STATUS, true, "")) {
 		glDeleteShader(program);
 		return 0;
 	}
