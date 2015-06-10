@@ -169,7 +169,7 @@ struct Console {
 
 	}
 
-	void draw(Window* window) {
+	void draw(Window* window) nothrow @nogc {
 
 		if (!enabled) return;
 

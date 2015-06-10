@@ -93,11 +93,11 @@ struct Window {
 		SDL_SetWindowTitle(window, c_title);
 	}
 
-	@property uint width() const { return window_width; }
-	@property uint height() const { return window_height; }
+	@property uint width() const nothrow @nogc { return window_width; }
+	@property uint height() const nothrow @nogc { return window_height; }
 
-	@property bool is_alive() const { return alive; }
-	@property void is_alive(bool status) { alive = status; }
+	@property bool is_alive() const nothrow @nogc { return alive; }
+	@property void is_alive(bool status) nothrow @nogc { alive = status; }
 
 	void render_clear(int color) {
 

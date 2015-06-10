@@ -549,7 +549,7 @@ struct Game {
 
 		tm = ra.alloc!(TurnManager)();
 		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm);
-		scope(exit) { net_man.send_message(Command.TERMINATE); }
+		scope(exit) { net_man.send_message(Command.TERMINATE); } //terminate network worker when run goes out of scope, because the game has ended
 
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, net_man), State.MENU);
 		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas), State.GAME);
