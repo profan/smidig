@@ -437,8 +437,10 @@ struct Shader {
 
 //C-ish code ahoy
 
+import blindfire.engine.util : load_file;
+
 char* load_shader(in char[] file_name) {
-	return cast(char*)read(file_name);
+	return load_file(toStringz(file_name));
 }
 
 bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] shader_path) nothrow {

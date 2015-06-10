@@ -124,7 +124,7 @@ struct LinearAllocator {
 
 	}
 
-	mixin AllocatorCommon!();
+	mixin AllocatorCommon;
 
 	void* alloc(size_t size, size_t alignment) nothrow @nogc {
 
@@ -154,7 +154,7 @@ struct LinearAllocator {
 
 	}
 
-	mixin AllocatorInvariant!();
+	mixin AllocatorInvariant;
 
 } //LinearAllocator
 
@@ -210,7 +210,7 @@ struct StackAllocator {
 
 	}
 
-	mixin AllocatorCommon!();
+	mixin AllocatorCommon;
 
 	void* alloc(bool header = false)(size_t bytes) {
 
@@ -258,7 +258,7 @@ struct StackAllocator {
 
 	}
 
-	mixin AllocatorInvariant!();
+	mixin AllocatorInvariant;
 
 } //StackAllocator
 
@@ -291,7 +291,7 @@ struct FreeListAllocator {
 	
 	@disable this(this);
 
-	mixin AllocatorInvariant!();
+	mixin AllocatorInvariant;
 
 } //FreeListAllocator
 
