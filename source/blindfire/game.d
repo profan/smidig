@@ -190,7 +190,10 @@ final class LobbyState : GameState {
 		offset_y += item_height * 2;
 
 		//list players here
-		
+		foreach(player; net_man.connected_players) {
+			ui_state.draw_label(window, player.player_name[], offset_x, offset_y, 0, 0, 0x428bca);
+			offset_y += item_height;
+		}
 
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {

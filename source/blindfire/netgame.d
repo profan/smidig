@@ -63,6 +63,10 @@ class TurnManager {
 
 class GameNetworkManager {
 
+	struct Connection {
+		StaticArray!(char, 64) player_name;
+	}
+
 	enum Event {
 		CONNECT,
 		DISCONNECT
@@ -85,6 +89,8 @@ class GameNetworkManager {
 	ClientID client_id;
 	GameStateHandler game_state_handler;
 	ConfigMap* config_map;
+
+	StaticArray!(Connection, 32) connections;
 
 	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm) {
 		this.network_thread = net_tid;
@@ -231,6 +237,7 @@ class GameNetworkManager {
 						PlayerData player = input_stream.read!PlayerData();
 						writefln("[GAME] Handling player data - username: %s", 
 								 player.player_name[0..player.length]);
+						connections ~= Connection(StaticArray!(char, 64)(player.player_name[0..player.length]));
 						break;
 
 					case UpdateType.ACTION:
@@ -277,6 +284,10 @@ class GameNetworkManager {
 		//copy data, send.
 		send(network_thread, data.idup);
 
+	}
+
+	@property Connection[] connected_players() {
+		return connections[];
 	}
 
 } //GameNetworkManager
