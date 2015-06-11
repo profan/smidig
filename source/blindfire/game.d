@@ -140,6 +140,17 @@ final class JoiningState : GameState {
 			statehan.pop_state();
 		} //back to menu, cancel
 
+
+		auto offset = Vec2i(0, 0);
+		ui_state.draw_label(window, "Local Servers", offset.x, offset.y, 0, 0, 0x428bca);
+		offset.x += item_height * 2;
+
+		auto servers = net_man.query_servers();
+		foreach (server; servers) {
+			ui_state.draw_label(window, server.server_name[], offset.x, offset.y, 0, 0, 0x428bca);
+			offset.x += item_height;
+		}
+
 	}
 
 } //JoiningState

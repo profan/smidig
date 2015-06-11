@@ -67,6 +67,10 @@ class GameNetworkManager {
 		StaticArray!(char, 64) player_name;
 	}
 
+	struct Server {
+		StaticArray!(char, 64) server_name;
+	}
+
 	enum Event {
 		CONNECT,
 		DISCONNECT
@@ -91,6 +95,7 @@ class GameNetworkManager {
 	ConfigMap* config_map;
 
 	StaticArray!(Connection, 32) connections;
+	StaticArray!(Server, 32) servers;
 
 	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm) {
 		this.network_thread = net_tid;
@@ -288,6 +293,10 @@ class GameNetworkManager {
 
 	@property Connection[] connected_players() {
 		return connections[];
+	}
+
+	Server[] query_servers() {
+		return servers[];
 	}
 
 } //GameNetworkManager
