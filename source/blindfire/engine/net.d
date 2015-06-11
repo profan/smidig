@@ -257,7 +257,7 @@ struct NetworkPeer {
 	}
 
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
-		ubyte[4096] ubyte_data = void;
+		ubyte[4096] ubyte_data = void; //FIXME look at this later
 		auto send_data = OutputStream(ubyte_data.ptr, ubyte_data.length);
 		send_data.write(msg);
 		send_data.write(data);

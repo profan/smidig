@@ -12,9 +12,6 @@ import blindfire.action;
 import blindfire.config;
 import profan.ecs : EntityManager;
 
-alias void delegate() OnConnectDelegate;
-alias void delegate() OnDisconnectDelegate;
-
 struct PlayerData {
 
 	ubyte length;
@@ -23,8 +20,8 @@ struct PlayerData {
 } //PlayerData
 
 alias TempBuf = OutputStream;
-
 alias ActionType = uint;
+
 interface Action {
 
 	ActionType identifier() const;
@@ -41,6 +38,7 @@ enum UpdateType {
 } //UpdateType
 
 alias TurnID = uint;
+
 class TurnManager {
 
 	Action[] pending_actions;
@@ -61,11 +59,11 @@ class TurnManager {
 
 } //TurnManager
 
-class GameNetworkManager {
+struct Connection {
+	StaticArray!(char, 64) player_name;
+}
 
-	struct Connection {
-		StaticArray!(char, 64) player_name;
-	}
+class GameNetworkManager {
 
 	struct Server {
 		StaticArray!(char, 64) server_name;
@@ -93,8 +91,8 @@ class GameNetworkManager {
 	ClientID client_id;
 	GameStateHandler game_state_handler;
 	ConfigMap* config_map;
-
-	StaticArray!(Connection, 32) connections;
+	
+	Session* active_session;
 	StaticArray!(Server, 32) servers;
 
 	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm) {
@@ -133,7 +131,7 @@ class GameNetworkManager {
 
 	void process_actions() {
 
-		ubyte[2048] buf;
+		ubyte[2048] buf; //FIXME deal with this artificial limitation
 		auto stream = OutputStream(buf.ptr, buf.length);
 		foreach (action; tm.pending_actions) {
 
@@ -165,13 +163,15 @@ class GameNetworkManager {
 			switch (cmd) with (Command) {
 
 				case CREATE:
+					//notify active game state
+					active_session = new Session(this);
 					active_game_state.on_command(cmd);
 					break;
 
 				case SET_CONNECTED:
+
 					//send player data
-					
-					ubyte[4096] buf;
+					ubyte[4096] buf; //FIXME deal with this artificial limitation
 					auto stream = OutputStream(buf.ptr, buf.length);
 
 					auto type = UpdateType.PLAYER_DATA;
@@ -242,7 +242,7 @@ class GameNetworkManager {
 						PlayerData player = input_stream.read!PlayerData();
 						writefln("[GAME] Handling player data - username: %s", 
 								 player.player_name[0..player.length]);
-						connections ~= Connection(StaticArray!(char, 64)(player.player_name[0..player.length]));
+						active_session.connections ~= Connection(StaticArray!(char, 64)(player.player_name[0..player.length]));
 						break;
 
 					case UpdateType.ACTION:
@@ -287,12 +287,17 @@ class GameNetworkManager {
 	void send_message(in ubyte[] data) {
 
 		//copy data, send.
-		send(network_thread, data.idup);
+		send(network_thread, data.idup); //FIXME this allocates, aaaargh?!
 
 	}
 
 	@property Connection[] connected_players() {
-		return connections[];
+		assert(active_session !is null);
+		return active_session.connected_players();
+	}
+
+	@property Session* current_session() {
+		return active_session;
 	}
 
 	Server[] query_servers() {
@@ -303,15 +308,15 @@ class GameNetworkManager {
 
 struct Session {
 
-	enum State {
-		RUNNING,
-		WAITING
-	}
-
 	GameNetworkManager nm;
+	StaticArray!(Connection, 256) connections;
 
 	this(GameNetworkManager nm) {
-		
+		this.nm = nm;
+	}
+
+	@property Connection[] connected_players() {
+		return connections[];
 	}
 
 } //Session

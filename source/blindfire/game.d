@@ -249,7 +249,7 @@ final class MatchState : GameState {
 		this.console = console;
 		this.debug_atlas = atlas;
 
-		this.entity_allocator = LinearAllocator(1024 * 1024 * 32, "EntityAllocator"); //32 megabytes :D
+		this.entity_allocator = LinearAllocator(1024 * 32, "EntityAllocator"); //32 megabytes :D
 
 		alias ea = entity_allocator;
 		this.em = ea.alloc!(EntityManager)();
@@ -549,7 +549,26 @@ struct Game {
 
 	}
 
+	struct Thing {
+		this (int v) {
+			this.var = v;
+		}
+		int var;
+	}
+
 	void run() {
+
+		import blindfire.engine.memory : FreeListAllocator;
+
+		auto fa = FreeListAllocator(1024, "SomeFreeList");
+		auto ptr_to_thing1 = fa.alloc!(Thing)(210);
+		printf("thing1: %d", ptr_to_thing1.var);
+
+		auto ptr_to_thing2 = fa.alloc!(Thing)(420);
+		printf("thing2: %d", ptr_to_thing2.var);
+
+		fa.dealloc(ptr_to_thing1);
+		fa.dealloc(ptr_to_thing2);
 
 		//load game resources
 		load_resources();
