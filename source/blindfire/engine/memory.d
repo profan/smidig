@@ -264,15 +264,22 @@ struct StackAllocator {
 
 struct FreeListAllocator {
 
+	struct Block {
+		size_t size;
+		Block* next;
+	}
+
 	void* buffer;
 	void* current;
 
 	size_t total_size;
 	size_t allocated_size;
+	
+	Block* first;
 
 	immutable char[] name;
 
-	this(size_t size, string name) nothrow {
+	this(size_t size, string name) {
 
 		this.total_size = size;
 		this.allocated_size = 0;
@@ -283,15 +290,57 @@ struct FreeListAllocator {
 		GC.addRange(buffer, total_size);
 		this.name = name;
 
-	}
-
-	~this() {
+		first = alloc_item!(Block)(total_size - Block.sizeof, null);
 
 	}
 	
 	@disable this(this);
 
+	~this() {
+
+	}
+
+	auto alloc(T, Args...)(Args args) {
+
+		Block* cur = first;
+		while (cur != null) {
+			if (cur.size >= get_size!T) {
+
+				size_t remaining_size = cur.size - get_size!T;
+				cur.size = get_size!T;
+
+				auto obj_mem = (cur + Block.sizeof)[0..cur.size];
+				auto obj = emplace!(T, Args)(obj_mem, args);
+
+				void* block = cur + cur.size + Block.sizeof; //end of new block
+				auto mem = block[0..Block.sizeof];
+
+				if (cur.next == null) {
+					cur.next = emplace!Block(mem, remaining_size, null);
+				} else {
+					Block* next = cur.next;
+					cur.next = emplace!Block(mem, remaining_size, next);
+				}
+
+				return obj;
+
+			}
+		}
+
+		return null;
+
+	}
+
+	void* alloc(size_t size) {
+		return null;
+	}
+
+	void dealloc(void* block) {
+
+	}	
+
 	mixin AllocatorInvariant;
+	mixin AllocatorCommon;
 
 } //FreeListAllocator
 
