@@ -185,7 +185,7 @@ struct StackAllocator {
 	immutable char[] name;
 	
 	size_t pointer_count = 0;
-	Instance[100] allocated_pointers = void;
+	Instance[100] allocated_pointers = void; //FIXME get rid of this limitation, this is... very bad :D
 
 	this(size_t size, string name) nothrow {
 
