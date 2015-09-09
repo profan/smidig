@@ -60,8 +60,10 @@ struct FontAtlas {
 			printf("[FontAtlas] Could not open font.");
 		}
 
-		scope(exit) { FT_Done_FreeType(ft); }
-		scope(exit) { FT_Done_Face(face); }
+		scope(exit) {
+			FT_Done_FreeType(ft);
+			FT_Done_Face(face);
+		}
 
 		FT_Set_Pixel_Sizes(face, 0, font_size);	
 		FT_GlyphSlot glyph = face.glyph;
@@ -88,8 +90,9 @@ struct FontAtlas {
 		int x = 0;
 		for (uint i = 32; i < 128; ++i) {
 
-			if (FT_Load_Char(face, i, FT_LOAD_RENDER))
+			if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
 				continue;
+			}
 
 			float top_distance = face.glyph.metrics.horiBearingY; //used to adjust for eventual hang
 
@@ -156,8 +159,9 @@ struct FontAtlas {
 			y2 -= (characters[ci].bitmap_top * sy);
 			y2 -= (characters[ci].tx_offset_y * sy);
 
-			if (!w || !h) //continue if no width or height, invisible character
+			if (!w || !h) {//continue if no width or height, invisible character
 			 	continue;
+			}
 
 			coords[n++] = Point(x2, y2, characters[ci].tx_offset, characters[ci].bitmap_height / atlas_height); //top left?
 			coords[n++] = Point(x2, y2 - h, characters[ci].tx_offset, 0);
