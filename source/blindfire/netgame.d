@@ -8,6 +8,7 @@ import blindfire.engine.state : GameState, GameStateHandler;
 import blindfire.engine.log;
 import blindfire.engine.net;
 
+import blindfire.defs;
 import blindfire.action;
 import blindfire.config;
 import profan.ecs : EntityManager;
@@ -78,28 +79,40 @@ class GameNetworkManager {
 		SESSION_ACTIVE
 	}
 
-	float turn_length = 0.2f;
-	float tick_length = 0.05f;
-	uint ticks_per_second = 20;
-	uint ticks_per_turn = 4;
 
-	TurnID turn_id;
-	TurnManager tm;
-	EntityManager em;
-	private Tid network_thread;
+	public {
 
-	ClientID client_id;
-	GameStateHandler game_state_handler;
-	ConfigMap* config_map;
-	
-	Session* active_session;
-	StaticArray!(Server, 32) servers;
+		float turn_length = 0.2f;
+		float tick_length = 0.05f;
+		uint ticks_per_second = 20;
+		uint ticks_per_turn = 4;
 
-	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm) {
+		TurnID turn_id;
+		TurnManager tm;
+		EntityManager em;
+		Tid network_thread;
+
+		ClientID client_id;
+
+	}
+
+	private {
+
+		EventManagerType* evman;
+		GameStateHandler game_state_handler;
+		ConfigMap* config_map;
+
+		Session* active_session;
+		StaticArray!(Server, 32) servers;
+
+	}
+
+	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm, EventManagerType* eventman) {
 		this.network_thread = net_tid;
 		this.game_state_handler = state_han;
 		this.config_map = config;
 		this.tm = tm;
+		this.evman = eventman;
 	}
 
 	bool lockstep_turn() {

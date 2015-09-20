@@ -17,6 +17,7 @@ import blindfire.engine.util : render_string;
 import blindfire.engine.memory : LinearAllocator;
 import blindfire.engine.resource;
 import blindfire.engine.state;
+import blindfire.engine.event;
 import blindfire.engine.defs;
 import blindfire.engine.net;
 import blindfire.engine.gl;
@@ -24,6 +25,7 @@ import blindfire.engine.gl;
 import blindfire.graphics;
 import blindfire.netgame;
 import blindfire.config;
+import blindfire.defs;
 import blindfire.ui;
 
 const int BG_COLOR = 0xca8142;
@@ -34,14 +36,13 @@ final class MenuState : GameState {
 	
 	UIState* ui_state;
 	GameStateHandler statehan;
-
-	GameNetworkManager net_man;
+	EventManagerType* evman;
 	
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManagerType* eventman) {
 
 		this.statehan = statehan;
 		this.ui_state = state;
-		this.net_man = net_man;
+		this.evman = eventman;
 
 	}
 	
@@ -75,7 +76,7 @@ final class MenuState : GameState {
 		} //join
 
 		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", MENU_COLOR)) {
-			net_man.send_message(Command.CREATE);
+			evman.push!CreateGameEvent(true);
 			statehan.push_state(State.LOBBY);
 		} //create
 
@@ -95,17 +96,19 @@ final class JoiningState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
-	GameNetworkManager net_man;
+	GameNetworkManager netman;
+	EventManagerType* evman;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
-		this.net_man = net_man;
+		this.evman = eventman;
+		this.netman = net;
 	}
 
 	void enter() {
 		InternetAddress addr = new InternetAddress("localhost", 12000);
-		net_man.send_message(Command.CONNECT, cast(shared)addr);
+		evman.push!ClientConnectEvent(addr);
 	}
 
 	void leave() {
@@ -136,7 +139,7 @@ final class JoiningState : GameState {
 
 		uint item_width = window.width/2, item_height = 32;
 		if (do_button(ui_state, 4, window, window.width/2, window.height/2 - item_height, item_width, item_height, ITEM_COLOR)) {
-			net_man.send_message(Command.DISCONNECT);
+			evman.push!ClientDisconnectEvent(true);
 			statehan.pop_state();
 		} //back to menu, cancel
 
@@ -145,7 +148,7 @@ final class JoiningState : GameState {
 		ui_state.draw_label(window, "Local Servers", offset.x, offset.y, 0, 0, 0x428bca);
 		offset.x += item_height * 2;
 
-		auto servers = net_man.query_servers();
+		auto servers = netman.query_servers();
 		foreach (server; servers) {
 			ui_state.draw_label(window, server.server_name[], offset.x, offset.y, 0, 0, 0x428bca);
 			offset.x += item_height;
@@ -161,12 +164,14 @@ final class LobbyState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
-	GameNetworkManager net_man;
+	GameNetworkManager netman;
+	EventManagerType* evman;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
-		this.net_man = net_man;
+		this.evman = eventman;
+		this.netman = net;
 	}
 
 	void enter() {
@@ -201,20 +206,20 @@ final class LobbyState : GameState {
 		offset_y += item_height * 2;
 
 		//list players here
-		foreach(player; net_man.connected_players) {
+		foreach(player; netman.connected_players) {
 			ui_state.draw_label(window, player.player_name[], offset_x, offset_y, 0, 0, 0x428bca);
 			offset_y += item_height;
 		}
 
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
-			net_man.send_message(Command.SET_CONNECTED);
+			evman.push!ClientSetConnectedEvent(true);
 			statehan.pop_state();
 			statehan.push_state(State.GAME);
 		}
 
 		if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
-			net_man.send_message(Command.DISCONNECT);
+			evman.push!ClientDisconnectEvent(true);
 			statehan.pop_state();
 		} //back to menu
 
@@ -235,16 +240,18 @@ final class MatchState : GameState {
 
 	SelectionBox sbox;
 	EntityManager em;
+	EventManagerType* evman;
 
 	Console* console;
 	FontAtlas* debug_atlas;
 
 	LinearAllocator entity_allocator;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas, EventManagerType* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.net_man = net_man;
+		this.evman = eventman;
 
 		this.console = console;
 		this.debug_atlas = atlas;
@@ -313,7 +320,7 @@ final class MatchState : GameState {
 
 		uint item_width = window.width / 2, item_height = 32;
 		if (do_button(ui_state, 5, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Quit", 0x428bca)) {
-			net_man.send_message(Command.DISCONNECT);
+			evman.push!ClientDisconnectEvent(true);
 			statehan.pop_state();
 		} //back to menu
 
@@ -341,12 +348,12 @@ final class WaitingState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
-	GameNetworkManager net_man;
+	EventManagerType* evman;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManagerType* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
-		this.net_man = net_man;
+		this.evman = eventman;
 	}
 
 	void enter() {
@@ -369,7 +376,7 @@ final class WaitingState : GameState {
 
 		uint item_width = window.width / 2, item_height = 32;
 		if (do_button(ui_state, 6, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Cancel", 0x428bca)) {
-			net_man.send_message(Command.DISCONNECT);
+			evman.push!ClientDisconnectEvent();
 			statehan.pop_state();
 		} //back to menu
 
@@ -380,6 +387,7 @@ final class WaitingState : GameState {
 final class OptionsState : GameState {
 
 	GameStateHandler statehan;
+	EventManagerType* evman;
 	EventHandler* evhan;
 	UIState* ui_state;
 
@@ -388,11 +396,12 @@ final class OptionsState : GameState {
 	//options
 	StaticArray!(char, 64) player_name;
 
-	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf) {
+	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf, EventManagerType* eventman) {
 		this.statehan = state_handler;
 		this.evhan = event_handler;
 		this.ui_state = ui;
 		this.config_map = conf;
+		this.evman = eventman;
 	}
 
 	void enter() {
@@ -449,6 +458,7 @@ enum Resource : ResourceID {
 struct Game {
 
 	Window* window;
+	EventManagerType evman;
 	EventHandler* evhan;
 	GameStateHandler state;
 	UIState ui_state;
@@ -473,6 +483,7 @@ struct Game {
 		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, "ResourceAllocator", &master_allocator);
 		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, "SystemAllocator", &master_allocator);
 
+		this.evman = EventManagerType(EventMemory);
 		this.evhan = evhan;
 		this.window = window;
 		this.ui_state = UIState();
@@ -581,15 +592,15 @@ struct Game {
 		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 
 		tm = ra.alloc!(TurnManager)();
-		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm);
+		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm, &evman);
 		scope(exit) { net_man.send_message(Command.TERMINATE); } //terminate network worker when run goes out of scope, because the game has ended
 
-		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, net_man), State.MENU);
-		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas), State.GAME);
-		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, net_man), State.JOIN);
-		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man), State.LOBBY);
-		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, net_man), State.WAIT);
-		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map), State.OPTIONS);
+		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, &evman), State.MENU);
+		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas, &evman), State.GAME);
+		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, net_man, &evman), State.JOIN);
+		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man, &evman), State.LOBBY);
+		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, &evman), State.WAIT);
+		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map, &evman), State.OPTIONS);
 		state.push_state(State.MENU);
 
 		evhan.add_listener(&ui_state.update_ui);

@@ -154,6 +154,11 @@ struct LinearAllocator {
 
 	}
 
+	void reset() {
+		allocated_size = 0;
+		current = buffer;
+	}
+
 	mixin AllocatorInvariant;
 
 } //LinearAllocator
