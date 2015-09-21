@@ -5,6 +5,7 @@ import std.datetime : dur;
 
 import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.state : GameState, GameStateHandler;
+import blindfire.engine.event;
 import blindfire.engine.log;
 import blindfire.engine.net;
 
@@ -113,6 +114,11 @@ class GameNetworkManager {
 		this.config_map = config;
 		this.tm = tm;
 		this.evman = eventman;
+
+		evman.register!ClientConnectEvent(&onClientConnect);
+		evman.register!ClientDisconnectEvent(&onClientDisconnect);
+		evman.register!CreateGameEvent(&onCreateGame);
+
 	}
 
 	bool lockstep_turn() {
@@ -178,7 +184,7 @@ class GameNetworkManager {
 				case CREATE:
 					//notify active game state
 					active_session = new Session(this);
-					active_game_state.on_command(cmd);
+					evman.push!GameCreatedEvent(true);
 					break;
 
 				case SET_CONNECTED:
@@ -199,11 +205,11 @@ class GameNetworkManager {
 
 					send_message(Command.UPDATE, cast(immutable(ubyte[]))stream[].idup);
 
-					active_game_state.on_command(cmd);
+					evman.push!ClientSetConnectedEvent(true);
 					break;
 
 				case DISCONNECT:
-					active_game_state.on_command(cmd);
+					evman.push!ClientDisconnectEvent(true);
 					break;
 
 				default:
@@ -283,6 +289,21 @@ class GameNetworkManager {
 
 		});
 
+	}
+
+	void onCreateGame(EventCast* ev) {
+		auto cgev = ev.extract!CreateGameEvent();
+		send_message(Command.CREATE);
+	}
+
+	void onClientConnect(EventCast* ev) {
+		auto cev = ev.extract!ClientConnectEvent();
+		send_message(Command.CONNECT);
+	}
+
+	void onClientDisconnect(EventCast* ev) {
+		auto cdev = ev.extract!ClientDisconnectEvent();
+		send_message(Command.DISCONNECT);
 	}
 
 	void send_message(Args...)(Args args) {

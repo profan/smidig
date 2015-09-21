@@ -66,8 +66,6 @@ interface GameState {
 	void update(double dt);
 	void draw(Window* window);
 
-	void on_command(Command cmd);
-
 } //GameState
 
 unittest {
