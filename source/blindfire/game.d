@@ -72,142 +72,142 @@ final class MenuState : GameState {
 		} //join
 
 		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", MENU_COLOR)) {
-				evman.push!CreateGameEvent(true);
-				statehan.push_state(State.LOBBY);
-			} //create
-
-			if (do_button(ui_state, 12, window, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, ITEM_COLOR, 255, "Options", MENU_COLOR)) {
-				statehan.push_state(State.OPTIONS);
-			} //create
-
-			if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", MENU_COLOR)) {
-				window.is_alive = false;
-			} //quit
-			
-		}
-
-	} //MenuState
-
-	final class JoiningState : GameState {
-
-		UIState* ui_state;
-		GameStateHandler statehan;
-		GameNetworkManager netman;
-		EventManagerType* evman;
-
-		this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
-			this.statehan = statehan;
-			this.ui_state = state;
-			this.evman = eventman;
-			this.netman = net;
-		}
-
-		void enter() {
-			evman.register!ClientSetConnectedEvent(&onClientSetConnected);
-			InternetAddress addr = new InternetAddress("localhost", 12000);
-			evman.push!ClientConnectEvent(addr);
-		}
-
-		void leave() {
-			evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
-		}
-
-		void onClientSetConnected(EventCast* ev) {
-			auto cev = ev.extract!ClientSetConnectedEvent();
-			statehan.pop_state();
+			evman.push!CreateGameEvent(true);
 			statehan.push_state(State.LOBBY);
+		} //create
+
+		if (do_button(ui_state, 12, window, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, ITEM_COLOR, 255, "Options", MENU_COLOR)) {
+			statehan.push_state(State.OPTIONS);
+		} //create
+
+		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", MENU_COLOR)) {
+			window.is_alive = false;
+		} //quit
+			
+	}
+
+} //MenuState
+
+final class JoiningState : GameState {
+
+	UIState* ui_state;
+	GameStateHandler statehan;
+	GameNetworkManager netman;
+	EventManagerType* evman;
+
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
+		this.statehan = statehan;
+		this.ui_state = state;
+		this.evman = eventman;
+		this.netman = net;
+	}
+
+	void enter() {
+		evman.register!ClientSetConnectedEvent(&onClientSetConnected);
+		InternetAddress addr = new InternetAddress("localhost", 12000);
+		evman.push!ClientConnectEvent(addr);
+	}
+
+	void leave() {
+		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
+	}
+
+	void onClientSetConnected(EventCast* ev) {
+		auto cev = ev.extract!ClientSetConnectedEvent();
+		statehan.pop_state();
+		statehan.push_state(State.LOBBY);
+	}
+
+	void update(double dt) {
+
+	}
+
+	void draw(Window* window) {
+
+		uint item_width = window.width/2, item_height = 32;
+		if (do_button(ui_state, 4, window, window.width/2, window.height/2 - item_height, item_width, item_height, ITEM_COLOR)) {
+			evman.push!ClientDisconnectEvent(true);
+			statehan.pop_state();
+		} //back to menu, cancel
+
+
+		auto offset = Vec2i(0, 0);
+		ui_state.draw_label(window, "Local Servers", offset.x, offset.y, 0, 0, 0x428bca);
+		offset.x += item_height * 2;
+
+		auto servers = netman.query_servers();
+		foreach (server; servers) {
+			ui_state.draw_label(window, server.server_name[], offset.x, offset.y, 0, 0, 0x428bca);
+			offset.x += item_height;
 		}
 
-		void update(double dt) {
+	}
 
-		}
-
-		void draw(Window* window) {
-
-			uint item_width = window.width/2, item_height = 32;
-			if (do_button(ui_state, 4, window, window.width/2, window.height/2 - item_height, item_width, item_height, ITEM_COLOR)) {
-				evman.push!ClientDisconnectEvent(true);
-				statehan.pop_state();
-			} //back to menu, cancel
+} //JoiningState
 
 
-			auto offset = Vec2i(0, 0);
-			ui_state.draw_label(window, "Local Servers", offset.x, offset.y, 0, 0, 0x428bca);
-			offset.x += item_height * 2;
+// state handles match-preparation stage (whatever that may be?)
+final class LobbyState : GameState {
 
-			auto servers = netman.query_servers();
-			foreach (server; servers) {
-				ui_state.draw_label(window, server.server_name[], offset.x, offset.y, 0, 0, 0x428bca);
-				offset.x += item_height;
-			}
+	UIState* ui_state;
+	GameStateHandler statehan;
+	GameNetworkManager netman;
+	EventManagerType* evman;
 
-		}
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
+		this.statehan = statehan;
+		this.ui_state = state;
+		this.evman = eventman;
+		this.netman = net;
+	}
 
-	} //JoiningState
+	void enter() {
+		evman.register!ClientSetConnectedEvent(&onClientSetConnected);
+	}
 
+	void leave() {
+		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
+	}
 
-	// state handles match-preparation stage (whatever that may be?)
-	final class LobbyState : GameState {
+	void onClientSetConnected(EventCast* ev) {
+		auto cev = ev.extract!ClientSetConnectedEvent();
+		statehan.pop_state();
+		statehan.push_state(State.GAME);
+	}
 
-		UIState* ui_state;
-		GameStateHandler statehan;
-		GameNetworkManager netman;
-		EventManagerType* evman;
+	void update(double dt) {
 
-		this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
-			this.statehan = statehan;
-			this.ui_state = state;
-			this.evman = eventman;
-			this.netman = net;
-		}
+	}
 
-		void enter() {
-			evman.register!ClientSetConnectedEvent(&onClientSetConnected);
-		}
+	void draw(Window* window) {
 
-		void leave() {
-			evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
-		}
+		uint item_width = window.width / 2, item_height = 32;
+		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
 
-		void onClientSetConnected(EventCast* ev) {
-			auto cev = ev.extract!ClientSetConnectedEvent();
+		uint offset_x = window.width/3, offset_y = window.height/3;
+
+		ui_state.draw_label(window, "Players", offset_x, offset_y, 0, 0, 0x428bca);
+		offset_y += item_height * 2;
+
+		//list players here
+		/*foreach(player; netman.connected_players) {
+			ui_state.draw_label(window, player.player_name[], offset_x, offset_y, 0, 0, 0x428bca);
+			offset_y += item_height;
+		}*/
+
+		//bottom left for quit button
+		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
+			evman.push!ClientSetConnectedEvent(true);
 			statehan.pop_state();
 			statehan.push_state(State.GAME);
 		}
 
-		void update(double dt) {
+		if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
+			evman.push!ClientDisconnectEvent(true);
+			statehan.pop_state();
+		} //back to menu
 
-		}
-
-		void draw(Window* window) {
-
-			uint item_width = window.width / 2, item_height = 32;
-			ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
-
-			uint offset_x = window.width/3, offset_y = window.height/3;
-
-			ui_state.draw_label(window, "Players", offset_x, offset_y, 0, 0, 0x428bca);
-			offset_y += item_height * 2;
-
-			//list players here
-			/*foreach(player; netman.connected_players) {
-				ui_state.draw_label(window, player.player_name[], offset_x, offset_y, 0, 0, 0x428bca);
-				offset_y += item_height;
-			}*/
-
-			//bottom left for quit button
-			if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
-				evman.push!ClientSetConnectedEvent(true);
-				statehan.pop_state();
-				statehan.push_state(State.GAME);
-			}
-
-			if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
-				evman.push!ClientDisconnectEvent(true);
-				statehan.pop_state();
-			} //back to menu
-
-		}
+	}
 
 } //LobbyState
 
