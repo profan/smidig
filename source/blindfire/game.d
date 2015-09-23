@@ -167,47 +167,47 @@ final class MenuState : GameState {
 
 		void leave() {
 			evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
-	}
+		}
 
-	void onClientSetConnected(EventCast* ev) {
-		auto cev = ev.extract!ClientSetConnectedEvent();
-		statehan.pop_state();
-		statehan.push_state(State.GAME);
-	}
-
-	void update(double dt) {
-
-	}
-
-	void draw(Window* window) {
-
-		uint item_width = window.width / 2, item_height = 32;
-		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
-
-		uint offset_x = window.width/3, offset_y = window.height/3;
-
-		ui_state.draw_label(window, "Players", offset_x, offset_y, 0, 0, 0x428bca);
-		offset_y += item_height * 2;
-
-		//list players here
-		/*foreach(player; netman.connected_players) {
-			ui_state.draw_label(window, player.player_name[], offset_x, offset_y, 0, 0, 0x428bca);
-			offset_y += item_height;
-		}*/
-
-		//bottom left for quit button
-		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
-			evman.push!ClientSetConnectedEvent(true);
+		void onClientSetConnected(EventCast* ev) {
+			auto cev = ev.extract!ClientSetConnectedEvent();
 			statehan.pop_state();
 			statehan.push_state(State.GAME);
 		}
 
-		if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
-			evman.push!ClientDisconnectEvent(true);
-			statehan.pop_state();
-		} //back to menu
+		void update(double dt) {
 
-	}
+		}
+
+		void draw(Window* window) {
+
+			uint item_width = window.width / 2, item_height = 32;
+			ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
+
+			uint offset_x = window.width/3, offset_y = window.height/3;
+
+			ui_state.draw_label(window, "Players", offset_x, offset_y, 0, 0, 0x428bca);
+			offset_y += item_height * 2;
+
+			//list players here
+			/*foreach(player; netman.connected_players) {
+				ui_state.draw_label(window, player.player_name[], offset_x, offset_y, 0, 0, 0x428bca);
+				offset_y += item_height;
+			}*/
+
+			//bottom left for quit button
+			if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
+				evman.push!ClientSetConnectedEvent(true);
+				statehan.pop_state();
+				statehan.push_state(State.GAME);
+			}
+
+			if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
+				evman.push!ClientDisconnectEvent(true);
+				statehan.pop_state();
+			} //back to menu
+
+		}
 
 } //LobbyState
 
@@ -264,22 +264,20 @@ final class MatchState : GameState {
 	}
 
 	void enter() {
-
+		evman.register!ClientDisconnectEvent(&onClientDisconnect);
 	}
 
 	void leave() {
 
 		//remove all things
+		evman.unregister!ClientDisconnectEvent(&onClientDisconnect);
 		em.clear_systems();
 
 	}
 
-	void on_command(Command cmd) {
-
-		if (cmd == Command.DISCONNECT) {
-			statehan.pop_state();
-		}
-
+	void onClientDisconnect(EventCast* ev) {
+		auto cdev = ev.extract!ClientDisconnectEvent();
+		statehan.pop_state();
 	}
 
 	void update(double dt) {
@@ -390,10 +388,6 @@ final class OptionsState : GameState {
 
 	void leave() {
 		player_name.length = 0;
-	}
-
-	void on_command(Command cmd) {
-
 	}
 
 	void update(double dt) {
