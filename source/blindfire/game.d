@@ -4,10 +4,6 @@ import std.stdio : writefln;
 import std.concurrency : spawn, thisTid;
 
 import derelict.sdl2.sdl;
-import derelict.sdl2.ttf;
-import derelict.opengl3.gl3;
-import derelict.opengl3.gl;
-import derelict.freetype.ft;
 
 import blindfire.engine.window;
 import blindfire.engine.eventhandler;
