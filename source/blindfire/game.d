@@ -427,28 +427,32 @@ enum Resource : ResourceID {
 
 struct Game {
 
-	Window* window;
-	EventManager evman;
-	EventHandler* evhan;
-	GameStateHandler state;
-	UIState ui_state;
+	private {
 
-	Tid network_thread;
-	GameNetworkManager net_man;
-	ConfigMap config_map;
-	TurnManager tm;
+		Window* window;
+		EventManager evman;
+		EventHandler* evhan;
+		GameStateHandler state;
+		UIState ui_state;
 
-	LinearAllocator master_allocator;
-	LinearAllocator* resource_allocator;
-	LinearAllocator* system_allocator;
+		Tid network_thread;
+		GameNetworkManager net_man;
+		ConfigMap config_map;
+		TurnManager tm;
 
-	float frametime, updatetime, drawtime;
-	FontAtlas* debug_atlas;
-	Console* console;
-	Cursor* cursor;
+		LinearAllocator master_allocator;
+		LinearAllocator* resource_allocator;
+		LinearAllocator* system_allocator;
 
-	//timekeeping
-	TickDuration iter, last;
+		float frametime, updatetime, drawtime;
+		FontAtlas* debug_atlas;
+		Console* console;
+		Cursor* cursor;
+
+		//timekeeping
+		TickDuration iter, last;
+
+	}
 
 	this(Window* window, EventHandler* evhan) {
 
@@ -537,15 +541,14 @@ struct Game {
 	void initialize_systems() {
 
 		//upload vertices for ui to gpu, set up shaders.
-		ui_state.init(system_allocator);
+		this.ui_state.init(system_allocator);
 
 		alias ra = system_allocator;
-		state = ra.alloc!(GameStateHandler)();
-		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
+		this.state = ra.alloc!(GameStateHandler)();
+		this.network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 
-		tm = ra.alloc!(TurnManager)();
-		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm, &evman);
-		scope(exit) { net_man.send_message(Command.TERMINATE); } //terminate network worker when run goes out of scope, because the game has ended
+		this.tm = ra.alloc!(TurnManager)();
+		this.net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm, &evman);
 
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, &evman), State.MENU);
 		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas, &evman), State.GAME);
@@ -613,6 +616,9 @@ struct Game {
 
 		//allocate resources for systems
 		initialize_systems();
+
+		//terminate network worker when run goes out of scope, because the game has ended
+		scope(exit) { net_man.send_message(Command.TERMINATE); }
 
 		//register console commands
 		register_concommands();
