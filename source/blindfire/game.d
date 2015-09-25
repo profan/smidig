@@ -533,40 +533,7 @@ struct Game {
 
 	}
 
-	struct Thing {
-		this (int v) {
-			this.var = v;
-		}
-		int var;
-	}
-
-	void onSetTickrate(EventCast* ev) {
-		auto sev = ev.extract!SetTickrateEvent();
-		this.iter = sev.payload;
-	}
-
-	void onGameStatePush(EventCast* ev) {
-		auto gev = ev.extract!PushGameStateEvent();
-		this.state.push_state(gev.payload);
-	}
-
-	void run() {
-
-		import std.datetime : Duration, StopWatch, TickDuration;
-		import blindfire.engine.memory : FreeListAllocator;
-
-		auto fa = FreeListAllocator(1024, "SomeFreeList");
-		auto ptr_to_thing1 = fa.alloc!(Thing)(210);
-		printf("thing1: %d", ptr_to_thing1.var);
-
-		auto ptr_to_thing2 = fa.alloc!(Thing)(420);
-		printf("thing2: %d", ptr_to_thing2.var);
-
-		fa.dealloc(ptr_to_thing1);
-		fa.dealloc(ptr_to_thing2);
-
-		//load game resources
-		load_resources();
+	void initialize_systems() {
 
 		//upload vertices for ui to gpu, set up shaders.
 		ui_state.init(system_allocator);
@@ -585,11 +552,12 @@ struct Game {
 		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man, &evman), State.LOBBY);
 		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, &evman), State.WAIT);
 		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map, &evman), State.OPTIONS);
-		state.push_state(State.MENU);
+		state.push_state(State.MENU); //set initial state
 
 		evhan.add_listener(&ui_state.update_ui);
 		evhan.bind_keyevent(SDL_SCANCODE_RALT, &window.toggle_wireframe);
 
+		//bind keys and such
 		evhan.add_listener(&console.handle_event);
 		evhan.bind_keyevent(SDL_SCANCODE_TAB, &console.toggle);
 		evhan.bind_keyevent(SDL_SCANCODE_BACKSPACE, &console.del);
@@ -598,22 +566,18 @@ struct Game {
 		evhan.bind_keyevent(SDL_SCANCODE_DOWN, &console.get_prev);
 		evhan.bind_keyevent(SDL_SCANCODE_UP, &console.get_next);
 
-		import core.thread : Thread;
-		
-		StopWatch sw;
-		iter = TickDuration.from!("msecs")(16);
-		last = TickDuration.from!("msecs")(0);
+	}
 
-		import blindfire.defs : SetTickrateEvent;
+	void register_concommands() {
+
 		import blindfire.engine.console : ConsoleCommand;
+
 		console.bind_command(ConsoleCommand.SET_TICKRATE,
 			(Console* console, in char[] args) {
 				int tickrate = to!int(args);
 				auto new_iter = TickDuration.from!("msecs")(1000/tickrate);
 				console.evman.push!SetTickrateEvent(new_iter);
 		});
-
-		evman.register!SetTickrateEvent(&onSetTickrate);
 
 		console.bind_command(ConsoleCommand.PUSH_STATE,
 			(Console* console, in char[] args) {
@@ -623,7 +587,38 @@ struct Game {
 				}
 		});
 
+		evman.register!SetTickrateEvent(&onSetTickrate);
 		evman.register!PushGameStateEvent(&onGameStatePush);
+
+	}
+
+	void onSetTickrate(EventCast* ev) {
+		auto sev = ev.extract!SetTickrateEvent();
+		this.iter = sev.payload;
+	}
+
+	void onGameStatePush(EventCast* ev) {
+		auto gev = ev.extract!PushGameStateEvent();
+		this.state.push_state(gev.payload);
+	}
+
+	void run() {
+
+		import core.thread : Thread;
+		import std.datetime : Duration, StopWatch, TickDuration;
+
+		//load game resources
+		load_resources();
+
+		//allocate resources for systems
+		initialize_systems();
+
+		//register console commands
+		register_concommands();
+
+		StopWatch sw;
+		this.iter = TickDuration.from!("msecs")(16);
+		this.last = TickDuration.from!("msecs")(0);
 
 		StopWatch ft_sw, ut_sw, dt_sw;
 		ft_sw.start();
