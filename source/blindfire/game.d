@@ -545,6 +545,11 @@ struct Game {
 		this.iter = sev.payload;
 	}
 
+	void onGameStatePush(EventCast* ev) {
+		auto gev = ev.extract!PushGameStateEvent();
+		this.state.push_state(gev.payload);
+	}
+
 	void run() {
 
 		import std.datetime : Duration, StopWatch, TickDuration;
@@ -614,9 +619,11 @@ struct Game {
 			(Console* console, in char[] args) {
 				int new_state = to!int(args);
 				if (new_state >= State.min && new_state <= State.max) {
-					state.push_state(cast(State)new_state);
+					console.evman.push!PushGameStateEvent(cast(State)new_state);
 				}
 		});
+
+		evman.register!PushGameStateEvent(&onGameStatePush);
 
 		StopWatch ft_sw, ut_sw, dt_sw;
 		ft_sw.start();

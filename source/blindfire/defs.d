@@ -3,6 +3,7 @@ module blindfire.defs;
 import std.socket : InternetAddress;
 
 import blindfire.engine.event : Event, EventID, EventManager;
+import blindfire.engine.state : State;
 
 alias ClientConnectEvent = Event!(EventType.ClientConnect, InternetAddress);
 alias ClientDisconnectEvent = Event!(EventType.ClientDisconnect, bool);
@@ -13,6 +14,7 @@ alias GameCreatedEvent = Event!(EventType.GameCreated, bool);
 //console commands
 import std.datetime : TickDuration;
 alias SetTickrateEvent = Event!(EventType.SetTickrate, TickDuration);
+alias PushGameStateEvent = Event!(EventType.PushGameState, State);
 
 enum EventType : EventID {
 	ClientConnect,
@@ -20,5 +22,6 @@ enum EventType : EventID {
 	ClientSetConnected,
 	CreateGame,
 	GameCreated,
-	SetTickrate
+	SetTickrate,
+	PushGameState
 } //EventType
