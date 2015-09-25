@@ -10,12 +10,15 @@ alias ClientSetConnectedEvent = Event!(EventType.ClientSetConnected, bool);
 alias CreateGameEvent = Event!(EventType.CreateGame, bool);
 alias GameCreatedEvent = Event!(EventType.GameCreated, bool);
 
-alias EventManagerType = EventManager!(EventType.max+1);
+//console commands
+import std.datetime : TickDuration;
+alias SetTickrateEvent = Event!(EventType.SetTickrate, TickDuration);
 
 enum EventType : EventID {
 	ClientConnect,
 	ClientDisconnect,
 	ClientSetConnected,
 	CreateGame,
-	GameCreated
+	GameCreated,
+	SetTickrate
 } //EventType

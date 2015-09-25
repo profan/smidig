@@ -32,9 +32,9 @@ final class MenuState : GameState {
 	
 	UIState* ui_state;
 	GameStateHandler statehan;
-	EventManagerType* evman;
+	EventManager* evman;
 	
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -89,9 +89,9 @@ final class JoiningState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 	GameNetworkManager netman;
-	EventManagerType* evman;
+	EventManager* evman;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.evman = eventman;
@@ -148,9 +148,9 @@ final class LobbyState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 	GameNetworkManager netman;
-	EventManagerType* evman;
+	EventManager* evman;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.evman = eventman;
@@ -220,14 +220,14 @@ final class MatchState : GameState {
 
 	SelectionBox sbox;
 	EntityManager em;
-	EventManagerType* evman;
+	EventManager* evman;
 
 	Console* console;
 	FontAtlas* debug_atlas;
 
 	LinearAllocator entity_allocator;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.net_man = net_man;
@@ -326,9 +326,9 @@ final class WaitingState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
-	EventManagerType* evman;
+	EventManager* evman;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.evman = eventman;
@@ -361,7 +361,7 @@ final class WaitingState : GameState {
 final class OptionsState : GameState {
 
 	GameStateHandler statehan;
-	EventManagerType* evman;
+	EventManager* evman;
 	EventHandler* evhan;
 	UIState* ui_state;
 
@@ -370,7 +370,7 @@ final class OptionsState : GameState {
 	//options
 	StaticArray!(char, 64) player_name;
 
-	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf, EventManagerType* eventman) {
+	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf, EventManager* eventman) {
 		this.statehan = state_handler;
 		this.evhan = event_handler;
 		this.ui_state = ui;
@@ -428,7 +428,7 @@ enum Resource : ResourceID {
 struct Game {
 
 	Window* window;
-	EventManagerType evman;
+	EventManager evman;
 	EventHandler* evhan;
 	GameStateHandler state;
 	UIState ui_state;
@@ -447,13 +447,16 @@ struct Game {
 	Console* console;
 	Cursor* cursor;
 
+	//timekeeping
+	TickDuration iter, last;
+
 	this(Window* window, EventHandler* evhan) {
 
 		this.master_allocator = LinearAllocator(65536, "MasterAllocator");
 		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, "ResourceAllocator", &master_allocator);
 		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, "SystemAllocator", &master_allocator);
 
-		this.evman = EventManagerType(EventMemory);
+		this.evman = EventManager(EventMemory);
 		this.evhan = evhan;
 		this.window = window;
 		this.ui_state = UIState();
@@ -521,7 +524,7 @@ struct Game {
 
 		//font atlases and such
 		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12, text_shader);
-		this.console = system_allocator.alloc!(Console)(debug_atlas);
+		this.console = system_allocator.alloc!(Console)(debug_atlas, &evman);
 
 		auto cursor_texture = ra.alloc!(Texture)("resource/img/other_cursor.png");
 		rm.set_resource!(Texture)(cursor_texture, Resource.CURSOR_TEXTURE);
@@ -537,8 +540,14 @@ struct Game {
 		int var;
 	}
 
+	void onSetTickrate(EventCast* ev) {
+		auto sev = ev.extract!SetTickrateEvent();
+		this.iter = sev.payload;
+	}
+
 	void run() {
 
+		import std.datetime : Duration, StopWatch, TickDuration;
 		import blindfire.engine.memory : FreeListAllocator;
 
 		auto fa = FreeListAllocator(1024, "SomeFreeList");
@@ -585,20 +594,23 @@ struct Game {
 		evhan.bind_keyevent(SDL_SCANCODE_UP, &console.get_next);
 
 		import core.thread : Thread;
-		import std.datetime : Duration, StopWatch, TickDuration;
 		
 		StopWatch sw;
-		auto iter = TickDuration.from!("msecs")(16);
-		auto last = TickDuration.from!("msecs")(0);
+		iter = TickDuration.from!("msecs")(16);
+		last = TickDuration.from!("msecs")(0);
 
+		import blindfire.defs : SetTickrateEvent;
 		import blindfire.engine.console : ConsoleCommand;
-		console.bind_command(ConsoleCommand.SET_TICKRATE, 
+		console.bind_command(ConsoleCommand.SET_TICKRATE,
 			(Console* console, in char[] args) {
 				int tickrate = to!int(args);
-				iter = TickDuration.from!("msecs")(1000/tickrate);
+				auto new_iter = TickDuration.from!("msecs")(1000/tickrate);
+				console.evman.push!SetTickrateEvent(new_iter);
 		});
 
-		console.bind_command(ConsoleCommand.PUSH_STATE, 
+		evman.register!SetTickrateEvent(&onSetTickrate);
+
+		console.bind_command(ConsoleCommand.PUSH_STATE,
 			(Console* console, in char[] args) {
 				int new_state = to!int(args);
 				if (new_state >= State.min && new_state <= State.max) {

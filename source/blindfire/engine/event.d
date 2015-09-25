@@ -18,18 +18,18 @@ struct Event(EventID ID, T) {
 	static assert(this.sizeof <= 32u, format("Event: %s too big: %d", typeof(this).stringof, this.sizeof));
 } //Event
 
-struct EventManager(EventID EventTypeNum) {
+struct EventManager {
 
-	import blindfire.engine.memory : LinearAllocator;
 	import std.stdio : writefln;
+	import blindfire.engine.memory : LinearAllocator;
 
 	@disable this();
 	@disable this(this);
 
 	private {
 		LinearAllocator allocator;
-		EventDelegate[][EventTypeNum] delegates;
-		EventCast*[][EventTypeNum] events;
+		EventDelegate[][EventID] delegates;
+		EventCast*[][EventID] events;
 	}
 
 	this(size_t to_allocate) {
@@ -91,11 +91,9 @@ struct EventManager(EventID EventTypeNum) {
 
 	void tick() {
 		foreach (id, ref ev_list; events) {
-			if (ev_list.length == 0) continue;
-			auto cur_dels = delegates[id];
-			if (cur_dels.length > 0) {
+			if (auto del_ptr = id in delegates) {
 				foreach (ref ev; ev_list) {
-					foreach (key, ref del_func; cur_dels) {
+					foreach (key, ref del_func; *del_ptr) {
 						del_func(ev);
 					}
 				}

@@ -99,7 +99,7 @@ class GameNetworkManager {
 
 	private {
 
-		EventManagerType* evman;
+		EventManager* evman;
 		GameStateHandler game_state_handler;
 		ConfigMap* config_map;
 
@@ -108,7 +108,7 @@ class GameNetworkManager {
 
 	}
 
-	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm, EventManagerType* eventman) {
+	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm, EventManager* eventman) {
 		this.network_thread = net_tid;
 		this.game_state_handler = state_han;
 		this.config_map = config;

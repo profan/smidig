@@ -5,6 +5,7 @@ import derelict.sdl2.sdl;
 
 import blindfire.engine.text : FontAtlas;
 import blindfire.engine.window : Window;
+import blindfire.engine.event : EventManager, EventCast;
 
 import profan.collections : StaticArray;
 
@@ -35,10 +36,15 @@ struct Console {
 		size_t history_index = 0;
 		size_t history_elements = 0;
 
-	}
-	
+		//dependencies
 
-	this(FontAtlas* font_atlas) {
+	}
+
+	public {
+		EventManager* evman;
+	}
+
+	this(FontAtlas* font_atlas, EventManager* eventman) {
 
 		import std.traits : EnumMembers;
 		this.atlas = font_atlas;
@@ -48,6 +54,8 @@ struct Console {
 				foreach (i, field; EnumMembers!ConsoleCommand) console.print!(field);
 				console.print!("Listing all commands:");
 		});
+
+		this.evman = eventman;
 
 	}
 
@@ -111,9 +119,9 @@ struct Console {
 
 	void run() {
 
-		if (!enabled) return;
+		if (!enabled) { return; }
 
-		if (buffers[0].length == 0) return;
+		if (buffers[0].length == 0) { return; }
 		const char[] slice = buffers[0][];
 
 		uint i = 0;
@@ -145,7 +153,8 @@ struct Console {
 
 	void get_prev() {
 
-		if(!enabled) return;
+		if(!enabled) { return; }
+
 		if (history_index != 0)
 			buffers[0] = history[--history_index];
 
@@ -153,7 +162,8 @@ struct Console {
 
 	void get_next() {
 		
-		if(!enabled) return;
+		if(!enabled) { return; }
+
 		if (history_index+1 < BUFFER_LINES && history_index+1 <= history_elements)
 			buffers[0] = history[++history_index];
 
@@ -171,7 +181,7 @@ struct Console {
 
 	void draw(Window* window) nothrow @nogc {
 
-		if (!enabled) return;
+		if (!enabled) { return; }
 
 		int x = window.width - (atlas.char_width * BUFFER_WIDTH) - atlas.char_width, y = 16;
 		int color = 0xFFFFFF;
@@ -192,7 +202,7 @@ struct Console {
 	
 	void handle_event(ref SDL_Event ev) {
 
-		if (!enabled) return;
+		if (!enabled) { return; }
 
 		switch (ev.type) {
 			case SDL_TEXTINPUT:
