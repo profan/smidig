@@ -105,7 +105,7 @@ enum Command {
 mixin template MessageHeader() {
 	MessageType type;
 	ClientID client_uuid;
-}
+} //MessageHeader
 
 struct BasicMessage {
 
@@ -117,7 +117,7 @@ struct BasicMessage {
 	align(1):
 	mixin MessageHeader;
 
-}
+} //BasicMessage
 
 struct ConnectMessage {
 
@@ -131,7 +131,7 @@ struct ConnectMessage {
 	mixin MessageHeader;
 	ClientID assigned_id;
 
-}
+} //ConnectMessage
 
 struct UpdateMessage {
 
@@ -145,14 +145,14 @@ struct UpdateMessage {
 	mixin MessageHeader;
 	uint data_size;
 
-}
+} //UpdateMessage
 
 struct Peer {
 
 	ClientID client_uuid;
 	Address addr;
 
-}
+} //Peer
 
 struct NetVar(T) {
 
@@ -198,7 +198,7 @@ struct NetworkState {
 	string toString() {
 		return to!string(*state) ~ " " ~ to!string(*client_uuid);
 	}
-}
+} //NetworkState
 
 struct NetworkPeer {
 
@@ -449,11 +449,11 @@ struct NetworkPeer {
 
 			case CREATE: //new session, become ze host
 
-				client_uuid = 0;
-				id_counter = 0;
-				is_host = true;
+				this.client_uuid = 0;
+				this.id_counter = 0;
+				this.is_host = true;
+				this.state = switch_state(ConnectionState.CONNECTED);
 
-				state = switch_state(ConnectionState.CONNECTED);
 				send(game_thread, Command.ASSIGN_ID, id_counter++);
 				break;
 

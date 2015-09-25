@@ -526,10 +526,11 @@ struct Game {
 		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12, text_shader);
 		this.console = system_allocator.alloc!(Console)(debug_atlas, &evman);
 
+		//mouse pointer texture
 		auto cursor_texture = ra.alloc!(Texture)("resource/img/other_cursor.png");
 		rm.set_resource!(Texture)(cursor_texture, Resource.CURSOR_TEXTURE);
 		this.cursor = system_allocator.alloc!(Cursor)(cursor_texture, shader);
-		SDL_ShowCursor(SDL_DISABLE);
+		SDL_ShowCursor(SDL_DISABLE); //make sure to disable default cursor
 
 	}
 
@@ -630,7 +631,6 @@ struct Game {
 		while(window.is_alive) {
 
 			ft_sw.start();
-
 			net_man.handle_messages();
 			net_man.process_actions();
 
@@ -650,9 +650,9 @@ struct Game {
 			window.render_clear(0x428bca);
 			draw();
 			window.render_present();
+
 			drawtime = dt_sw.peek().msecs;
 			frametime = ft_sw.peek().msecs;
-
 			dt_sw.reset();
 			ft_sw.reset();
 			
