@@ -456,7 +456,7 @@ struct Game {
 		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, "ResourceAllocator", &master_allocator);
 		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, "SystemAllocator", &master_allocator);
 
-		this.evman = EventManager(EventMemory);
+		this.evman = EventManager(EventMemory, EventType.max);
 		this.evhan = evhan;
 		this.window = window;
 		this.ui_state = UIState();

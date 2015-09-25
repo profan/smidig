@@ -28,12 +28,14 @@ struct EventManager {
 
 	private {
 		LinearAllocator allocator;
-		EventDelegate[][EventID] delegates;
-		EventCast*[][EventID] events;
+		EventDelegate[][] delegates;
+		EventCast*[][] events;
 	}
 
-	this(size_t to_allocate) {
+	this(size_t to_allocate, EventID number_types) {
 		this.allocator = LinearAllocator(to_allocate, "EventAllocator");
+		delegates = new EventDelegate[][](number_types+1, 0);
+		events = new EventCast*[][](number_types+1, 0);
 	} //this
 
 	void push(E, Args...)(Args args) {
@@ -91,9 +93,11 @@ struct EventManager {
 
 	void tick() {
 		foreach (id, ref ev_list; events) {
-			if (auto del_ptr = id in delegates) {
+			if (ev_list.length == 0) continue;
+			auto cur_dels = delegates[id];
+			if (cur_dels.length > 0) {
 				foreach (ref ev; ev_list) {
-					foreach (key, ref del_func; *del_ptr) {
+					foreach (key, ref del_func; cur_dels) {
 						del_func(ev);
 					}
 				}
