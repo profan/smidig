@@ -20,14 +20,14 @@ T rotate(T)(ref T vec, double radians) nothrow @nogc pure if (is(T : Vector) && 
 	auto sa = sin(radians);
 	return T(ca*vec.x - sa*vec.y, sa*vec.x + ca*vec.y);
 
-}
+} //rotate
 
 T._T squaredDistanceTo(T)(ref T vec, ref T other_vec) nothrow @nogc pure if (is(T : Vector) && T._N == 2) {
 
 	return ((vec.x - other_vec.x)*(vec.x - other_vec.x)) -
 		((vec.y - other_vec.y)*(vec.y-other_vec.y));
 
-}
+} //squaredDistanceTo
 
 interface UpdateSystem : ComponentSystem!(0) {
 

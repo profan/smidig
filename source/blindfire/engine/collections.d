@@ -1,6 +1,7 @@
 module blindfire.engine.collections;
 
 /* a set of datastructures which utilize the allocators built for the engine. */
+import blindfire.engine.memory;
 
 struct DynamicArray {
 
@@ -14,9 +15,9 @@ struct DynamicArray {
 
 } //DynamicArray
 
-struct HashMap {
+struct HashMap(Allocator) {
 
-	this (size_t initial_size) {
+	this (size_t initial_size, Allocator alloc) {
 
 	}
 

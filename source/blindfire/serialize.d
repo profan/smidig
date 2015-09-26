@@ -14,7 +14,7 @@ enum ignore = "ignore";
 
 template isAttribute(alias curAttr, alias Attr) {
 	enum isAttribute = is(typeof(curAttr) == typeof(Attr)) && curAttr == Attr;
-}
+} //isAttribute
 
 template hasAttribute(T, alias Member, alias Attribute, Attributes...) {
 
@@ -32,35 +32,35 @@ template hasAttribute(T, alias Member, alias Attribute, Attributes...) {
 
 	}
 
-}
+} //hasAttribute
 
 template getAttributes(T, alias Member) {
 	enum getAttributes = __traits(getAttributes, __traits(getMember, T, Member));
-}
+} //getAttributes
 
 template Identifier(alias Sym) {
 	enum Identifier = __traits(identifier, Sym);
-}
+} //Identifier
 
 template StringIdentifier(alias T, alias Member) {
 	enum StringIdentifier = typeof(Symbol!(T, Member)).stringof;
-}
+} //StringIdentifier
 
 template Symbol(alias T, alias Member) {
 	enum Symbol = __traits(getMember, T, Member);
-}
+} //Symbol
 
 template Symbol(T, alias Member) {
 	enum Symbol = __traits(getMember, T, Member);
-}
+} //Symbol
 
 template isPOD(T) {
 	enum isPOD = __traits(isPOD, T);
-}
+} //isPOD
 
 template NetVarToSym(T, alias Member) {
 	enum NetVarToSym = Symbol!(T, Member).variable;
-}
+} //NetVarToSym
 
 mixin template DoSerializable() {
 
@@ -73,7 +73,7 @@ mixin template DoSerializable() {
 		mixin(MakeTypeSerializable!(typeof(this), typeof(this).tupleof));
 	}
 
-}
+} //DoSerializable
 
 template MakeSerializable(Types...) {
 
@@ -91,7 +91,7 @@ template MakeSerializable(Types...) {
 
 	}
 
-}
+} //MakeSerializable
 
 template MakeTypeSerializable(T, members...) {
 
@@ -109,19 +109,19 @@ template MakeTypeSerializable(T, members...) {
 
 	}
 
-}
+} //MakeTypeSerializable
 
 template SizeString(alias Symbol) {
 
 	enum SizeString = to!string(Symbol.sizeof);
 
-}
+} //SizeString
 
 template AddSerialization(T, alias Member) {
 
 	enum AddSerialization = "buf.write("~Member.stringof~");";
 
-}
+} //AddSerialization
 
 template DeSerializeEachMember(T, alias data, alias object, members...) {
 
@@ -143,15 +143,15 @@ template DeSerializeEachMember(T, alias data, alias object, members...) {
 	}
 
 
-}
+} //DeSerializeEachMember
 
 template Serialize(T, alias data, alias object) {
 	enum Serialize = SerializeEachMember!(T, data, object, T.tupleof);
-}
+} //Serialize
 
 template DeSerialize(T, alias data, alias object) {
 	enum DeSerialize = DeSerializeEachMember!(T, data, object, __traits(allMembers, T)); //this is until the identifier shit is fix
-}
+} //DeSerialize
 
 template TotalNetSize(T, members...) {
 
@@ -169,22 +169,22 @@ template TotalNetSize(T, members...) {
 
 	}
 
-}
+} //TotalNetSize
 
 template MemberSize(T) {
 	enum MemberSize = TotalNetSize!(T, __traits(allMembers, T));
-}
+} //MemberSize
 
 void serialize(B, T)(ref B data, T* object) {
 
 	mixin Serialize!(T, data, object);
 	mixin(Serialize);
 
-}
+} //serialize
 
 void deserialize(T)(ref InputStream data, T* object) {
 
 	mixin DeSerialize!(T, data, object);
 	mixin(DeSerialize);
 
-}
+} //deserialize

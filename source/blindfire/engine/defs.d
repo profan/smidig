@@ -19,7 +19,8 @@ alias Mat4f = Matrix!(float, 4, 4);
 
 enum DrawEventType : EventID {
 
-	RenderSprite
+	RenderSprite,
+	RenderLine
 
 } //EventType
 
@@ -35,6 +36,10 @@ struct RenderSpriteCommand {
 
 	}
 
-}
+} //RenderSpriteCommand
+
+struct RenderLineCommand {
+
+} //RenderLineCommand
 
 alias RenderSpriteEvent = Event!(DrawEventType.RenderSprite, RenderSpriteCommand);

@@ -307,15 +307,21 @@ struct FreeListAllocator {
 
 	auto alloc(T, Args...)(Args args) {
 
+		auto obj_size = get_size!T;
+		return emplace!(T, Args)(alloc(obj_size), args);
+
+	}
+
+	void[] alloc(size_t alloc_size) {
+
 		Block* cur = first;
 		while (cur != null) {
-			if (cur.size >= get_size!T) {
+			if (cur.size >= alloc_size) {
 
-				size_t remaining_size = cur.size - get_size!T;
-				cur.size = get_size!T;
+				size_t remaining_size = cur.size - alloc_size;
+				cur.size = alloc_size;
 
 				auto obj_mem = (cur + Block.sizeof)[0..cur.size];
-				auto obj = emplace!(T, Args)(obj_mem, args);
 
 				void* block = cur + cur.size + Block.sizeof; //end of new block
 				auto mem = block[0..Block.sizeof];
@@ -327,17 +333,13 @@ struct FreeListAllocator {
 					cur.next = emplace!Block(mem, remaining_size, next);
 				}
 
-				return obj;
+				return obj_mem[0..cur.size];
 
 			}
 		}
 
 		return null;
 
-	}
-
-	void* alloc(size_t size) {
-		return null;
 	}
 
 	void dealloc(void* block) {

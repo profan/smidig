@@ -193,7 +193,7 @@ interface IComponentManager {
 	@property int priority() nothrow const @nogc;
 	@property ComponentName name() nothrow const @nogc;
 	bool register(EntityID entity);
-	bool register(EntityID entity, void[] component); //make nothrow?
+	bool register(EntityID entity, void[] component); //TODO make nothrow?
 	void unregister(EntityID entity);
 	void* component(EntityID entity) nothrow @nogc;
 	void* allComponents() nothrow @nogc;
