@@ -53,7 +53,7 @@ struct EventManager {
 		alias first_param = ParameterTypeTuple!(ED)[0];
 		static assert (isImplicitlyConvertible!(T, first_param),
 					   "can't call function: " ~ ED.stringof ~ " with: " ~ T.stringof);
-	}
+	} //checkValidity
 
 	void register(T, ED)(ED dele) {
 		mixin checkValidity!(T, ED);
@@ -97,6 +97,10 @@ struct EventManager {
 	void fire() {
 
 	} //fire
+
+	void schedule() {
+
+	} //schedule
 
 	mixin template doTick() {	
 		
