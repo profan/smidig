@@ -146,7 +146,7 @@ class EntityManager {
 
 	} //register
 
-	bool register(C)(EntityID entity, C component) {
+	bool register(C)(EntityID entity, ref C component) {
 
 		IComponentManager em = getManager!C();
 

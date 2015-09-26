@@ -143,6 +143,13 @@ struct SpriteComponent {
    	Texture* texture;
 	@dependency TransformComponent* tc;
 
+	this(ref Mesh in_mesh, Shader* shader, Texture* texture) {
+		import std.algorithm : move;
+		move(in_mesh, this.mesh);
+		this.shader = shader;
+		this.texture = texture;
+	}
+
 } //SpriteComponent
 
 class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {

@@ -29,15 +29,10 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 	em.register!SelectionComponent(unit);
 	em.register!OrderComponent(unit);
 
-	em.register!SpriteComponent(unit);
-	SpriteComponent* sc = em.getComponent!SpriteComponent(unit);
-	
 	int w = texture.width;
 	int h = texture.height;
 	Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
-	sc.mesh = Mesh(vertices);
-	sc.texture = texture;
-	sc.shader = shader;
+	em.register!SpriteComponent(unit, Mesh(vertices), shader, texture);
 	
 	return unit;
 
