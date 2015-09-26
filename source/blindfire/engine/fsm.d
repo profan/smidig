@@ -33,7 +33,8 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 
 	void transitionTo(FStateID new_state) {
 
-		assert(new_state > 0 && new_state < states.length);
+		assert(new_state >= 0 && new_state < states.length, "state outside range of existing states.");
+		assert(new_state != current_state, "tried to switch state to current.");
 
 		states[current_state].leave(new_state);
 		states[new_state].enter(current_state);
