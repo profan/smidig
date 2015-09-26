@@ -51,7 +51,7 @@ struct EventManager {
 	static mixin template checkValidity(T, ED) {
 		import std.traits : isImplicitlyConvertible, ParameterTypeTuple;
 		alias first_param = ParameterTypeTuple!(ED)[0];
-		static assert (isImplicitlyConvertible!(T*, first_param), 
+		static assert (isImplicitlyConvertible!(T, first_param),
 					   "can't call function: " ~ ED.stringof ~ " with: " ~ T.stringof);
 	}
 
@@ -60,7 +60,7 @@ struct EventManager {
 		delegates[T.message_id] ~= cast(EventDelegate)dele;
 	} //register
 
-	void unregister(T, ED)(ED base_dele) {
+	void unregister(T, ED)(ED base_dele) { //CAUUTIIOON
 		import std.algorithm : remove;
 		auto dele = cast(EventDelegate) base_dele;
 		delegates[T.message_id][].remove!(e => e == dele);
@@ -106,8 +106,8 @@ struct EventManager {
 			auto str = "";
 			foreach (type, id; EventTypes) {
 				str ~= "case " ~ to!string(id)
-					~ ": auto casted_func = cast(void delegate(" ~ type ~ 
-					"*)) del_func; casted_func(ev.extract!("~ type ~ ")); break; \n";
+					~ ": auto casted_func = cast(void delegate(ref " ~ type ~ 
+					")) del_func; auto event = ev.extract!("~type~"); casted_func(*event); break; \n";
 			}
 			return str;
 

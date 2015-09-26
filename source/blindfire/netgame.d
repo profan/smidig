@@ -291,15 +291,15 @@ class GameNetworkManager {
 
 	}
 
-	void onCreateGame(CreateGameEvent* ev) {
+	void onCreateGame(ref CreateGameEvent ev) {
 		send_message(Command.CREATE);
 	}
 
-	void onClientConnect(ClientConnectEvent* ev) {
+	void onClientConnect(ref ClientConnectEvent ev) {
 		send_message(Command.CONNECT);
 	}
 
-	void onClientDisconnect(ClientDisconnectEvent* ev) {
+	void onClientDisconnect(ref ClientDisconnectEvent ev) {
 		send_message(Command.DISCONNECT);
 	}
 

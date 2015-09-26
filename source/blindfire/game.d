@@ -108,7 +108,7 @@ final class JoiningState : GameState {
 		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
 	}
 
-	void onClientSetConnected(ClientSetConnectedEvent* ev) {
+	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
 		statehan.pop_state();
 		statehan.push_state(State.LOBBY);
 	}
@@ -164,7 +164,7 @@ final class LobbyState : GameState {
 		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
 	}
 
-	void onClientSetConnected(ClientSetConnectedEvent* ev) {
+	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
 		statehan.pop_state();
 		statehan.push_state(State.GAME);
 	}
@@ -269,7 +269,7 @@ final class MatchState : GameState {
 
 	}
 
-	void onClientDisconnect(ClientDisconnectEvent* ev) {
+	void onClientDisconnect(ref ClientDisconnectEvent ev) {
 		statehan.pop_state();
 	}
 
@@ -593,11 +593,11 @@ struct Game {
 
 	}
 
-	void onSetTickrate(SetTickrateEvent* ev) {
+	void onSetTickrate(ref SetTickrateEvent ev) {
 		this.iter = ev.payload;
 	}
 
-	void onGameStatePush(PushGameStateEvent* ev) {
+	void onGameStatePush(ref PushGameStateEvent ev) {
 		this.state.push_state(ev.payload);
 	}
 
