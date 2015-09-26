@@ -30,16 +30,27 @@ private struct CharacterInfo {
 
 struct FontAtlas {
 
-	GLuint vao, vbo;
-	Shader* shader;
-	Texture atlas;
-	CharacterInfo[96] characters;
+	import blindfire.engine.memory : StackAllocator;
 
-	int atlas_width, atlas_height;
-	int char_width, char_height;
+	private {
 
-	import blindfire.engine.memory;
-	StackAllocator stack_allocator;
+		GLuint vao, vbo;
+		Shader* shader;
+		Texture atlas;
+
+		CharacterInfo[96] characters;
+		int atlas_width, atlas_height;
+		StackAllocator stack_allocator;
+
+	}
+
+	public {
+
+		const int char_width, char_height;
+
+	}
+
+	@disable this(this);
 
 	this(in char[] font_name, uint font_size, Shader* text_shader) {
 
@@ -121,8 +132,6 @@ struct FontAtlas {
 
 	}
 	
-	@disable this(this);
-
 	~this() nothrow @nogc {
 		glDeleteBuffers(1, &vbo);
 		glDeleteVertexArrays(1, &vao);
@@ -138,12 +147,14 @@ struct FontAtlas {
 		}
 
 		Point[] coords = (cast(Point*)stack_allocator.alloc(Point.sizeof * text.length * 6))[0..text.length*6];
-		scope(exit) stack_allocator.dealloc(Point.sizeof * text.length * 6); //pop it
+		scope(exit) { stack_allocator.dealloc(Point.sizeof * text.length * 6); } //pop it
 
 		int n = 0; //how many to draw?
 		foreach (ch; text) {
 
-			if (ch < 32 || ch > 127) continue;
+			if (ch < 32 || ch > 127) { 
+				continue; 
+			}
 
 			int ci = ch - 32; //get char index
 			float x2 =  x + characters[ci].bitmap_left * sx;
@@ -159,7 +170,7 @@ struct FontAtlas {
 			y2 -= (characters[ci].bitmap_top * sy);
 			y2 -= (characters[ci].tx_offset_y * sy);
 
-			if (!w || !h) {//continue if no width or height, invisible character
+			if (!w || !h) { //continue if no width or height, invisible character
 			 	continue;
 			}
 
@@ -201,6 +212,6 @@ struct FontAtlas {
 
 	}
 
-	mixin OpenGLError!();
+	mixin OpenGLError;
 
 }

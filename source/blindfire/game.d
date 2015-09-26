@@ -4,10 +4,6 @@ import std.stdio : writefln;
 import std.concurrency : spawn, thisTid;
 
 import derelict.sdl2.sdl;
-import derelict.sdl2.ttf;
-import derelict.opengl3.gl3;
-import derelict.opengl3.gl;
-import derelict.freetype.ft;
 
 import blindfire.engine.window;
 import blindfire.engine.eventhandler;
@@ -36,9 +32,9 @@ final class MenuState : GameState {
 	
 	UIState* ui_state;
 	GameStateHandler statehan;
-	EventManagerType* evman;
+	EventManager* evman;
 	
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -51,10 +47,6 @@ final class MenuState : GameState {
 	}
 
 	void leave() {
-
-	}
-
-	void on_command(Command cmd) {
 
 	}
 
@@ -87,7 +79,7 @@ final class MenuState : GameState {
 		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", MENU_COLOR)) {
 			window.is_alive = false;
 		} //quit
-		
+			
 	}
 
 } //MenuState
@@ -97,9 +89,9 @@ final class JoiningState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 	GameNetworkManager netman;
-	EventManagerType* evman;
+	EventManager* evman;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.evman = eventman;
@@ -107,28 +99,18 @@ final class JoiningState : GameState {
 	}
 
 	void enter() {
+		evman.register!ClientSetConnectedEvent(&onClientSetConnected);
 		InternetAddress addr = new InternetAddress("localhost", 12000);
 		evman.push!ClientConnectEvent(addr);
 	}
 
 	void leave() {
-
+		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
 	}
 
-	void on_command(Command cmd) {
-
-		switch (cmd) with (Command) {
-
-			case SET_CONNECTED:
-				statehan.pop_state();
-				statehan.push_state(State.LOBBY);
-				break;
-
-			default:
-				writefln("[GAME] Unhandled message: %s", to!string(cmd));
-
-		}
-
+	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
+		statehan.pop_state();
+		statehan.push_state(State.LOBBY);
 	}
 
 	void update(double dt) {
@@ -165,9 +147,9 @@ final class LobbyState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 	GameNetworkManager netman;
-	EventManagerType* evman;
+	EventManager* evman;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.evman = eventman;
@@ -175,20 +157,16 @@ final class LobbyState : GameState {
 	}
 
 	void enter() {
-
+		evman.register!ClientSetConnectedEvent(&onClientSetConnected);
 	}
 
 	void leave() {
-
+		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
 	}
 
-	void on_command(Command cmd) {
-
-		if (cmd == Command.SET_CONNECTED) {
-			statehan.pop_state();
-			statehan.push_state(State.GAME);
-		}
-
+	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
+		statehan.pop_state();
+		statehan.push_state(State.GAME);
 	}
 
 	void update(double dt) {
@@ -206,10 +184,10 @@ final class LobbyState : GameState {
 		offset_y += item_height * 2;
 
 		//list players here
-		foreach(player; netman.connected_players) {
+		/*foreach(player; netman.connected_players) {
 			ui_state.draw_label(window, player.player_name[], offset_x, offset_y, 0, 0, 0x428bca);
 			offset_y += item_height;
-		}
+		}*/
 
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
@@ -240,14 +218,14 @@ final class MatchState : GameState {
 
 	SelectionBox sbox;
 	EntityManager em;
-	EventManagerType* evman;
+	EventManager* evman;
 
 	Console* console;
 	FontAtlas* debug_atlas;
 
 	LinearAllocator entity_allocator;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.net_man = net_man;
@@ -280,22 +258,19 @@ final class MatchState : GameState {
 	}
 
 	void enter() {
-
+		evman.register!ClientDisconnectEvent(&onClientDisconnect);
 	}
 
 	void leave() {
 
 		//remove all things
+		evman.unregister!ClientDisconnectEvent(&onClientDisconnect);
 		em.clear_systems();
 
 	}
 
-	void on_command(Command cmd) {
-
-		if (cmd == Command.DISCONNECT) {
-			statehan.pop_state();
-		}
-
+	void onClientDisconnect(ref ClientDisconnectEvent ev) {
+		statehan.pop_state();
 	}
 
 	void update(double dt) {
@@ -348,9 +323,9 @@ final class WaitingState : GameState {
 
 	UIState* ui_state;
 	GameStateHandler statehan;
-	EventManagerType* evman;
+	EventManager* evman;
 
-	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManagerType* eventman) {
+	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.evman = eventman;
@@ -364,10 +339,6 @@ final class WaitingState : GameState {
 	
 	}
 
-	void on_command(Command cmd) {
-
-	}
-	
 	void update(double dt) {
 
 	}
@@ -387,7 +358,7 @@ final class WaitingState : GameState {
 final class OptionsState : GameState {
 
 	GameStateHandler statehan;
-	EventManagerType* evman;
+	EventManager* evman;
 	EventHandler* evhan;
 	UIState* ui_state;
 
@@ -396,7 +367,7 @@ final class OptionsState : GameState {
 	//options
 	StaticArray!(char, 64) player_name;
 
-	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf, EventManagerType* eventman) {
+	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf, EventManager* eventman) {
 		this.statehan = state_handler;
 		this.evhan = event_handler;
 		this.ui_state = ui;
@@ -410,10 +381,6 @@ final class OptionsState : GameState {
 
 	void leave() {
 		player_name.length = 0;
-	}
-
-	void on_command(Command cmd) {
-
 	}
 
 	void update(double dt) {
@@ -457,25 +424,32 @@ enum Resource : ResourceID {
 
 struct Game {
 
-	Window* window;
-	EventManagerType evman;
-	EventHandler* evhan;
-	GameStateHandler state;
-	UIState ui_state;
+	private {
 
-	Tid network_thread;
-	GameNetworkManager net_man;
-	ConfigMap config_map;
-	TurnManager tm;
+		Window* window;
+		EventManager evman;
+		EventHandler* evhan;
+		GameStateHandler state;
+		UIState ui_state;
 
-	LinearAllocator master_allocator;
-	LinearAllocator* resource_allocator;
-	LinearAllocator* system_allocator;
+		Tid network_thread;
+		GameNetworkManager net_man;
+		ConfigMap config_map;
+		TurnManager tm;
 
-	float frametime, updatetime, drawtime;
-	FontAtlas* debug_atlas;
-	Console* console;
-	Cursor* cursor;
+		LinearAllocator master_allocator;
+		LinearAllocator* resource_allocator;
+		LinearAllocator* system_allocator;
+
+		float frametime, updatetime, drawtime;
+		FontAtlas* debug_atlas;
+		Console* console;
+		Cursor* cursor;
+
+		//timekeeping
+		TickDuration iter, last;
+
+	}
 
 	this(Window* window, EventHandler* evhan) {
 
@@ -483,7 +457,7 @@ struct Game {
 		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, "ResourceAllocator", &master_allocator);
 		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, "SystemAllocator", &master_allocator);
 
-		this.evman = EventManagerType(EventMemory);
+		this.evman = EventManager(EventMemory, EventType.max);
 		this.evhan = evhan;
 		this.window = window;
 		this.ui_state = UIState();
@@ -551,49 +525,27 @@ struct Game {
 
 		//font atlases and such
 		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12, text_shader);
-		this.console = system_allocator.alloc!(Console)(debug_atlas);
+		this.console = system_allocator.alloc!(Console)(debug_atlas, &evman);
 
+		//mouse pointer texture
 		auto cursor_texture = ra.alloc!(Texture)("resource/img/other_cursor.png");
 		rm.set_resource!(Texture)(cursor_texture, Resource.CURSOR_TEXTURE);
 		this.cursor = system_allocator.alloc!(Cursor)(cursor_texture, shader);
-		SDL_ShowCursor(SDL_DISABLE);
+		SDL_ShowCursor(SDL_DISABLE); //make sure to disable default cursor
 
 	}
 
-	struct Thing {
-		this (int v) {
-			this.var = v;
-		}
-		int var;
-	}
-
-	void run() {
-
-		import blindfire.engine.memory : FreeListAllocator;
-
-		auto fa = FreeListAllocator(1024, "SomeFreeList");
-		auto ptr_to_thing1 = fa.alloc!(Thing)(210);
-		printf("thing1: %d", ptr_to_thing1.var);
-
-		auto ptr_to_thing2 = fa.alloc!(Thing)(420);
-		printf("thing2: %d", ptr_to_thing2.var);
-
-		fa.dealloc(ptr_to_thing1);
-		fa.dealloc(ptr_to_thing2);
-
-		//load game resources
-		load_resources();
+	void initialize_systems() {
 
 		//upload vertices for ui to gpu, set up shaders.
-		ui_state.init(system_allocator);
+		this.ui_state.init(system_allocator);
 
 		alias ra = system_allocator;
-		state = ra.alloc!(GameStateHandler)();
-		network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
+		this.state = ra.alloc!(GameStateHandler)();
+		this.network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 
-		tm = ra.alloc!(TurnManager)();
-		net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm, &evman);
-		scope(exit) { net_man.send_message(Command.TERMINATE); } //terminate network worker when run goes out of scope, because the game has ended
+		this.tm = ra.alloc!(TurnManager)();
+		this.net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm, &evman);
 
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, &evman), State.MENU);
 		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas, &evman), State.GAME);
@@ -601,11 +553,12 @@ struct Game {
 		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man, &evman), State.LOBBY);
 		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, &evman), State.WAIT);
 		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map, &evman), State.OPTIONS);
-		state.push_state(State.MENU);
+		state.push_state(State.MENU); //set initial state
 
 		evhan.add_listener(&ui_state.update_ui);
 		evhan.bind_keyevent(SDL_SCANCODE_RALT, &window.toggle_wireframe);
 
+		//bind keys and such
 		evhan.add_listener(&console.handle_event);
 		evhan.bind_keyevent(SDL_SCANCODE_TAB, &console.toggle);
 		evhan.bind_keyevent(SDL_SCANCODE_BACKSPACE, &console.del);
@@ -614,27 +567,60 @@ struct Game {
 		evhan.bind_keyevent(SDL_SCANCODE_DOWN, &console.get_prev);
 		evhan.bind_keyevent(SDL_SCANCODE_UP, &console.get_next);
 
-		import core.thread : Thread;
-		import std.datetime : Duration, StopWatch, TickDuration;
-		
-		StopWatch sw;
-		auto iter = TickDuration.from!("msecs")(16);
-		auto last = TickDuration.from!("msecs")(0);
+	}
+
+	void register_concommands() {
 
 		import blindfire.engine.console : ConsoleCommand;
-		console.bind_command(ConsoleCommand.SET_TICKRATE, 
+
+		console.bind_command(ConsoleCommand.SET_TICKRATE,
 			(Console* console, in char[] args) {
 				int tickrate = to!int(args);
-				iter = TickDuration.from!("msecs")(1000/tickrate);
+				auto new_iter = TickDuration.from!("msecs")(1000/tickrate);
+				console.evman.push!SetTickrateEvent(new_iter);
 		});
 
-		console.bind_command(ConsoleCommand.PUSH_STATE, 
+		console.bind_command(ConsoleCommand.PUSH_STATE,
 			(Console* console, in char[] args) {
 				int new_state = to!int(args);
 				if (new_state >= State.min && new_state <= State.max) {
-					state.push_state(cast(State)new_state);
+					console.evman.push!PushGameStateEvent(cast(State)new_state);
 				}
 		});
+
+		evman.register!SetTickrateEvent(&onSetTickrate);
+		evman.register!PushGameStateEvent(&onGameStatePush);
+
+	}
+
+	void onSetTickrate(ref SetTickrateEvent ev) {
+		this.iter = ev.payload;
+	}
+
+	void onGameStatePush(ref PushGameStateEvent ev) {
+		this.state.push_state(ev.payload);
+	}
+
+	void run() {
+
+		import core.thread : Thread;
+		import std.datetime : Duration, StopWatch, TickDuration;
+
+		//load game resources
+		load_resources();
+
+		//allocate resources for systems
+		initialize_systems();
+
+		//terminate network worker when run goes out of scope, because the game has ended
+		scope(exit) { net_man.send_message(Command.TERMINATE); }
+
+		//register console commands
+		register_concommands();
+
+		StopWatch sw;
+		this.iter = TickDuration.from!("msecs")(16);
+		this.last = TickDuration.from!("msecs")(0);
 
 		StopWatch ft_sw, ut_sw, dt_sw;
 		ft_sw.start();
@@ -646,13 +632,16 @@ struct Game {
 		while(window.is_alive) {
 
 			ft_sw.start();
-
 			net_man.handle_messages();
 			net_man.process_actions();
 
 			if (sw.peek() - last > iter) {
 
+				import blindfire.defs : EventIdentifier;
+				mixin EventManager.doTick!();
+
 				ut_sw.start();
+				tick!EventIdentifier(evman);
 				evhan.handle_events();
 				update(1.0);
 				last = sw.peek();
@@ -665,9 +654,9 @@ struct Game {
 			window.render_clear(0x428bca);
 			draw();
 			window.render_present();
+
 			drawtime = dt_sw.peek().msecs;
 			frametime = ft_sw.peek().msecs;
-
 			dt_sw.reset();
 			ft_sw.reset();
 			

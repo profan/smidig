@@ -3,7 +3,7 @@ docs.json
 *.o
 *.obj
 .*.s??
-blindfire
+./blindfire
 fonts/
 *.dll
 *.exe

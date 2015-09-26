@@ -18,22 +18,22 @@ struct Event(EventID ID, T) {
 	static assert(this.sizeof <= 32u, format("Event: %s too big: %d", typeof(this).stringof, this.sizeof));
 } //Event
 
-struct EventManager(EventID EventTypeNum) {
+struct EventManager {
 
-	import blindfire.engine.memory : LinearAllocator;
 	import std.stdio : writefln;
+	import blindfire.engine.memory : LinearAllocator;
 
 	@disable this();
 	@disable this(this);
 
-	private {
-		LinearAllocator allocator;
-		EventDelegate[][EventTypeNum] delegates;
-		EventCast*[][EventTypeNum] events;
-	}
+	LinearAllocator allocator;
+	EventDelegate[][] delegates;
+	EventCast*[][] events;
 
-	this(size_t to_allocate) {
+	this(size_t to_allocate, EventID number_types) {
 		this.allocator = LinearAllocator(to_allocate, "EventAllocator");
+		delegates = new EventDelegate[][](number_types+1, 0);
+		events = new EventCast*[][](number_types+1, 0);
 	} //this
 
 	void push(E, Args...)(Args args) {
@@ -48,16 +48,25 @@ struct EventManager(EventID EventTypeNum) {
 		events[e.message_id] ~= cast(EventCast*)allocated_space;
 	} //push
 
-	void register(T)(EventDelegate dele) {
-		delegates[T.message_id] ~= dele;
+	static mixin template checkValidity(T, ED) {
+		import std.traits : isImplicitlyConvertible, ParameterTypeTuple;
+		alias first_param = ParameterTypeTuple!(ED)[0];
+		static assert (isImplicitlyConvertible!(T, first_param),
+					   "can't call function: " ~ ED.stringof ~ " with: " ~ T.stringof);
+	} //checkValidity
+
+	void register(T, ED)(ED dele) {
+		mixin checkValidity!(T, ED);
+		delegates[T.message_id] ~= cast(EventDelegate)dele;
 	} //register
 
-	void unregister(T)(EventDelegate dele) {
+	void unregister(T, ED)(ED base_dele) { //CAUUTIIOON
 		import std.algorithm : remove;
+		auto dele = cast(EventDelegate) base_dele;
 		delegates[T.message_id][].remove!(e => e == dele);
 	} //unregister
 
-	void test(size_t rounds) {
+	void test(T)(size_t rounds) {
 
 		alias TestEvent = Event!(0, uint);
 
@@ -75,7 +84,7 @@ struct EventManager(EventID EventTypeNum) {
 		sw.start();
 		foreach (i; iota(0, rounds)) {
 			push!TestEvent(10);
-			tick();
+			tick!T();
 		}
 		sw.stop();
 
@@ -89,21 +98,47 @@ struct EventManager(EventID EventTypeNum) {
 
 	} //fire
 
-	void tick() {
-		foreach (id, ref ev_list; events) {
-			if (ev_list.length == 0) continue;
-			auto cur_dels = delegates[id];
-			if (cur_dels.length > 0) {
-				foreach (ref ev; ev_list) {
-					foreach (key, ref del_func; cur_dels) {
-						del_func(ev);
+	void schedule() {
+
+	} //schedule
+
+	mixin template doTick() {	
+		
+		static string doSwitchEntry(alias EventTypes)() {
+
+			import std.conv : to;
+			auto str = "";
+			foreach (type, id; EventTypes) {
+				str ~= "case " ~ to!string(id)
+					~ ": auto casted_func = cast(void delegate(ref " ~ type ~ 
+					")) del_func; auto event = ev.extract!("~type~"); casted_func(*event); break; \n";
+			}
+			return str;
+
+		} //doSwitchEntry
+
+		static void tick(alias EvTypesMap)(ref EventManager ev_man) {
+			foreach (id, ref ev_list; ev_man.events) {
+				if (ev_list.length == 0) continue;
+				auto cur_dels = ev_man.delegates[id];
+				if (cur_dels.length > 0) {
+					foreach (ref ev; ev_list) {
+						foreach (key, ref del_func; cur_dels) {
+
+							switch (id) {
+								mixin(doSwitchEntry!EvTypesMap());
+								default: writefln("unhandled event type: %d", id);
+							}
+
+						}
 					}
 				}
+				ev_list.length = 0;
 			}
-			ev_list.length = 0;
-		}
-		allocator.reset();
-	} //tick
+			ev_man.allocator.reset();
+		} //tick
+
+	}
 
 } //EventManager
 

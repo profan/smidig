@@ -33,13 +33,13 @@ interface UpdateSystem : ComponentSystem!(0) {
 
 	void update();
 
-}
+} //UpdateSystem
 
 interface DrawSystem : ComponentSystem!(1) {
 
 	void update(Window* window);
 
-}
+} //DrawSystem
 
 class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) {
 

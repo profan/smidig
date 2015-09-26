@@ -5,6 +5,7 @@ import std.datetime : dur;
 
 import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.state : GameState, GameStateHandler;
+import blindfire.engine.event;
 import blindfire.engine.log;
 import blindfire.engine.net;
 
@@ -98,7 +99,7 @@ class GameNetworkManager {
 
 	private {
 
-		EventManagerType* evman;
+		EventManager* evman;
 		GameStateHandler game_state_handler;
 		ConfigMap* config_map;
 
@@ -107,12 +108,17 @@ class GameNetworkManager {
 
 	}
 
-	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm, EventManagerType* eventman) {
+	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm, EventManager* eventman) {
 		this.network_thread = net_tid;
 		this.game_state_handler = state_han;
 		this.config_map = config;
 		this.tm = tm;
 		this.evman = eventman;
+
+		evman.register!ClientConnectEvent(&onClientConnect);
+		evman.register!ClientDisconnectEvent(&onClientDisconnect);
+		evman.register!CreateGameEvent(&onCreateGame);
+
 	}
 
 	bool lockstep_turn() {
@@ -178,7 +184,7 @@ class GameNetworkManager {
 				case CREATE:
 					//notify active game state
 					active_session = new Session(this);
-					active_game_state.on_command(cmd);
+					evman.push!GameCreatedEvent(true);
 					break;
 
 				case SET_CONNECTED:
@@ -199,11 +205,11 @@ class GameNetworkManager {
 
 					send_message(Command.UPDATE, cast(immutable(ubyte[]))stream[].idup);
 
-					active_game_state.on_command(cmd);
+					evman.push!ClientSetConnectedEvent(true);
 					break;
 
 				case DISCONNECT:
-					active_game_state.on_command(cmd);
+					evman.push!ClientDisconnectEvent(true);
 					break;
 
 				default:
@@ -283,6 +289,18 @@ class GameNetworkManager {
 
 		});
 
+	}
+
+	void onCreateGame(ref CreateGameEvent ev) {
+		send_message(Command.CREATE);
+	}
+
+	void onClientConnect(ref ClientConnectEvent ev) {
+		send_message(Command.CONNECT);
+	}
+
+	void onClientDisconnect(ref ClientDisconnectEvent ev) {
+		send_message(Command.DISCONNECT);
 	}
 
 	void send_message(Args...)(Args args) {
