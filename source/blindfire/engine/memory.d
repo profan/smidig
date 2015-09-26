@@ -315,28 +315,25 @@ struct FreeListAllocator {
 	void[] alloc(size_t alloc_size) {
 
 		Block* cur = first;
-		while (cur != null) {
+		Block* prev = null;
+
+		do {
+
 			if (cur.size >= alloc_size) {
 
 				size_t remaining_size = cur.size - alloc_size;
-				cur.size = alloc_size;
+				cur.size = remaining_size;
 
-				auto obj_mem = (cur + Block.sizeof)[0..cur.size];
+				auto obj_mem = (cur + cur.size)[0..alloc_size];
+				writefln("[FreeListAllocator:%s] allocated %d bytes", name, alloc_size);
 
-				void* block = cur + cur.size + Block.sizeof; //end of new block
-				auto mem = block[0..Block.sizeof];
-
-				if (cur.next == null) {
-					cur.next = emplace!Block(mem, remaining_size, null);
-				} else {
-					Block* next = cur.next;
-					cur.next = emplace!Block(mem, remaining_size, next);
-				}
-
-				return obj_mem[0..cur.size];
+				return obj_mem;
 
 			}
-		}
+
+			cur = cur.next;
+			
+		} while (cur != null);
 
 		return null;
 
@@ -349,7 +346,7 @@ struct FreeListAllocator {
 			cur = cur.next;
 		}
 
-		assert(!(cur.size - Block.sizeof) > cur.size);
+		assert(!(cur.size - Block.sizeof) > cur.size, "size - block size was more than initial size!");
 
 		auto ret_size = returned_block.length;
 		auto alloc_offset = cur.size - Block.sizeof;
@@ -365,6 +362,27 @@ struct FreeListAllocator {
 } //FreeListAllocator
 
 unittest {
+	
+	import std.random : uniform;
+
+	immutable size_t alloc_size = 1024 * 1024 * 8;
+	auto allocator = FreeListAllocator(alloc_size, "TestFreeList"); // 8 megabytes
+	
+	auto max_alloc_size = 32768, min_alloc_size = 16;
+
+	size_t total_allocated = 0;
+	void[][] allocated_things = [];
+	while (total_allocated < (alloc_size / 2)) {
+
+		auto allocated_data = allocator.alloc(uniform(min_alloc_size, max_alloc_size));
+		allocated_things ~= allocated_data;
+		total_allocated += allocated_data.length;
+		
+	}
+
+	foreach (ref data; allocated_things) {
+		allocator.dealloc(data);
+	}
 
 } //FreeListAllocator Tests
 
