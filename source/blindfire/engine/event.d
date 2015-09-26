@@ -121,8 +121,6 @@ struct EventManager {
 					foreach (ref ev; ev_list) {
 						foreach (key, ref del_func; cur_dels) {
 
-							pragma(msg, doSwitchEntry!EvTypesMap());
-
 							switch (id) {
 								mixin(doSwitchEntry!EvTypesMap());
 								default: writefln("unhandled event type: %d", id);
