@@ -2,18 +2,12 @@ module blindfire.engine.fsm;
 
 import std.typecons : Tuple;
 
-mixin template makeStates(States) {
-
-	void createStates() {
-
-	}
-
-} //makeStates
-
 alias FStateID = int;
 alias FStateTuple = Tuple!(FStateID, FStateID);
 
 mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc) {
+
+	import std.traits : ParameterTypeTuple;
 
 	alias RunFunc = StateFunc;
 	alias TransitionFunc = void delegate(FStateID target_state);
@@ -26,12 +20,16 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 	ref typeof(this) setInitialState(FStateID state) {
 		current_state = state;
 		return this;
-	}
+	} //setInitialState
 
 	ref typeof(this) attachFunction(FStateID id, TripleRunFunc func_triple) {
 		states[id] = func_triple;
 		return this;
 	} //attachFunction
+
+	void tick(Args...)(Args args) {
+		states[current_state](args);
+	} //tick
 
 	void transitionTo(FStateID new_state) {
 
@@ -66,30 +64,34 @@ struct MovingFSM {
 		setInitialState(State.Moving)
 			.attachFunction(State.Moving, TripleRunFunc(&onMovEnter, &onMovExecute, &onMovLeave))
 			.attachFunction(State.Stationary, TripleRunFunc(&onStatEnter, &onStatExecute, &onStatLeave));
-	}
+	} //this
 
 	void onStatEnter(FStateID from) {
 
-	}
+	} //onStatEnter
 
 	void onStatExecute(int new_speed) {
 
-	}
+	} //onStatExecute
 
 	void onStatLeave(FStateID target) {
 
-	}
+	} //onStatLeave
 
 	void onMovEnter(FStateID from) {
 
-	}
+	} //onMovEnter
 
 	void onMovExecute(int new_speed) {
 
-	}
+	} //onMovExecute
 
 	void onMovLeave(FStateID target) {
 
-	}
+	} //onMovLeave
 
 } //WalkingFSM
+
+unittest {
+
+}
