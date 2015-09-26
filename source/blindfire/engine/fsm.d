@@ -18,7 +18,7 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 	immutable FStateTuple[] transitions = in_transitions;
 
 	ref typeof(this) setInitialState(FStateID state) {
-		current_state = state;
+		transitionTo(state);
 		return this;
 	} //setInitialState
 
@@ -43,55 +43,6 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 	} //transitionTo
 
 } //FSM
-
-struct MovingFSM {
-
-	alias MovingFunc = void delegate(int new_speed);
-
-	enum State : FStateID {
-		Moving,
-		Stationary
-	}
-
-	mixin FSM!([State.Moving, State.Stationary],
-			   [FStateTuple(State.Moving, State.Stationary),
-			   FStateTuple(State.Stationary, State.Moving)],
-			   MovingFunc);
-
-	@disable this();
-	@disable this(this);
-	
-	this(int v) {
-		setInitialState(State.Moving)
-			.attachFunction(State.Moving, TripleRunFunc(&onMovEnter, &onMovExecute, &onMovLeave))
-			.attachFunction(State.Stationary, TripleRunFunc(&onStatEnter, &onStatExecute, &onStatLeave));
-	} //this
-
-	void onStatEnter(FStateID from) {
-
-	} //onStatEnter
-
-	void onStatExecute(int new_speed) {
-
-	} //onStatExecute
-
-	void onStatLeave(FStateID target) {
-
-	} //onStatLeave
-
-	void onMovEnter(FStateID from) {
-
-	} //onMovEnter
-
-	void onMovExecute(int new_speed) {
-
-	} //onMovExecute
-
-	void onMovLeave(FStateID target) {
-
-	} //onMovLeave
-
-} //WalkingFSM
 
 unittest {
 
