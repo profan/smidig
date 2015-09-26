@@ -272,7 +272,7 @@ struct FreeListAllocator {
 	struct Block {
 		size_t size;
 		Block* next;
-	}
+	} //Block
 
 	void* buffer;
 	void* current;
@@ -297,20 +297,20 @@ struct FreeListAllocator {
 
 		first = alloc_item!(Block)(total_size - Block.sizeof, null);
 
-	}
+	} //this
 	
 	@disable this(this);
 
 	~this() {
 
-	}
+	} //~this
 
 	auto alloc(T, Args...)(Args args) {
 
 		auto obj_size = get_size!T;
 		return emplace!(T, Args)(alloc(obj_size), args);
 
-	}
+	} //alloc
 
 	void[] alloc(size_t alloc_size) {
 
@@ -340,11 +340,24 @@ struct FreeListAllocator {
 
 		return null;
 
-	}
+	} //alloc
 
-	void dealloc(void* block) {
+	void dealloc(void[] returned_block) {
 
-	}	
+		Block* cur = first;
+		while (cur.next != null) {
+			cur = cur.next;
+		}
+
+		assert(!(cur.size - Block.sizeof) > cur.size);
+
+		auto ret_size = returned_block.length;
+		auto alloc_offset = cur.size - Block.sizeof;
+		auto mem = cur[alloc_offset .. alloc_offset + Block.sizeof];
+		cur.next = emplace!Block(mem, ret_size, null);
+		cur.size = cur.size - Block.sizeof;
+
+	} //dealloc
 
 	mixin AllocatorInvariant;
 	mixin AllocatorCommon;
@@ -353,7 +366,7 @@ struct FreeListAllocator {
 
 unittest {
 
-}
+} //FreeListAllocator Tests
 
 //returns an aligned offset in bytes from current to allocate from.
 private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) nothrow @nogc pure {
@@ -361,7 +374,7 @@ private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alig
 	ptrdiff_t diff = alignment - (cast(ptrdiff_t)current & (alignment-1));
 	return (diff == T.alignof) ? 0 : diff;
 
-}
+} //get_aligned
 
 //returns size of type in memory
 size_t get_size(T)() nothrow @nogc pure {
@@ -372,4 +385,4 @@ size_t get_size(T)() nothrow @nogc pure {
 		return T.sizeof;
 	}
 
-}
+} //get_size
