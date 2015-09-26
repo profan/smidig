@@ -291,18 +291,15 @@ class GameNetworkManager {
 
 	}
 
-	void onCreateGame(EventCast* ev) {
-		auto cgev = ev.extract!CreateGameEvent();
+	void onCreateGame(CreateGameEvent* ev) {
 		send_message(Command.CREATE);
 	}
 
-	void onClientConnect(EventCast* ev) {
-		auto cev = ev.extract!ClientConnectEvent();
+	void onClientConnect(ClientConnectEvent* ev) {
 		send_message(Command.CONNECT);
 	}
 
-	void onClientDisconnect(EventCast* ev) {
-		auto cdev = ev.extract!ClientDisconnectEvent();
+	void onClientDisconnect(ClientDisconnectEvent* ev) {
 		send_message(Command.DISCONNECT);
 	}
 

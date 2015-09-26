@@ -108,8 +108,7 @@ final class JoiningState : GameState {
 		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
 	}
 
-	void onClientSetConnected(EventCast* ev) {
-		auto cev = ev.extract!ClientSetConnectedEvent();
+	void onClientSetConnected(ClientSetConnectedEvent* ev) {
 		statehan.pop_state();
 		statehan.push_state(State.LOBBY);
 	}
@@ -165,8 +164,7 @@ final class LobbyState : GameState {
 		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
 	}
 
-	void onClientSetConnected(EventCast* ev) {
-		auto cev = ev.extract!ClientSetConnectedEvent();
+	void onClientSetConnected(ClientSetConnectedEvent* ev) {
 		statehan.pop_state();
 		statehan.push_state(State.GAME);
 	}
@@ -271,8 +269,7 @@ final class MatchState : GameState {
 
 	}
 
-	void onClientDisconnect(EventCast* ev) {
-		auto cdev = ev.extract!ClientDisconnectEvent();
+	void onClientDisconnect(ClientDisconnectEvent* ev) {
 		statehan.pop_state();
 	}
 
@@ -596,14 +593,12 @@ struct Game {
 
 	}
 
-	void onSetTickrate(EventCast* ev) {
-		auto sev = ev.extract!SetTickrateEvent();
-		this.iter = sev.payload;
+	void onSetTickrate(SetTickrateEvent* ev) {
+		this.iter = ev.payload;
 	}
 
-	void onGameStatePush(EventCast* ev) {
-		auto gev = ev.extract!PushGameStateEvent();
-		this.state.push_state(gev.payload);
+	void onGameStatePush(PushGameStateEvent* ev) {
+		this.state.push_state(ev.payload);
 	}
 
 	void run() {
@@ -642,8 +637,11 @@ struct Game {
 
 			if (sw.peek() - last > iter) {
 
+				import blindfire.defs : EventIdentifier;
+				mixin EventManager.doTick!();
+
 				ut_sw.start();
-				evman.tick();
+				tick!EventIdentifier(evman);
 				evhan.handle_events();
 				update(1.0);
 				last = sw.peek();
