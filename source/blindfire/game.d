@@ -207,7 +207,7 @@ final class LobbyState : GameState {
 
 final class MatchState : GameState {
 
-	import profan.ecs : EntityID, EntityManager;
+	import blindfire.engine.ecs : EntityID, EntityManager;
 	import blindfire.action : SelectionBox;
 	import blindfire.ents : create_unit;
 	import blindfire.sys;
@@ -238,12 +238,12 @@ final class MatchState : GameState {
 
 		alias ea = entity_allocator;
 		this.em = ea.alloc!(EntityManager)();
-		this.em.add_system(ea.alloc!(TransformManager)());
-		this.em.add_system(ea.alloc!(CollisionManager)(Vec2i(640, 480)));
-		this.em.add_system(ea.alloc!(SpriteManager)());
-		this.em.add_system(ea.alloc!(InputManager)());
-		this.em.add_system(ea.alloc!(OrderManager)(&sbox, net_man.tm));
-		this.em.add_system(ea.alloc!(SelectionManager)());
+		this.em.addSystem(ea.alloc!(TransformManager)());
+		this.em.addSystem(ea.alloc!(CollisionManager)(Vec2i(640, 480)));
+		this.em.addSystem(ea.alloc!(SpriteManager)());
+		this.em.addSystem(ea.alloc!(InputManager)());
+		this.em.addSystem(ea.alloc!(OrderManager)(&sbox, net_man.tm));
+		this.em.addSystem(ea.alloc!(SelectionManager)());
 
 		this.sbox = SelectionBox();
 
@@ -265,7 +265,7 @@ final class MatchState : GameState {
 
 		//remove all things
 		evman.unregister!ClientDisconnectEvent(&onClientDisconnect);
-		em.clear_systems();
+		em.clearSystems();
 
 	}
 
@@ -406,23 +406,9 @@ final class OptionsState : GameState {
 
 } //OptionsState
 
-enum Resource : ResourceID {
-
-	//shaders
-	BASIC_SHADER,
-	TEXT_SHADER,
-
-	//textures
-
-	//cursor
-	CURSOR_TEXTURE,
-
-	//units
-	UNIT_TEXTURE
-
-}
-
 struct Game {
+
+	import blindfire.res : Resource;
 
 	private {
 
@@ -637,7 +623,6 @@ struct Game {
 
 			if (sw.peek() - last > iter) {
 
-				import blindfire.defs : EventIdentifier;
 				mixin EventManager.doTick!();
 
 				ut_sw.start();

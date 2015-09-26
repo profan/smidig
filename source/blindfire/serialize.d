@@ -1,13 +1,13 @@
 module blindfire.serialize;
 
 import blindfire.engine.gl;
+import blindfire.engine.ecs;
 import blindfire.engine.defs;
 import blindfire.engine.net : NetVar;
 import blindfire.engine.stream : InputStream, OutputStream;
 
 import blindfire.sys;
 import blindfire.action;
-import profan.ecs;
 
 enum networked = "networked";
 enum ignore = "ignore";

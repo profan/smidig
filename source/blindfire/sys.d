@@ -3,13 +3,13 @@ module blindfire.sys;
 import std.concurrency : send, receiveTimeout, Tid;
 import std.math : cos, sin, PI, pow;
 import std.stdio : writefln;
-import profan.ecs;
 
 import blindfire.engine.window : Window;
 import blindfire.engine.gl : Vec2i, Vec2f, Vec3f, Mat3f, Transform, Shader, Texture, Mesh;
 import blindfire.engine.net : NetVar, Command, ClientID;
 import blindfire.engine.stream : InputStream;
 import blindfire.engine.util : point_in_rect;
+import blindfire.engine.ecs;
 
 import blindfire.netgame;
 import blindfire.action;

@@ -129,9 +129,9 @@ struct UIState {
 		}
 
 		import blindfire.engine.resource : ResourceManager;
-		import blindfire.game : Resource;
+		import blindfire.res : Resource;
 
-		auto rm = ResourceManager.get();	
+		auto rm = ResourceManager.get();
 		auto text_shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
 		font_atlas = ui_allocator.alloc!(FontAtlas)("fonts/OpenSans-Bold.ttf", 22, text_shader);
 

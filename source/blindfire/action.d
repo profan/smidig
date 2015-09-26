@@ -3,14 +3,14 @@ module blindfire.action;
 import blindfire.engine.window : Window;
 import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.defs : Vec2f;
+import blindfire.engine.ecs;
 
 import blindfire.serialize : networked;
 import blindfire.ui : UIState, draw_rectangle;
 import blindfire.netgame : Action, ActionType;
-import blindfire.game : Resource;
+import blindfire.res : Resource;
 import blindfire.sys;
 
-import profan.ecs;
 
 enum : ActionType[string] {
 
@@ -52,7 +52,7 @@ class MoveAction : Action {
 	}
 
 	void execute(EntityManager em) {
-		em.get_component!(SelectionComponent)(entity).set_target(position);
+		em.getComponent!(SelectionComponent)(entity).set_target(position);
 	}
 
 } //MoveAction

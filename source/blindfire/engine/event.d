@@ -68,14 +68,14 @@ struct EventManager {
 
 	void test(T)(size_t rounds) {
 
+		import std.range : iota;
+		import std.datetime : StopWatch;
+
 		alias TestEvent = Event!(0, uint);
 
 		void receiveSomeEvent(EventCast* event) {
 			auto ev = event.extract!TestEvent;
 		}
-
-		import std.range : iota;
-		import std.datetime : StopWatch;
 
 		auto sw = StopWatch();
 
@@ -102,8 +102,8 @@ struct EventManager {
 
 	} //schedule
 
-	mixin template doTick() {	
-		
+	mixin template doTick() {
+
 		static string doSwitchEntry(alias EventTypes)() {
 
 			import std.conv : to;
@@ -141,6 +141,26 @@ struct EventManager {
 	}
 
 } //EventManager
+
+template expandEventsToMap(Events...) {
+	enum expandEventsToMap =
+		"enum : int[string] {
+			EventIdentifier = [" ~ expandEvents!Events ~ "]
+		}";
+} //expandEventsToMap
+
+template expandEvents(Events...) {
+	import std.conv : to;
+	static if (Events.length > 1) {
+		enum expandEvents = "\"" ~ Events[0].stringof ~ "\" : " ~ to!string(Events[0].message_id) ~ ", "
+			~ expandEvents!(Events[1..$]);
+	} else static if (Events.length > 0) {
+		enum expandEvents = "\"" ~ Events[0].stringof ~ "\" : " ~ to!string(Events[0].message_id)
+			~ expandEvents!(Events[1..$]);
+	} else {
+		enum expandEvents = "";
+	}
+} //expandEvents
 
 unittest {
 

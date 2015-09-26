@@ -8,11 +8,11 @@ import blindfire.engine.state : GameState, GameStateHandler;
 import blindfire.engine.event;
 import blindfire.engine.log;
 import blindfire.engine.net;
+import blindfire.engine.ecs;
 
 import blindfire.defs;
 import blindfire.action;
 import blindfire.config;
-import profan.ecs : EntityManager;
 
 struct PlayerData {
 
