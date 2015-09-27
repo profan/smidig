@@ -25,8 +25,8 @@ struct MovingFSM {
 	this(int initial_velocity) {
 
 		setInitialState(State.Moving)
-			.attachFunction(State.Moving, TripleRunFunc(&onMovEnter, &onMovExecute, &onMovLeave))
-			.attachFunction(State.Stationary, TripleRunFunc(&onStatEnter, &onStatExecute, &onStatLeave));
+			.attachFunction(State.Moving, &onMovEnter, &onMovExecute, &onMovLeave)
+			.attachFunction(State.Stationary, &onStatEnter, &onStatExecute, &onStatLeave);
 
 	} //this
 

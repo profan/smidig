@@ -7,8 +7,6 @@ alias FStateTuple = Tuple!(FStateID, FStateID);
 
 mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc) {
 
-	import std.traits : ParameterTypeTuple;
-
 	alias RunFunc = StateFunc;
 	alias TransitionFunc = void delegate(FStateID target_state);
 	alias TripleRunFunc = Tuple!(TransitionFunc, "enter", RunFunc, "exec", TransitionFunc, "leave");
@@ -22,8 +20,8 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 		return this;
 	} //setInitialState
 
-	ref typeof(this) attachFunction(FStateID id, TripleRunFunc func_triple) {
-		states[id] = func_triple;
+	ref typeof(this) attachFunction(FStateID id, TransitionFunc enter, RunFunc exec, TransitionFunc leave) {
+		states[id] = TripleRunFunc(enter, exec, leave);
 		return this;
 	} //attachFunction
 
