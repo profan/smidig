@@ -59,7 +59,7 @@ private mixin template AllocatorCommon() {
 
 	}
 
-	@property size_t remaining_size() const {
+	@property size_t remaining_size() const nothrow @nogc {
 
 		assert(allocated_size <= total_size);
 		auto remaining = total_size - allocated_size;
@@ -160,7 +160,7 @@ struct LinearAllocator {
 
 	}
 
-	void reset() {
+	void reset() nothrow {
 		allocated_size = 0;
 		current = buffer;
 	}
@@ -340,6 +340,7 @@ struct FreeListAllocator {
 				cur.size = remaining_size;
 
 				auto obj_mem = (cur + cur.size)[0..alloc_size];
+
 				writefln("[FreeListAllocator:%s] allocated %d bytes", name, alloc_size);
 
 				return obj_mem;
