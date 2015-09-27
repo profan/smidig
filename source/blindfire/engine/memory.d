@@ -36,6 +36,12 @@ private class MemoryObject(T) : Instance {
 
 private mixin template AllocatorCommon() {
 
+	void* buffer;
+	void* current;
+	size_t total_size;
+	size_t allocated_size;
+	immutable char[] name;
+
 	auto alloc_item(T, Args...)(Args args) {
 
 		size_t item_size = get_size!(T)();
@@ -62,7 +68,7 @@ private mixin template AllocatorCommon() {
 
 	}
 
-}
+} //AllocatorCommon
 
 private mixin template AllocatorInvariant() {
 
@@ -73,18 +79,11 @@ private mixin template AllocatorInvariant() {
 
 	}
 
-}
+} //AllocatorInvariant
 
 struct LinearAllocator {
 
 	bool composed;
-
-	void* buffer;
-	void* current;
-	size_t total_size;
-	size_t allocated_size = 0;
-	immutable char[] name;
-
 	size_t pointer_count = 0;
 	Instance[100] allocated_pointers = void;
 
@@ -133,8 +132,6 @@ struct LinearAllocator {
 
 	}
 
-	mixin AllocatorCommon;
-
 	void* alloc(size_t size, size_t alignment) nothrow @nogc {
 
 		auto align_offset = get_aligned(current, alignment);
@@ -169,12 +166,13 @@ struct LinearAllocator {
 	}
 
 	mixin AllocatorInvariant;
+	mixin AllocatorCommon;
 
 } //LinearAllocator
 
 unittest {
 
-}
+} //LinearAllocator Tests
 
 struct StackAllocator {
 
@@ -192,12 +190,6 @@ struct StackAllocator {
 
 	}
 
-	void* buffer;
-	void* current;
-	size_t total_size;
-	size_t allocated_size;
-	immutable char[] name;
-	
 	size_t pointer_count = 0;
 	Instance[100] allocated_pointers = void; //FIXME get rid of this limitation, this is... very bad :D
 
@@ -305,15 +297,7 @@ struct FreeListAllocator {
 		Block* next;
 	} //Block
 
-	void* buffer;
-	void* current;
-
-	size_t total_size;
-	size_t allocated_size;
-	
 	Block* first;
-
-	immutable char[] name;
 
 	this(size_t size, string name) {
 
