@@ -53,6 +53,15 @@ private mixin template AllocatorCommon() {
 
 	}
 
+	@property size_t remaining_size() const {
+
+		assert(allocated_size <= total_size);
+		auto remaining = total_size - allocated_size;
+
+		return remaining;
+
+	}
+
 }
 
 private mixin template AllocatorInvariant() {
@@ -192,6 +201,8 @@ struct StackAllocator {
 	size_t pointer_count = 0;
 	Instance[100] allocated_pointers = void; //FIXME get rid of this limitation, this is... very bad :D
 
+	@disable this(this);
+
 	this(size_t size, string name) nothrow {
 
 		this.total_size = size;
@@ -205,8 +216,6 @@ struct StackAllocator {
 
 	}
 
-	@disable this(this);
-
 	~this() {
 
 		if (total_size > 0) {
@@ -215,7 +224,6 @@ struct StackAllocator {
 
 	}
 
-	mixin AllocatorCommon;
 
 	void* alloc(bool header = false)(size_t bytes) {
 
@@ -263,9 +271,32 @@ struct StackAllocator {
 
 	}
 
+
 	mixin AllocatorInvariant;
+	mixin AllocatorCommon;
 
 } //StackAllocator
+
+unittest {
+
+	import std.random : uniform;
+
+	enum total_alloc_size = 65536;
+	auto sa = StackAllocator(total_alloc_size, "Test");
+	size_t min_size = 3, max_size = 2048;
+
+	size_t total_allocated = 0;
+	while (total_allocated < total_alloc_size) {
+
+		size_t alloc_size;
+		do { alloc_size = uniform(min_size, max_size); } while (alloc_size > sa.remaining_size);
+
+		auto allocated_bytes = sa.alloc(alloc_size);
+		total_allocated += alloc_size;
+
+	}
+
+} //StackAllocator Tests
 
 struct FreeListAllocator {
 
@@ -362,6 +393,8 @@ struct FreeListAllocator {
 } //FreeListAllocator
 
 unittest {
+
+	/* tests by making a bunch of allocations and deallocations */
 	
 	import std.random : uniform;
 
