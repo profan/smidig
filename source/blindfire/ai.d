@@ -31,11 +31,9 @@ struct MovingFSM {
 	} //this
 
 	void onStatEnter(FStateID from) {
-		writefln("entered stat");
 	} //onStatEnter
 
 	void onStatExecute(int new_speed) {
-		writefln("got: %d", new_speed);
 		transitionTo(State.Moving);
 	} //onStatExecute
 

@@ -63,7 +63,64 @@ class TurnManager {
 
 struct Connection {
 	StaticArray!(char, 64) player_name;
-}
+} //Connection
+
+struct ClientFSM {
+
+	import blindfire.engine.fsm : FSM, FStateID, FStateTuple;
+
+	alias UpdateFunc = void delegate();
+
+	enum State : FStateID {
+		Active,
+		Waiting
+	}
+
+	@disable this();
+	@disable this(this);
+
+	mixin FSM!([State.Active, State.Waiting], //states
+			   [FStateTuple(State.Active, State.Waiting), //transitions
+			   FStateTuple(State.Waiting, State.Active)],
+			   UpdateFunc);
+
+	this(int v) {
+
+		setInitialState(State.Waiting)
+			.attachFunction(State.Active, &onActiveEnter, &onActiveExecute, &onActiveLeave)
+			.attachFunction(State.Waiting, &onWaitingEnter, &onWaitingExecute, &onWaitingLeave);
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+	void onActiveEnter(FStateID from) {
+
+	} //onActiveEnter
+
+	void onActiveExecute() {
+
+	} //onActiveExecute
+
+	void onActiveLeave(FStateID target) {
+
+	} //onActiveLeave
+
+	void onWaitingEnter(FStateID from) {
+
+	} //onWaitingEnter
+
+	void onWaitingExecute() {
+
+	} //onWaitingExecute
+
+	void onWaitingLeave(FStateID target) {
+
+	} //onWaitingLeave
+
+} //ClientFSM
 
 class GameNetworkManager {
 
