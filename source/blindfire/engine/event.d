@@ -159,7 +159,7 @@ template expandEventsToMap(Events...) {
 template expandEvents(Events...) {
 	import std.conv : to;
 	static if (Events.length > 1) {
-		enum expandEvents = "\"" ~ Events[0].stringof ~ "\" : " ~ to!string(Events[0].message_id) ~ ", "
+		enum expandEvents = expandEvents!(Events[0..1]) ~ ", "
 			~ expandEvents!(Events[1..$]);
 	} else static if (Events.length > 0) {
 		enum expandEvents = "\"" ~ Events[0].stringof ~ "\" : " ~ to!string(Events[0].message_id)

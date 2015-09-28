@@ -334,7 +334,7 @@ class GameNetworkManager {
 
 						switch (action_type) {
 
-							mixin(handle_action());
+							mixin(handle_action()); //generates code for handling each action type
 
 							default:
 								writefln("[GAME] Unhandled action type: %s", to!string(action_type));
