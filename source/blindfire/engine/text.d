@@ -146,8 +146,9 @@ struct FontAtlas {
 			GLfloat t;
 		}
 
-		Point[] coords = (cast(Point*)stack_allocator.alloc(Point.sizeof * text.length * 6))[0..text.length*6];
-		scope(exit) { stack_allocator.dealloc(Point.sizeof * text.length * 6); } //pop it
+		auto alloc_bytes = stack_allocator.alloc(Point.sizeof * text.length * 6);
+		Point[] coords = (cast(Point*)alloc_bytes.ptr)[0..text.length*6];
+		scope(exit) { stack_allocator.dealloc(alloc_bytes.length); } //pop it
 
 		int n = 0; //how many to draw?
 		foreach (ch; text) {
