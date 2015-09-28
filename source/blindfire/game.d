@@ -415,6 +415,9 @@ struct Game {
 	private {
 
 		Window* window;
+		EventManager net_evman;
+		NetworkPeer network_client;
+
 		EventManager evman;
 		EventHandler* evhan;
 		GameStateHandler state;
@@ -440,6 +443,9 @@ struct Game {
 	}
 
 	this(Window* window, EventHandler* evhan) {
+
+		this.net_evman = EventManager(EventMemory, NetEventType.max);
+		this.network_client = NetworkPeer(12000, &net_evman);
 
 		this.master_allocator = LinearAllocator(65536, "MasterAllocator");
 		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, "ResourceAllocator", &master_allocator);
@@ -525,15 +531,16 @@ struct Game {
 
 	void initialize_systems() {
 
+		this.network_client.init();
+
 		//upload vertices for ui to gpu, set up shaders.
 		this.ui_state.init(system_allocator);
 
 		alias ra = system_allocator;
 		this.state = ra.alloc!(GameStateHandler)();
-		this.network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 
 		this.tm = ra.alloc!(TurnManager)();
-		this.net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm, &evman);
+		this.net_man = ra.alloc!(GameNetworkManager)(&net_evman, state, &config_map, tm, &evman);
 
 		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, &evman), State.MENU);
 		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas, &evman), State.GAME);
@@ -601,7 +608,7 @@ struct Game {
 		initialize_systems();
 
 		//terminate network worker when run goes out of scope, because the game has ended
-		scope(exit) { net_man.send_message(Command.TERMINATE); }
+		//scope(exit) { net_man.send_message(Command.TERMINATE); } TODO REVISIT
 
 		//register console commands
 		register_concommands();
@@ -629,8 +636,12 @@ struct Game {
 
 				ut_sw.start();
 				tick!EventIdentifier(evman);
+				tick!NetEventIdentifier(net_evman);
+
+				network_client.tick();
 				evhan.handle_events();
 				update(1.0);
+
 				last = sw.peek();
 				updatetime = ut_sw.peek().msecs;
 				ut_sw.reset();

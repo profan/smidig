@@ -124,6 +124,8 @@ struct ClientFSM {
 
 class GameNetworkManager {
 
+	import blindfire.engine.defs;
+
 	struct Server {
 		StaticArray!(char, 64) server_name;
 	}
@@ -137,7 +139,6 @@ class GameNetworkManager {
 		SESSION_ACTIVE
 	}
 
-
 	public {
 
 		float turn_length = 0.2f;
@@ -148,7 +149,7 @@ class GameNetworkManager {
 		TurnID turn_id;
 		TurnManager tm;
 		EntityManager em;
-		Tid network_thread;
+		EventManager* network_client;
 
 		ClientID client_id;
 
@@ -165,8 +166,8 @@ class GameNetworkManager {
 
 	}
 
-	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm, EventManager* eventman) {
-		this.network_thread = net_tid;
+	this(EventManager* net_ev_man, GameStateHandler state_han, ConfigMap* config, TurnManager tm, EventManager* eventman) {
+		this.network_client = net_ev_man;
 		this.game_state_handler = state_han;
 		this.config_map = config;
 		this.tm = tm;
@@ -174,7 +175,7 @@ class GameNetworkManager {
 
 		evman.register!ClientConnectEvent(&onClientConnect);
 		evman.register!ClientDisconnectEvent(&onClientDisconnect);
-		evman.register!CreateGameEvent(&onCreateGame);
+		evman.register!StartGameEvent(&onCreateGame);
 
 	}
 
@@ -221,7 +222,7 @@ class GameNetworkManager {
 		}
 	
 		if (stream.current > 0) {
-			send(network_thread, Command.UPDATE, cast(immutable(ubyte[]))stream[].idup);
+			network_client.push!GameUpdateEvent(stream[].idup);
 		}
 
 		tm.do_pending_actions(em);
@@ -260,7 +261,7 @@ class GameNetworkManager {
 					auto data = PlayerData(cast(ubyte)name.length, username);
 					stream.write(data);
 
-					send_message(Command.UPDATE, cast(immutable(ubyte[]))stream[].idup);
+					send_message(stream[]);
 
 					evman.push!ClientSetConnectedEvent(true);
 					break;
@@ -355,23 +356,17 @@ class GameNetworkManager {
 
 	}
 
-	void onCreateGame(ref CreateGameEvent ev) {
-		send_message(Command.CREATE);
-	}
+	void onCreateGame(ref StartGameEvent ev) {
+		network_client.push!CreateGameEvent(true);
+	} //onCreateGame
 
 	void onClientConnect(ref ClientConnectEvent ev) {
-		send_message(Command.CONNECT);
-	}
+		network_client.push!DoConnectEvent(true);
+	} //onClientConnect
 
 	void onClientDisconnect(ref ClientDisconnectEvent ev) {
-		send_message(Command.DISCONNECT);
-	}
-
-	void send_message(Args...)(Args args) {
-
-		send(network_thread, args);
-
-	}
+		network_client.push!DoDisconnectEvent(true);
+	} //onClientDisconnect
 
 	void send_action(T, Args...)(Args args) {
 
@@ -382,7 +377,7 @@ class GameNetworkManager {
 	void send_message(in ubyte[] data) {
 
 		//copy data, send.
-		send(network_thread, data.idup); //FIXME this allocates, aaaargh?!
+		network_client.push!GameUpdateEvent(data.idup);
 
 	}
 

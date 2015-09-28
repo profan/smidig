@@ -149,10 +149,10 @@ struct EventManager {
 
 } //EventManager
 
-template expandEventsToMap(Events...) {
+template expandEventsToMap(string name, Events...) {
 	enum expandEventsToMap =
 		"enum : int[string] {
-			EventIdentifier = [" ~ expandEvents!Events ~ "]
+			" ~ name ~ " = [" ~ expandEvents!Events ~ "]
 		}";
 } //expandEventsToMap
 

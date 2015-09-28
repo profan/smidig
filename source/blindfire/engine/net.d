@@ -204,6 +204,7 @@ struct NetworkPeer {
 
 	import blindfire.engine.collections : ScopedBuffer;
 	import blindfire.engine.memory : StackAllocator;
+	import blindfire.engine.event : EventManager;
 
 	enum DEFAULT_CLIENT_ID = ClientID.max;
 	enum MAX_PACKET_SIZE = 65507;
@@ -228,15 +229,16 @@ struct NetworkPeer {
 	Address addr;
 	ScopedBuffer!void data;
 	StackAllocator stack_allocator;
+	EventManager* net_event_man;
 
-	this(ushort port, Tid game_tid) {
+	this(ushort port, EventManager* net_event_manager) {
 
 		//set socket to nonblocking, since one thread is used both for transmission and receiving, doesn't block on receive.
 		this.socket = new UdpSocket();
 		this.socket.blocking = false;
 
-		//thread id to pass messages back to
-		this.game_thread = game_tid;
+		//event handler to pass messages back to
+		this.net_event_man = net_event_manager;
 		
 		//unique network identifier
 		this.client_uuid = DEFAULT_CLIENT_ID; //if it's still 255 when in session, something is wrong.
@@ -577,10 +579,6 @@ struct NetworkPeer {
 
 	}
 
-	void tick() {
-
-	}
-
 	void init() {
 
 		bind_to_port(this.addr);
@@ -588,6 +586,10 @@ struct NetworkPeer {
 		network_stats.timer.start();
 
 		this.data = ScopedBuffer!void(&stack_allocator, MAX_PACKET_SIZE);
+
+	} //init
+
+	void tick() {
 
 		if (open) {
 
@@ -627,66 +629,6 @@ struct NetworkPeer {
 
 		}
 
-	}
-
-	void listen() {
-
-		Address addr;
-		bind_to_port(addr);
-
-		open = true;
-		logger.log("Listening on - %s:%d", addr.toAddrString(), port);
-		network_stats.timer.start();
-
-		import core.stdc.stdlib : malloc, free;
-		void[] data = malloc(MAX_PACKET_SIZE)[0..MAX_PACKET_SIZE];
-		scope (exit) { free(data.ptr); }
-
-		while (open) {
-
-			Address from;
-			auto bytes = socket.receiveFrom(data, from);
-			update_stats(bytes);
-
-			bool packet_ready = (bytes != -1 && bytes >= MessageType.sizeof);
-
-			InputStream stream;
-			MessageType type;
-
-			if (packet_ready) {
-				stream = InputStream(cast(ubyte*)data.ptr, bytes);
-				type = stream.read!(MessageType, InputStream.ReadMode.Peek)();
-				logger.log("Received message of type: %s", to!string(type));
-			}
-
-			final switch (state) with (ConnectionState) {
-
-				case CONNECTED:
-					if (packet_ready) { handle_connected_net(type, stream, from); }
-					handle_connected();
-					break;
-
-				case UNCONNECTED:
-					if (packet_ready) { handle_unconnected_net(type, stream, from); }
-					handle_unconnected();
-					break;
-
-				case CONNECTING:
-					if (packet_ready) { handle_connecting_net(type, stream, from); }
-					handle_connecting();
-					break;
-
-			}
-
-		}
-
-	}
+	} //tick
 
 } //NetworkPeer
-
-void launch_peer(Tid game_tid) {
-
-	auto peer = NetworkPeer(12000, game_tid);
-	peer.listen();
-
-}

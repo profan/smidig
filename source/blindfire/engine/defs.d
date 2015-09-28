@@ -51,6 +51,9 @@ enum NetEventType : EventID {
 	AssignID,
 	SetConnected,
 	Disconnected,
+	DoConnect,
+	DoDisconnect,
+	CreateGame,
 	GameUpdate
 } //NetEventType
 
@@ -61,4 +64,16 @@ enum DisconnectReason : uint {
 alias AssignIDEvent = Event!(NetEventType.AssignID, ClientID);
 alias IsConnectedEvent = Event!(NetEventType.SetConnected, bool);
 alias DisconnectedEvent = Event!(NetEventType.Disconnected, DisconnectReason);
-alias GameUpdateEvent = Event!(NetEventType.GameUpdate, ubyte[]);
+alias DoConnectEvent = Event!(NetEventType.DoConnect, bool);
+alias DoDisconnectEvent = Event!(NetEventType.DoDisconnect, bool);
+alias CreateGameEvent = Event!(NetEventType.CreateGame, bool);
+alias GameUpdateEvent = Event!(NetEventType.GameUpdate, immutable(ubyte[]));
+
+mixin(expandEventsToMap!("NetEventIdentifier",
+						 AssignIDEvent,
+						 IsConnectedEvent,
+						 DisconnectedEvent,
+						 DoConnectEvent,
+						 DoDisconnectEvent,
+						 CreateGameEvent,
+						 GameUpdateEvent));
