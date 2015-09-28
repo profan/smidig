@@ -209,21 +209,17 @@ struct NetworkPeer {
 	UdpSocket socket;
 	ConnectionState state = ConnectionState.UNCONNECTED;
 
-	//keep track of if Peer is host as well?
-	bool is_host = false;
-
-	//list of connected peers as a hashmap, identified by their UUID
-	Peer[ClientID] peers;
-
-	Tid game_thread;
-	ClientID client_uuid;
 	ushort port;
+	bool is_host = false;
+	Peer[ClientID] peers; //list of connected peers as a hashmap, identified by their UUID
+	ClientID client_uuid;
+	Tid game_thread;
 
 	NetworkState net_state;
 	Logger!("NET", NetworkState) logger;
 
-	Peer host_peer;
 	ClientID id_counter;
+	Peer host_peer;
 
 	this(ushort port, Tid game_tid) {
 
@@ -258,7 +254,7 @@ struct NetworkPeer {
 
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
 		ubyte[4096] ubyte_data = void; //FIXME look at this later
-		auto send_data = OutputStream(ubyte_data.ptr, ubyte_data.length);
+		auto send_data = OutputStream(ubyte_data);
 		send_data.write(msg);
 		send_data.write(data);
 		auto bytes_sent = socket.sendTo(cast(void[])send_data[], target);

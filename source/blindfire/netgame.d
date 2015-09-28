@@ -208,7 +208,7 @@ class GameNetworkManager {
 	void process_actions() {
 
 		ubyte[2048] buf; //FIXME deal with this artificial limitation
-		auto stream = OutputStream(buf.ptr, buf.length);
+		auto stream = OutputStream(buf);
 		foreach (action; tm.pending_actions) {
 
 			auto type = UpdateType.ACTION;
@@ -248,7 +248,7 @@ class GameNetworkManager {
 
 					//send player data
 					ubyte[4096] buf; //FIXME deal with this artificial limitation
-					auto stream = OutputStream(buf.ptr, buf.length);
+					auto stream = OutputStream(buf);
 
 					auto type = UpdateType.PLAYER_DATA;
 					stream.write(type);

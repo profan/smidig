@@ -33,7 +33,7 @@ size_t get_filesize(FILE *file) nothrow @nogc {
  	rewind(file);
 	if (size <= 0) printf("Invalid file size. \n");
 
-	return size;
+	return cast(size_t)size; //TODO consider the sanity of this
 
 }
 

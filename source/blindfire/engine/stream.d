@@ -1,7 +1,5 @@
 module blindfire.engine.stream;
 
-import std.traits : isArray;
-
 private mixin template StreamImpl() {
 
 	private {
@@ -13,6 +11,11 @@ private mixin template StreamImpl() {
 	this(ubyte* data, size_t length) nothrow @nogc {
 		this.buffer = data;
 		this.size = length;
+	}
+
+	this(SA)(ref SA arr) nothrow @nogc {
+		this.buffer = arr.ptr;
+		this.size = arr.length;
 	}
 
 	@property const(ubyte*) pointer() nothrow @nogc const {
@@ -53,6 +56,8 @@ struct InputStream {
 }
 
 struct OutputStream {
+
+	import std.traits : isArray;
 
 	mixin StreamImpl;
 
