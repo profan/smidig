@@ -206,20 +206,20 @@ struct NetworkPeer {
 	enum MAX_PACKET_SIZE = 65507;
 
 	bool open;
-	UdpSocket socket;
-	ConnectionState state = ConnectionState.UNCONNECTED;
-
 	ushort port;
 	bool is_host = false;
+
+	UdpSocket socket;
+	ConnectionState state = ConnectionState.UNCONNECTED;
 	Peer[ClientID] peers; //list of connected peers as a hashmap, identified by their UUID
 	ClientID client_uuid;
-	Tid game_thread;
+	Peer host_peer;
 
+	Tid game_thread;
 	NetworkState net_state;
 	Logger!("NET", NetworkState) logger;
 
-	ClientID id_counter;
-	Peer host_peer;
+	ClientID id_counter; //keeps track of what to assign connected clients
 
 	this(ushort port, Tid game_tid) {
 

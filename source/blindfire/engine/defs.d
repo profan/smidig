@@ -17,6 +17,7 @@ alias Vec4f = Vector!(float, 4);
 alias Mat3f = Matrix!(float, 3, 3);
 alias Mat4f = Matrix!(float, 4, 4);
 
+//rendering related
 enum DrawEventType : EventID {
 
 	RenderSprite,
@@ -24,7 +25,6 @@ enum DrawEventType : EventID {
 
 } //EventType
 
-//rendering related
 struct RenderSpriteCommand {
 	import blindfire.engine.resource : ResourceID;
 
@@ -43,3 +43,22 @@ struct RenderLineCommand {
 } //RenderLineCommand
 
 alias RenderSpriteEvent = Event!(DrawEventType.RenderSprite, RenderSpriteCommand);
+
+//networking related
+import blindfire.engine.net : Command;
+
+enum NetEventType : EventID {
+	AssignID,
+	SetConnected,
+	Disconnected,
+	GameUpdate
+} //NetEventType
+
+enum DisconnectReason : uint {
+	HostDisconnected
+}
+
+alias AssignIDEvent = Event!(NetEventType.AssignID, ClientID);
+alias IsConnectedEvent = Event!(NetEventType.SetConnected, bool);
+alias DisconnectedEvent = Event!(NetEventType.Disconnected, DisconnectReason);
+alias GameUpdateEvent = Event!(NetEventType.GameUpdate, ubyte[]);
