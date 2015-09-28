@@ -56,7 +56,7 @@ enum NetEventType : EventID {
 
 enum DisconnectReason : uint {
 	HostDisconnected
-}
+} //DisconnectReason
 
 alias AssignIDEvent = Event!(NetEventType.AssignID, ClientID);
 alias IsConnectedEvent = Event!(NetEventType.SetConnected, bool);

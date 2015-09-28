@@ -144,7 +144,7 @@ struct FontAtlas {
 			GLfloat y;
 			GLfloat s;
 			GLfloat t;
-		}
+		} //Point
 
 		auto alloc_bytes = stack_allocator.alloc(Point.sizeof * text.length * 6);
 		Point[] coords = (cast(Point*)alloc_bytes.ptr)[0..text.length*6];

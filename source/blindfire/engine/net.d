@@ -202,6 +202,9 @@ struct NetworkState {
 
 struct NetworkPeer {
 
+	import blindfire.engine.collections : ScopedBuffer;
+	import blindfire.engine.memory : StackAllocator;
+
 	enum DEFAULT_CLIENT_ID = ClientID.max;
 	enum MAX_PACKET_SIZE = 65507;
 
@@ -221,6 +224,11 @@ struct NetworkPeer {
 
 	ClientID id_counter; //keeps track of what to assign connected clients
 
+	//from refactor, currently bound address
+	Address addr;
+	ScopedBuffer!void data;
+	StackAllocator stack_allocator;
+
 	this(ushort port, Tid game_tid) {
 
 		//set socket to nonblocking, since one thread is used both for transmission and receiving, doesn't block on receive.
@@ -238,6 +246,7 @@ struct NetworkPeer {
 		net_state.state = &state;
 		net_state.client_uuid = &client_uuid;
 		this.logger = Logger!("NET", NetworkState)(&net_state);
+		this.stack_allocator = StackAllocator(MAX_PACKET_SIZE * 2, "NetAllocator");
 
 	}
 
@@ -568,6 +577,58 @@ struct NetworkPeer {
 
 	}
 
+	void tick() {
+
+	}
+
+	void init() {
+
+		bind_to_port(this.addr);
+		logger.log("Listening on - %s:%d", this.addr.toAddrString(), this.port);
+		network_stats.timer.start();
+
+		this.data = ScopedBuffer!void(&stack_allocator, MAX_PACKET_SIZE);
+
+		if (open) {
+
+			Address from;
+			auto bytes = socket.receiveFrom(data, from);
+			update_stats(bytes);
+
+			bool packet_ready = (bytes != -1 && bytes >= MessageType.sizeof);
+
+			InputStream stream;
+			MessageType type;
+
+			if (packet_ready) {
+				stream = InputStream(cast(ubyte*)data.ptr, bytes);
+				type = stream.read!(MessageType, InputStream.ReadMode.Peek)();
+				logger.log("Received message of type: %s", to!string(type));
+			}
+
+			final switch (state) with (ConnectionState) {
+
+				case CONNECTED:
+					if (packet_ready) { handle_connected_net(type, stream, from); }
+					handle_connected();
+					break;
+
+				case UNCONNECTED:
+					if (packet_ready) { handle_unconnected_net(type, stream, from); }
+					handle_unconnected();
+					break;
+
+				case CONNECTING:
+					if (packet_ready) { handle_connecting_net(type, stream, from); }
+					handle_connecting();
+					break;
+
+			}
+
+		}
+
+	}
+
 	void listen() {
 
 		Address addr;
@@ -577,18 +638,18 @@ struct NetworkPeer {
 		logger.log("Listening on - %s:%d", addr.toAddrString(), port);
 		network_stats.timer.start();
 
-		Address from;
 		import core.stdc.stdlib : malloc, free;
 		void[] data = malloc(MAX_PACKET_SIZE)[0..MAX_PACKET_SIZE];
 		scope (exit) { free(data.ptr); }
 
 		while (open) {
 
+			Address from;
 			auto bytes = socket.receiveFrom(data, from);
 			update_stats(bytes);
 
 			bool packet_ready = (bytes != -1 && bytes >= MessageType.sizeof);
-		
+
 			InputStream stream;
 			MessageType type;
 
