@@ -63,11 +63,11 @@ struct FontAtlas {
 		FT_Library ft;
 		FT_Face face;
 
-		if (FT_Init_FreeType(&ft)) { 
+		if (FT_Init_FreeType(&ft)) {
 			printf("[FontAtlas] Could not init freetype.");
 		}
 
-		if (FT_New_Face(ft, font_name.ptr, 0, &face)) { 
+		if (FT_New_Face(ft, font_name.ptr, 0, &face)) {
 			printf("[FontAtlas] Could not open font.");
 		}
 

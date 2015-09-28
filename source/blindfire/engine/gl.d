@@ -59,6 +59,8 @@ struct Cursor {
 	Shader* shader;
 	Texture* texture;
 	
+	@disable this(this);
+
 	this(Texture* cursor_texture, Shader* cursor_shader) nothrow @nogc {
 
 		this.texture = cursor_texture;
@@ -83,8 +85,6 @@ struct Cursor {
 		shader.unbind();
 
 	}
-
-	@disable this(this);
 
 } //Cursor
 
@@ -127,6 +127,10 @@ struct Text {
 	
 	}
 
+	~this() {
+
+	}
+
 	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
 
 		auto tf = Transform(position);
@@ -140,11 +144,7 @@ struct Text {
 
 	}
 
-	~this() {
-
-	}
-
-	mixin OpenGLError!();
+	mixin OpenGLError;
 
 } //Text
 
@@ -158,6 +158,8 @@ struct Mesh {
 	GLuint vao; //vertex array object
 	GLuint[NUM_BUFFERS] vbo; //vertex array buffers
 	uint draw_count;
+
+	@disable this(this);
 
 	this(in Vertex[] vertices) nothrow @nogc {
 
@@ -188,8 +190,6 @@ struct Mesh {
 
 	}
 
-	@disable this(this);
-
 	~this() nothrow @nogc {
 
 		glDeleteVertexArrays(1, &vao);
@@ -218,6 +218,8 @@ struct Texture {
 
 	GLuint texture; //OpenGL handle for texture
 	int width, height;
+
+	@disable this(this);
 
 	this(in char[] file_name) {
 
@@ -282,8 +284,6 @@ struct Texture {
 		//UNBIND
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
-
-	@disable this(this);
 
 	~this() nothrow @nogc {
 
@@ -388,6 +388,12 @@ struct Shader {
 
 	}
 
+	~this() nothrow @nogc {
+
+		glDeleteProgram(program);
+
+	}
+
 	void update(ref Mat4f projection, ref Transform transform) nothrow @nogc {
 
 		Mat4f model = transform.transform;
@@ -411,13 +417,6 @@ struct Shader {
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
 	}
-
-	~this() nothrow @nogc {
-
-		glDeleteProgram(program);
-
-	}
-
 
 	void bind() nothrow @nogc {
 

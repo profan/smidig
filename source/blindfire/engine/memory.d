@@ -87,6 +87,8 @@ struct LinearAllocator {
 	size_t pointer_count = 0;
 	Instance[100] allocated_pointers = void;
 
+	@disable this(this);
+
 	this(size_t size, string name) nothrow {
 
 		this.composed = false;
@@ -113,8 +115,6 @@ struct LinearAllocator {
 		this.name = name;
 
 	}
-
-	@disable this(this);
 
 	~this() {
 
@@ -301,6 +301,8 @@ struct FreeListAllocator {
 
 	Block* first;
 
+	@disable this(this);
+
 	this(size_t size, string name) {
 
 		this.total_size = size;
@@ -315,8 +317,6 @@ struct FreeListAllocator {
 		first = alloc_item!(Block)(total_size - Block.sizeof, null);
 
 	} //this
-	
-	@disable this(this);
 
 	~this() {
 

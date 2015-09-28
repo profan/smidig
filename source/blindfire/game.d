@@ -427,13 +427,13 @@ struct Game {
 		LinearAllocator* resource_allocator;
 		LinearAllocator* system_allocator;
 
-		float frametime, updatetime, drawtime;
-		FontAtlas* debug_atlas;
 		Console* console;
 		Cursor* cursor;
 
 		//timekeeping
 		TickDuration iter, last;
+		float frametime, updatetime, drawtime;
+		FontAtlas* debug_atlas;
 
 	}
 
