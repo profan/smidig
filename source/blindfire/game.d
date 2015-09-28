@@ -40,19 +40,19 @@ final class MenuState : GameState {
 		this.ui_state = state;
 		this.evman = eventman;
 
-	}
+	} //this
 	
 	void enter() {
 
-	}
+	} //enter
 
 	void leave() {
 
-	}
+	} //leave
 
 	void update(double dt) {
 	
-	}
+	} //update
 
 	void draw(Window* window) {
 
@@ -80,7 +80,7 @@ final class MenuState : GameState {
 			window.is_alive = false;
 		} //quit
 			
-	}
+	} //draw
 
 } //MenuState
 
@@ -96,26 +96,28 @@ final class JoiningState : GameState {
 		this.ui_state = state;
 		this.evman = eventman;
 		this.netman = net;
-	}
+	} //this
 
 	void enter() {
+
 		evman.register!ClientSetConnectedEvent(&onClientSetConnected);
 		InternetAddress addr = new InternetAddress("localhost", 12000);
 		evman.push!ClientConnectEvent(addr);
-	}
+
+	} //enter
 
 	void leave() {
 		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
-	}
+	} //leave
 
 	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
 		statehan.pop_state();
 		statehan.push_state(State.LOBBY);
-	}
+	} //onClientSetConnected
 
 	void update(double dt) {
 
-	}
+	} //update
 
 	void draw(Window* window) {
 
@@ -136,7 +138,7 @@ final class JoiningState : GameState {
 			offset.x += item_height;
 		}
 
-	}
+	} //draw
 
 } //JoiningState
 
@@ -154,24 +156,24 @@ final class LobbyState : GameState {
 		this.ui_state = state;
 		this.evman = eventman;
 		this.netman = net;
-	}
+	} //this
 
 	void enter() {
 		evman.register!ClientSetConnectedEvent(&onClientSetConnected);
-	}
+	} //enter
 
 	void leave() {
 		evman.unregister!ClientSetConnectedEvent(&onClientSetConnected);
-	}
+	} //leave
 
 	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
 		statehan.pop_state();
 		statehan.push_state(State.GAME);
-	}
+	} //onClientSetConnected
 
 	void update(double dt) {
 
-	}
+	} //update
 
 	void draw(Window* window) {
 
@@ -201,7 +203,7 @@ final class LobbyState : GameState {
 			statehan.pop_state();
 		} //back to menu
 
-	}
+	} //draw
 
 } //LobbyState
 
@@ -255,11 +257,11 @@ final class MatchState : GameState {
 
 		net_man.em = em;
 
-	}
+	} //this
 
 	void enter() {
 		evman.register!ClientDisconnectEvent(&onClientDisconnect);
-	}
+	} //enter
 
 	void leave() {
 
@@ -267,17 +269,17 @@ final class MatchState : GameState {
 		evman.unregister!ClientDisconnectEvent(&onClientDisconnect);
 		em.clearSystems();
 
-	}
+	} //leave
 
 	void onClientDisconnect(ref ClientDisconnectEvent ev) {
 		statehan.pop_state();
-	}
+	} //onClientDisconnect
 
 	void update(double dt) {
 
 		em.tick!(UpdateSystem)();
 
-	}
+	} //update
 
 	void draw_debug(Window* window) {
 
@@ -286,7 +288,7 @@ final class MatchState : GameState {
 		float allocated_percent = cast(float)entity_allocator.allocated_size / entity_allocator.total_size;
 		debug_atlas.render_string!("entity allocator - alllocated: %f %%")(window, offset, allocated_percent);
 
-	}
+	} //draw_debug
 
 	void draw(Window* window) {
 
@@ -314,7 +316,7 @@ final class MatchState : GameState {
 
 		draw_debug(window);
 
-	}
+	} //draw
 
 } //MatchState
 
@@ -329,19 +331,19 @@ final class WaitingState : GameState {
 		this.statehan = statehan;
 		this.ui_state = state;
 		this.evman = eventman;
-	}
+	} //this
 
 	void enter() {
 
-	}
+	} //enter
 
 	void leave() {
 	
-	}
+	} //leave
 
 	void update(double dt) {
 
-	}
+	} //update
 
 	void draw(Window* window) {
 
@@ -373,19 +375,19 @@ final class OptionsState : GameState {
 		this.ui_state = ui;
 		this.config_map = conf;
 		this.evman = eventman;
-	}
+	} //this
 
 	void enter() {
 		player_name ~= config_map.get("username");
-	}
+	} //enter
 
 	void leave() {
 		player_name.length = 0;
-	}
+	} //leave
 
 	void update(double dt) {
 
-	}
+	} //update
 
 	void draw(Window* window) {
 
@@ -402,7 +404,7 @@ final class OptionsState : GameState {
 		if (do_button(ui_state, 12, window, window.width/2, window.height - item_height/2, item_width, item_height, ITEM_COLOR, 255, "To Menu", 0x428bca)) {
 			statehan.pop_state();
 		} //back to menu
-	}
+	} //draw
 
 } //OptionsState
 
@@ -449,14 +451,14 @@ struct Game {
 		this.ui_state = UIState();
 		this.config_map = ConfigMap("game.cfg");
 		
-	}
+	} //this
 
 	void update(double dt) {
 
 		//wow
 		state.update(dt);
 
-	}
+	} //update
 
 	void draw_debug() {
 
@@ -473,7 +475,7 @@ struct Game {
 		debug_atlas.render_string!("bytes out/sec: %f")(window, offset,
 				blindfire.engine.net.network_stats.bytes_out_per_second);
 
-	}
+	} //draw_debug
 
 	void draw() {
 
@@ -485,7 +487,7 @@ struct Game {
 		draw_debug();
 		cursor.draw(window.view_projection, Vec2f(evhan.last_x[0], evhan.last_y[0]));
 
-	}
+	} //draw
 
 	void load_resources() {
 
@@ -519,7 +521,7 @@ struct Game {
 		this.cursor = system_allocator.alloc!(Cursor)(cursor_texture, shader);
 		SDL_ShowCursor(SDL_DISABLE); //make sure to disable default cursor
 
-	}
+	} //load_resources
 
 	void initialize_systems() {
 
@@ -553,7 +555,7 @@ struct Game {
 		evhan.bind_keyevent(SDL_SCANCODE_DOWN, &console.get_prev);
 		evhan.bind_keyevent(SDL_SCANCODE_UP, &console.get_next);
 
-	}
+	} //initialize_systems
 
 	void register_concommands() {
 
@@ -577,15 +579,15 @@ struct Game {
 		evman.register!SetTickrateEvent(&onSetTickrate);
 		evman.register!PushGameStateEvent(&onGameStatePush);
 
-	}
+	} //register_concommands
 
 	void onSetTickrate(ref SetTickrateEvent ev) {
 		this.iter = ev.payload;
-	}
+	} //onSetTickrate
 
 	void onGameStatePush(ref PushGameStateEvent ev) {
 		this.state.push_state(ev.payload);
-	}
+	} //onGameStatePush
 
 	void run() {
 
@@ -652,6 +654,6 @@ struct Game {
 
 		}
 
-	}
+	} //run
 
 } //Game
