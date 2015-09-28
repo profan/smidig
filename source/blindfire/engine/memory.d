@@ -278,15 +278,19 @@ unittest {
 	size_t min_size = 3, max_size = 2048;
 
 	size_t total_allocated = 0;
-	while (total_allocated < total_alloc_size) {
+	while (total_allocated < total_alloc_size*0.75) {
 
 		size_t alloc_size;
-		do { alloc_size = uniform(min_size, max_size); } while (alloc_size > sa.remaining_size);
+		do { alloc_size = uniform(min_size, max_size); } while (cast(long)alloc_size > cast(long)(sa.remaining_size - alloc_size));
 
+		writefln("allocating: %d", alloc_size);
+		writefln("remaining: %d", sa.remaining_size);
 		auto allocated_bytes = sa.alloc(alloc_size);
 		total_allocated += alloc_size;
 
 	}
+
+	sa.dealloc(total_allocated);
 
 } //StackAllocator Tests
 
