@@ -107,11 +107,18 @@ struct EventManager {
 		static string doSwitchEntry(alias EventTypes)() {
 
 			import std.conv : to;
+			import std.string : format;
+
 			auto str = "";
 			foreach (type, id; EventTypes) {
-				str ~= "case " ~ to!string(id)
-					~ ": auto casted_func = cast(void delegate(ref " ~ type ~ 
-					")) del_func; auto event = ev.extract!("~type~"); casted_func(*event); break; \n";
+
+				str ~= format(
+					q{case %d:
+						auto casted_func = cast(void delegate(ref %s)) del_func;
+						auto event = ev.extract!(%s); casted_func(*event);
+						break;
+					}, id, type, type);
+
 			}
 			return str;
 

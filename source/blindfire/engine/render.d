@@ -4,9 +4,8 @@ import blindfire.engine.defs : RenderSpriteEvent;
 
 struct Renderer {
 
-	//disallow copying and default construction
 	@disable this();
-	@disable this(this);
+	@disable this(this); //disallow copying and default construction
 
 	void onRenderSprite(RenderSpriteEvent* ev) {
 

@@ -301,13 +301,20 @@ class GameNetworkManager {
 
 					string handle_action() {
 
+						import std.string : format;
+
 						auto str = "";
 
 						foreach (type, id; ActionIdentifier) {
-							str ~= "case " ~ to!string(id) ~ ": " ~
-								type ~ " action = new " ~ type ~ "();" ~
-								"deserialize!("~type~")(input_stream, &action);" ~
-								"action.execute(em); break;";
+
+							str ~= format(
+									q{case %d:
+										auto action = new %s();
+										deserialize!(%s)(input_stream, &action);
+										action.execute(em);
+										break;
+									}, id, type, type);
+
 						}
 
 						return str;
