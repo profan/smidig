@@ -199,7 +199,7 @@ struct NetworkPeer {
 
 	//from refactor, currently bound address
 	Address addr;
-	ScopedBuffer!void data;
+	ScopedBuffer!(StackAllocator, void) data;
 	StackAllocator stack_allocator;
 	EventManager* net_evman;
 
@@ -556,7 +556,7 @@ struct NetworkPeer {
 		logger.log("Listening on - %s:%d", this.addr.toAddrString(), this.port);
 		network_stats.timer.start();
 
-		this.data = ScopedBuffer!void(&stack_allocator, MAX_PACKET_SIZE);
+		this.data = ScopedBuffer!(StackAllocator, void)(&stack_allocator, MAX_PACKET_SIZE);
 
 	} //init
 

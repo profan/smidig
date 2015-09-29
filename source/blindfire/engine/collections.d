@@ -35,10 +35,10 @@ struct DHeap {
 
 } //DHeap
 
-struct ScopedBuffer(T) {
+struct ScopedBuffer(Allocator, T) {
 
 	T[] buffer;
-	StackAllocator* allocator;
+	Allocator* allocator;
 
 	alias buffer this;
 
@@ -49,7 +49,7 @@ struct ScopedBuffer(T) {
 	} //this
 
 	~this() {
-		this.allocator.dealloc(buffer.length * T.sizeof);
+		this.allocator.dealloc(buffer);
 	} //~this
 
 } //ScopedBuffer

@@ -246,6 +246,12 @@ struct StackAllocator {
 
 	}
 
+	void dealloc(AT)(ref in AT[] arr) {
+
+		dealloc(arr.length * AT.sizeof);
+		
+	}
+
 	void dealloc(size_t size) nothrow @nogc {
 
 		allocated_size -= size;
