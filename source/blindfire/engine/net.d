@@ -268,8 +268,6 @@ struct NetworkPeerFSM {
 
 	void update() {
 
-		tick();
-
 	} //tick
 
 } //NetworkPeerFSM

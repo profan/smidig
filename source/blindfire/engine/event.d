@@ -104,7 +104,15 @@ struct EventManager {
 
 	} //test
 
-	void fire() { //TODO implement
+	void fire(E, Args...)(Args args) {
+
+		auto event = E(args);
+		auto cur_dels = delegates[E.message_id];
+
+		foreach (key, ref del_func; cur_dels) {
+			auto casted_func = cast(void delegate(ref E)) del_func;
+			casted_func(event);
+		}
 
 	} //fire
 
@@ -188,6 +196,7 @@ template expandEvents(Events...) {
 version (unittest) {
 
 	import std.stdio : writefln;
+	import std.string : format;
 
 	enum TestEvent : EventID {
 		Foo,
@@ -207,8 +216,6 @@ version (unittest) {
 
 unittest {
 
-	import std.string : format;
-
 	auto evman = EventManager(EventMemory, TestEvent.max);
 
 	auto received_result = false;
@@ -221,3 +228,16 @@ unittest {
 		   format("received_result wasn't %s, event not received properly?", true));
 
 } //TODO write some tests up in this motherfucker
+
+unittest {
+
+	auto evman = EventManager(EventMemory, TestEvent.max);
+
+	long received_result = 0;
+	auto func = (ref BarEvent bar) { received_result = bar; };
+	evman.register!BarEvent(func);
+	evman.fire!BarEvent(25);
+
+	assert(received_result == 25, format("received result wasn't %d, event not received properly?", 25));
+
+}
