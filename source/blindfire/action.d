@@ -22,6 +22,26 @@ enum : ActionType[string] {
 
 }
 
+string handle_action() {
+
+	import std.string : format;
+
+	auto str = "";
+
+	foreach (type, id; ActionIdentifier) {
+		str ~= format(
+				q{case %d:
+					auto action = new %s();
+					deserialize!(%s)(input_stream, &action);
+					action.execute(em);
+					break;
+				}, id, type, type);
+	}
+
+	return str;
+
+} //handle_action
+
 class NoAction : Action {
 
 	mixin DoSerializable;

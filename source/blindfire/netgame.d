@@ -265,25 +265,7 @@ class GameNetworkManager {
 		UpdateType type = input_stream.read!UpdateType();
 		while (!done && input_stream.current < data.length) {
 
-			string handle_action() {
-
-				import std.string : format;
-
-				auto str = "";
-
-				foreach (type, id; ActionIdentifier) {
-					str ~= format(
-							q{case %d:
-								auto action = new %s();
-								deserialize!(%s)(input_stream, &action);
-								action.execute(em);
-								break;
-							}, id, type, type);
-				}
-
-				return str;
-
-			}
+			import blindfire.action : handle_action;
 
 			switch (type) {
 
@@ -321,7 +303,7 @@ class GameNetworkManager {
 
 		}
 
-	}
+	} //onGameUpdate
 
 	void onSetConnectionStatus(ref SetConnectionStatusEvent ev) {
 

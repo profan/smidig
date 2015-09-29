@@ -13,6 +13,7 @@ import blindfire.engine.log : Logger;
 import blindfire.engine.defs :
 		Command, ConnectionState, DisconnectReason, ClientID, AssignIDEvent, 
 		ConnectionNotificationEvent, DisconnectedEvent, GameUpdateEvent, SetConnectionStatusEvent;
+
 import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.collections : ScopedBuffer;
 import blindfire.engine.memory : StackAllocator;
@@ -190,7 +191,11 @@ struct NetworkPeerFSM {
 
 	private {
 
+		/* network */
 		UdpSocket socket;
+		Address bound_address;
+
+		/* clients */
 		Peer[ClientID] peers;
 		Peer* host_peer;
 		Peer self_peer;
@@ -199,7 +204,6 @@ struct NetworkPeerFSM {
 		ClientID id_counter;
 
 		/* state */
-		Address bound_address;
 		ScopedBuffer!(StackAllocator, void) data_buffer;
 		StackAllocator stack_allocator;
 

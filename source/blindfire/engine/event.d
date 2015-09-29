@@ -116,7 +116,7 @@ struct EventManager {
 
 	} //fire
 
-	void schedule() { //TODO implement
+	void schedule(size_t in_ticks) { //TODO implement
 
 	} //schedule
 
