@@ -255,17 +255,14 @@ class GameNetworkManager {
 
 		import blindfire.serialize : deserialize;
 
-		auto data = ev.payload;
-
 		bool done = false;
+		auto data = ev.payload;
 		auto input_stream = InputStream(cast(ubyte*)data.ptr, data.length);
 
 		writefln("[GAME] Received packet, %d bytes", data.length);
 
 		UpdateType type = input_stream.read!UpdateType();
 		while (!done && input_stream.current < data.length) {
-
-			import blindfire.action : handle_action;
 
 			switch (type) {
 
@@ -282,6 +279,7 @@ class GameNetworkManager {
 
 				case UpdateType.ACTION: {
 
+					import blindfire.action : handle_action;
 					ActionType action_type = input_stream.read!(ActionType)();
 
 					switch (action_type) {
