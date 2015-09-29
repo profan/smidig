@@ -627,8 +627,6 @@ struct Game {
 		while(window.is_alive) {
 
 			ft_sw.start();
-			net_man.handle_messages();
-			net_man.process_actions();
 
 			if (sw.peek() - last > iter) {
 
@@ -638,8 +636,9 @@ struct Game {
 				tick!EventIdentifier(evman);
 				tick!NetEventIdentifier(net_evman);
 
-				network_client.tick();
 				evhan.handle_events();
+				network_client.tick();
+				net_man.process_actions();
 				update(1.0);
 
 				last = sw.peek();

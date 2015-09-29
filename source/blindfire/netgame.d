@@ -1,6 +1,5 @@
 module blindfire.netgame;
 
-import std.concurrency : Tid, receiveTimeout, send;
 import std.datetime : dur;
 
 import blindfire.engine.stream : InputStream, OutputStream;
@@ -317,79 +316,6 @@ class GameNetworkManager {
 	void onDisconnectedEvent(ref DisconnectedEvent ev) {
 		evman.push!ClientDisconnectEvent(true);
 	} //onDisconnectedEvent
-
-	void handle_messages() {
-
-		auto result = receiveTimeout(dur!("nsecs")(1),
-		(Command cmd, immutable(ubyte)[] data) {
-
-			import blindfire.serialize : deserialize;
-
-			bool done = false;
-			auto input_stream = InputStream(cast(ubyte*)data.ptr, data.length);
-
-			writefln("[GAME] Received packet, %d bytes", data.length);
-
-			UpdateType type = input_stream.read!UpdateType();
-			while (!done && input_stream.current < data.length) {
-
-				switch (type) {
-
-					string handle_action() {
-
-						import std.string : format;
-
-						auto str = "";
-
-						foreach (type, id; ActionIdentifier) {
-
-							str ~= format(
-									q{case %d:
-										auto action = new %s();
-										deserialize!(%s)(input_stream, &action);
-										action.execute(em);
-										break;
-									}, id, type, type);
-
-						}
-
-						return str;
-
-					}
-
-					case UpdateType.PLAYER_DATA:
-						PlayerData player = input_stream.read!PlayerData();
-						writefln("[GAME] Handling player data - username: %s", 
-								 player.player_name[0..player.length]);
-						active_session.connections ~= Connection(StaticArray!(char, 64)(player.player_name[0..player.length]));
-						break;
-
-					case UpdateType.ACTION:
-
-						ActionType action_type = input_stream.read!(ActionType)();
-
-						switch (action_type) {
-
-							mixin(handle_action()); //generates code for handling each action type
-
-							default:
-								writefln("[GAME] Unhandled action type: %s", to!string(action_type));
-
-						}
-
-						break;
-
-					default:
-						writefln("[GAME] Unhandled Update Type: %s", to!string(type));
-						done = true; //halt, or would get stuck in a loop.
-
-				}
-
-			}
-
-		});
-
-	}
 
 	void onCreateGame(ref StartGameEvent ev) {
 		network_client.push!CreateGameEvent(true);
