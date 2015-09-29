@@ -169,6 +169,37 @@ template expandEvents(Events...) {
 	}
 } //expandEvents
 
+version (unittest) {
+
+	import std.stdio : writefln;
+
+	enum TestEvent : EventID {
+		Foo,
+		Bar
+	}
+
+	alias FooEvent = Event!(TestEvent.Foo, bool);
+	alias BarEvent = Event!(TestEvent.Bar, long);
+
+	mixin (expandEventsToMap!("TestEventIdentifier",
+				  FooEvent,
+				  BarEvent));
+
+	mixin EventManager.doTick;
+
+}
+
 unittest {
+
+	auto evman = EventManager(EventMemory, TestEvent.max);
+
+	auto boo = false;
+
+	auto func = (ref FooEvent foo) { boo = foo; };
+	evman.register!FooEvent(func);
+	evman.push!FooEvent(true);
+	tick!TestEventIdentifier(evman);
+
+	assert(boo == true, "boo wasn't true, event not received properly?");
 
 } //TODO write some tests up in this motherfucker
