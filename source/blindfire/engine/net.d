@@ -13,8 +13,10 @@ import blindfire.engine.log : Logger;
 import blindfire.engine.defs :
 		Command, ConnectionState, DisconnectReason, ClientID, AssignIDEvent, 
 		ConnectionNotificationEvent, DisconnectedEvent, GameUpdateEvent, SetConnectionStatusEvent;
-
 import blindfire.engine.stream : InputStream, OutputStream;
+import blindfire.engine.collections : ScopedBuffer;
+import blindfire.engine.memory : StackAllocator;
+import blindfire.engine.event : EventManager;
 
 import profan.collections : StaticArray;
 
@@ -173,11 +175,51 @@ struct NetworkState {
 	}
 } //NetworkState
 
-struct NetworkPeer {
+struct NetworkPeerFSM {
 
-	import blindfire.engine.collections : ScopedBuffer;
-	import blindfire.engine.memory : StackAllocator;
-	import blindfire.engine.event : EventManager;
+	import blindfire.engine.fsm : FSM, FStateID, FStateTuple;
+
+	alias State = ConnectionState;
+	alias ExecFunc = void delegate();
+
+	mixin FSM!([State.CONNECTED, State.UNCONNECTED, State.CONNECTING], //states
+		[FStateTuple(State.CONNECTED, State.UNCONNECTED),
+		FStateTuple(State.CONNECTING, State.CONNECTED),
+		FStateTuple(State.UNCONNECTED, State.CONNECTING)],
+		ExecFunc);
+
+	private {
+
+		UdpSocket socket;
+		Peer[ClientID] peers;
+		Peer* host_peer;
+		Peer self_peer;
+
+		/* book-keeping */
+		ClientID id_counter;
+
+		/* state */
+		Address bound_address;
+		ScopedBuffer!(StackAllocator, void) data_buffer;
+		StackAllocator stack_allocator;
+
+		/* communication */
+		EventManager* net_evman;
+
+	}
+
+	this(ushort port, EventManager* net_event_manager) {
+
+		this.socket = new UdpSocket();
+		this.socket.blocking = false;
+
+		this.net_evman = net_event_manager;
+
+	}
+
+} //NetworkPeerFSM
+
+struct NetworkPeer {
 
 	enum DEFAULT_CLIENT_ID = ClientID.max;
 	enum MAX_PACKET_SIZE = 65507;
