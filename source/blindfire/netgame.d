@@ -21,16 +21,6 @@ struct PlayerData {
 
 } //PlayerData
 
-alias TempBuf = OutputStream;
-alias ActionType = uint;
-
-interface Action {
-
-	ActionType identifier() const;
-	void serialize(ref TempBuf buf);
-	void execute(EntityManager em);
-
-} //Action
 
 enum UpdateType {
 
