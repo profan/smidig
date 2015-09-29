@@ -219,7 +219,6 @@ struct NetworkPeer {
 	ClientID client_uuid;
 	Peer host_peer;
 
-	Tid game_thread;
 	NetworkState net_state;
 	Logger!("NET", NetworkState) logger;
 
@@ -229,7 +228,7 @@ struct NetworkPeer {
 	Address addr;
 	ScopedBuffer!void data;
 	StackAllocator stack_allocator;
-	EventManager* net_event_man;
+	EventManager* net_evman;
 
 	this(ushort port, EventManager* net_event_manager) {
 
@@ -238,7 +237,7 @@ struct NetworkPeer {
 		this.socket.blocking = false;
 
 		//event handler to pass messages back to
-		this.net_event_man = net_event_manager;
+		this.net_evman = net_event_manager;
 		
 		//unique network identifier
 		this.client_uuid = DEFAULT_CLIENT_ID; //if it's still 255 when in session, something is wrong.
@@ -308,7 +307,7 @@ struct NetworkPeer {
 			peers[cast(ClientID)(id_counter-1)] = new_peer;
 
 			if (is_host) {
-				send(game_thread, Command.NOTIFY_CONNECTION, id_counter-1);
+				net_evman.push!ConnectionNotificationEvent(id_counter - 1);
 			}
 
 		} else {
@@ -318,12 +317,12 @@ struct NetworkPeer {
 		if (!is_host) {
 			host_peer = Peer(cmsg.client_uuid, from);
 			client_uuid = cmsg.assigned_id;
-			send(game_thread, Command.ASSIGN_ID, cmsg.assigned_id);
+			net_evman.push!AssignIDEvent(cmsg.assigned_id);
 		}
 
 		if (state == ConnectionState.CONNECTING) {
 			state = switch_state(ConnectionState.CONNECTED);
-			send(game_thread, Command.SET_CONNECTED);
+			net_evman.push!SetConnectionStatusEvent(state);
 		}
 
 	}
@@ -366,7 +365,7 @@ struct NetworkPeer {
 
 				if (!is_host && host_peer.client_uuid == cmsg.client_uuid) { //if disconnecting client is the host, disconnect too.
 					state = switch_state(ConnectionState.UNCONNECTED);
-					send(game_thread, Command.DISCONNECT);
+					net_evman.push!DisconnectedEvent(DisconnectReason.HostDisconnected);
 				}
 
 				peers.remove(cmsg.client_uuid);
@@ -383,8 +382,7 @@ struct NetworkPeer {
 					break;
 				}
 
-				send(game_thread, Command.UPDATE,
-					 cast(immutable(ubyte)[])stream.pointer[0..umsg.data_size].idup);
+				net_evman.push!GameUpdateEvent(cast(immutable(ubyte)[])stream.pointer[0..umsg.data_size].idup);
 				//this cast is not useless, DO NOT REMOVE THIS UNLESS YOU ACTUALLY FIX THE PROBLEM
 				break;
 
@@ -461,7 +459,7 @@ struct NetworkPeer {
 				this.is_host = true;
 				this.state = switch_state(ConnectionState.CONNECTED);
 
-				send(game_thread, Command.ASSIGN_ID, id_counter++);
+				net_evman.push!AssignIDEvent(id_counter++);
 				break;
 
 			default:

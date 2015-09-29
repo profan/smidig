@@ -45,7 +45,7 @@ struct RenderLineCommand {
 alias RenderSpriteEvent = Event!(DrawEventType.RenderSprite, RenderSpriteCommand);
 
 //networking related
-import blindfire.engine.net : Command, ConnectionState;
+import blindfire.engine.net : ConnectionState;
 
 enum NetEventType : EventID {
 	AssignID,
