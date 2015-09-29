@@ -31,28 +31,38 @@ struct EventManager {
 	EventCast*[][] events;
 
 	this(size_t to_allocate, EventID number_types) {
+
 		this.allocator = LinearAllocator(to_allocate, "EventAllocator");
-		delegates = new EventDelegate[][](number_types+1, 0);
-		events = new EventCast*[][](number_types+1, 0);
+		this.delegates = new EventDelegate[][](number_types+1, 0);
+		this.events = new EventCast*[][](number_types+1, 0);
+
 	} //this
 
 	void push(E, Args...)(Args args) {
+
 		auto thing = allocator.alloc!(E)(args);
 		events[thing.message_id] ~= cast(EventCast*)thing;
+
 	} //push
 
 	void push(E)(ref E e) {
+
 		import orb.memory : get_size;
+
 		auto allocated_space = cast(E*)allocator.alloc(get_size!E(), E.alignof);
 		*allocated_space = e;
 		events[e.message_id] ~= cast(EventCast*)allocated_space;
+
 	} //push
 
 	static mixin template checkValidity(T, ED) {
+
 		import std.traits : isImplicitlyConvertible, ParameterTypeTuple;
 		alias first_param = ParameterTypeTuple!(ED)[0];
+
 		static assert (isImplicitlyConvertible!(T, first_param),
 					   "can't call function: " ~ ED.stringof ~ " with: " ~ T.stringof);
+
 	} //checkValidity
 
 	void register(T, ED)(ED dele) {
@@ -94,11 +104,11 @@ struct EventManager {
 
 	} //test
 
-	void fire() {
+	void fire() { //TODO implement
 
 	} //fire
 
-	void schedule() {
+	void schedule() { //TODO implement
 
 	} //schedule
 
@@ -120,32 +130,38 @@ struct EventManager {
 					}, id, type, type);
 
 			}
+
 			return str;
 
 		} //doSwitchEntry
 
 		static void tick(alias EvTypesMap)(ref EventManager ev_man) {
+
 			foreach (id, ref ev_list; ev_man.events) {
+
 				if (ev_list.length == 0) continue;
 				auto cur_dels = ev_man.delegates[id];
+
 				if (cur_dels.length > 0) {
 					foreach (ref ev; ev_list) {
 						foreach (key, ref del_func; cur_dels) {
-
 							switch (id) {
 								mixin(doSwitchEntry!EvTypesMap());
 								default: writefln("unhandled event type: %d", id);
 							}
-
 						}
 					}
 				}
+
 				ev_list.length = 0;
+
 			}
+
 			ev_man.allocator.reset();
+
 		} //tick
 
-	}
+	} //doTick
 
 } //EventManager
 
@@ -191,15 +207,17 @@ version (unittest) {
 
 unittest {
 
+	import std.string : format;
+
 	auto evman = EventManager(EventMemory, TestEvent.max);
 
-	auto boo = false;
-
-	auto func = (ref FooEvent foo) { boo = foo; };
+	auto received_result = false;
+	auto func = (ref FooEvent foo) { received_result = foo; };
 	evman.register!FooEvent(func);
 	evman.push!FooEvent(true);
-	tick!TestEventIdentifier(evman);
 
-	assert(boo == true, "boo wasn't true, event not received properly?");
+	tick!TestEventIdentifier(evman);
+	assert(received_result == true, 
+		   format("received_result wasn't %s, event not received properly?", true));
 
 } //TODO write some tests up in this motherfucker
