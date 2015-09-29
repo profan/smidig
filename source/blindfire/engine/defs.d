@@ -45,7 +45,34 @@ struct RenderLineCommand {
 alias RenderSpriteEvent = Event!(DrawEventType.RenderSprite, RenderSpriteCommand);
 
 //networking related
-import blindfire.engine.net : ConnectionState;
+enum ConnectionState {
+
+	CONNECTED, //not accepting connections, active
+	UNCONNECTED, //not accepting connections, can create
+	CONNECTING //accepting connections, has created session or is in created lobby
+
+} //ConnectionState
+
+enum Command {
+
+	//set network id
+	ASSIGN_ID,
+
+	CREATE,
+	CONNECT,
+	DISCONNECT,
+	TERMINATE,
+	UPDATE,
+	PING,
+
+	//replacement commands
+	SET_CONNECTED,
+	SET_UNCONNECTED,
+
+	//notifications to game thread
+	NOTIFY_CONNECTION
+
+} //Command
 
 enum NetEventType : EventID {
 	AssignID,

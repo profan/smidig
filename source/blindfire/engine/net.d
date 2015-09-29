@@ -10,7 +10,10 @@ import std.typecons : Tuple;
 import std.conv : to;
 
 import blindfire.engine.log : Logger;
-import blindfire.engine.defs : ClientID;
+import blindfire.engine.defs :
+		Command, ConnectionState, DisconnectReason, ClientID, AssignIDEvent, 
+		ConnectionNotificationEvent, DisconnectedEvent, GameUpdateEvent, SetConnectionStatusEvent;
+
 import blindfire.engine.stream : InputStream, OutputStream;
 
 import profan.collections : StaticArray;
@@ -61,36 +64,6 @@ enum MessageType : uint {
 	SEND_PEER_LIST
 
 } //MessageType
-
-enum ConnectionState {
-
-	CONNECTED, //not accepting connections, active
-	UNCONNECTED, //not accepting connections, can create
-	CONNECTING //accepting connections, has created session or is in created lobby
-
-} //ConnectionState
-
-enum Command {
-
-	//set network id
-	ASSIGN_ID,
-
-	CREATE,
-	CONNECT,
-	DISCONNECT,
-	TERMINATE,
-	UPDATE,
-	PING,
-
-	//replacement commands
-	SET_CONNECTED,
-	SET_UNCONNECTED,
-
-	//notifications to game thread
-	NOTIFY_CONNECTION
-
-} //Command
-
 
 /******************************
 * Packet Structure ************
@@ -307,7 +280,7 @@ struct NetworkPeer {
 			peers[cast(ClientID)(id_counter-1)] = new_peer;
 
 			if (is_host) {
-				net_evman.push!ConnectionNotificationEvent(id_counter - 1);
+				net_evman.push!ConnectionNotificationEvent(cast(ClientID)(id_counter - 1));
 			}
 
 		} else {
