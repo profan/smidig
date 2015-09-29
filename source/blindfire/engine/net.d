@@ -215,7 +215,62 @@ struct NetworkPeerFSM {
 
 		this.net_evman = net_event_manager;
 
-	}
+		setInitialState(State.UNCONNECTED)
+			.attachFunction(State.UNCONNECTED, &onUnconnectedEnter, &onUnconnectedExecute, &onUnconnectedLeave)
+			.attachFunction(State.CONNECTED, &onConnectedEnter, &onConnectedExecute, &onConnectedLeave)
+			.attachFunction(State.CONNECTING, &onConnectingEnter, &onConnectingExecute, &onConnectingLeave);
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+	void onUnconnectedEnter(FStateID from) {
+
+	} //onUnconnectedEnter
+
+	void onUnconnectedExecute() {
+
+	} //onUnconnectedEnter
+
+	void onUnconnectedLeave(FStateID target) {
+
+	} //onUnconnnectedLeave
+
+	void onConnectedEnter(FStateID from) {
+
+	} //onConnectedEnter
+
+	void onConnectedExecute() {
+
+	} //onConnectedExecute
+
+	void onConnectedLeave(FStateID target) {
+
+	} //onConnectedLeave
+
+	void onConnectingEnter(FStateID from) {
+
+	} //onConnectingEnter
+
+	void onConnectingExecute() {
+
+	} //onConnectingExecute
+
+	void onConnectingLeave(FStateID target) {
+
+	} //onConnectingLeave
+
+	void init() {
+
+	} //init
+
+	void update() {
+
+		tick();
+
+	} //tick
 
 } //NetworkPeerFSM
 
