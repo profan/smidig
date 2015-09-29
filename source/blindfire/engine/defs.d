@@ -45,7 +45,7 @@ struct RenderLineCommand {
 alias RenderSpriteEvent = Event!(DrawEventType.RenderSprite, RenderSpriteCommand);
 
 //networking related
-import blindfire.engine.net : Command;
+import blindfire.engine.net : Command, ConnectionState;
 
 enum NetEventType : EventID {
 	AssignID,
@@ -54,7 +54,9 @@ enum NetEventType : EventID {
 	DoConnect,
 	DoDisconnect,
 	CreateGame,
-	GameUpdate
+	GameUpdate,
+	SetConnectionStatus,
+	ConnectionNotification
 } //NetEventType
 
 enum DisconnectReason : uint {
@@ -68,6 +70,8 @@ alias DoConnectEvent = Event!(NetEventType.DoConnect, bool);
 alias DoDisconnectEvent = Event!(NetEventType.DoDisconnect, bool);
 alias CreateGameEvent = Event!(NetEventType.CreateGame, bool);
 alias GameUpdateEvent = Event!(NetEventType.GameUpdate, immutable(ubyte[]));
+alias SetConnectionStatusEvent = Event!(NetEventType.SetConnectionStatus, ConnectionState);
+alias ConnectionNotificationEvent = Event!(NetEventType.ConnectionNotification, ClientID);
 
 mixin(expandEventsToMap!("NetEventIdentifier",
 						 AssignIDEvent,
@@ -76,4 +80,6 @@ mixin(expandEventsToMap!("NetEventIdentifier",
 						 DoConnectEvent,
 						 DoDisconnectEvent,
 						 CreateGameEvent,
-						 GameUpdateEvent));
+						 GameUpdateEvent,
+						 SetConnectionStatusEvent,
+						 ConnectionNotificationEvent));
