@@ -5,8 +5,9 @@ import std.math : cos, sin, PI, pow;
 import std.stdio : writefln;
 
 import blindfire.engine.window : Window;
-import blindfire.engine.gl : Vec2i, Vec2f, Vec3f, Mat3f, Transform, Shader, Texture, Mesh;
 import blindfire.engine.net : NetVar, Command, ClientID;
+import blindfire.engine.gl : Transform, Shader, Texture, Mesh;
+import blindfire.engine.defs : Vec2i, Vec2f, Vec3f, Mat3f;
 import blindfire.engine.stream : InputStream;
 import blindfire.engine.util : point_in_rect;
 import blindfire.engine.ecs;

@@ -7,9 +7,8 @@ import std.stdio : writefln;
 import std.file : read;
 
 import derelict.opengl3.gl3;
-import gfm.math;
 
-import blindfire.engine.defs;
+import blindfire.engine.defs : Vec2i, Vec2f, Vec3f, Mat3f, Mat4f;
 
 mixin template OpenGLError() {
 
