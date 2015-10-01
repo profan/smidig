@@ -248,7 +248,7 @@ struct StackAllocator {
 
 	void dealloc(AT)(ref in AT[] arr) {
 
-		dealloc(arr.length * AT.sizeof);
+		dealloc(arr.length * typeof(arr).sizeof);
 		
 	}
 

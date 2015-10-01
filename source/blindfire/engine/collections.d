@@ -49,7 +49,9 @@ struct ScopedBuffer(Allocator, T) {
 	} //this
 
 	~this() {
-		this.allocator.dealloc(buffer);
+		if (buffer != buffer.init) {
+			this.allocator.dealloc(buffer);
+		}
 	} //~this
 
 } //ScopedBuffer
