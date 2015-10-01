@@ -19,13 +19,26 @@ struct Window {
 		char* c_title; //keep this here so the char* for toStringz doesn't point to nowhere!
 		SDL_Window* window;
 		SDL_GLContext glcontext;
+
+		//window data
+		int window_width, window_height;
+
 	}
 
 	//gl related data
 	Mat4f view_projection;
 
-	//window data
-	private int window_width, window_height;
+	@property const(char*) title() const { return c_title; }
+	@property void title(in char[] new_title) {
+		c_title = toUTFz!(char*)(new_title);
+		SDL_SetWindowTitle(window, c_title);
+	}
+
+	@property uint width() const nothrow @nogc { return window_width; }
+	@property uint height() const nothrow @nogc { return window_height; }
+
+	@property bool is_alive() const nothrow @nogc { return alive; }
+	@property void is_alive(bool status) nothrow @nogc { alive = status; }
 
 	@disable this();
 	@disable this(this);
@@ -33,7 +46,6 @@ struct Window {
 	this(void* external_window) {
 		
 		SDL_Window* new_window = SDL_CreateWindowFrom(external_window);
-
 		this(new_window);
 
 	}
@@ -97,17 +109,7 @@ struct Window {
 
 	}
 
-	@property const(char*) title() const { return c_title; }
-	@property void title(in char[] new_title) {
-		c_title = toUTFz!(char*)(new_title);
-		SDL_SetWindowTitle(window, c_title);
-	}
 
-	@property uint width() const nothrow @nogc { return window_width; }
-	@property uint height() const nothrow @nogc { return window_height; }
-
-	@property bool is_alive() const nothrow @nogc { return alive; }
-	@property void is_alive(bool status) nothrow @nogc { alive = status; }
 
 	void render_clear(int color) {
 
@@ -126,7 +128,6 @@ struct Window {
 	void toggle_wireframe() {
 		
 		static GLenum current = GL_FILL;
-
 		current = (current == GL_FILL) ? GL_LINE : GL_FILL;
 		glPolygonMode(GL_FRONT_AND_BACK, current);
 

@@ -7,6 +7,7 @@ import derelict.sdl2.mixer;
 import derelict.sdl2.ttf;
 
 import derelict.openal.al;
+import derelict.alure.alure;
 import derelict.opengl3.gl;
 import derelict.freetype.ft;
 import derelict.util.loader;
@@ -37,6 +38,7 @@ void initialize_systems() {
 	DerelictGL.missingSymbolCallback = &missingSymFunc;
 	DerelictFT.missingSymbolCallback = &missingSymFunc;
 	DerelictAL.missingSymbolCallback = &missingSymFunc;
+	DerelictALURE.missingSymbolCallback = &missingSymFunc;
 
 	DerelictSDL2.load();
 	DerelictSDL2Image.load();
@@ -45,6 +47,7 @@ void initialize_systems() {
 	DerelictGL.load();
 	DerelictFT.load();
 	DerelictAL.load();
+	DerelictALURE.load();
 
 	if (TTF_Init() == -1) {
 		writefln("[GAME] TTF_Init: %s\n", TTF_GetError());

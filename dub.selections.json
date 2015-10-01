@@ -1,5 +1,6 @@
 {
 	"versions": {
+		"derelict-alure": "1.0.0",
 		"derelict-gl3": "1.0.15",
 		"derelict-sdl2": "1.9.7",
 		"derelict-util": "2.0.3",
