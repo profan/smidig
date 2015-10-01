@@ -6,6 +6,7 @@ import derelict.sdl2.image;
 import derelict.sdl2.mixer;
 import derelict.sdl2.ttf;
 
+import derelict.openal.al;
 import derelict.opengl3.gl;
 import derelict.freetype.ft;
 import derelict.util.loader;
@@ -33,6 +34,9 @@ ShouldThrow missingSymFunc( string symName ) {
 void initialize_systems() {
 
 	DerelictFT.missingSymbolCallback = &missingSymFunc;
+	DerelictGL.missingSymbolCallback = &missingSymFunc;
+	DerelictFT.missingSymbolCallback = &missingSymFunc;
+	DerelictAL.missingSymbolCallback = &missingSymFunc;
 
 	DerelictSDL2.load();
 	DerelictSDL2Image.load();
@@ -40,6 +44,7 @@ void initialize_systems() {
 	DerelictSDL2ttf.load();
 	DerelictGL.load();
 	DerelictFT.load();
+	DerelictAL.load();
 
 	if (TTF_Init() == -1) {
 		writefln("[GAME] TTF_Init: %s\n", TTF_GetError());

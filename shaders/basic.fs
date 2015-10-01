@@ -1,4 +1,4 @@
-#version 120
+#version 330
 
 varying vec2 tex_coord0;
 
