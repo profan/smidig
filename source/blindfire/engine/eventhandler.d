@@ -43,6 +43,9 @@ struct EventHandler {
 	//mouse pos, last first, current second
 	int[2] last_x, last_y;
 
+	@disable this();
+	@disable this(this);
+
 	this(in Uint8* keys) {
 		this.pressed_keys = keys;
 	}

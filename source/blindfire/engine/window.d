@@ -27,6 +27,9 @@ struct Window {
 	//window data
 	private int window_width, window_height;
 
+	@disable this();
+	@disable this(this);
+
 	this(void* external_window) {
 		
 		SDL_Window* new_window = SDL_CreateWindowFrom(external_window);
