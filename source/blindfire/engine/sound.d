@@ -1,5 +1,7 @@
 module blindfire.engine.sound;
 
+import core.stdc.stdio : printf;
+
 import derelict.openal.al;
 import derelict.alure.alure;
 
@@ -7,11 +9,6 @@ alias SoundID = int;
 alias SoundVolume = float;
 
 struct SoundSystem {
-
-	import core.stdc.stdio : printf;
-
-	@disable this();
-	@disable this(this);
 
 	ALCdevice* device;
 	ALCcontext* context;
@@ -21,13 +18,15 @@ struct SoundSystem {
 
 	SoundID current_sound_id;
 
+	@disable this();
+	@disable this(this);
+
 	this(size_t num_sources) {
 		this.sources.reserve(num_sources);
 		this.sources.length = sources.capacity;
-	}
+	} //this
 
 	void init() {
-
 
 		this.device = alcOpenDevice(null); //preferred device
 		this.context = alcCreateContext(device, null);
@@ -41,6 +40,9 @@ struct SoundSystem {
 
 		alDeleteSources(sources.length, sources.ptr);
 		alDeleteBuffers(buffers.length, buffers.values.ptr);
+		alcMakeContextCurrent(null);
+		alcDestroyContext(context);
+		alcCloseDevice(device);
 
 	} //~this
 
@@ -71,7 +73,8 @@ struct SoundSystem {
 
 		auto sound_buffer = buffers[sound_id];
 		auto sound_source = find_free_source();
-		alSourcei(sound_source, AL_BUFFER, sound_buffer);
+
+		alSourcei(sound_source, AL_BUFFER, sound_buffer); //associate source with buffer
 		alSourcef(sound_source, AL_GAIN, volume);
 		alSourcePlay(sound_source);
 
