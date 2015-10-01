@@ -45,9 +45,14 @@ struct SoundSystem {
 	} //~this
 
 	auto load_sound_file(char* path) {
+		
+		import std.string : format, fromStringz;
 
-		buffers[current_sound_id] = alureCreateBufferFromFile(path);
-		printf("Error: %d : %s\n", alGetError(), alureGetErrorString());
+		auto created_buffer = alureCreateBufferFromFile(path);
+		assert(created_buffer != AL_NONE, 
+			   format("[SoundSystem] failed creating buffer: %s", fromStringz(alureGetErrorString())));
+
+		buffers[current_sound_id] = created_buffer;
 
 		return current_sound_id++;
 
