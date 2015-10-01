@@ -59,6 +59,11 @@ void initialize_systems() {
 void main() {
 
 	initialize_systems();
+
+	import blindfire.engine.sound;
+	auto sys = SoundSystem();
+	sys.init();
+
 	auto event_handler = EventHandler(SDL_GetKeyboardState(null));
 	auto window = Window("Project Blindfire", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 	auto game = Game(&window, &event_handler);
