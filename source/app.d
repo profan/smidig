@@ -61,8 +61,12 @@ void main() {
 	initialize_systems();
 
 	import blindfire.engine.sound;
-	auto sys = SoundSystem();
+	auto sys = SoundSystem(32);
 	sys.init();
+
+	//load test music
+	auto loaded_sound = sys.load_sound_file(cast(char*)"resource/audio/paniq.wav".ptr);
+	sys.play_sound(loaded_sound, 0.25f);
 
 	auto event_handler = EventHandler(SDL_GetKeyboardState(null));
 	auto window = Window("Project Blindfire", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);

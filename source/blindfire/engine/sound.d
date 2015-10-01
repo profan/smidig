@@ -1,55 +1,79 @@
 module blindfire.engine.sound;
 
-import std.stdio : writefln;
-
 import derelict.openal.al;
 import derelict.alure.alure;
 
 alias SoundID = int;
-alias SoundVolume = int;
+alias SoundVolume = float;
 
 struct SoundSystem {
 
-	enum NUM_BUFFERS = 3;
-	enum NUM_SOURCES = 32;
+	import core.stdc.stdio : printf;
 
+	@disable this();
 	@disable this(this);
 
 	ALCdevice* device;
 	ALCcontext* context;
 
-	ALuint[NUM_BUFFERS] buffer;
-	ALuint[NUM_SOURCES] source;
+	ALuint[SoundID] buffers;
+	ALuint[] sources;
+
+	SoundID current_sound_id;
+
+	this(size_t num_sources) {
+		this.sources.reserve(num_sources);
+		this.sources.length = sources.capacity;
+	}
 
 	void init() {
 
-		import core.stdc.stdio : printf;
 
 		this.device = alcOpenDevice(null); //preferred device
 		this.context = alcCreateContext(device, null);
 		alcMakeContextCurrent(context);
 
-		buffer[0] = alureCreateBufferFromFile(cast(char*)"resource/audio/paniq.wav".ptr);
-		printf("Error: %d : %s\n", alGetError(), alureGetErrorString());
-
-		alGenSources(NUM_SOURCES, source.ptr);
-		alSourcei(source[0], AL_BUFFER, buffer[0]);
-		printf("Error: %d : %s\n", alGetError(), alureGetErrorString());
-
-		alSourcef(source[0], AL_GAIN, 0.25f);
-		alSourcePlay(source[0]);
+		alGenSources(sources.capacity, sources.ptr);
 
 	} //init
 
 	~this() {
 
-		alDeleteSources(NUM_SOURCES, source.ptr);
-		alDeleteBuffers(NUM_BUFFERS, buffer.ptr);
+		alDeleteSources(sources.length, sources.ptr);
+		alDeleteBuffers(buffers.length, buffers.values.ptr);
 
 	} //~this
 
-	void playSound(SoundID sound, SoundVolume volume) {
+	auto load_sound_file(char* path) {
+
+		buffers[current_sound_id] = alureCreateBufferFromFile(path);
+		printf("Error: %d : %s\n", alGetError(), alureGetErrorString());
+
+		return current_sound_id++;
+
+	} //load_sound_file
+
+	ALuint find_free_source() {
+
+		auto source = sources[0];
+		sources = sources[1..$];
+
+		return source;
+
+	} //find_free_source
+
+	void play_sound(SoundID sound_id, SoundVolume volume) {
+
+		auto sound_buffer = buffers[sound_id];
+		auto sound_source = find_free_source();
+		alSourcei(sound_source, AL_BUFFER, sound_buffer);
+		alSourcef(sound_source, AL_GAIN, volume);
+		alSourcePlay(sound_source);
 
 	} //playSound
+
+	void tick() {
+
+	} //tick
 
 } //SoundSystem

@@ -65,15 +65,15 @@ struct EventManager {
 
 	} //checkValidity
 
-	void register(T, ED)(ED dele) {
-		mixin checkValidity!(T, ED);
-		delegates[T.message_id] ~= cast(EventDelegate)dele;
+	void register(E, ED)(ED dele) {
+		mixin checkValidity!(E, ED);
+		delegates[E.message_id] ~= cast(EventDelegate)dele;
 	} //register
 
-	void unregister(T, ED)(ED base_dele) { //CAUUTIIOON
+	void unregister(E, ED)(ED base_dele) { //CAUUTIIOON
 		import std.algorithm : remove;
 		auto dele = cast(EventDelegate) base_dele;
-		delegates[T.message_id][].remove!(e => e == dele);
+		delegates[E.message_id][].remove!(e => e == dele);
 	} //unregister
 
 	void test(T)(size_t rounds) {
@@ -106,11 +106,14 @@ struct EventManager {
 
 	void fire(E, Args...)(Args args) {
 
+		alias ED = void delegate(ref E);
+		mixin checkValidity!(E, ED);
+
 		auto event = E(args);
 		auto cur_dels = delegates[E.message_id];
 
 		foreach (key, ref del_func; cur_dels) {
-			auto casted_func = cast(void delegate(ref E)) del_func;
+			auto casted_func = cast(ED) del_func;
 			casted_func(event);
 		}
 
