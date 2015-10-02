@@ -9,12 +9,12 @@ import blindfire.engine.state : StateID;
 // game states
 enum State : StateID {
 
-	MENU,
-	JOIN,
-	GAME,
-	OPTIONS,
-	LOBBY,
-	WAIT
+	Menu,
+	Joining,
+	Game,
+	Options,
+	Lobby,
+	Waiting
 
 } //State
 

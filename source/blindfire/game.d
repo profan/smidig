@@ -24,7 +24,7 @@ import blindfire.defs;
 import blindfire.ui;
 
 const int BG_COLOR = 0xca8142;
-const int MENU_COLOR = 0x428bca;
+const int Menu_COLOR = 0x428bca;
 const int ITEM_COLOR = 0x8bca42;
 
 final class MenuState : GameState {
@@ -33,7 +33,7 @@ final class MenuState : GameState {
 	GameStateHandler statehan;
 	EventManager* evman;
 
-	@property StateID id() const { return State.MENU; }
+	@property StateID id() const { return State.Menu; }
 	
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 
@@ -59,25 +59,25 @@ final class MenuState : GameState {
 
 		uint width = 512, height = window.height - window.height/3;
 		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
-		ui_state.draw_rectangle(window, window.width/2-width/2, window.height/2-height/2, width, height, MENU_COLOR);
+		ui_state.draw_rectangle(window, window.width/2-width/2, window.height/2-height/2, width, height, Menu_COLOR);
 
 		ui_state.draw_label(window, "Project Blindfire", window.width/2, window.height/4, 0, 0, BG_COLOR);
 
 		uint item_width = height / 2, item_height = 32;
-		if (do_button(ui_state, 1, window, window.width/2, window.height/2 - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Join Game", MENU_COLOR)) {
-			statehan.push_state(State.JOIN);
+		if (do_button(ui_state, 1, window, window.width/2, window.height/2 - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Join Game", Menu_COLOR)) {
+			statehan.push_state(State.Joining);
 		} //join
 
-		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", MENU_COLOR)) {
+		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", Menu_COLOR)) {
 			evman.push!CreateGameEvent(true);
-			statehan.push_state(State.LOBBY);
+			statehan.push_state(State.Lobby);
 		} //create
 
-		if (do_button(ui_state, 12, window, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, ITEM_COLOR, 255, "Options", MENU_COLOR)) {
-			statehan.push_state(State.OPTIONS);
+		if (do_button(ui_state, 12, window, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, ITEM_COLOR, 255, "Options", Menu_COLOR)) {
+			statehan.push_state(State.Options);
 		} //create
 
-		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", MENU_COLOR)) {
+		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", Menu_COLOR)) {
 			window.is_alive = false;
 		} //quit
 			
@@ -92,7 +92,7 @@ final class JoiningState : GameState {
 	GameNetworkManager netman;
 	EventManager* evman;
 
-	@property StateID id() const { return State.JOIN; }
+	@property StateID id() const { return State.Joining; }
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
@@ -114,7 +114,7 @@ final class JoiningState : GameState {
 	} //leave
 
 	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
-		statehan.switch_state(State.LOBBY);
+		statehan.switch_state(State.Lobby);
 	} //onClientSetConnected
 
 	void update(double dt) {
@@ -152,7 +152,7 @@ final class LobbyState : GameState {
 	GameNetworkManager netman;
 	EventManager* evman;
 
-	@property StateID id() const { return State.LOBBY; }
+	@property StateID id() const { return State.Lobby; }
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
@@ -170,7 +170,7 @@ final class LobbyState : GameState {
 	} //leave
 
 	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
-		statehan.switch_state(State.GAME);
+		statehan.switch_state(State.Game);
 	} //onClientSetConnected
 
 	void update(double dt) {
@@ -196,7 +196,7 @@ final class LobbyState : GameState {
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
 			evman.push!ClientSetConnectedEvent(true);
-			statehan.switch_state(State.GAME);
+			statehan.switch_state(State.Game);
 		}
 
 		if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
@@ -228,7 +228,7 @@ final class MatchState : GameState {
 
 	LinearAllocator entity_allocator;
 
-	@property StateID id() const { return State.GAME; }
+	@property StateID id() const { return State.Game; }
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas, EventManager* eventman) {
 		this.statehan = statehan;
@@ -330,7 +330,7 @@ final class WaitingState : GameState {
 	GameStateHandler statehan;
 	EventManager* evman;
 
-	@property StateID id() const { return State.WAIT; }
+	@property StateID id() const { return State.Waiting; }
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 		this.statehan = statehan;
@@ -374,7 +374,7 @@ final class OptionsState : GameState {
 	//options
 	StaticArray!(char, 64) player_name;
 
-	@property StateID id() const { return State.OPTIONS; }
+	@property StateID id() const { return State.Options; }
 
 	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf, EventManager* eventman) {
 		this.statehan = state_handler;
@@ -554,7 +554,7 @@ struct Game {
 		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man, &evman));
 		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, &evman));
 		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map, &evman));
-		state.push_state(State.MENU); //set initial state
+		state.push_state(State.Menu); //set initial state
 
 		evhan.add_listener(&ui_state.update_ui);
 		evhan.bind_keyevent(SDL_SCANCODE_RALT, &window.toggle_wireframe);

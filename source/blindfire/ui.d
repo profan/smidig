@@ -15,14 +15,16 @@ import blindfire.engine.gl;
 import profan.collections;
 
 enum LayoutType {
-	LINEAR
-}
+	Linear,
+	Horizontal
+} //LayoutType
 
 struct Layout {
 
 	LayoutType type;
 	int width, height;
 	int offset_x, offset_y;
+
 	this(LayoutType type, int offset_x, int offset_y, int width, int height) {
 		this.type = type;
 		this.offset_x = offset_x;
@@ -31,20 +33,7 @@ struct Layout {
 		this.height = height;
 	}
 
-}
-
-enum DrawCommand {
-	Rectangle,
-	Label
-}
-
-struct RectangleDrawCommand {
-
-}
-
-struct LabelDrawCommand {
-
-}
+} //Layout
 
 struct UIState {
 
@@ -150,7 +139,7 @@ void before_ui(ref UIState ui) {
 
 	ui.hot_item = 0;
 
-}
+} //before_ui
 
 void reset_ui(ref UIState ui) {
 

@@ -5,6 +5,7 @@ import blindfire.engine.window;
 import blindfire.engine.net;
 
 alias StateID = ulong;
+
 class GameStateHandler {
 
 	GameState[] stack;
