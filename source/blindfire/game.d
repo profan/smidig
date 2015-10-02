@@ -24,7 +24,7 @@ import blindfire.defs;
 import blindfire.ui;
 
 const int BG_COLOR = 0xca8142;
-const int Menu_COLOR = 0x428bca;
+const int MENU_COLOR = 0x428bca;
 const int ITEM_COLOR = 0x8bca42;
 
 final class MenuState : GameState {
@@ -59,25 +59,25 @@ final class MenuState : GameState {
 
 		uint width = 512, height = window.height - window.height/3;
 		ui_state.draw_rectangle(window, 0, 0, window.width, window.height, BG_COLOR);
-		ui_state.draw_rectangle(window, window.width/2-width/2, window.height/2-height/2, width, height, Menu_COLOR);
+		ui_state.draw_rectangle(window, window.width/2-width/2, window.height/2-height/2, width, height, MENU_COLOR);
 
 		ui_state.draw_label(window, "Project Blindfire", window.width/2, window.height/4, 0, 0, BG_COLOR);
 
 		uint item_width = height / 2, item_height = 32;
-		if (do_button(ui_state, 1, window, window.width/2, window.height/2 - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Join Game", Menu_COLOR)) {
+		if (do_button(ui_state, 1, window, window.width/2, window.height/2 - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Join Game", MENU_COLOR)) {
 			statehan.push_state(State.Joining);
 		} //join
 
-		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", Menu_COLOR)) {
+		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", MENU_COLOR)) {
 			evman.push!CreateGameEvent(true);
 			statehan.push_state(State.Lobby);
 		} //create
 
-		if (do_button(ui_state, 12, window, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, ITEM_COLOR, 255, "Options", Menu_COLOR)) {
+		if (do_button(ui_state, 12, window, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, ITEM_COLOR, 255, "Options", MENU_COLOR)) {
 			statehan.push_state(State.Options);
 		} //create
 
-		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", Menu_COLOR)) {
+		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", MENU_COLOR)) {
 			window.is_alive = false;
 		} //quit
 			
@@ -418,12 +418,14 @@ final class OptionsState : GameState {
 struct Game {
 
 	import blindfire.res : Resource;
+	import blindfire.engine.sound : SoundSystem, SoundID;
 
 	private {
 
 		Window* window;
 		EventManager net_evman;
 		NetworkPeer network_client;
+		SoundSystem* sound_system;
 
 		EventManager evman;
 		EventHandler* evhan;
@@ -450,6 +452,7 @@ struct Game {
 
 	this(Window* window, EventHandler* evhan) {
 
+		this.window = window;
 		this.net_evman = EventManager(EventMemory, NetEventType.max);
 		this.network_client = NetworkPeer(12000, &net_evman);
 
@@ -459,7 +462,6 @@ struct Game {
 
 		this.evman = EventManager(EventMemory, EventType.max);
 		this.evhan = evhan;
-		this.window = window;
 		this.ui_state = UIState();
 		this.config_map = ConfigMap("game.cfg");
 		
@@ -512,16 +514,16 @@ struct Game {
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
 		auto shader = ra.alloc!(Shader)("shaders/basic", attributes[], uniforms[]);
-		rm.set_resource!(Shader)(shader, Resource.BASIC_SHADER);
+		rm.set_resource(shader, Resource.BASIC_SHADER);
 
 		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
 		char[16][2] text_uniforms = ["color", "projection"];
 		auto text_shader = ra.alloc!(Shader)("shaders/text", text_attribs[], text_uniforms[]); 
-		rm.set_resource!(Shader)(text_shader, Resource.TEXT_SHADER);
+		rm.set_resource(text_shader, Resource.TEXT_SHADER);
 
 		//textures
 		auto unit_tex = ra.alloc!(Texture)("resource/img/dude2.png");
-		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
+		rm.set_resource(unit_tex, Resource.UNIT_TEXTURE);
 
 		//font atlases and such
 		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12, text_shader);
@@ -529,11 +531,19 @@ struct Game {
 
 		//mouse pointer texture
 		auto cursor_texture = ra.alloc!(Texture)("resource/img/other_cursor.png");
-		rm.set_resource!(Texture)(cursor_texture, Resource.CURSOR_TEXTURE);
+		rm.set_resource(cursor_texture, Resource.CURSOR_TEXTURE);
 		this.cursor = system_allocator.alloc!(Cursor)(cursor_texture, shader);
 		SDL_ShowCursor(SDL_DISABLE); //make sure to disable default cursor
 
 	} //load_resources
+
+	void load_sounds() {
+
+		auto rm = ResourceManager.get();
+		auto music_file = sound_system.load_sound_file(cast(char*)"resource/audio/paniq.wav".ptr);
+		rm.set_resource!(SoundID)(cast(SoundID*)music_file, Resource.PANIQ);
+
+	} //load_sounds
 
 	void initialize_systems() {
 
@@ -543,6 +553,8 @@ struct Game {
 		this.ui_state.init(system_allocator);
 
 		alias ra = system_allocator;
+		//this.sound_system = ra.alloc!(SoundSystem, size_t)(32);
+
 		this.state = ra.alloc!(GameStateHandler)();
 
 		this.tm = ra.alloc!(TurnManager)();
@@ -604,6 +616,10 @@ struct Game {
 
 	void run() {
 
+		import core.memory : GC;
+
+		GC.disable();
+
 		import core.thread : Thread;
 		import std.datetime : Duration, StopWatch, TickDuration;
 
@@ -612,6 +628,12 @@ struct Game {
 
 		//allocate resources for systems
 		initialize_systems();
+
+		//load sounds
+		//load_sounds();
+
+		//auto retrieved_sound = ResourceManager.get().get_resource!(SoundID)(Resource.PANIQ);
+		//sound_system.play_sound(*retrieved_sound, 0.25f);
 
 		//terminate network worker when run goes out of scope, because the game has ended
 		//scope(exit) { net_man.send_message(Command.TERMINATE); } TODO REVISIT
