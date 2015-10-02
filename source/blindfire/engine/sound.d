@@ -7,6 +7,7 @@ import derelict.alure.alure;
 
 alias SoundID = int;
 alias SoundVolume = float;
+alias SoundSource = ALuint;
 
 struct SoundSystem {
 
@@ -60,6 +61,14 @@ struct SoundSystem {
 
 	} //load_sound_file
 
+	void expand_sources() {
+
+		sources.reserve(16); //add 16 to sources capacity
+		sources.length = sources.capacity;
+		alGenSources(sources.capacity, sources.ptr);
+
+	} //expand_sources
+
 	ALuint find_free_source() {
 
 		auto source = sources[0];
@@ -69,16 +78,22 @@ struct SoundSystem {
 
 	} //find_free_source
 
-	void play_sound(SoundID sound_id, SoundVolume volume) {
+	void play_sound(SoundID sound_id, SoundSource sound_source, SoundVolume volume) {
 
 		auto sound_buffer = buffers[sound_id];
-		auto sound_source = find_free_source();
 
 		alSourcei(sound_source, AL_BUFFER, sound_buffer); //associate source with buffer
 		alSourcef(sound_source, AL_GAIN, volume);
 		alSourcePlay(sound_source);
 
-	} //playSound
+	} //play_sound
+
+	void play_sound(SoundID sound_id, SoundVolume volume) {
+
+		auto sound_source = find_free_source();
+		play_sound(sound_id, sound_source, volume);
+
+	} //play_sound
 
 	void tick() {
 
