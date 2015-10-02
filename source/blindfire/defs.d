@@ -4,7 +4,19 @@ import std.socket : InternetAddress;
 import std.datetime : TickDuration;
 
 import blindfire.engine.event : Event, EventID, EventManager, expandEventsToMap;
-import blindfire.engine.state : State;
+import blindfire.engine.state : StateID;
+
+// game states
+enum State : StateID {
+
+	MENU,
+	JOIN,
+	GAME,
+	OPTIONS,
+	LOBBY,
+	WAIT
+
+} //State
 
 alias ClientConnectEvent = Event!(EventType.ClientConnect, InternetAddress);
 alias ClientDisconnectEvent = Event!(EventType.ClientDisconnect, bool);

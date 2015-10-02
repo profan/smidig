@@ -33,6 +33,8 @@ final class MenuState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 	EventManager* evman;
+
+	@property StateID id() const { return State.MENU; }
 	
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 
@@ -90,6 +92,8 @@ final class JoiningState : GameState {
 	GameStateHandler statehan;
 	GameNetworkManager netman;
 	EventManager* evman;
+
+	@property StateID id() const { return State.JOIN; }
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
@@ -150,6 +154,8 @@ final class LobbyState : GameState {
 	GameStateHandler statehan;
 	GameNetworkManager netman;
 	EventManager* evman;
+
+	@property StateID id() const { return State.LOBBY; }
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
@@ -226,6 +232,8 @@ final class MatchState : GameState {
 	FontAtlas* debug_atlas;
 
 	LinearAllocator entity_allocator;
+
+	@property StateID id() const { return State.GAME; }
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas, EventManager* eventman) {
 		this.statehan = statehan;
@@ -327,6 +335,8 @@ final class WaitingState : GameState {
 	GameStateHandler statehan;
 	EventManager* evman;
 
+	@property StateID id() const { return State.WAIT; }
+
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -368,6 +378,8 @@ final class OptionsState : GameState {
 
 	//options
 	StaticArray!(char, 64) player_name;
+
+	@property StateID id() const { return State.OPTIONS; }
 
 	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf, EventManager* eventman) {
 		this.statehan = state_handler;
@@ -542,12 +554,12 @@ struct Game {
 		this.tm = ra.alloc!(TurnManager)();
 		this.net_man = ra.alloc!(GameNetworkManager)(&net_evman, state, &config_map, tm, &evman);
 
-		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, &evman), State.MENU);
-		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas, &evman), State.GAME);
-		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, net_man, &evman), State.JOIN);
-		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man, &evman), State.LOBBY);
-		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, &evman), State.WAIT);
-		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map, &evman), State.OPTIONS);
+		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, &evman));
+		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas, &evman));
+		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, net_man, &evman));
+		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man, &evman));
+		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, &evman));
+		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map, &evman));
 		state.push_state(State.MENU); //set initial state
 
 		evhan.add_listener(&ui_state.update_ui);
@@ -651,7 +663,6 @@ struct Game {
 			window.render_clear(0x428bca);
 			draw();
 			window.render_present();
-
 			drawtime = dt_sw.peek().msecs;
 			frametime = ft_sw.peek().msecs;
 			dt_sw.reset();

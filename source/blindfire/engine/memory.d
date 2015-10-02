@@ -57,7 +57,7 @@ private mixin template AllocatorCommon() {
 
 		return emplace!(T)(memory, args);
 
-	}
+	} //alloc_item
 
 	@property size_t remaining_size() const nothrow @nogc {
 
@@ -66,7 +66,7 @@ private mixin template AllocatorCommon() {
 
 		return remaining;
 
-	}
+	} //remaining_size
 
 } //AllocatorCommon
 
@@ -104,7 +104,7 @@ struct LinearAllocator {
 		this.current = buffer;
 		this.name = name;
 
-	}
+	} //this
 
 	this(size_t size, string name, LinearAllocator* master) nothrow @nogc {
 
@@ -114,7 +114,7 @@ struct LinearAllocator {
 		this.current = buffer;
 		this.name = name;
 
-	}
+	} //this
 
 	~this() {
 
@@ -130,7 +130,7 @@ struct LinearAllocator {
 			free(buffer);
 		}
 
-	}
+	} //~this
 
 	void* alloc(size_t size, size_t alignment) nothrow @nogc {
 
@@ -147,7 +147,7 @@ struct LinearAllocator {
 
 		return allocated_start;
 
-	}
+	} //alloc
 
 	auto alloc(T, Args...)(Args args) {
 
@@ -158,12 +158,14 @@ struct LinearAllocator {
 
 		return element;
 
-	}
+	} //alloc
 
 	void reset() nothrow {
+
 		allocated_size = 0;
 		current = buffer;
-	}
+
+	} //reset
 
 	mixin AllocatorInvariant;
 	mixin AllocatorCommon;
@@ -246,7 +248,7 @@ struct StackAllocator {
 
 	}
 
-	void dealloc(AT)(ref in AT[] arr) {
+	void dealloc(AT)(ref in AT[] arr) nothrow @nogc {
 
 		dealloc(arr.length * typeof(arr).sizeof);
 		

@@ -172,7 +172,7 @@ struct EventManager {
 
 		} //tick
 
-	} //doTick
+	} //do_tick
 
 } //EventManager
 
@@ -213,7 +213,7 @@ version (unittest) {
 				  FooEvent,
 				  BarEvent));
 
-	mixin EventManager.doTick;
+	mixin EventManager.do_tick;
 
 }
 
