@@ -213,7 +213,7 @@ version (unittest) {
 				  FooEvent,
 				  BarEvent));
 
-	mixin EventManager.do_tick;
+	mixin EventManager.doTick;
 
 }
 

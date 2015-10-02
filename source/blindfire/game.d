@@ -1,7 +1,6 @@
 module blindfire.game;
 
 import std.stdio : writefln;
-import std.concurrency : spawn, thisTid;
 
 import derelict.sdl2.sdl;
 
@@ -115,8 +114,7 @@ final class JoiningState : GameState {
 	} //leave
 
 	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
-		statehan.pop_state();
-		statehan.push_state(State.LOBBY);
+		statehan.switch_state(State.LOBBY);
 	} //onClientSetConnected
 
 	void update(double dt) {
@@ -130,7 +128,6 @@ final class JoiningState : GameState {
 			evman.push!ClientDisconnectEvent(true);
 			statehan.pop_state();
 		} //back to menu, cancel
-
 
 		auto offset = Vec2i(0, 0);
 		ui_state.draw_label(window, "Local Servers", offset.x, offset.y, 0, 0, 0x428bca);
@@ -173,8 +170,7 @@ final class LobbyState : GameState {
 	} //leave
 
 	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
-		statehan.pop_state();
-		statehan.push_state(State.GAME);
+		statehan.switch_state(State.GAME);
 	} //onClientSetConnected
 
 	void update(double dt) {
@@ -200,8 +196,7 @@ final class LobbyState : GameState {
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
 			evman.push!ClientSetConnectedEvent(true);
-			statehan.pop_state();
-			statehan.push_state(State.GAME);
+			statehan.switch_state(State.GAME);
 		}
 
 		if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
@@ -435,7 +430,6 @@ struct Game {
 		GameStateHandler state;
 		UIState ui_state;
 
-		Tid network_thread;
 		GameNetworkManager net_man;
 		ConfigMap config_map;
 		TurnManager tm;
