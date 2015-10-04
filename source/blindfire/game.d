@@ -547,13 +547,14 @@ struct Game {
 
 	void initialize_systems() {
 
-		this.network_client.init();
+		this.network_client.initialize();
 
 		//upload vertices for ui to gpu, set up shaders.
-		this.ui_state.init(system_allocator);
+		this.ui_state.initialize(system_allocator);
 
 		alias ra = system_allocator;
-		//this.sound_system = ra.alloc!(SoundSystem, size_t)(32);
+		this.sound_system = ra.alloc!(SoundSystem)(32);
+		this.sound_system.initialize();
 
 		this.state = ra.alloc!(GameStateHandler)();
 
@@ -616,10 +617,6 @@ struct Game {
 
 	void run() {
 
-		import core.memory : GC;
-
-		GC.disable();
-
 		import core.thread : Thread;
 		import std.datetime : Duration, StopWatch, TickDuration;
 
@@ -630,10 +627,10 @@ struct Game {
 		initialize_systems();
 
 		//load sounds
-		//load_sounds();
+		load_sounds();
 
-		//auto retrieved_sound = ResourceManager.get().get_resource!(SoundID)(Resource.PANIQ);
-		//sound_system.play_sound(*retrieved_sound, 0.25f);
+		auto retrieved_sound = ResourceManager.get().get_resource!(SoundID)(Resource.PANIQ);
+		sound_system.play_sound(*retrieved_sound, 0.25f);
 
 		//terminate network worker when run goes out of scope, because the game has ended
 		//scope(exit) { net_man.send_message(Command.TERMINATE); } TODO REVISIT

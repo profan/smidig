@@ -27,7 +27,7 @@ struct SoundSystem {
 		this.sources.length = sources.capacity;
 	} //this
 
-	void init() {
+	void initialize() {
 
 		this.device = alcOpenDevice(null); //preferred device
 		this.context = alcCreateContext(device, null);
@@ -35,7 +35,7 @@ struct SoundSystem {
 
 		alGenSources(sources.capacity, sources.ptr);
 
-	} //init
+	} //initialize
 
 	~this() {
 

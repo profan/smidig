@@ -61,7 +61,7 @@ struct ObjectPool(T, uint ExpandSize = 10, Args...) {
 
 	} //expand
 
-	auto findFreeObject() {
+	auto find_free_object() {
 
 		size_t id = 0;
 
@@ -79,7 +79,7 @@ struct ObjectPool(T, uint ExpandSize = 10, Args...) {
 
 	auto create(Args...)(Args args) {
 
-		auto id = findFreeObject();
+		auto id = find_free_object();
 		auto obj = &pool[id];
 		reinitialize(obj, args);
 		obj.active = true;
@@ -209,9 +209,9 @@ struct SmartPointer(T, alias FreeFunc) {
 		writefln("[SmartPointer] converted from object: %s", s.data.object);
 	} //opAssign(S, F)
 
-	auto getWeak() {
+	auto get_weak() {
 		return WeakPointer!(typeof(this))(this);
-	} //getWeak
+	} //get_weak
 
 	@property auto opDispatch(string name)() {
 		return mixin("data." ~ name);
@@ -232,7 +232,7 @@ struct SmartPointer(T, alias FreeFunc) {
 				free(data);
 			}
 		}
-	} //doDestroy
+	} //do_destroy
 
 	~this() {
 		do_destroy();

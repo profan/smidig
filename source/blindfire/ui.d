@@ -86,7 +86,7 @@ struct UIState {
 
 	} //update_ui
 
-	void init(LinearAllocator* allocator) {
+	void initialize(LinearAllocator* allocator) {
 		
 		ui_allocator = allocator;
 		assert (ui_allocator !is null);

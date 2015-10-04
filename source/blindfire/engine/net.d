@@ -649,7 +649,7 @@ struct NetworkPeer {
 
 	}
 
-	void init() {
+	void initialize() {
 
 		bind_to_port(this.addr);
 		logger.log("Listening on - %s:%d", this.addr.toAddrString(), this.port);
