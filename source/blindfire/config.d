@@ -66,8 +66,8 @@ struct ConfigMap {
 
 	const(Value) get(in Key key) const {
 
-		if (key in config) {
-			return config[key];
+		if (auto item = key in config) {
+			return *item;
 		} //get
 
 		return "";
