@@ -113,7 +113,17 @@ version(unittest) {
 
 unittest {
 
-	auto pool = ObjectPool!(PooledThing, 32, 0)(32);
+	import std.range : iota;
+	import std.random : uniform;
+
+	enum total_runs = 1000;
+	auto pool = ObjectPool!(PooledThing, 1000, 0)(32);
+
+	foreach (i; iota(total_runs)) {
+		auto v = uniform(int.min, int.max);
+		auto thing = pool.create(v);
+		assert(thing.var == v, "var in object didn't match v");
+	}
 
 }
 
@@ -230,12 +240,11 @@ struct SmartPointer(T, alias FreeFunc) {
 
 } //SmartPointer
 
-unittest {
+version(unittest) {
 
-	auto pool = ObjectPool!(PooledThing, 32, 0)(16);
-	
-	auto fetched_obj = pool.create(16);
-	assert(fetched_obj.var == 16);
+}
+
+unittest {
 
 }
 
