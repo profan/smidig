@@ -281,50 +281,67 @@ unittest {
 struct LinkedList(T) {
 
 	struct Node {
-		Node* prev;
+
+		this(Node* n, T d) {
+			this.next = n;
+			this.data = d;
+		} //this
+
 		Node* next;
 		T data;
 	} //Node
 	
 	private {
 
-		Node* first;
-		Node* last;
+		Node* head_;
 
-		IAllocator allocator;
+		IAllocator allocator_;
 
 	}
 
 	@disable this();
 	@disable this(this);
 
+	this(IAllocator allocator) {
+		this.allocator_ = allocator;
+	}  //this
+
 	~this() {
 
-		for (auto n = first; n != null; n = n.next) {
-
+		for (auto n = head_; n != null; n = n.next) {
+			allocator_.dispose(n);
 		}
 
 	} //~this
 
 	void add(T item) {
 
+		this.push(&head_, item);
+
 	} //add
 
-	ref T get() {
+	void push(Node** node, ref T data) {
 
-	} //get
+		auto new_node = allocator_.make!Node(null, data);
+		new_node.next = *node;
 
-	ref T get(size_t index) {
+		*node = new_node;
 
-	} //get
+	} //push
 
-	void remove() {
+	void poll() {
 
-	} //remove
+		if (head_) {
+			auto f = head_;
+			head_ = head_.next;
+			allocator_.dispose(f);
+		}
 
-	void remove(T item) {
+	} //poll
 
-	} //remove
+	T* head() {
+		return &head_.data;
+	} //first
 
 } //LinkedList
 
@@ -333,6 +350,50 @@ version(unittest) {
 }
 
 unittest {
+
+}
+
+struct Stack(T) {
+
+	private LinkedList!T list_;
+
+	@disable this();
+	@disable this(this);
+
+	this(IAllocator allocator) {
+		this.list_ = LinkedList!T(allocator);
+	} //this
+
+	void push(T item) {
+		list_.add(item);
+	} //push
+
+	T* peek() {
+		return list_.head();
+	} //peek
+
+	T pop() {
+		auto item = list_.head();
+		if (!item) {
+			return T.init;
+		} else {
+			list_.poll();
+			return *item;
+		}
+	} //pop
+
+}
+
+version(unittest) {
+
+}
+
+unittest {
+
+	auto stack = Stack!int(theAllocator);
+	stack.push(25);
+
+	assert(*stack.peek() == 25);
 
 }
 
