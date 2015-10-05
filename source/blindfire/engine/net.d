@@ -202,7 +202,7 @@ struct NetworkPeerFSM {
 		ClientID id_counter;
 
 		/* state */
-		ScopedBuffer!ubyte data_buffer;
+		ScopedBuffer!ubyte data_buffer = void;
 
 		/* communication */
 		EventManager* net_evman;
@@ -295,7 +295,7 @@ struct NetworkPeer {
 
 	//from refactor, currently bound address
 	Address addr;
-	ScopedBuffer!ubyte data;
+	ScopedBuffer!ubyte data = void;
 	StackAllocator stack_allocator;
 	EventManager* net_evman;
 

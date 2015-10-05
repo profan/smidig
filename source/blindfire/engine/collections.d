@@ -9,10 +9,6 @@ import std.experimental.allocator.showcase;
 import std.experimental.allocator.mallocator : Mallocator;
 import std.experimental.allocator.building_blocks.free_list;
 
-alias AllocFunc = void[] delegate(size_t size) @system;
-alias ReAllocFunc = bool delegate(ref void[] block, size_t new_size) @system;
-alias DeallocFunc = bool delegate(void[] block) @system;
-
 struct Array(T) {
 
 	private {
@@ -24,6 +20,9 @@ struct Array(T) {
 		IAllocator allocator_;
 
 	}
+
+	@disable this();
+	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size) {
 
@@ -109,6 +108,9 @@ struct HashMap(K, V) {
 
 	}
 
+	@disable this();
+	@disable this(this);
+
 	this(IAllocator allocator, size_t initial_size) {
 
 		this.allocator_ = allocator;
@@ -138,9 +140,63 @@ unittest {
 
 }
 
-struct LinkedList {
+struct LinkedList(T) {
+
+	struct Node {
+		Node* prev;
+		Node* next;
+		T data;
+	} //Node
+	
+	private {
+
+		Node* first;
+		Node* last;
+
+		IAllocator allocator;
+
+	}
+
+	@disable this();
+	@disable this(this);
+
+	~this() {
+
+		for (auto n = first; n != null; n = n.next) {
+
+		}
+
+	} //~this
+
+	void add(T item) {
+
+	} //add
+
+	ref T get() {
+
+	} //get
+
+	ref T get(size_t index) {
+
+	} //get
+
+	void remove() {
+
+	} //remove
+
+	void remove(T item) {
+
+	} //remove
 
 } //LinkedList
+
+version(unittest) {
+
+}
+
+unittest {
+
+}
 
 struct DHeap(E) {
 
@@ -154,15 +210,22 @@ struct DHeap(E) {
 
 } //DHeap
 
+version (unittest) {
+
+} 
+
+unittest {
+
+}
+
 struct ScopedBuffer(T) {
 
-	import blindfire.engine.memory : StackAllocator;
+	private IAllocator allocator_;
 
 	T[] buffer_;
-	IAllocator allocator_;
-
 	alias buffer_ this; //careful!
 
+	@disable this();
 	@disable this(this);
 
 	this(IAllocator allocator, size_t elements) {
@@ -171,12 +234,63 @@ struct ScopedBuffer(T) {
 	} //this
 
 	~this() {
-		if (buffer_ != buffer_.init) {
-			this.allocator_.deallocate(buffer_);
-		}
+		this.allocator_.dispose(buffer_);
 	} //~this
 
 } //ScopedBuffer
+
+version (unittest) {
+
+	struct DestructTest {
+
+		int* var;
+		int target;
+
+		this(int* v, int t) {
+			this.var = v;
+			this.target = t;
+		}
+
+		~this() {
+			if (var != typeof(var).init) {
+				*var = target;
+			}
+		}
+
+	}
+
+}
+
+unittest {
+
+	import std.range : iota;
+	import std.random : uniform;
+
+	enum runs = 500, size = 128;
+
+	auto buf = ScopedBuffer!int(theAllocator, size);
+
+	foreach (i; iota(runs)) {
+		auto index = uniform(0, size-1);
+		buf[index] = i;
+		assert(buf[index] == i, "buf[index] wasn't i");
+	}
+
+}
+
+unittest {
+
+	int testing_var = 256;
+	enum target = int.max;
+
+	{
+		auto buf = ScopedBuffer!DestructTest(theAllocator, 4);
+		buf[2] = DestructTest(&testing_var, target);
+	}
+
+	assert(testing_var == target, "destructor didn't fire for DestructTest?");
+
+}
 
 struct StaticArray(T, size_t size) {
 
