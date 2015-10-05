@@ -207,7 +207,6 @@ struct HashMap(K, V) {
 	}
 
 	@disable this();
-	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size) {
 
@@ -216,6 +215,10 @@ struct HashMap(K, V) {
 		this.capacity_ = initial_size;
 
 	} //this
+
+	this(this) {
+
+	} //this(this)
 
 	~this() {
 		this.allocator_.dispose(array_);
@@ -261,6 +264,14 @@ struct HashMap(K, V) {
 
 	void rehash() {
 
+		auto temp_map = HashMap!T(allocator_, capacity_ * 2);
+
+		foreach (ref k, ref v; this) {
+			temp_map[k] = v;
+		}
+
+		this = temp_map;
+
 	} //rehash
 
 	void expand(size_t extra_size) {
@@ -292,13 +303,17 @@ struct HashMap(K, V) {
 
 	} //get
 
+	ref V put(T[] arr, K key, V value) {
+
+	} //put
+
 	ref V put(K key, V value) {
 
 		auto index = key.toHash() % capacity_;
 		auto default_value = K.init;
 
 		if (cast(float)used_capacity_ / cast(float)capacity_ => LOAD_FACTOR_THRESHOLD) {
-			this.expand(capacity_);
+			this.rehash();
 		}
 
 		while (array_[index].key != key && array_[index].key != default_value) {
