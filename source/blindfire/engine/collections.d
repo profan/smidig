@@ -102,12 +102,17 @@ struct HashMap(K, V) {
 
 	private {
 
-		T[] array_;
+		V[] array_;
 		size_t capacity_;
+
+		IAllocator allocator_;
 
 	}
 
 	this(IAllocator allocator, size_t initial_size) {
+
+		this.allocator_ = allocator;
+		this.array_ = allocator.makeArray!V(initial_size);
 
 	} //this
 
@@ -116,14 +121,22 @@ struct HashMap(K, V) {
 	}
 
 	ref V get(in K key) {
-
+		return array_[key.hashCode() % capacity_];
 	} //get
 
 	void put(in K key, V value) {
-
+		array_[key.hashCode() % capacity_] = value;
 	} //put
 
 } //HashMap
+
+version(unittest) {
+
+}
+
+unittest {
+
+}
 
 struct LinkedList {
 
