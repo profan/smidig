@@ -251,9 +251,36 @@ struct HashMap(K, V) {
 			index++;
 		}
 
+		if (array_[index].key == default_value) { //new key/value pair!
+			used_capacity_++;
+		}
+
 		return array_[index] = Entry(key, value);
 
 	} //put
+
+	bool remove(K key) {
+
+		auto index = key.toHash() % capacity_;
+		int searched_elements = 0;
+
+		while (array_[index].key != key) {
+
+			if (searched_elements == used_capacity_) {
+				return false;
+			}
+
+			searched_elements++;
+			index++;
+		}
+		
+		array_[index].key = K.init;
+		array_[index].value = V.init;
+		used_capacity_--;
+
+		return true;
+		
+	} //remove
 
 } //HashMap
 
@@ -288,9 +315,12 @@ unittest {
 	auto hash_map = HashMap!(HashThing, uint)(theAllocator, 32);
 
 	auto thing = HashThing("hello");
-	hash_map[thing] = 255;
 
+	hash_map[thing] = 255;
 	assert(hash_map[thing] == 255);
+
+	hash_map[thing] = 128;
+	assert(hash_map[thing] == 128);
 
 }
 
@@ -299,9 +329,12 @@ unittest {
 	auto hash_map = HashMap!(string, uint)(theAllocator, 16);
 
 	enum str = "yes";
-	hash_map[str] = 128;
 
+	hash_map[str] = 128;
 	assert(hash_map[str] == 128);
+
+	hash_map[str] = 324;
+	assert(hash_map[str] == 324);
 
 }
 
