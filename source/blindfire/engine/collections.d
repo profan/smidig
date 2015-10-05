@@ -95,7 +95,7 @@ struct Array(T) {
 	void reserve(size_t requested_size) {
 
 		if (capacity_ < requested_size) {
-			this.expand(requested_size);
+			this.expand(requested_size - capacity_);
 		}
 
 	} //reserve
@@ -103,7 +103,7 @@ struct Array(T) {
 	void expand(size_t extra_size) {
 
 		bool success = allocator_.expandArray!T(array_, extra_size);
-		capacity_ = length_ + extra_size;
+		capacity_ += extra_size;
 
 		assert(success, "failed to expand array!");
 
@@ -188,6 +188,8 @@ size_t toHash(string str) @system nothrow {
 /* - currently linear probing though. */
 struct HashMap(K, V) {
 
+	enum LOAD_FACTOR_THRESHOLD = 0.75; // when used_capacity_ / capacity_ > threshold, expand!
+
 	struct Entry {
 		K key;
 		V value;
@@ -257,6 +259,15 @@ struct HashMap(K, V) {
 		return get(key);
 	} //opIndex
 
+	void expand(size_t extra_size) {
+
+		bool success = allocator_.expandArray!T(array_, extra_size);
+		capacity_ += extra_size;
+
+		assert(success, "failed to expand hashmap array!");
+
+	} //expand
+
 	V get(in K key) {
 
 		auto index = key.toHash() % capacity_;
@@ -281,6 +292,10 @@ struct HashMap(K, V) {
 
 		auto index = key.toHash() % capacity_;
 		auto default_value = K.init;
+
+		if (cast(float)used_capacity_ / cast(float)capacity_ => LOAD_FACTOR_THRESHOLD) {
+			this.expand(capacity_);
+		}
 
 		while (array_[index].key != key && array_[index].key != default_value) {
 			index++;
