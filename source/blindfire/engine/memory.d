@@ -6,6 +6,8 @@ import core.stdc.stdlib : malloc, free;
 import std.stdio : writefln;
 import std.conv : emplace;
 
+public import std.experimental.allocator : IAllocator;
+
 private interface Instance {
 	void destroy_object();
 }

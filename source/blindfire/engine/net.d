@@ -299,6 +299,9 @@ struct NetworkPeer {
 	StackAllocator stack_allocator;
 	EventManager* net_evman;
 
+	@disable this();
+	@disable this(this);
+
 	this(ushort port, EventManager* net_event_manager) {
 
 		//set socket to nonblocking, since one thread is used both for transmission and receiving, doesn't block on receive.
