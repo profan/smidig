@@ -225,8 +225,8 @@ struct HashMap(K, V) {
 	} //~this
 
 	void free() {
-		this.allocator_.dispose(array_),
-	}
+		this.allocator_.dispose(array_);
+	} //free
 
 	int opApply(int delegate(ref K, ref V) dg) {
 
@@ -268,7 +268,7 @@ struct HashMap(K, V) {
 
 	void rehash() {
 
-		auto temp_map = HashMap!T(allocator_, capacity_ * 2);
+		auto temp_map = HashMap!(K, V)(allocator_, capacity_ * 2);
 
 		foreach (ref k, ref v; this) {
 			temp_map[k] = v;
@@ -278,15 +278,6 @@ struct HashMap(K, V) {
 		this = temp_map;
 
 	} //rehash
-
-	void expand(size_t extra_size) {
-
-		bool success = allocator_.expandArray!T(array_, extra_size);
-		capacity_ += extra_size;
-
-		assert(success, "failed to expand hashmap array!");
-
-	} //expand
 
 	V get(in K key) {
 
@@ -313,7 +304,7 @@ struct HashMap(K, V) {
 		auto index = key.toHash() % capacity_;
 		auto default_value = K.init;
 
-		if (cast(float)used_capacity_ / cast(float)capacity_ => LOAD_FACTOR_THRESHOLD) {
+		if ((cast(float)used_capacity_ / cast(float)capacity_) > LOAD_FACTOR_THRESHOLD) {
 			this.rehash();
 		}
 
