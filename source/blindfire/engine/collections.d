@@ -221,8 +221,12 @@ struct HashMap(K, V) {
 	} //this(this)
 
 	~this() {
-		this.allocator_.dispose(array_);
+		this.free();
 	} //~this
+
+	void free() {
+		this.allocator_.dispose(array_),
+	}
 
 	int opApply(int delegate(ref K, ref V) dg) {
 
@@ -270,6 +274,7 @@ struct HashMap(K, V) {
 			temp_map[k] = v;
 		}
 
+		this.free();
 		this = temp_map;
 
 	} //rehash
@@ -302,10 +307,6 @@ struct HashMap(K, V) {
 		return array_[index];
 
 	} //get
-
-	ref V put(T[] arr, K key, V value) {
-
-	} //put
 
 	ref V put(K key, V value) {
 
