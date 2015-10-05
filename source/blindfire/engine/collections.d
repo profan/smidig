@@ -41,6 +41,14 @@ struct Array(T) {
 		allocator_.dispose(array_);
 	} //free
 
+	@property size_t capacity() const {
+		return capacity_;
+	} //capacity
+
+	@property size_t length() const {
+		return length_;
+	} //length
+
 	int opApply(int delegate(ref uint i, ref T) dg) {
 
 		int result = 0;
@@ -67,16 +75,8 @@ struct Array(T) {
 
 	} //opApply
 
-	@property size_t capacity() const {
-		return capacity_;
-	} //capacity
-
-	@property size_t length() const {
-		return length_;
-	} //length
-
 	size_t opDollar(int dim)() const {
-		static assert(dim == 0);
+		static assert(dim == 0); //TODO remember what this does..
 		return length_;
 	} //opDollar
 
@@ -96,11 +96,27 @@ struct Array(T) {
 		return array_[index];
 	} //opIndex
 
+	void reserve(size_t requested_size) {
+
+		if (capacity_ < requested_size) {
+			this.expand(requested_size);
+		}
+
+	} //reserve
+
+	void expand(size_t extra_size) {
+
+		bool success = allocator_.expandArray!T(array_, extra_size);
+		capacity_ = length_ + extra_size;
+
+		assert(success, "failed to expand array!");
+
+	} //expand
+
 	void add(T item) {
 
 		if (length_ == capacity_) {
-			bool success = allocator_.expandArray!T(array_, length_);
-			assert(success, "reallocation failed on add!");
+			this.expand(length_);
 		}
 
 		array_[length_++] = item;
@@ -112,6 +128,8 @@ struct Array(T) {
 	} //get
 
 	void remove(size_t index) {
+
+		assert(index < length_, "removal index was greater or equal to length of array!");
 
 		// [0, 1, 2, 3, 4, 5] -- remove 3, need to shift 4 and 5 one position down
 		array_[index..length_-1] = array_[index+1..length_];
@@ -154,6 +172,15 @@ unittest {
 	foreach (i, e; array) {
 		assert(to_find[i] == e);
 	}
+
+}
+
+unittest {
+
+	auto array = Array!int(theAllocator, 0);
+	array.reserve(32);
+
+	assert(array.capacity == 32);
 
 }
 
