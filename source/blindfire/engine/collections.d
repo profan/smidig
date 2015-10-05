@@ -41,6 +41,36 @@ struct Array(T) {
 		allocator_.dispose(array_);
 	} //free
 
+	int opApply(int delegate(ref uint i, ref T) dg) {
+
+		int result = 0;
+
+		foreach (i, ref e; this[]) {
+
+			result = dg(i, e);
+			if (result) break;
+
+		}
+
+		return result;
+
+	}
+
+	int opApply(int delegate(ref T) dg) {
+
+		int result = 0;
+
+		foreach (ref e; this[]) {
+
+			result = dg(e);
+			if (result) break;
+
+		}
+
+		return result;
+
+	} //opApply
+
 	@property size_t capacity() const {
 		return capacity_;
 	} //capacity
@@ -48,6 +78,27 @@ struct Array(T) {
 	@property size_t length() const {
 		return length_;
 	} //length
+
+	size_t opDollar(int dim)() const {
+		static assert(dim == 0);
+		return length_;
+	} //opDollar
+
+	T[] opSlice() {
+		return array_[0..length_];
+	} //opSlice
+
+	T[] opSlice(size_t h, size_t t) {
+		return array_[h..t];
+	} //opSlice
+
+	ref T opIndexAssign(T value, size_t index) {
+		return array_[index] = value;
+	} //opIndexAssign
+
+	ref T opIndex(size_t index) {
+		return array_[index];
+	} //opIndex
 
 	void add(T item) {
 
@@ -93,6 +144,22 @@ unittest {
 	array.remove(0);
 	assert(array.length == 1, "didn't equal 1, wut?");
 	assert(array.get(0) == 42, "didn't equal 42, wat?");
+
+}
+
+unittest {
+
+	auto array = Array!long(theAllocator, 4);
+
+	auto to_find = [1, 2, 3, 4];
+
+	foreach (e; to_find) {
+		array.add(e);
+	}
+
+	foreach (i, e; array) {
+		assert(to_find[i] == e);
+	}
 
 }
 
