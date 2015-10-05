@@ -4,6 +4,7 @@ import blindfire.engine.memory : get_size;
 
 /* a set of datastructures which utilize the allocators built for the engine. */
 import std.experimental.allocator : allocatorObject, IAllocator, theAllocator, make, makeArray, expandArray, shrinkArray, dispose;
+import std.experimental.allocator.common;
 import std.experimental.allocator.mallocator : Mallocator;
 import std.experimental.allocator.building_blocks.free_list : FreeList;
 
@@ -287,6 +288,7 @@ struct LinkedList(T) {
 
 		Node* next;
 		T data;
+
 	} //Node
 	
 	private {
@@ -306,8 +308,11 @@ struct LinkedList(T) {
 
 	~this() {
 
-		for (auto n = head_; n != null; n = n.next) {
-			allocator_.dispose(n);
+		auto cur = head_;
+		while (cur != null) {
+			auto last = cur;
+			cur = cur.next;
+			allocator_.dispose(last);
 		}
 
 	} //~this
