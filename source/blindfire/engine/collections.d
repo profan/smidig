@@ -207,8 +207,8 @@ struct HashMap(K, V) {
 	} //this
 
 	~this() {
-		//free
-	}
+		this.allocator.dispose(array_);
+	} //~this
 
 	ref V opIndexAssign(V value, K key) {
 		return put(key, value);
@@ -369,7 +369,7 @@ unittest {
 	foreach (i; iota(runs)) {
 		auto index = uniform(0, size-1);
 		buf[index] = i;
-		assert(buf[index] == i, "buf[index] wasn't i");
+		assert(buf[index] == i, format("buf[index] was %d, expected %d", buf[index], i));
 	}
 
 }
@@ -463,6 +463,7 @@ unittest {
 
 	int[5] int_a = [1, 2, 3, 4, 5];
 	arr ~= int_a;
-	assert(arr.elements == 5, "expected num of elements to be 5, was: " ~ to!string(arr.elements));
+	assert(arr.elements == 5, format("expected num of elements to be 5, was: %s", arr.elements));
+	assert(arr[$-1] == 5, format("expected last element to be 5, was: %s", arr[$]));
 
 }
