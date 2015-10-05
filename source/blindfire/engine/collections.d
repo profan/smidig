@@ -184,12 +184,21 @@ unittest {
 
 }
 
+size_t toHash(string str) @system nothrow {
+	return typeid(str).getHash(&str);
+} //toHash for string
+
 /* quadratic probing hashmap implementation */
 struct HashMap(K, V) {
 
+	struct Entry {
+		V value;
+		alias value this;
+	} //Entry
+
 	private {
 
-		V[] array_;
+		Entry[] array_;
 		size_t capacity_;
 
 		IAllocator allocator_;
@@ -202,12 +211,13 @@ struct HashMap(K, V) {
 	this(IAllocator allocator, size_t initial_size) {
 
 		this.allocator_ = allocator;
-		this.array_ = allocator.makeArray!V(initial_size);
+		this.array_ = allocator.makeArray!Entry(initial_size);
+		this.capacity_ = initial_size;
 
 	} //this
 
 	~this() {
-		this.allocator.dispose(array_);
+		this.allocator_.dispose(array_);
 	} //~this
 
 	ref V opIndexAssign(V value, K key) {
@@ -219,20 +229,52 @@ struct HashMap(K, V) {
 	} //opIndex
 
 	ref V get(in K key) {
-		return array_[key.hashCode() % capacity_];
+		return array_[key.toHash() % capacity_];
 	} //get
 
-	void put(in K key, V value) {
-		array_[key.hashCode() % capacity_] = value;
+	ref V put(in K key, V value) { 
+		return array_[key.toHash() % capacity_] = Entry(value);
 	} //put
 
 } //HashMap
 
 version(unittest) {
 
+	struct HashThing {
+
+		string content;
+
+		size_t toHash() const @safe pure nothrow {
+			return content.hashOf();
+		}
+
+		bool opEquals(ref const typeof(this) s) @safe pure nothrow {
+			return content == s.content;
+		}
+
+	} //HashThing
+
 }
 
 unittest {
+
+	auto hash_map = HashMap!(HashThing, uint)(theAllocator, 32);
+
+	auto thing = HashThing("hello");
+	hash_map[thing] = 255;
+
+	assert(hash_map[thing] == 255);
+
+}
+
+unittest {
+
+	auto hash_map = HashMap!(string, uint)(theAllocator, 16);
+
+	enum str = "yes";
+	hash_map[str] = 128;
+
+	assert(hash_map[str] == 128);
 
 }
 
@@ -360,6 +402,7 @@ version (unittest) {
 unittest {
 
 	import std.range : iota;
+	import std.string : format;
 	import std.random : uniform;
 
 	enum runs = 500, size = 128;
