@@ -4,9 +4,8 @@ import blindfire.engine.memory : get_size;
 
 /* a set of datastructures which utilize the allocators built for the engine. */
 import std.experimental.allocator : allocatorObject, IAllocator, theAllocator, make, makeArray, expandArray, shrinkArray, dispose;
-import std.experimental.allocator.common;
-import std.experimental.allocator.mallocator : Mallocator;
 import std.experimental.allocator.building_blocks.free_list : FreeList;
+import std.experimental.allocator.mallocator : Mallocator;
 
 struct Array(T) {
 
@@ -328,6 +327,9 @@ struct SparseArray(T) {
 		size_t index;
 	} //Entry
 
+	@disable this();
+	@disable this(this);
+
 } //SparseArray
 
 version(unittest) {
@@ -375,7 +377,6 @@ unittest {
 	import std.string : format;
 
 	auto hash_map = HashMap!(string, uint)(theAllocator, 16);
-
 	enum str = "yes";
 
 	hash_map[str] = 128;
@@ -525,6 +526,9 @@ struct DHeap(T) {
 		IAllocator allocator;
 
 	}
+
+	@disable this();
+	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size) {
 
