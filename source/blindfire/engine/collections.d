@@ -222,20 +222,58 @@ struct HashMap(K, V) {
 		this.allocator_.dispose(array_);
 	} //~this
 
+	int opApply(int delegate(ref K, ref V) dg) {
+
+		int result = 0;
+
+		foreach (ref i, ref e; array_) {
+			if (e.key != K.init) {
+				result = dg(e.key, e.value);
+			}
+			if (result) break;
+		}
+
+		return result;
+
+	} //opApply
+
+	int opApply(int delegate(ref V) dg) {
+
+		int result = 0;
+
+		foreach (ref e; array_) {
+			if (e.key != K.init) {
+				result = dg(e.value);
+			}
+			if (result) break;
+		}
+
+		return result;
+
+	} //opApply
+
 	ref V opIndexAssign(V value, K key) {
 		return put(key, value);
 	} //opIndexAssign
 
-	ref V opIndex(in K key) {
+	V opIndex(in K key) {
 		return get(key);
 	} //opIndex
 
-	ref V get(in K key) {
+	V get(in K key) {
 
 		auto index = key.toHash() % capacity_;
+		int searched_elements = 0;
 
 		while (array_[index].key != key) {
+
+			if (searched_elements == used_capacity_) {
+				return V.init;
+			}
+
+			searched_elements++;
 			index++;
+
 		}
 
 		return array_[index];
@@ -326,6 +364,8 @@ unittest {
 
 unittest {
 
+	import std.string : format;
+
 	auto hash_map = HashMap!(string, uint)(theAllocator, 16);
 
 	enum str = "yes";
@@ -335,6 +375,14 @@ unittest {
 
 	hash_map[str] = 324;
 	assert(hash_map[str] == 324);
+	bool success = hash_map.remove(str);
+	assert(success, "failed to remove str?");
+	assert(hash_map[str] != 324, "entry was still 324?");
+	hash_map[str] = 500;
+
+	foreach (ref key, ref value; hash_map) {
+		assert(key == str && value == 500, format("key or value didn't match, %s : %s", key, value));
+	}
 
 }
 
