@@ -90,7 +90,7 @@ struct ObjectPool(T, uint ExpandSize = 10, Args...) {
 
 	static void release(Item* object) {
 
-		writefln("release called for: %s", object);
+		//writefln("release called for: %s", object);
 		object.active = false;
 
 	} //release
@@ -169,7 +169,7 @@ struct SmartPointer(T, alias FreeFunc) {
 		data.object = thing;
 		data.ref_count = 1;
 		data.weak_count = 0;
-		writefln("[SmartPointer] acquired object: %s", data.object);
+		//writefln("[SmartPointer] acquired object: %s", data.object);
 	} //this
 
 	this(ST)(Data!ST* other_data)
@@ -177,7 +177,7 @@ struct SmartPointer(T, alias FreeFunc) {
 		{
 			data = cast(Data!T*)other_data;
 			data.ref_count += 1;
-			writefln("[SmartPointer] copied object data explicitly: %s", data.object);
+			//writefln("[SmartPointer] copied object data explicitly: %s", data.object);
 		} //this(Data!T*)
 
 	this(S, F)(SmartPointer!(S, F) s)
@@ -185,13 +185,13 @@ struct SmartPointer(T, alias FreeFunc) {
 		{
 			data = s.data;
 			data.ref_count += 1;
-			writefln("[SmartPointer] converted from object: %s", s.data.object);
+			//writefln("[SmartPointer] converted from object: %s", s.data.object);
 		} //this(S, F)
 
 	this(this) {
 		data = data;
 		data.ref_count += 1;
-		writefln("[SmartPointer] copied object: %s", data.object);
+		//writefln("[SmartPointer] copied object: %s", data.object);
 	} //this(this)
 
 	auto conv(S, alias F = FreeFunc)() {
@@ -206,7 +206,7 @@ struct SmartPointer(T, alias FreeFunc) {
 		}
 		data = s.data;
 		data.ref_count += 1;
-		writefln("[SmartPointer] converted from object: %s", s.data.object);
+		//writefln("[SmartPointer] converted from object: %s", s.data.object);
 	} //opAssign(S, F)
 
 	auto get_weak() {
@@ -226,7 +226,7 @@ struct SmartPointer(T, alias FreeFunc) {
 	void do_destroy() {
 		data.ref_count -= 1;
 		if (data.ref_count == 0) {
-			writefln("[SmartPointer] destroyed object: %s", data.object);
+			//writefln("[SmartPointer] destroyed object: %s", data.object);
 			FreeFunc(data.object);
 			if (data.weak_count == 0) {
 				free(data);

@@ -202,8 +202,7 @@ struct NetworkPeerFSM {
 		ClientID id_counter;
 
 		/* state */
-		ScopedBuffer!(StackAllocator, void) data_buffer;
-		StackAllocator stack_allocator;
+		ScopedBuffer!ubyte data_buffer;
 
 		/* communication */
 		EventManager* net_evman;
@@ -296,7 +295,7 @@ struct NetworkPeer {
 
 	//from refactor, currently bound address
 	Address addr;
-	ScopedBuffer!(StackAllocator, void) data;
+	ScopedBuffer!ubyte data;
 	StackAllocator stack_allocator;
 	EventManager* net_evman;
 
@@ -649,11 +648,13 @@ struct NetworkPeer {
 
 	void initialize() {
 
+		import std.experimental.allocator : theAllocator;
+
 		bind_to_port(this.addr);
 		logger.log("Listening on - %s:%d", this.addr.toAddrString(), this.port);
 		network_stats.timer.start();
 
-		this.data = ScopedBuffer!(StackAllocator, void)(&stack_allocator, MAX_PACKET_SIZE);
+		this.data = ScopedBuffer!ubyte(theAllocator, MAX_PACKET_SIZE);
 
 	} //init
 

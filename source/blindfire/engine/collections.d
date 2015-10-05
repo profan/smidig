@@ -1,29 +1,66 @@
 module blindfire.engine.collections;
 
+import blindfire.engine.memory : get_size;
+
 /* a set of datastructures which utilize the allocators built for the engine. */
-import blindfire.engine.memory;
+import std.experimental.allocator;
+import std.experimental.allocator.common;
+import std.experimental.allocator.showcase;
+import std.experimental.allocator.mallocator : Mallocator;
+import std.experimental.allocator.building_blocks.free_list;
+
+alias AllocFunc = void[] delegate(size_t size) @system;
+alias ReAllocFunc = bool delegate(ref void[] block, size_t new_size) @system;
+alias DeallocFunc = bool delegate(void[] block) @system;
 
 struct Array(T) {
 
 	private {
 
-		T* array_;
+		T[] array_;
+		size_t capacity_;
+		size_t length_;
+
+		IAllocator allocator_;
 
 	}
 
-	this(size_t initial_size) {
+	this(IAllocator allocator, size_t initial_size) {
+
+		this.allocator_ = allocator;
+		this.array_ = allocator.makeArray!T(initial_size);
+		this.capacity_ = initial_size;
+		this.length_ = 0;
 
 	} //this
 
 	~this() {
-
+		free();
 	} //~this
+
+	void free() {
+		allocator_.dispose(array_);
+	} //free
+
+	@property size_t capacity() const {
+		return capacity_;
+	} //capacity
+
+	@property size_t length() const {
+		return length_;
+	} //length
 
 	void add(T item) {
 
+		if (length_ == capacity_) {
+			allocator_.expandArray!T(array_, length_);
+		}
+
+		array_[length_++] = item;
+
 	} //add
 
-	void get(size_t index) {
+	ref T get(size_t index) {
 
 		return array_[index];
 
@@ -35,23 +72,28 @@ struct Array(T) {
 
 } //Array
 
-struct DynamicArray {
+version(unittest) {
 
-	this (size_t initial_size) {
+	import std.stdio : writefln;
 
-	}
+}
 
-	~this() {
-		//free
-	}
+unittest {
 
-} //DynamicArray
+	auto free_list = FreeList!(Mallocator, 0, 128)();
 
-struct HashMap(Allocator, K, V) {
+	auto array = Array!long(allocatorObject(free_list), 64);
 
-	this (size_t initial_size, Allocator alloc) {
+	array.add(25);
+	assert(array.get(0) == 25, "didnt' equal 25, wtf?");
 
-	}
+}
+
+struct HashMap(K, V) {
+
+	this(IAllocator allocator, size_t initial_size) {
+
+	} //this
 
 	~this() {
 		//free
@@ -71,26 +113,37 @@ struct LinkedList {
 
 } //LinkedList
 
-struct DHeap {
+struct DHeap(E) {
 
-} //DHeap
+	this(IAllocator allocator, size_t initial_size) {
 
-struct ScopedBuffer(Allocator, T) {
-
-	T[] buffer;
-	Allocator* allocator;
-
-	alias buffer this;
-
-	@disable this(this);
-
-	this(StackAllocator* allocator, size_t elements) {
-		this.buffer = (cast(T*)allocator.alloc(elements * T.sizeof))[0..elements];
 	} //this
 
 	~this() {
-		if (buffer != buffer.init) {
-			this.allocator.dealloc(buffer);
+
+	} //~this
+
+} //DHeap
+
+struct ScopedBuffer(T) {
+
+	import blindfire.engine.memory : StackAllocator;
+
+	T[] buffer_;
+	IAllocator allocator_;
+
+	alias buffer_ this; //careful!
+
+	@disable this(this);
+
+	this(IAllocator allocator, size_t elements) {
+		this.buffer_ = allocator.makeArray!T(elements);
+		this.allocator_ = allocator;
+	} //this
+
+	~this() {
+		if (buffer_ != buffer_.init) {
+			this.allocator_.deallocate(buffer_);
 		}
 	} //~this
 
@@ -161,6 +214,7 @@ struct StaticArray(T, size_t size) {
 unittest {
 
 	import std.conv : to;
+	import std.string : format;
 
 	//StaticArray
 	const int size = 10;
