@@ -15,11 +15,9 @@ import blindfire.engine.defs :
 		ConnectionNotificationEvent, DisconnectedEvent, GameUpdateEvent, SetConnectionStatusEvent;
 
 import blindfire.engine.stream : InputStream, OutputStream;
-import blindfire.engine.collections : ScopedBuffer;
+import blindfire.engine.collections : ScopedBuffer, StaticArray;
 import blindfire.engine.memory : StackAllocator;
 import blindfire.engine.event : EventManager;
-
-import profan.collections : StaticArray;
 
 struct NetworkStats {
 

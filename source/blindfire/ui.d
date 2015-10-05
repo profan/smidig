@@ -6,13 +6,12 @@ import core.stdc.stdlib;
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl;
 
+import blindfire.engine.collections : StaticArray;
 import blindfire.engine.window;
 import blindfire.engine.util;
 import blindfire.engine.defs;
 import blindfire.engine.text;
 import blindfire.engine.gl;
-
-import profan.collections;
 
 enum LayoutType {
 	Linear,
@@ -50,7 +49,7 @@ struct UIState {
 	//encapsulate this, this is TEMPORARY
 	GLuint box_vao;
 	GLuint box_vbo;
-	Shader box_shader;
+	Shader box_shader = void;
 	uint box_num_vertices;
 
 	FontAtlas* font_atlas;

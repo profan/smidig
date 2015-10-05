@@ -417,6 +417,14 @@ unittest {
 //returns an aligned offset in bytes from current to allocate from.
 private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) nothrow @nogc pure {
 
+	import std.traits : classInstanceAlignment;
+	import std.conv : to;
+
+	static if (is(T == class)) {
+		enum class_alignment = classInstanceAlignment!T;
+		alignment = class_alignment;
+	}
+
 	ptrdiff_t diff = alignment - (cast(ptrdiff_t)current & (alignment-1));
 	return (diff == T.alignof) ? 0 : diff;
 

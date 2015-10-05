@@ -35,7 +35,7 @@ class ResourceManager {
 
 		import std.string : format;
 		assert (resources[identifier].type == T.stringof, format("tried to retrieve resource of type: %s with type %s", resources[identifier].type, T.stringof));
-		return cast(T*)(identifier in resources).resource;
+		return cast(T*)(resources[identifier].resource);
 
 	}
 

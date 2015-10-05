@@ -17,7 +17,7 @@ void render_string(string format, Args...)(ref FontAtlas atlas, Window* window, 
 	import std.string : sformat;
 
 	char[format.length*2] buf;
-	const char[] str = sformat(buf, format, args);
+	const char[] str = sformat(buf, format, args); //this allocates! wtf!!!!
 	atlas.render_text(window, str, offset.x, offset.y, 1, 1, 0xffffff);
 	offset.y += atlas.char_height*2;
 

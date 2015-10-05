@@ -630,7 +630,7 @@ struct Game {
 		load_sounds();
 
 		auto retrieved_sound = ResourceManager.get().get_resource!(SoundID)(Resource.PANIQ);
-		sound_system.play_sound(*retrieved_sound, 0.25f);
+		sound_system.play_sound(cast(SoundID)retrieved_sound, 0.25f);
 
 		//terminate network worker when run goes out of scope, because the game has ended
 		//scope(exit) { net_man.send_message(Command.TERMINATE); } TODO REVISIT

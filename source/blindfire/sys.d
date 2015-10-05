@@ -5,6 +5,7 @@ import std.math : cos, sin, PI, pow;
 import std.stdio : writefln;
 
 import blindfire.engine.window : Window;
+import blindfire.engine.math : rotate, squaredDistanceTo;
 import blindfire.engine.gl : Transform, Shader, Texture, Mesh;
 import blindfire.engine.defs : Vec2i, Vec2f, Vec3f, Mat3f;
 import blindfire.engine.net : NetVar, Command, ClientID;
@@ -14,21 +15,6 @@ import blindfire.engine.ecs;
 
 import blindfire.netgame;
 import blindfire.action;
-
-T rotate(T)(ref T vec, double radians) nothrow @nogc pure if (is(T : Vector) && T._N == 2) {
-
-	auto ca = cos(radians);
-	auto sa = sin(radians);
-	return T(ca*vec.x - sa*vec.y, sa*vec.x + ca*vec.y);
-
-} //rotate
-
-T._T squaredDistanceTo(T)(ref T vec, ref T other_vec) nothrow @nogc pure if (is(T : Vector) && T._N == 2) {
-
-	return ((vec.x - other_vec.x)*(vec.x - other_vec.x)) -
-		((vec.y - other_vec.y)*(vec.y-other_vec.y));
-
-} //squaredDistanceTo
 
 interface UpdateSystem : ComponentSystem!(0) {
 

@@ -4,7 +4,7 @@ import std.stdio : writefln;
 
 template hasMember(alias obj, string Member) {
 	enum hasMember = __traits(hasMember, typeof(obj), Member);
-}
+} //hasMember
 
 void reinitialize(ClassName, CtorArgs...)(ClassName obj, CtorArgs args) {
 

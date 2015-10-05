@@ -47,11 +47,6 @@ struct AttribLocation {
 
 }
 
-//some kind of line-based graph, for visual profiling of performance.
-struct Graph {
-
-} //Graph
-
 struct Cursor {
 
 	Mesh mesh;
@@ -70,7 +65,7 @@ struct Cursor {
 		this.mesh = Mesh(vertices);
 		this.shader = cursor_shader;
 
-	}
+	} //this
 
 	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
 		
@@ -83,7 +78,7 @@ struct Cursor {
 		texture.unbind();
 		shader.unbind();
 
-	}
+	} //draw
 
 } //Cursor
 
@@ -124,11 +119,11 @@ struct Text {
 		this.mesh = Mesh(vertices);
 		this.shader = text_shader;
 	
-	}
+	} //this
 
 	~this() {
 
-	}
+	} //~this
 
 	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
 
@@ -141,7 +136,7 @@ struct Text {
 		texture.unbind();
 		shader.unbind();
 
-	}
+	} //draw
 
 	mixin OpenGLError;
 
@@ -187,13 +182,13 @@ struct Mesh {
 		//UNBIND
 		glBindVertexArray(0); //unbind
 
-	}
+	} //this
 
 	~this() nothrow @nogc {
 
 		glDeleteVertexArrays(1, &vao);
 
-	}
+	} //~this
 
 	void draw() nothrow @nogc {
 
@@ -203,7 +198,7 @@ struct Mesh {
 
 		glBindVertexArray(0); //unbind
 
-	}
+	} //draw
 
 	mixin OpenGLError;
 
@@ -235,7 +230,7 @@ struct Texture {
 
 		this(image.pixels, image.w, image.h, GL_RGBA, GL_RGBA);
 
-	}
+	} //this
 
 	this(int width, int height, GLenum input_format, GLenum output_format, GLenum unpack_alignment) nothrow @nogc {
 
@@ -256,7 +251,7 @@ struct Texture {
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-	}
+	} //this
 
 	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) nothrow @nogc {
 
@@ -282,13 +277,14 @@ struct Texture {
 
 		//UNBIND
 		glBindTexture(GL_TEXTURE_2D, 0);
-	}
+
+	} //this
 
 	~this() nothrow @nogc {
 
 		glDeleteTextures(1, &texture);
 
-	}
+	} //~this
 
 	//since OpenGL lets you bind multiple textures at once, maximum(32?)
 	void bind(int unit) nothrow @nogc {
@@ -297,17 +293,18 @@ struct Texture {
 		glActiveTexture(GL_TEXTURE0 + unit); //since this is sequential, this works
 		glBindTexture(GL_TEXTURE_2D, texture);
 
-	}
+	} //bind
 
 	void unbind() nothrow @nogc {
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-	}
+	} //unbind
 
 	mixin OpenGLError;
 
 } //Texture
+
 struct Transform {
 
 	Vec2f position;
@@ -364,6 +361,9 @@ struct Shader {
 	//alias this for implicit conversions
 	alias program this;
 
+	@disable this();
+	@disable this(this);
+
 	this (in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
 
 		assert(uniforms.length <= bound_uniforms.length);
@@ -385,13 +385,13 @@ struct Shader {
 		glDeleteShader(vshader);
 		glDeleteShader(fshader);
 
-	}
+	} //this
 
 	~this() nothrow @nogc {
 
 		glDeleteProgram(program);
 
-	}
+	} //~this
 
 	void update(ref Mat4f projection, ref Transform transform) nothrow @nogc {
 
@@ -401,7 +401,7 @@ struct Shader {
 		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, model.ptr);
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
-	}
+	} //update
 
 	void update(ref Mat4f projection, ref Mat4f transform) nothrow @nogc {
 
@@ -409,25 +409,25 @@ struct Shader {
 		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, transform.ptr);
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
-	}
+	} //update
 
 	void update(ref Mat4f projection) nothrow @nogc {
 
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
-	}
+	} //update
 
 	void bind() nothrow @nogc {
 
 		glUseProgram(program);
 
-	}
+	} //bind
 
 	void unbind() nothrow @nogc {
 
 		glUseProgram(0);
 
-	}
+	} //unbind
 
 	mixin OpenGLError;
 

@@ -1,6 +1,6 @@
 #version 330
 
-attribute vec3 position;
+in vec3 position;
 
 uniform mat4 transform;
 uniform mat4 perspective;

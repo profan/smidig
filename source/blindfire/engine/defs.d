@@ -7,7 +7,7 @@ import blindfire.engine.ecs : EntityID;
 
 //Network related
 alias ClientID = ubyte;
-alias LocalEntityID = ulong;
+alias LocalEntityID = uint; //FIXME change back to ulong later
 
 //OpenGL maths related
 alias Vec2i = Vector!(int, 2);

@@ -17,7 +17,7 @@ enum dependency = "dependency";
 
 class EntityManager {
 
-	import profan.collections : StaticArray;
+	import blindfire.engine.collections : StaticArray;
 
 	enum MAX_SYSTEMS = 10;
 

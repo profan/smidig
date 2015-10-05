@@ -1,3 +1,0 @@
-[submodule "source/dlang-libs"]
-	path = source/profan
-	url = git@github.com:profan/dlang-libs.git
