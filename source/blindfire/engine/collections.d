@@ -46,25 +46,21 @@ struct Array(T) {
 		int result = 0;
 
 		foreach (i, ref e; this[]) {
-
 			result = dg(i, e);
 			if (result) break;
-
 		}
 
 		return result;
 
-	}
+	} //opApply
 
 	int opApply(int delegate(ref T) dg) {
 
 		int result = 0;
 
 		foreach (ref e; this[]) {
-
 			result = dg(e);
 			if (result) break;
-
 		}
 
 		return result;
@@ -112,9 +108,7 @@ struct Array(T) {
 	} //add
 
 	ref T get(size_t index) {
-
 		return array_[index];
-
 	} //get
 
 	void remove(size_t index) {
@@ -188,6 +182,14 @@ struct HashMap(K, V) {
 	~this() {
 		//free
 	}
+
+	ref V opIndexAssign(V value, K key) {
+		return put(key, value);
+	} //opIndexAssign
+
+	ref V opIndex(in K key) {
+		return get(key);
+	} //opIndex
 
 	ref V get(in K key) {
 		return array_[key.hashCode() % capacity_];
