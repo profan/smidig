@@ -3,11 +3,9 @@ module blindfire.engine.collections;
 import blindfire.engine.memory : get_size;
 
 /* a set of datastructures which utilize the allocators built for the engine. */
-import std.experimental.allocator;
-import std.experimental.allocator.common;
-import std.experimental.allocator.showcase;
+import std.experimental.allocator : allocatorObject, IAllocator, theAllocator, make, makeArray, expandArray, shrinkArray, dispose;
 import std.experimental.allocator.mallocator : Mallocator;
-import std.experimental.allocator.building_blocks.free_list;
+import std.experimental.allocator.building_blocks.free_list : FreeList;
 
 struct Array(T) {
 
