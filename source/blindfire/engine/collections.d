@@ -188,9 +188,11 @@ size_t toHash(string str) @system nothrow {
 } //toHash for string
 
 /* quadratic probing hashmap implementation */
+/* - currently linear probing though. */
 struct HashMap(K, V) {
 
 	struct Entry {
+		K key;
 		V value;
 		alias value this;
 	} //Entry
@@ -199,6 +201,7 @@ struct HashMap(K, V) {
 
 		Entry[] array_;
 		size_t capacity_;
+		size_t used_capacity_;
 
 		IAllocator allocator_;
 
@@ -228,11 +231,28 @@ struct HashMap(K, V) {
 	} //opIndex
 
 	ref V get(in K key) {
-		return array_[key.toHash() % capacity_];
+
+		auto index = key.toHash() % capacity_;
+
+		while (array_[index].key != key) {
+			index++;
+		}
+
+		return array_[index];
+
 	} //get
 
-	ref V put(in K key, V value) { 
-		return array_[key.toHash() % capacity_] = Entry(value);
+	ref V put(K key, V value) {
+
+		auto index = key.toHash() % capacity_;
+		auto default_value = K.init;
+
+		while (array_[index].key != key && array_[index].key != default_value) {
+			index++;
+		}
+
+		return array_[index] = Entry(key, value);
+
 	} //put
 
 } //HashMap
@@ -244,12 +264,20 @@ version(unittest) {
 		string content;
 
 		size_t toHash() const @safe pure nothrow {
-			return content.hashOf();
-		}
+			return content.hashOf() * 31;
+		} //toHash
+
+		bool opEquals(const typeof(this) s) @safe pure nothrow {
+			return content == s.content;
+		} //opEquals
 
 		bool opEquals(ref const typeof(this) s) @safe pure nothrow {
 			return content == s.content;
-		}
+		} //opEquals
+
+		bool opEquals(const typeof(this) s) const @safe pure nothrow {
+			return content == s.content;
+		} //opEquals
 
 	} //HashThing
 
@@ -400,7 +428,14 @@ unittest {
 
 }
 
-struct DHeap(E) {
+struct DHeap(T) {
+
+	private {
+
+		T[] array_;
+		IAllocator allocator;
+
+	}
 
 	this(IAllocator allocator, size_t initial_size) {
 
@@ -409,6 +444,14 @@ struct DHeap(E) {
 	~this() {
 
 	} //~this
+
+	void decreaseKey() {
+
+	} //decreaseKey
+
+	void deleteMin() {
+
+	} //deleteMin
 
 } //DHeap
 
