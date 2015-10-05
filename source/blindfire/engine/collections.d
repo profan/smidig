@@ -322,6 +322,14 @@ struct HashMap(K, V) {
 
 } //HashMap
 
+struct SparseArray(T) {
+
+	struct Entry {
+		size_t index;
+	} //Entry
+
+} //SparseArray
+
 version(unittest) {
 
 	struct HashThing {
