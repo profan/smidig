@@ -53,7 +53,8 @@ struct Array(T) {
 	void add(T item) {
 
 		if (length_ == capacity_) {
-			allocator_.expandArray!T(array_, length_);
+			bool success = allocator_.expandArray!T(array_, length_);
+			assert(success, "reallocation failed on add!");
 		}
 
 		array_[length_++] = item;
@@ -66,7 +67,11 @@ struct Array(T) {
 
 	} //get
 
-	void remove(T item) {
+	void remove(size_t index) {
+
+		// [0, 1, 2, 3, 4, 5] -- remove 3, need to shift 4 and 5 one position down
+		array_[index..length_-1] = array_[index+1..length_];
+		length_--;
 
 	} //remove
 
@@ -81,15 +86,26 @@ version(unittest) {
 unittest {
 
 	auto free_list = FreeList!(Mallocator, 0, 128)();
-
 	auto array = Array!long(allocatorObject(free_list), 64);
 
 	array.add(25);
 	assert(array.get(0) == 25, "didnt' equal 25, wtf?");
+	array.add(42);
+	array.remove(0);
+	assert(array.length == 1, "didn't equal 1, wut?");
+	assert(array.get(0) == 42, "didn't equal 42, wat?");
 
 }
 
+/* quadratic probing hashmap implementation */
 struct HashMap(K, V) {
+
+	private {
+
+		T[] array_;
+		size_t capacity_;
+
+	}
 
 	this(IAllocator allocator, size_t initial_size) {
 
