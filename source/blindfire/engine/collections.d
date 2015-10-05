@@ -259,6 +259,10 @@ struct HashMap(K, V) {
 		return get(key);
 	} //opIndex
 
+	void rehash() {
+
+	} //rehash
+
 	void expand(size_t extra_size) {
 
 		bool success = allocator_.expandArray!T(array_, extra_size);
