@@ -262,3 +262,27 @@ unittest {
 	assert(received_result == 25, format("received result wasn't %d, event not received properly?", 25));
 
 }
+
+unittest {
+	
+	import std.datetime : StopWatch;
+
+	auto evman = EventManager(EventMemory, TestEvent.max);
+	enum rounds = 100_000;
+
+	auto sw = StopWatch();
+
+	void receiveSomeEvent(ref FooEvent event) {}
+
+	evman.register!FooEvent(&receiveSomeEvent);
+
+	sw.start();
+	foreach (i; 0..rounds) {
+		evman.push!FooEvent(true);
+		tick!TestEventIdentifier(evman);
+	}
+	sw.stop();
+
+	writefln("[EventManager] took %s ms for %s events.", sw.peek().msecs, rounds);
+
+}
