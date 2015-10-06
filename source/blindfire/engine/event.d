@@ -35,12 +35,14 @@ struct EventManager {
 
 	this(size_t to_allocate, EventID number_types) {
 
-		this.allocator_ = theAllocator;
-		this.region_allocator_ = Region!Mallocator(EventMemory);
-		this.delegates = typeof(delegates)(allocator_, number_types+1);
-		this.events = typeof(events)(allocator_, number_types+1);
+		auto num_to_alloc = number_types + 1;
 
-		foreach (i; 0..number_types+1) {
+		this.allocator_ = theAllocator;
+		this.region_allocator_ = Region!Mallocator(to_allocate);
+		this.delegates = typeof(delegates)(allocator_, num_to_alloc);
+		this.events = typeof(events)(allocator_, num_to_alloc);
+
+		foreach (i; 0..num_to_alloc) {
 			delegates.add(allocator_.make!(Array!EventDelegate)(allocator_, 8));
 			events.add(allocator_.make!(Array!(EventCast*))(allocator_, 8));
 		}
