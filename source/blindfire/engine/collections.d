@@ -349,7 +349,7 @@ struct HashMap(K, V) {
 		int result = 0;
 
 		foreach (ref e; array_) {
-			if (e.key == State.Data) {
+			if (e.state == State.Data) {
 				result = dg(e.value);
 			}
 			if (result) break;
@@ -377,6 +377,7 @@ struct HashMap(K, V) {
 
 		this.free();
 		this = temp_map;
+		temp_map.allocator_ = null;
 
 	} //rehash
 
@@ -397,18 +398,18 @@ struct HashMap(K, V) {
 				fallback_index = index;
 			}
 
-			if (searched_elements == used_capacity_) {
-				found = false;
-				return fallback_index;
-			}
-
-			if (array_[index].key == key) {
+			if (array_[index].key == key && array_[index].state == State.Data) {
 				found = true;
 				return index; //found!
 			}
 
 			searched_elements++;
-			index++;
+			index = (index + 1) % capacity_;
+
+			if (searched_elements == capacity_) {
+				found = false;
+				return fallback_index;
+			}
 
 		}
 
@@ -436,7 +437,7 @@ struct HashMap(K, V) {
 		}
 
 		while (array_[index].key != key && array_[index].state != State.Free) {
-			index++;
+			index = (index + 1) % capacity_;
 		}
 
 		if (array_[index].state == State.Free) { //new key/value pair!
@@ -450,16 +451,17 @@ struct HashMap(K, V) {
 	bool remove(K key) {
 
 		auto index = key.toHash() % capacity_;
-		int searched_elements = 0;
+		uint searched_elements = 0;
 
 		while (array_[index].key != key) {
 
-			if (searched_elements == used_capacity_) {
+			if (searched_elements == capacity_) {
 				return false;
 			}
 
 			searched_elements++;
-			index++;
+			index = (index + 1) % capacity_;
+
 		}
 		
 		array_[index].key = K.init;
@@ -473,9 +475,8 @@ struct HashMap(K, V) {
 
 	void clear() {
 
-		foreach (ref k, ref v; this) {
-			k = K.init;
-			v = V.init;
+		foreach (i, ref e; array_[]) {
+			e = Entry.init;
 		}
 
 		used_capacity_ = 0;
