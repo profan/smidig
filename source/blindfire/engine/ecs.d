@@ -225,7 +225,7 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	protected {
 		EntityManager em;
-		HashMap!(EntityID, T) components = void;
+		HashMap!(EntityID, T) components;
 	}
 
 	public {

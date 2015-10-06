@@ -297,8 +297,6 @@ struct HashMap(K, V) {
 		return capacity_;
 	} //length
 
-	@disable this();
-
 	this(IAllocator allocator, size_t initial_size) {
 
 		this.allocator_ = allocator;
@@ -386,20 +384,21 @@ struct HashMap(K, V) {
 		return get_(key);
 	} //get
 
-	private int findIndex(in K key, bool found) nothrow {
+	private int findIndex(in K key, out bool found) nothrow {
 
 		auto index = key.toHash() % capacity_;
 		uint searched_elements = 0;
 		int fallback_index = -1;
-		found = false;
+		found = true;
 
-		while (array_[index].key != key) {
+		while (array_[index].key != key || array_[index].state == State.Free) {
 
 			if (array_[index].state == State.Free) {
 				fallback_index = index;
 			}
 
 			if (searched_elements == used_capacity_) {
+				found = false;
 				return fallback_index;
 			}
 
