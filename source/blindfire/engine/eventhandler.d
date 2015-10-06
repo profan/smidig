@@ -38,7 +38,7 @@ struct EventHandler {
 	KeyBind[] key_events;
 
 	//mutated by SDL2
-	const Uint8* pressed_keys;
+	Uint8* pressed_keys;
 
 	//mouse pos, last first, current second
 	int[2] last_x, last_y;
@@ -46,8 +46,13 @@ struct EventHandler {
 	@disable this();
 	@disable this(this);
 
-	this(in Uint8* keys) {
-		this.pressed_keys = keys;
+	this(Uint8* pressed_keys) {
+		this.pressed_keys = pressed_keys;
+	}
+
+	static auto construct() {
+		auto keys = SDL_GetKeyboardState(null);
+		return EventHandler(keys);
 	}
 
 	void add_listener(EventDelegate ed) {

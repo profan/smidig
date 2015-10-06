@@ -5,17 +5,24 @@ import core.stdc.stdio : printf;
 import derelict.openal.al;
 import derelict.alure.alure;
 
+import blindfire.engine.memory : IAllocator, theAllocator;
+import blindfire.engine.collections : Array, HashMap;
+
 alias SoundID = int;
 alias SoundVolume = float;
 alias SoundSource = ALuint;
 
 struct SoundSystem {
 
+	enum INITIAL_BUFFERS = 16;
+
+	IAllocator allocator_;
+
 	ALCdevice* device;
 	ALCcontext* context;
 
-	ALuint[SoundID] buffers;
-	ALuint[] sources;
+	HashMap!(SoundID, ALuint) buffers;
+	Array!ALuint sources;
 
 	SoundID current_sound_id;
 
@@ -23,7 +30,15 @@ struct SoundSystem {
 	@disable this(this);
 
 	this(size_t num_sources) {
-		this.sources.reserve(num_sources);
+		this.allocator_ = theAllocator;
+		this.buffers = typeof(buffers)(allocator_, INITIAL_BUFFERS);
+		this.sources = typeof(sources)(allocator_, num_sources);
+		this.sources.length = sources.capacity;
+	} //this
+
+	this(IAllocator allocator, size_t num_sources) {
+		this.buffers = typeof(buffers)(allocator, INITIAL_BUFFERS);
+		this.sources = typeof(sources)(allocator, num_sources);
 		this.sources.length = sources.capacity;
 	} //this
 
@@ -72,7 +87,7 @@ struct SoundSystem {
 	ALuint find_free_source() {
 
 		auto source = sources[0];
-		sources = sources[1..$];
+		sources.remove(0);
 
 		return source;
 

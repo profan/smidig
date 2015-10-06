@@ -49,6 +49,13 @@ struct Array(T) {
 		return length_;
 	} //length
 
+	@property size_t length(size_t new_length) { //no-op if length is too large
+		if (new_length <= length) {
+			length_ = new_length;
+		}
+		return length_;
+	} //length
+
 	int opApply(int delegate(ref uint i, ref T) dg) {
 
 		int result = 0;
@@ -160,7 +167,11 @@ struct Array(T) {
 			}
 		}
 
-	}
+	} //remove
+
+	@property T* ptr() {
+		return array_.ptr;
+	} //ptr
 
 } //Array
 
@@ -213,6 +224,10 @@ size_t toHash(string str) @system nothrow {
 	return typeid(str).getHash(&str);
 } //toHash for string
 
+size_t toHash(int k) @safe pure nothrow {
+	return k % 31;
+} //toHash
+
 /* quadratic probing hashmap implementation */
 /* - currently linear probing though. */
 struct HashMap(K, V) {
@@ -234,6 +249,22 @@ struct HashMap(K, V) {
 		IAllocator allocator_;
 
 	}
+
+	@property Array!(V) values() {
+
+		auto arr = Array!V(allocator_, used_capacity_);
+
+		foreach (ref k, ref v; this) {
+			arr.add(v);
+		}
+
+		return arr;
+
+	} //values
+
+	@property size_t length() const {
+		return capacity_;
+	} //length
 
 	@disable this();
 

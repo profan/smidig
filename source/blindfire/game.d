@@ -694,9 +694,11 @@ struct Game {
 
 struct NewGame {
 
+	import blindfire.engine.runtime;
+
 	private {
 
-
+		Engine engine_;
 
 	}
 
@@ -704,6 +706,8 @@ struct NewGame {
 	@disable this(this);
 
 	void initialize() {
+
+		this.engine_.initialize("Project Blindfire");
 
 	} //initialize
 

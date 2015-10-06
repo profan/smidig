@@ -65,6 +65,9 @@ struct Cursor {
 		this.mesh = Mesh(vertices);
 		this.shader = cursor_shader;
 
+		import derelict.sdl2.sdl : SDL_ShowCursor, SDL_DISABLE;
+		SDL_ShowCursor(SDL_DISABLE); //make sure to disable default cursor
+
 	} //this
 
 	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {

@@ -180,7 +180,7 @@ struct Console {
 
 	}
 
-	void draw(Window* window) nothrow @nogc {
+	void draw(Window* window) {
 
 		if (!enabled) { return; }
 

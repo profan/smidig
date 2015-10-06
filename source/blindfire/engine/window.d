@@ -110,8 +110,6 @@ struct Window {
 
 	}
 
-
-
 	void render_clear(int color) {
 
 		import blindfire.engine.gl : int_to_glcolor;

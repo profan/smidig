@@ -30,7 +30,7 @@ private struct CharacterInfo {
 
 struct FontAtlas {
 
-	import blindfire.engine.memory : StackAllocator;
+	import blindfire.engine.memory : Mallocator, Region, makeArray, dispose;
 
 	private {
 
@@ -40,21 +40,25 @@ struct FontAtlas {
 
 		CharacterInfo[96] characters;
 		int atlas_width, atlas_height;
-		StackAllocator stack_allocator;
+		int char_width_, char_height_;
+
+		Region!Mallocator region_allocator_;
 
 	}
 
-	public {
+	@property int char_width() const {
+		return char_width_;
+	}
 
-		const int char_width, char_height;
-
+	@property int char_height() const {
+		return char_height_;
 	}
 
 	@disable this(this);
 
 	this(in char[] font_name, uint font_size, Shader* text_shader) {
 
-		this.stack_allocator = StackAllocator(1024 * 8, "FontAllocator"); //todo nogc this
+		this.region_allocator_ = Region!Mallocator(1024 * 8);
 		this.shader = text_shader;
 
 		glGenVertexArrays(1, &vao);
@@ -126,8 +130,8 @@ struct FontAtlas {
 
 		}
 		
-		this.char_width = cast(typeof(char_width))face.glyph.metrics.width >> 6;
-		this.char_height = cast(typeof(char_height))face.glyph.metrics.height >> 6;
+		this.char_width_ = cast(typeof(char_width_))face.glyph.metrics.width >> 6;
+		this.char_height_ = cast(typeof(char_height_))face.glyph.metrics.height >> 6;
 		this.atlas.unbind();
 
 	}
@@ -137,7 +141,7 @@ struct FontAtlas {
 		glDeleteVertexArrays(1, &vao);
 	}
 
-	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) nothrow @nogc {
+	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
 		
 		struct Point {
 			GLfloat x;
@@ -146,9 +150,8 @@ struct FontAtlas {
 			GLfloat t;
 		} //Point
 
-		auto alloc_bytes = stack_allocator.alloc(Point.sizeof * text.length * 6);
-		Point[] coords = (cast(Point*)alloc_bytes.ptr)[0..text.length*6];
-		scope(exit) { stack_allocator.dealloc(alloc_bytes.length); } //pop it
+		Point[] coords = region_allocator_.makeArray!Point(text.length * 6);
+		scope(exit) { region_allocator_.deallocateAll(); } //pop it
 
 		int n = 0; //how many to draw?
 		foreach (ch; text) {
