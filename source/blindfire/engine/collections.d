@@ -118,8 +118,14 @@ struct Array(T) {
 	} //expand
 
 	void add(T item) {
-		this.add(item);
-	}
+
+		if (length_ == capacity_) {
+			this.expand(length_);
+		}
+
+		array_[length_++] = item;
+
+	} //add
 
 	void add(ref T item) {
 

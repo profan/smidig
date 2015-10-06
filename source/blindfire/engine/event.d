@@ -22,10 +22,7 @@ struct EventManager {
 
 	import std.stdio : writefln;
 	import blindfire.engine.collections : Array;
-	import blindfire.engine.memory : IAllocator, Mallocator, theAllocator, Region, make;
-
-	@disable this();
-	@disable this(this);
+	import blindfire.engine.memory : IAllocator, Mallocator, theAllocator, Region, make, dispose;
 
 	IAllocator allocator_;
 	Region!Mallocator region_allocator_;
@@ -33,19 +30,34 @@ struct EventManager {
 	Array!(Array!EventDelegate*) delegates;
 	Array!(Array!(EventCast*)*) events;
 
+	@disable this();
+	@disable this(this);
+
 	this(size_t to_allocate, EventID number_types) {
 
 		this.allocator_ = theAllocator;
-		this.region_allocator_ = Region!Mallocator();
+		this.region_allocator_ = Region!Mallocator(EventMemory);
 		this.delegates = typeof(delegates)(allocator_, number_types+1);
 		this.events = typeof(events)(allocator_, number_types+1);
 
-		foreach (i; 0..number_types) {
-			delegates[i] = allocator_.make!(Array!EventDelegate)(allocator_, 8);
-			events[i] = allocator_.make!(Array!(EventCast*))(allocator_, 8);
+		foreach (i; 0..number_types+1) {
+			delegates.add(allocator_.make!(Array!EventDelegate)(allocator_, 8));
+			events.add(allocator_.make!(Array!(EventCast*))(allocator_, 8));
 		}
 
 	} //this
+
+	~this() {
+
+		foreach (ref arr; delegates) {
+			this.allocator_.dispose(arr);
+		}
+
+		foreach (ref arr; events) {
+			this.allocator_.dispose(arr);
+		}
+
+	} //~this
 
 	void push(E, Args...)(Args args) {
 
@@ -56,11 +68,9 @@ struct EventManager {
 
 	void push(E)(ref E e) {
 
-		import orb.memory : get_size;
-
 		auto allocated_thing = region_allocator_.make(E)();
 		*allocated_space = e;
-		events[e.message_id] ~= cast(EventCast*)allocated_space;
+		(*events[e.message_id]) ~= cast(EventCast*)allocated_space;
 
 	} //push
 
