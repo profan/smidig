@@ -153,7 +153,7 @@ class EntityManager {
 
 	} //register
 
-	bool register(C)(EntityID entity, ref C component) {
+	bool register(C)(EntityID entity, C component) {
 
 		IComponentManager em = getManager!C();
 
@@ -167,8 +167,10 @@ class EntityManager {
 
 	bool register(C, Args...)(EntityID id, Args args) {
 
+		import std.algorithm : move;
+
 		auto component = C(args);
-		return register!C(id, component);
+		return register!C(id, move(component));
 
 	} //register
 

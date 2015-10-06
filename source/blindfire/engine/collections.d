@@ -105,8 +105,12 @@ struct Array(T) {
 		this.add(item);
 	} //opOpAssign
 
-	ref T opIndexAssign(ref T value, size_t index) @nogc nothrow {
-		return array_[index] = value;
+	void opIndexAssign(T value, size_t index) @nogc nothrow {
+		array_[index] = move(value);
+	}
+
+	void opIndexAssign(ref T value, size_t index) @nogc nothrow {
+		array_[index] = value;
 	} //opIndexAssign
 
 	ref T opIndex(size_t index) @nogc nothrow {
@@ -146,7 +150,7 @@ struct Array(T) {
 			this.expand(length_);
 		}
 
-		array_[length_++] = move(item);
+		array_[length_++] = item;
 
 	} //add
 
@@ -234,9 +238,17 @@ size_t toHash(int k) @nogc @safe pure nothrow {
 	return k % 31;
 } //toHash
 
+template isCopyable(T) {
+
+	enum isCopyable = __traits(compiles, function T(T t) { return t; });
+
+} //isCopyable
+
 /* quadratic probing hashmap implementation */
 /* - currently linear probing though. */
 struct HashMap(K, V) {
+
+	import std.algorithm : move;
 
 	enum LOAD_FACTOR_THRESHOLD = 0.75; // when used_capacity_ / capacity_ > threshold, expand!
 
@@ -256,17 +268,21 @@ struct HashMap(K, V) {
 
 	}
 
-	@property Array!(V) values() {
+	static if (isCopyable!V) { /* it only makes sense to define this if the thing is copyable */
 
-		auto arr = Array!V(allocator_, used_capacity_);
+		@property Array!V values() {
 
-		foreach (ref k, ref v; this) {
-			arr.add(v);
-		}
+			auto arr = Array!V(allocator_, used_capacity_);
 
-		return arr;
+			foreach (ref k, ref v; this) {
+				arr.add(v);
+			}
 
-	} //values
+			return arr;
+
+		} //values
+
+	}
 
 	@property size_t length() const {
 		return capacity_;
@@ -331,8 +347,8 @@ struct HashMap(K, V) {
 
 	} //opApply
 
-	ref V opIndexAssign(V value, K key) {
-		return put(key, value);
+	void opIndexAssign(V value, K key) {
+		put(key, move(value));
 	} //opIndexAssign
 
 	ref V opIndex(in K key) {
@@ -340,8 +356,6 @@ struct HashMap(K, V) {
 	} //opIndex
 
 	void rehash() {
-
-		import std.algorithm : move;
 
 		auto temp_map = HashMap!(K, V)(allocator_, capacity_ * 2);
 
@@ -383,7 +397,9 @@ struct HashMap(K, V) {
 
 	} //get
 
-	ref V put(ref K key, ref V value) {
+	void put(ref K key, V value) {
+
+		import std.algorithm : move;
 
 		auto index = key.toHash() % capacity_;
 		auto default_value = K.init;
@@ -400,7 +416,7 @@ struct HashMap(K, V) {
 			used_capacity_++;
 		}
 
-		return array_[index] = Entry(key, value);
+		array_[index] = Entry(key, move(value));
 
 	} //put
 
