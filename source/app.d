@@ -60,11 +60,13 @@ void main() {
 
 	initialize_systems();
 
-	auto event_handler = EventHandler(SDL_GetKeyboardState(null));
+	auto event_handler = EventHandler.construct();
+
 	auto window = Window("Project Blindfire", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 	auto game = Game(&window, &event_handler);
 
 	event_handler.add_listener(&window.handle_events);
+
 	game.run();
 
 }
