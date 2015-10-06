@@ -19,7 +19,7 @@ enum Resource {
 	BasicShader,
 	TextShader,
 	CursorTexture
-}
+} //Resource
 
 struct Engine {
 
@@ -81,8 +81,6 @@ struct Engine {
 		import blindfire.engine.gl : AttribLocation, Shader, Texture;
 
 		auto rm = ResourceManager.get();
-
-		/* shaders */
 
 		//basic shader
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
