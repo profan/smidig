@@ -30,12 +30,16 @@ struct Array(T) {
 	} //this
 
 	~this() {
-		free();
+		this.free();
 	} //~this
 
 	void free() {
-		allocator_.dispose(array_);
+		this.allocator_.dispose(array_);
 	} //free
+
+	void clear() { //note, does not run destructors!
+		this.length_ = 0;
+	} //clear
 
 	@property size_t capacity() const {
 		return capacity_;
@@ -84,6 +88,10 @@ struct Array(T) {
 		return array_[h..t];
 	} //opSlice
 
+	void opOpAssign(string op: "~")(T item) {
+		this.add(item);
+	} //opOpAssign
+
 	ref T opIndexAssign(T value, size_t index) {
 		return array_[index] = value;
 	} //opIndexAssign
@@ -110,6 +118,10 @@ struct Array(T) {
 	} //expand
 
 	void add(T item) {
+		this.add(item);
+	}
+
+	void add(ref T item) {
 
 		if (length_ == capacity_) {
 			this.expand(length_);
@@ -132,6 +144,17 @@ struct Array(T) {
 		length_--;
 
 	} //remove
+
+	void remove(ref T thing) {
+
+		foreach(ref i, ref e; this) {
+			if (e == thing) {
+				this.remove(i);
+				return;
+			}
+		}
+
+	}
 
 } //Array
 

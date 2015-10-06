@@ -21,27 +21,36 @@ struct Event(EventID ID, T) {
 struct EventManager {
 
 	import std.stdio : writefln;
-	import blindfire.engine.memory : LinearAllocator;
+	import blindfire.engine.collections : Array;
+	import blindfire.engine.memory : IAllocator, Mallocator, theAllocator, Region, make;
 
 	@disable this();
 	@disable this(this);
 
-	LinearAllocator allocator;
-	EventDelegate[][] delegates;
-	EventCast*[][] events;
+	IAllocator allocator_;
+	Region!Mallocator region_allocator_;
+
+	Array!(Array!EventDelegate*) delegates;
+	Array!(Array!(EventCast*)*) events;
 
 	this(size_t to_allocate, EventID number_types) {
 
-		this.allocator = LinearAllocator(to_allocate, "EventAllocator");
-		this.delegates = new EventDelegate[][](number_types+1, 0);
-		this.events = new EventCast*[][](number_types+1, 0);
+		this.allocator_ = theAllocator;
+		this.region_allocator_ = Region!Mallocator();
+		this.delegates = typeof(delegates)(allocator_, number_types+1);
+		this.events = typeof(events)(allocator_, number_types+1);
+
+		foreach (i; 0..number_types) {
+			delegates[i] = allocator_.make!(Array!EventDelegate)(allocator_, 8);
+			events[i] = allocator_.make!(Array!(EventCast*))(allocator_, 8);
+		}
 
 	} //this
 
 	void push(E, Args...)(Args args) {
 
-		auto thing = allocator.alloc!(E)(args);
-		events[thing.message_id] ~= cast(EventCast*)thing;
+		auto thing = region_allocator_.make!(E)(args);
+		(*events[thing.message_id]) ~= cast(EventCast*)thing;
 
 	} //push
 
@@ -49,7 +58,7 @@ struct EventManager {
 
 		import orb.memory : get_size;
 
-		auto allocated_space = cast(E*)allocator.alloc(get_size!E(), E.alignof);
+		auto allocated_thing = region_allocator_.make(E)();
 		*allocated_space = e;
 		events[e.message_id] ~= cast(EventCast*)allocated_space;
 
@@ -67,13 +76,12 @@ struct EventManager {
 
 	void register(E, ED)(ED dele) {
 		mixin checkValidity!(E, ED);
-		delegates[E.message_id] ~= cast(EventDelegate)dele;
+		(*delegates[E.message_id]) ~= cast(EventDelegate)dele;
 	} //register
 
 	void unregister(E, ED)(ED base_dele) { //CAUUTIIOON
-		import std.algorithm : remove;
 		auto dele = cast(EventDelegate) base_dele;
-		delegates[E.message_id][].remove!(e => e == dele);
+		delegates[E.message_id].remove(dele);
 	} //unregister
 
 	void test(T)(size_t rounds) {
@@ -110,7 +118,7 @@ struct EventManager {
 		mixin checkValidity!(E, ED);
 
 		auto event = E(args);
-		auto cur_dels = delegates[E.message_id];
+		auto cur_dels = (*delegates[E.message_id])[];
 
 		foreach (key, ref del_func; cur_dels) {
 			auto casted_func = cast(ED) del_func;
@@ -151,10 +159,10 @@ struct EventManager {
 			foreach (id, ref ev_list; ev_man.events) {
 
 				if (ev_list.length == 0) continue;
-				auto cur_dels = ev_man.delegates[id];
+				auto cur_dels = (*ev_man.delegates[id])[];
 
 				if (cur_dels.length > 0) {
-					foreach (ref ev; ev_list) {
+					foreach (ref ev; *ev_list) {
 						foreach (key, ref del_func; cur_dels) {
 							switch (id) {
 								mixin(doSwitchEntry!EvTypesMap());
@@ -164,11 +172,11 @@ struct EventManager {
 					}
 				}
 
-				ev_list.length = 0;
+				ev_list.clear();
 
 			}
 
-			ev_man.allocator.reset();
+			ev_man.region_allocator_.deallocateAll();
 
 		} //tick
 

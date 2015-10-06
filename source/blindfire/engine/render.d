@@ -4,13 +4,13 @@ import std.stdio : writefln;
 
 import blindfire.engine.defs : RenderSpriteEvent;
 
-interface Renderer {
+interface IRenderer {
 
 	void on_render_sprite_event(RenderSpriteEvent* event);
 
 } //Renderer
 
-class OpenGLRenderer : Renderer {
+class OpenGLRenderer : IRenderer {
 
 	void on_render_sprite_event(RenderSpriteEvent* event) {
 

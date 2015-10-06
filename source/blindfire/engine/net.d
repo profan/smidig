@@ -296,7 +296,6 @@ struct NetworkPeer {
 	//from refactor, currently bound address
 	Address addr;
 	ScopedBuffer!ubyte data = void;
-	StackAllocator stack_allocator;
 	EventManager* net_evman;
 
 	@disable this();
@@ -319,7 +318,6 @@ struct NetworkPeer {
 		net_state.state = &state;
 		net_state.client_uuid = &client_uuid;
 		this.logger = Logger!("NET", NetworkState)(&net_state);
-		this.stack_allocator = StackAllocator(MAX_PACKET_SIZE * 2, "NetAllocator");
 
 	}
 

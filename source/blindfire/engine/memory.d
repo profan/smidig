@@ -6,7 +6,9 @@ import core.stdc.stdlib : malloc, free;
 import std.stdio : writefln;
 import std.conv : emplace;
 
-public import std.experimental.allocator : IAllocator;
+public import std.experimental.allocator : IAllocator, theAllocator, make;
+public import std.experimental.allocator.building_blocks.region : Region;
+public import std.experimental.allocator.mallocator : Mallocator;
 
 private interface Instance {
 	void destroy_object();
