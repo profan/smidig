@@ -239,18 +239,16 @@ final class MatchState : GameState {
 		this.console = console;
 		this.debug_atlas = atlas;
 
-		this.entity_allocator = LinearAllocator(1024 * 32, "EntityAllocator"); //32 megabytes :D
+		import blindfire.engine.memory : theAllocator, make;
 
-		import blindfire.engine.memory : theAllocator;
-
-		alias ea = entity_allocator;
-		this.em = ea.alloc!(EntityManager)(theAllocator);
-		this.em.addSystem(ea.alloc!(TransformManager)());
-		this.em.addSystem(ea.alloc!(CollisionManager)(Vec2i(640, 480)));
-		this.em.addSystem(ea.alloc!(SpriteManager)());
-		this.em.addSystem(ea.alloc!(InputManager)());
-		this.em.addSystem(ea.alloc!(OrderManager)(&sbox, net_man.tm));
-		this.em.addSystem(ea.alloc!(SelectionManager)());
+		alias ac = theAllocator;
+		this.em = ac.make!EntityManager(theAllocator);
+		this.em.addSystem(ac.make!TransformManager());
+		this.em.addSystem(ac.make!(CollisionManager)(Vec2i(640, 480)));
+		this.em.addSystem(ac.make!(SpriteManager)());
+		this.em.addSystem(ac.make!(InputManager)());
+		this.em.addSystem(ac.make!(OrderManager)(&sbox, net_man.tm));
+		this.em.addSystem(ac.make!(SelectionManager)());
 
 		this.sbox = SelectionBox();
 
