@@ -61,7 +61,7 @@ struct Engine {
 
 		//initialize renderer and event manager for rendering events
 		this.renderer_evman_ = EventManager(EventMemory, DrawEventType.max);
-		this.renderer_ = new OpenGLRenderer();
+		this.renderer_ = allocator_.make!OpenGLRenderer();
 
 		//initialize network system and event manager for communication
 		this.network_evman_ = EventManager(EventMemory, NetEventType.max);

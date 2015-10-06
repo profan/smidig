@@ -17,21 +17,28 @@ enum dependency = "dependency";
 
 class EntityManager {
 
-	import blindfire.engine.collections : StaticArray;
+	import blindfire.engine.collections : Array, StaticArray;
+	import blindfire.engine.memory : IAllocator;
 
+	enum INITIAL_SYSTEMS = 10;
 	enum MAX_SYSTEMS = 10;
 
 	private {
-		LocalEntityID current_id = 0;
-		IComponentManager[] cms;
+
+		Array!IComponentManager cms;
 		StaticArray!(IComponentManager[], MAX_SYSTEMS) systems;
+
+		LocalEntityID current_id = 0;
+		IAllocator allocator_;
+
 	}
 
-	this() nothrow @nogc {
-
+	this(IAllocator allocator) {
+		this.allocator_ = allocator;
+		this.cms = typeof(cms)(allocator, INITIAL_SYSTEMS);
 	} //this
 
-	void addSystem(S)(S cm) nothrow {
+	void addSystem(S)(S cm) {
 
 		static assert(S.identifier >= 0 && S.identifier < MAX_SYSTEMS);
 
@@ -40,11 +47,11 @@ class EntityManager {
 		systems[id] ~= cm;
 		sort(systems[id]);
 		cms ~= cm;
-		sort(cms);
+		sort(cms[]);
 
 	} //addSystem
 
-	void addSystems(S...)(S systems) nothrow {
+	void addSystems(S...)(S systems) {
 
 		foreach (sys; systems) {
 			addSystem(sys);
@@ -64,7 +71,7 @@ class EntityManager {
 
 	} //createEntity
 
-	IComponentManager getManager(C = void)(ComponentName system = typeid(C).stringof) nothrow @nogc {
+	IComponentManager getManager(C = void)(ComponentName system = typeid(C).stringof) {
 
 		foreach (id, man; cms) {
 			if (man.name == system) return man;
@@ -74,7 +81,7 @@ class EntityManager {
 
 	} //getManager
 
-	C* getComponent(C)(EntityID entity) nothrow @nogc {
+	C* getComponent(C)(EntityID entity) {
 
 		return cast(C*)getManager!C().component(entity);
 
@@ -188,16 +195,16 @@ interface IComponentManager {
 
 	bool opEquals(ref const IComponentManager other) nothrow const @nogc;
 	int opCmp(ref const IComponentManager other) nothrow const @nogc;
-	void setManager(EntityManager em) nothrow @nogc;
+	void setManager(EntityManager em);
 
 	@property int priority() nothrow const @nogc;
 	@property ComponentName name() nothrow const @nogc;
 	bool register(EntityID entity);
 	bool register(EntityID entity, void[] component); //TODO make nothrow?
 	void unregister(EntityID entity);
-	void* component(EntityID entity) nothrow @nogc;
+	void* component(EntityID entity);
 	void* allComponents() nothrow @nogc;
-	void clear() nothrow;
+	void clear();
 
 } //IComponentManager
 
@@ -210,9 +217,13 @@ interface ComponentSystem(uint Identifier, Args...) : IComponentManager {
 
 abstract class ComponentManager(System, T, int P = int.max) : System {
 
+	enum INITIAL_SIZE = 32;
+
+	import blindfire.engine.collections : HashMap;
+
 	protected {
 		EntityManager em;
-		T[const EntityID] components;
+		HashMap!(EntityID, T) components = void;
 	}
 
 	public {
@@ -237,8 +248,9 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	} //opCmp
 
-	void setManager(EntityManager em) nothrow {
+	void setManager(EntityManager em) {
 
+		this.components = typeof(components)(em.allocator_, INITIAL_SIZE);
 		this.em = em;
 
 	} //setManager
@@ -250,7 +262,7 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 		assert(entity !in components, premade);
 
 		components[entity] = constructComponent(entity);
-		onInit(entity, &components[entity]);
+		onInit(entity, entity in components);
 		return true;
 
 	} //register(e)
@@ -272,12 +284,12 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	void unregister(EntityID entity) {
 
-		onDestroy(entity, &components[entity]);
+		onDestroy(entity, entity in components);
 		components.remove(entity);
 
 	} //unregister
 
-	void* component(EntityID entity) nothrow @nogc {
+	void* component(EntityID entity) nothrow {
 
 		return entity in components;
 
@@ -289,11 +301,9 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	} //allComponents
 
-	void clear() nothrow {
+	void clear() {
 
-		foreach(ref comp; components.keys) {
-			components.remove(comp);
-		}
+		components.clear();
 
 	} //clear
 
@@ -350,7 +360,7 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 	} //fetchDependencies
 
 	/* called when you simply specify the type to build, no actual struct passed. */
-	T constructComponent(EntityID entity) nothrow @nogc {
+	T constructComponent(EntityID entity) {
 		T c = T(); //this is positively horrifying, do something about this later.
 		mixin setUpDependencies!(T, c, entity);
 		linkUpDependencies();
@@ -363,7 +373,7 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 		import std.string : format;
 		import std.traits : moduleName;
 
-		void linkUpDependencies() nothrow @nogc {
+		void linkUpDependencies() {
 			mixin fetchDependencies!(T, c, entity);
 			mixin("import " ~ moduleName!T ~ ";");
 			mixin(fetchDependencies);
@@ -450,8 +460,10 @@ version(unittest) {
 
 	void create_prerequisites(ref EntityManager em, ref EntityID entity) {
 
+		import blindfire.engine.memory : theAllocator;
+
 		//create manager, system
-		em = new EntityManager();
+		em = new EntityManager(theAllocator);
 		em.addSystems(
 					  new SomeManager(),
 					  new OtherManager(),

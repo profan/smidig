@@ -7,6 +7,8 @@ import std.experimental.allocator.mallocator : Mallocator;
 
 struct Array(T) {
 
+	import std.algorithm : move;
+
 	private {
 
 		T[] array_;
@@ -37,26 +39,26 @@ struct Array(T) {
 		this.allocator_.dispose(array_);
 	} //free
 
-	void clear() { //note, does not run destructors!
+	void clear() nothrow @nogc { //note, does not run destructors!
 		this.length_ = 0;
 	} //clear
 
-	@property size_t capacity() const {
+	@property size_t capacity() const nothrow @nogc {
 		return capacity_;
 	} //capacity
 
-	@property size_t length() const {
+	@property size_t length() const nothrow @nogc {
 		return length_;
 	} //length
 
-	@property size_t length(size_t new_length) { //no-op if length is too large
+	@property size_t length(size_t new_length) nothrow @nogc { //no-op if length is too large
 		if (new_length <= capacity_) {
 			length_ = new_length;
 		}
 		return length_;
 	} //length
 
-	@property T* ptr() {
+	@property T* ptr() nothrow {
 		return array_.ptr;
 	} //ptr
 
@@ -86,16 +88,16 @@ struct Array(T) {
 
 	} //opApply
 
-	size_t opDollar(int dim)() const {
+	size_t opDollar(int dim)() const nothrow {
 		static assert(dim == 0); //TODO remember what this does..
 		return length_;
 	} //opDollar
 
-	T[] opSlice() {
+	T[] opSlice() nothrow {
 		return array_[0..length_];
 	} //opSlice
 
-	T[] opSlice(size_t h, size_t t) {
+	T[] opSlice(size_t h, size_t t) nothrow {
 		return array_[h..t];
 	} //opSlice
 
@@ -103,11 +105,11 @@ struct Array(T) {
 		this.add(item);
 	} //opOpAssign
 
-	ref T opIndexAssign(T value, size_t index) {
+	ref T opIndexAssign(ref T value, size_t index) @nogc nothrow {
 		return array_[index] = value;
 	} //opIndexAssign
 
-	ref T opIndex(size_t index) {
+	ref T opIndex(size_t index) @nogc nothrow {
 		return array_[index];
 	} //opIndex
 
@@ -134,7 +136,7 @@ struct Array(T) {
 			this.expand(length_);
 		}
 
-		array_[length_++] = item;
+		array_[length_++] = move(item);
 
 	} //add
 
@@ -144,7 +146,7 @@ struct Array(T) {
 			this.expand(length_);
 		}
 
-		array_[length_++] = item;
+		array_[length_++] = move(item);
 
 	} //add
 
@@ -155,13 +157,13 @@ struct Array(T) {
 	void remove(size_t index) {
 
 		import std.string : format;
-		import std.algorithm : copy;
+		import blindfire.engine.memory : memmove;
 
 		assert(index < length_,
 			   format("removal index was greater or equal to length of array, cap/len was: %d:%d", capacity_, length_));
 
 		// [0, 1, 2, 3, 4, 5] -- remove 3, need to shift 4 and 5 one position down
-		copy(array_[index+1..length_], array_[index..length_-1]);
+		memmove(array_[index+1..length_], array_[index..length_-1]);
 		length_--;
 
 	} //remove
@@ -228,7 +230,7 @@ size_t toHash(string str) @system nothrow {
 	return typeid(str).getHash(&str);
 } //toHash for string
 
-size_t toHash(int k) @safe pure nothrow {
+size_t toHash(int k) @nogc @safe pure nothrow {
 	return k % 31;
 } //toHash
 
@@ -292,6 +294,13 @@ struct HashMap(K, V) {
 		this.allocator_.dispose(array_);
 	} //free
 
+	V* opBinaryRight(string op = "in")(K key) nothrow {
+
+		auto v = get_(key);
+		return v;
+
+	}
+
 	int opApply(int delegate(ref K, ref V) dg) {
 
 		int result = 0;
@@ -326,16 +335,18 @@ struct HashMap(K, V) {
 		return put(key, value);
 	} //opIndexAssign
 
-	V opIndex(in K key) {
+	ref V opIndex(in K key) {
 		return get(key);
 	} //opIndex
 
 	void rehash() {
 
+		import std.algorithm : move;
+
 		auto temp_map = HashMap!(K, V)(allocator_, capacity_ * 2);
 
 		foreach (ref k, ref v; this) {
-			temp_map[k] = v;
+			temp_map[k] = move(v);
 		}
 
 		this.free();
@@ -343,15 +354,24 @@ struct HashMap(K, V) {
 
 	} //rehash
 
-	V get(in K key) {
+	ref V get(in K key) nothrow {
+		return *get_(key);
+	} //get
 
+	private V* get_(in K key) nothrow {
+
+		V* found_value = null;
 		auto index = key.toHash() % capacity_;
 		int searched_elements = 0;
 
 		while (array_[index].key != key) {
 
 			if (searched_elements == used_capacity_) {
-				return V.init;
+				return found_value;
+			}
+
+			if (array_[index].key == key) {
+				found_value = &array_[index].value;
 			}
 
 			searched_elements++;
@@ -359,11 +379,11 @@ struct HashMap(K, V) {
 
 		}
 
-		return array_[index];
+		return found_value;
 
 	} //get
 
-	ref V put(K key, V value) {
+	ref V put(ref K key, ref V value) {
 
 		auto index = key.toHash() % capacity_;
 		auto default_value = K.init;
@@ -406,6 +426,17 @@ struct HashMap(K, V) {
 		return true;
 		
 	} //remove
+
+	void clear() {
+
+		foreach (ref k, ref v; this) {
+			k = K.init;
+			v = V.init;
+		}
+
+		used_capacity_ = 0;
+
+	} //clear
 
 } //HashMap
 

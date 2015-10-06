@@ -241,8 +241,10 @@ final class MatchState : GameState {
 
 		this.entity_allocator = LinearAllocator(1024 * 32, "EntityAllocator"); //32 megabytes :D
 
+		import blindfire.engine.memory : theAllocator;
+
 		alias ea = entity_allocator;
-		this.em = ea.alloc!(EntityManager)();
+		this.em = ea.alloc!(EntityManager)(theAllocator);
 		this.em.addSystem(ea.alloc!(TransformManager)());
 		this.em.addSystem(ea.alloc!(CollisionManager)(Vec2i(640, 480)));
 		this.em.addSystem(ea.alloc!(SpriteManager)());
