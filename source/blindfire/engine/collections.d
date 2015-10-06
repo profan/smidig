@@ -50,11 +50,15 @@ struct Array(T) {
 	} //length
 
 	@property size_t length(size_t new_length) { //no-op if length is too large
-		if (new_length <= length) {
+		if (new_length <= capacity_) {
 			length_ = new_length;
 		}
 		return length_;
 	} //length
+
+	@property T* ptr() {
+		return array_.ptr;
+	} //ptr
 
 	int opApply(int delegate(ref uint i, ref T) dg) {
 
@@ -150,10 +154,14 @@ struct Array(T) {
 
 	void remove(size_t index) {
 
-		assert(index < length_, "removal index was greater or equal to length of array!");
+		import std.string : format;
+		import std.algorithm : copy;
+
+		assert(index < length_,
+			   format("removal index was greater or equal to length of array, cap/len was: %d:%d", capacity_, length_));
 
 		// [0, 1, 2, 3, 4, 5] -- remove 3, need to shift 4 and 5 one position down
-		array_[index..length_-1] = array_[index+1..length_];
+		copy(array_[index+1..length_], array_[index..length_-1]);
 		length_--;
 
 	} //remove
@@ -168,10 +176,6 @@ struct Array(T) {
 		}
 
 	} //remove
-
-	@property T* ptr() {
-		return array_.ptr;
-	} //ptr
 
 } //Array
 
@@ -647,7 +651,6 @@ struct ScopedBuffer(T) {
 	T[] buffer_;
 	alias buffer_ this; //careful!
 
-	@disable this();
 	@disable this(this);
 
 	this(IAllocator allocator, size_t elements) {
@@ -656,7 +659,9 @@ struct ScopedBuffer(T) {
 	} //this
 
 	~this() {
-		this.allocator_.dispose(buffer_);
+		if (buffer_ != typeof(buffer_).init) {
+			this.allocator_.dispose(buffer_);
+		}
 	} //~this
 
 } //ScopedBuffer
