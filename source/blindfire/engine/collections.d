@@ -485,17 +485,6 @@ struct HashMap(K, V) {
 
 } //HashMap
 
-struct SparseArray(T) {
-
-	struct Entry {
-		size_t index;
-	} //Entry
-
-	@disable this();
-	@disable this(this);
-
-} //SparseArray
-
 version(unittest) {
 
 	struct HashThing {
@@ -530,9 +519,11 @@ unittest {
 
 	hash_map[thing] = 255;
 	assert(hash_map[thing] == 255);
+	assert(thing in hash_map);
 
 	hash_map[thing] = 128;
 	assert(hash_map[thing] == 128);
+	assert(thing in hash_map);
 
 }
 
@@ -543,21 +534,44 @@ unittest {
 	auto hash_map = HashMap!(string, uint)(theAllocator, 16);
 	enum str = "yes";
 
-	hash_map[str] = 128;
-	assert(hash_map[str] == 128);
+	{
 
-	hash_map[str] = 324;
-	assert(hash_map[str] == 324);
-	bool success = hash_map.remove(str);
-	assert(success, "failed to remove str?");
-	assert(hash_map[str] != 324, "entry was still 324?");
-	hash_map[str] = 500;
+		hash_map[str] = 128;
+		assert(hash_map[str] == 128);
+		auto p = str in hash_map;
+		assert(p && *p == 128);
+
+	}
+
+	{
+
+		hash_map[str] = 324;
+		assert(hash_map[str] == 324);
+		bool success = hash_map.remove(str);
+		assert(success, "failed to remove str?");
+		assert(hash_map[str] != 324, "entry was still 324?");
+		hash_map[str] = 500;
+		auto p = str in hash_map;
+		assert(p && *p == 500);
+
+	}
 
 	foreach (ref key, ref value; hash_map) {
 		assert(key == str && value == 500, format("key or value didn't match, %s : %s", key, value));
 	}
 
 }
+
+struct SparseArray(T) {
+
+	struct Entry {
+		size_t index;
+	} //Entry
+
+	@disable this();
+	@disable this(this);
+
+} //SparseArray
 
 struct LinkedList(T) {
 
