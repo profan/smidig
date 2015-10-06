@@ -32,7 +32,9 @@ struct Array(T) {
 	} //this
 
 	~this() {
-		this.free();
+		if (allocator_ !is null) {
+			this.free();
+		}
 	} //~this
 
 	void free() {
@@ -253,9 +255,15 @@ struct HashMap(K, V) {
 
 	enum LOAD_FACTOR_THRESHOLD = 0.75; // when used_capacity_ / capacity_ > threshold, expand!
 
+	enum State {
+		Free,
+		Data
+	} //State
+
 	struct Entry {
 		K key;
 		V value;
+		State state = State.Free;
 		alias value this;
 	} //Entry
 
@@ -299,12 +307,10 @@ struct HashMap(K, V) {
 
 	} //this
 
-	this(this) {
-
-	} //this(this)
-
 	~this() {
-		this.free();
+		if (allocator_ !is null) {
+			this.free();
+		}
 	} //~this
 
 	void free() {
@@ -314,10 +320,11 @@ struct HashMap(K, V) {
 	V* opBinaryRight(string op = "in")(K key) nothrow {
 
 		bool found = false;
-		auto ptr = &get_(key, found);
+		auto index = findIndex(key, found);
+		V* ptr = null;
 
-		if (!found) {
-			ptr = null;
+		if (found) {
+			ptr = &array_[index].value;
 		}
 
 		return ptr;
@@ -329,7 +336,7 @@ struct HashMap(K, V) {
 		int result = 0;
 
 		foreach (ref i, ref e; array_) {
-			if (e.key != K.init) {
+			if (e.state == State.Data) {
 				result = dg(e.key, e.value);
 			}
 			if (result) break;
@@ -344,7 +351,7 @@ struct HashMap(K, V) {
 		int result = 0;
 
 		foreach (ref e; array_) {
-			if (e.key != K.init) {
+			if (e.key == State.Data) {
 				result = dg(e.value);
 			}
 			if (result) break;
@@ -376,25 +383,29 @@ struct HashMap(K, V) {
 	} //rehash
 
 	ref V get(in K key) nothrow {
-		bool found;
-		return get_(key, found);
+		return get_(key);
 	} //get
 
-	private ref V get_(in K key, out bool found) nothrow {
+	private int findIndex(in K key, bool found) nothrow {
 
 		auto index = key.toHash() % capacity_;
-		int searched_elements = 0;
+		uint searched_elements = 0;
+		int fallback_index = -1;
 		found = false;
 
 		while (array_[index].key != key) {
 
+			if (array_[index].state == State.Free) {
+				fallback_index = index;
+			}
+
 			if (searched_elements == used_capacity_) {
-				return array_[index].value;
+				return fallback_index;
 			}
 
 			if (array_[index].key == key) {
 				found = true;
-				return array_[index].value;
+				return index; //found!
 			}
 
 			searched_elements++;
@@ -402,6 +413,14 @@ struct HashMap(K, V) {
 
 		}
 
+		return index;
+
+	} //findIndex
+
+	private ref V get_(in K key) nothrow {
+
+		bool found = false;
+		auto index = findIndex(key, found);
 		return array_[index].value;
 
 	} //get
@@ -417,15 +436,15 @@ struct HashMap(K, V) {
 			this.rehash();
 		}
 
-		while (array_[index].key != key && array_[index].key != default_value) {
+		while (array_[index].key != key && array_[index].state != State.Free) {
 			index++;
 		}
 
-		if (array_[index].key == default_value) { //new key/value pair!
+		if (array_[index].state == State.Free) { //new key/value pair!
 			used_capacity_++;
 		}
 
-		array_[index] = Entry(key, move(value));
+		array_[index] = Entry(key, move(value), State.Data);
 
 	} //put
 
@@ -446,6 +465,7 @@ struct HashMap(K, V) {
 		
 		array_[index].key = K.init;
 		array_[index].value = V.init;
+		array_[index].state = State.Free;
 		used_capacity_--;
 
 		return true;

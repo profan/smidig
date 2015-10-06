@@ -78,7 +78,7 @@ struct SoundSystem {
 
 	void expand_sources() {
 
-		sources.reserve(16); //add 16 to sources capacity
+		sources.reserve(sources.length + 16); //add 16 to sources capacity
 		sources.length = sources.capacity;
 		alGenSources(sources.capacity, sources.ptr);
 
