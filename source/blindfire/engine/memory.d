@@ -10,10 +10,10 @@ public import std.experimental.allocator : IAllocator, theAllocator, make, makeA
 public import std.experimental.allocator.building_blocks.region : Region;
 public import std.experimental.allocator.mallocator : Mallocator;
 
-void memmove(T)(T[] a1, T[] a2) {
+void memmove(T)(T[] src, T[] target) {
 
 	import core.stdc.string : memmove;
-	memmove(a1.ptr, a2.ptr, a1.length * T.sizeof);
+	memmove(target.ptr, src.ptr, src.length * T.sizeof);
 	
 }
 

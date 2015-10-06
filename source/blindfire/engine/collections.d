@@ -140,7 +140,7 @@ struct Array(T) {
 			this.expand(length_);
 		}
 
-		array_[length_++] = move(item);
+		array_[length_++] = item;
 
 	} //add
 
@@ -161,6 +161,7 @@ struct Array(T) {
 	void remove(size_t index) {
 
 		import std.string : format;
+		import std.algorithm : copy, moveAll;
 		import blindfire.engine.memory : memmove;
 
 		assert(index < length_,
@@ -312,8 +313,14 @@ struct HashMap(K, V) {
 
 	V* opBinaryRight(string op = "in")(K key) nothrow {
 
-		auto v = get_(key);
-		return v;
+		bool found = false;
+		auto ptr = &get_(key, found);
+
+		if (!found) {
+			ptr = null;
+		}
+
+		return ptr;
 
 	}
 
@@ -369,23 +376,25 @@ struct HashMap(K, V) {
 	} //rehash
 
 	ref V get(in K key) nothrow {
-		return *get_(key);
+		bool found;
+		return get_(key, found);
 	} //get
 
-	private V* get_(in K key) nothrow {
+	private ref V get_(in K key, out bool found) nothrow {
 
-		V* found_value = null;
 		auto index = key.toHash() % capacity_;
 		int searched_elements = 0;
+		found = false;
 
 		while (array_[index].key != key) {
 
 			if (searched_elements == used_capacity_) {
-				return found_value;
+				return array_[index].value;
 			}
 
 			if (array_[index].key == key) {
-				found_value = &array_[index].value;
+				found = true;
+				return array_[index].value;
 			}
 
 			searched_elements++;
@@ -393,7 +402,7 @@ struct HashMap(K, V) {
 
 		}
 
-		return found_value;
+		return array_[index].value;
 
 	} //get
 
