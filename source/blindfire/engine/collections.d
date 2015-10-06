@@ -562,6 +562,21 @@ unittest {
 
 }
 
+unittest { //test expansion
+
+	enum initial_size = 4, rounds = 8;
+	auto hash_map = HashMap!(uint, bool)(theAllocator, 4);
+
+	foreach (i; 0..rounds) {
+		hash_map[i] = true;
+	}
+
+	foreach (i; 0..rounds) {
+		assert(hash_map[i]);
+	}
+
+}
+
 struct SparseArray(T) {
 
 	struct Entry {
