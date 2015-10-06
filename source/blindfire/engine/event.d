@@ -256,6 +256,28 @@ unittest {
 	}
 	sw.stop();
 
-	writefln("[EventManager] took %s ms for %s events.", sw.peek().msecs, rounds);
+	writefln("[EventManager] took %s ms to push/tick %s events.", sw.peek().msecs, rounds);
+
+}
+
+unittest {
+
+	import std.datetime : StopWatch;
+	auto evman = EventManager(EventMemory, TestEvent.max);
+	enum rounds = 100_000;
+
+	auto sw = StopWatch();
+
+	void receiveSomeEvent(ref FooEvent event) {}
+
+	evman.register!FooEvent(&receiveSomeEvent);
+
+	sw.start();
+	foreach (i; 0..rounds) {
+		evman.fire!FooEvent(true);
+	}
+	sw.stop();
+
+	writefln("[EventManager] took %s ms to fire %s events.", sw.peek().msecs, rounds);
 
 }
