@@ -94,34 +94,6 @@ struct EventManager {
 		delegates[E.message_id].remove(dele);
 	} //unregister
 
-	void test(T)(size_t rounds) {
-
-		import std.range : iota;
-		import std.datetime : StopWatch;
-
-		alias TestEvent = Event!(0, uint);
-
-		void receiveSomeEvent(EventCast* event) {
-			auto ev = event.extract!TestEvent;
-		}
-
-		auto sw = StopWatch();
-
-		register!TestEvent(&receiveSomeEvent);
-
-		sw.start();
-		foreach (i; iota(0, rounds)) {
-			push!TestEvent(10);
-			tick!T();
-		}
-		sw.stop();
-
-		unregister!TestEvent(&receiveSomeEvent);
-
-		writefln("Sending and Receiving %s events took: %s msecs", rounds, sw.peek.msecs);
-
-	} //test
-
 	void fire(E, Args...)(Args args) {
 
 		alias ED = void delegate(ref E);
@@ -264,9 +236,8 @@ unittest {
 }
 
 unittest {
-	
-	import std.datetime : StopWatch;
 
+	import std.datetime : StopWatch;
 	auto evman = EventManager(EventMemory, TestEvent.max);
 	enum rounds = 100_000;
 
