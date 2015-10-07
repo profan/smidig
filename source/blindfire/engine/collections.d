@@ -64,7 +64,7 @@ struct Array(T) {
 		return array_.ptr;
 	} //ptr
 
-	int opApply(int delegate(ref uint i, ref T) dg) {
+	int opApply(int delegate(ref size_t i, ref T) dg) {
 
 		int result = 0;
 
@@ -385,11 +385,11 @@ struct HashMap(K, V) {
 		return get_(key);
 	} //get
 
-	private int findIndex(in K key, out bool found) nothrow {
+	private size_t findIndex(in K key, out bool found) nothrow {
 
 		auto index = key.toHash() % capacity_;
 		uint searched_elements = 0;
-		int fallback_index = -1;
+		size_t fallback_index = -1;
 		found = true;
 
 		while (array_[index].key != key || array_[index].state == State.Free) {
@@ -564,7 +564,7 @@ unittest {
 
 unittest { //test expansion
 
-	enum initial_size = 4, rounds = 8;
+	enum initial_size = 4, rounds = 32;
 	auto hash_map = HashMap!(uint, bool)(theAllocator, 4);
 
 	foreach (i; 0..rounds) {
@@ -764,7 +764,7 @@ struct ScopedBuffer(T) {
 	} //this
 
 	~this() {
-		if (buffer_ != typeof(buffer_).init) {
+		if (allocator_ !is null) {
 			this.allocator_.dispose(buffer_);
 		}
 	} //~this

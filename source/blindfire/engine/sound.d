@@ -48,14 +48,14 @@ struct SoundSystem {
 		this.context = alcCreateContext(device, null);
 		alcMakeContextCurrent(context);
 
-		alGenSources(sources.capacity, sources.ptr);
+		alGenSources(cast(int)sources.capacity, sources.ptr);
 
 	} //initialize
 
 	~this() {
 
-		alDeleteSources(sources.length, sources.ptr);
-		alDeleteBuffers(buffers.length, buffers.values.ptr);
+		alDeleteSources(cast(int)sources.length, sources.ptr);
+		alDeleteBuffers(cast(int)buffers.length, buffers.values.ptr);
 		alcMakeContextCurrent(null);
 		alcDestroyContext(context);
 		alcCloseDevice(device);
@@ -80,7 +80,7 @@ struct SoundSystem {
 
 		sources.reserve(sources.length + 16); //add 16 to sources capacity
 		sources.length = sources.capacity;
-		alGenSources(sources.capacity, sources.ptr);
+		alGenSources(cast(int)sources.capacity, sources.ptr);
 
 	} //expand_sources
 
