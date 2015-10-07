@@ -15,7 +15,7 @@ void memmove(T)(T[] src, T[] target) {
 	import core.stdc.string : memmove;
 	memmove(target.ptr, src.ptr, src.length * T.sizeof);
 	
-}
+} //memmove
 
 private interface Instance {
 	void destroy_object();

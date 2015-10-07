@@ -344,6 +344,9 @@ struct HashMap(K, V) {
 		this.used_capacity_ = move(other.used_capacity_);
 		this.allocator_ = move(other.allocator_);
 
+		other.allocator_ = null;
+		assert(other.allocator_ is null);
+
 	} //move
 
 	V* opBinaryRight(string op = "in")(K key) nothrow {
