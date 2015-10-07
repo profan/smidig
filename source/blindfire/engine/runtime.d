@@ -34,7 +34,7 @@ struct Engine {
 	import blindfire.engine.memory : IAllocator, theAllocator, make;
 	IAllocator allocator_;
 
-	//common state
+	//common subsystems
 	Window window_ = void;
 	EventHandler input_handler_ = void;
 
@@ -147,8 +147,6 @@ struct Engine {
 	}
 
 	void run() {
-
-		import std.stdio : writefln;
 
 		while (window_.is_alive) {
 

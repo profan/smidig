@@ -14,9 +14,11 @@ alias Mat4f = Matrix!(float, 4, 4);
 
 struct Window {
 
+	import blindfire.engine.collections : String;
+
 	private {
 		bool alive;
-		char* c_title; //keep this here so the char* for toStringz doesn't point to nowhere!
+		String title_;
 		SDL_Window* window;
 		SDL_GLContext glcontext;
 
@@ -28,10 +30,10 @@ struct Window {
 	//gl related data
 	Mat4f view_projection;
 
-	@property const(char*) title() const { return c_title; }
+	@property const(char*) title() const { return title_.c_str; }
 	@property void title(in char[] new_title) {
-		c_title = toUTFz!(char*)(new_title);
-		SDL_SetWindowTitle(window, c_title);
+		this.title_ = String(new_title);
+		SDL_SetWindowTitle(window, title_.c_str);
 	}
 
 	@property uint width() const nothrow @nogc { return window_width; }
@@ -52,14 +54,14 @@ struct Window {
 
 	this(in char[] title, uint width, uint height) {
 
-		this.c_title = toUTFz!(char*)(title);
+		this.title_ = String(title);
 
 		uint flags = 0;
 		flags |= SDL_WINDOW_OPENGL;
 		flags |= SDL_WINDOW_RESIZABLE;
 
 		SDL_Window* new_window = SDL_CreateWindow(
-				c_title,
+				title_.c_str,
 				SDL_WINDOWPOS_UNDEFINED,
 				SDL_WINDOWPOS_UNDEFINED,
 				width, height,

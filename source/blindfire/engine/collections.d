@@ -60,6 +60,14 @@ struct Array(T) {
 		return length_;
 	} //length
 
+	@property T[] data() nothrow @nogc {
+		return array_;
+	}
+
+	@property const(T*) ptr() const nothrow {
+		return array_.ptr;
+	} //ptr
+
 	@property T* ptr() nothrow {
 		return array_.ptr;
 	} //ptr
@@ -769,6 +777,43 @@ version (unittest) {
 unittest {
 
 }
+
+/* our string type, it has a length and a null terminator. */
+struct String {
+
+	private {
+
+		IAllocator allocator_;
+		Array!char array_ = void;
+
+	}
+
+	@disable this(this);
+
+	this(in char[] input) {
+
+		this.allocator_ = theAllocator;
+		this.array_ = typeof(array_)(allocator_, input.length+1);
+		this.array_.length = input.length;
+
+		this.array_[][0..input.length] = input[];
+		this.array_[$] = '\0';
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+	const(char*) c_str() const {
+		return array_.ptr;
+	} //c_string
+
+	string d_string() {
+		return cast(string)array_.data[0..array_.length];
+	} //d_string
+
+} //RCString
 
 struct ScopedBuffer(T) {
 
