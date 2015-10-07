@@ -699,7 +699,7 @@ struct NewGame {
 
 	enum GameResource : ResourceID {
 		Click = Resource.max
-	}
+	} //GameResource
 
 	private {
 
@@ -748,15 +748,19 @@ struct NewGame {
 
 	void draw() {
 
+		import blindfire.engine.dbg : render_string;
+
 		auto free_sources = engine_.sound_system_.free_sources;
 
 		auto offset = Vec2i(16, 48);
-		engine_.debug_atlas_.render_string!("free sound sources: %d")(&engine_.window_, offset, free_sources);
+		engine_.debug_context_.render_string!("free sound sources: %d")(free_sources);
 
 	} //draw
 
 	void run() {
+
 		this.engine_.run();
+
 	} //run
 
 } //NewGame

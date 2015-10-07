@@ -23,6 +23,9 @@ enum Resource {
 
 struct Engine {
 
+	import blindfire.engine.memory : allocatorObject, IAllocator, Mallocator, theAllocator, make;
+	import blindfire.engine.dbg : DebugContext, render_string;
+
 	alias UpdateFunc = void delegate();
 	alias DrawFunc = void delegate();
 
@@ -31,7 +34,6 @@ struct Engine {
 	enum MAX_SOUND_SOURCES = 32;
 
 	//default allocator
-	import blindfire.engine.memory : allocatorObject, IAllocator, Mallocator, theAllocator, make;
 	IAllocator allocator_;
 
 	//common subsystems
@@ -49,6 +51,8 @@ struct Engine {
 	FontAtlas debug_atlas_ = void;
 	Console console_ = void;
 	Cursor cursor_ = void;
+
+	DebugContext debug_context_ = void;
 
 	//external references
 	UpdateFunc update_function_;
@@ -94,8 +98,9 @@ struct Engine {
 
 	void load_resources() {
 
-		import blindfire.engine.pool : construct;
 		import blindfire.engine.gl : AttribLocation, Shader, Texture;
+		import blindfire.engine.pool : construct;
+		import blindfire.engine.defs : Vec2i;
 
 		auto rm = ResourceManager.get();
 
@@ -118,6 +123,7 @@ struct Engine {
 
 		//text atlases
 		this.debug_atlas_.construct("fonts/OpenSans-Regular.ttf", 12, text_shader);
+		this.debug_context_.construct(&debug_atlas_, &window_, Vec2i(16, 32));
 
 	} //load_resources
 
@@ -139,13 +145,13 @@ struct Engine {
 	void draw_debug() {
 
 		import blindfire.engine.defs : Vec2i;
-		import blindfire.engine.util : render_string;
+		import blindfire.engine.dbg : render_string;
 
 		int x, y;
 		input_handler_.mouse_pos(x, y);
+		debug_context_.render_string!("mouse x: %d, y: %d")(x, y);
 
-		auto offset = Vec2i(16, 32);
-		debug_atlas_.render_string!("mouse x: %d, y: %d")(&window_, offset, x, y);
+		debug_context_.reset();
 
 	}
 
