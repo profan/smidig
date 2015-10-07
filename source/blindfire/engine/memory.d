@@ -26,7 +26,7 @@ void memmove(T)(T* src, T* target) {
 
 private interface Instance {
 	void destroy_object();
-}
+} //Instance
 
 private class MemoryObject(T) : Instance {
 
@@ -50,7 +50,7 @@ private class MemoryObject(T) : Instance {
 		}
 	}
 
-}
+} //MemoryObject
 
 private mixin template AllocatorCommon() {
 

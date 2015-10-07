@@ -10,7 +10,7 @@ import blindfire.engine.gl : Transform, Shader, Texture, Mesh;
 import blindfire.engine.defs : Vec2i, Vec2f, Vec3f, Mat3f;
 import blindfire.engine.net : NetVar, Command, ClientID;
 import blindfire.engine.stream : InputStream;
-import blindfire.engine.util : point_in_rect;
+import blindfire.engine.math : point_in_rect;
 import blindfire.engine.ecs;
 
 import blindfire.netgame;
@@ -141,7 +141,7 @@ struct SpriteComponent {
 
 class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 
-	import blindfire.engine.util : point_in_rect;
+	import blindfire.engine.math : point_in_rect;
 
 	SelectionBox* sbox;
 	TurnManager tm;

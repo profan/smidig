@@ -185,6 +185,8 @@ struct TextSpec {
 
 bool mouse_in_rect(UIState* ui, int x, int y, int width, int height) {
 
+	import blindfire.engine.math : point_in_rect;
+
 	return point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
 
 } //mouse_in_rect
