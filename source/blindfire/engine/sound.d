@@ -14,51 +14,73 @@ alias SoundSource = ALuint;
 
 struct SoundSystem {
 
+	enum State {
+		Playing,
+		Free
+	} //State
+
 	enum INITIAL_BUFFERS = 16;
 
 	IAllocator allocator_;
 
-	ALCdevice* device;
-	ALCcontext* context;
+	ALCdevice* device_;
+	ALCcontext* context_;
 
-	HashMap!(SoundID, ALuint) buffers;
-	Array!ALuint sources;
+	HashMap!(SoundID, ALuint) buffers_;
+
+	Array!State source_states_;
+	Array!ALuint sources_;
 
 	SoundID current_sound_id;
 
 	@disable this();
 	@disable this(this);
 
+	@property uint free_sources() {
+
+		auto free = 0;
+
+		foreach (i, ref state; source_states_) {
+			free += (state == State.Free) ? 1 : 0;
+		}
+
+		return free;
+
+	} //free_sources
+
 	this(size_t num_sources) {
 		this.allocator_ = theAllocator;
-		this.buffers = typeof(buffers)(allocator_, INITIAL_BUFFERS);
-		this.sources = typeof(sources)(allocator_, num_sources);
-		this.sources.length = sources.capacity;
+		this.buffers_ = typeof(buffers_)(allocator_, INITIAL_BUFFERS);
+		this.source_states_ = typeof(source_states_)(allocator_, num_sources);
+		this.sources_ = typeof(sources_)(allocator_, num_sources);
 	} //this
 
 	this(IAllocator allocator, size_t num_sources) {
-		this.buffers = typeof(buffers)(allocator, INITIAL_BUFFERS);
-		this.sources = typeof(sources)(allocator, num_sources);
-		this.sources.length = sources.capacity;
+		this.allocator_ = allocator;
+		this.buffers_ = typeof(buffers_)(allocator_, INITIAL_BUFFERS);
+		this.source_states_ = typeof(source_states_)(allocator_, num_sources);
+		this.sources_ = typeof(sources_)(allocator_, num_sources);
 	} //this
 
 	void initialize() {
 
-		this.device = alcOpenDevice(null); //preferred device
-		this.context = alcCreateContext(device, null);
-		alcMakeContextCurrent(context);
+		this.device_ = alcOpenDevice(null); //preferred device
+		this.context_ = alcCreateContext(device_, null);
+		alcMakeContextCurrent(context_);
 
-		alGenSources(cast(int)sources.capacity, sources.ptr);
+		alGenSources(cast(int)sources_.capacity, sources_.ptr);
+		sources_.length = sources_.capacity;
+		source_states_.length = source_states_.capacity;
 
 	} //initialize
 
 	~this() {
 
-		alDeleteSources(cast(int)sources.length, sources.ptr);
-		alDeleteBuffers(cast(int)buffers.length, buffers.values.ptr);
+		alDeleteSources(cast(int)sources_.length, sources_.ptr);
+		alDeleteBuffers(cast(int)buffers_.length, buffers_.values.ptr);
 		alcMakeContextCurrent(null);
-		alcDestroyContext(context);
-		alcCloseDevice(device);
+		alcDestroyContext(context_);
+		alcCloseDevice(device_);
 
 	} //~this
 
@@ -70,7 +92,7 @@ struct SoundSystem {
 		assert(created_buffer != AL_NONE, 
 			   format("[SoundSystem] failed creating buffer: %s", fromStringz(alureGetErrorString())));
 
-		buffers[current_sound_id] = created_buffer;
+		buffers_[current_sound_id] = created_buffer;
 
 		return current_sound_id++;
 
@@ -78,16 +100,22 @@ struct SoundSystem {
 
 	void expand_sources() {
 
-		sources.reserve(sources.length + 16); //add 16 to sources capacity
-		sources.length = sources.capacity;
-		alGenSources(cast(int)sources.capacity, sources.ptr);
+		sources_.reserve(sources_.length + 16); //add 16 to sources capacity
+		sources_.length = sources_.capacity;
+		alGenSources(cast(int)sources_.capacity, sources_.ptr);
 
 	} //expand_sources
 
 	ALuint find_free_source() {
 
-		auto source = sources[0];
-		sources.remove(0);
+		auto i = 0;
+
+		while (source_states_[i++] == State.Playing) {
+
+		}
+
+		auto source = sources_[i];
+		source_states_[i] = State.Playing;
 
 		return source;
 
@@ -95,7 +123,7 @@ struct SoundSystem {
 
 	void play_sound(SoundID sound_id, SoundSource sound_source, SoundVolume volume) {
 
-		auto sound_buffer = buffers[sound_id];
+		auto sound_buffer = buffers_[sound_id];
 
 		alSourcei(sound_source, AL_BUFFER, sound_buffer); //associate source with buffer
 		alSourcef(sound_source, AL_GAIN, volume);
@@ -111,6 +139,14 @@ struct SoundSystem {
 	} //play_sound
 
 	void tick() {
+
+		ALint state;
+		foreach (i, src_id; sources_) {
+			alGetSourcei(src_id, AL_SOURCE_STATE, &state);
+			if (state != AL_PLAYING && source_states_[i] == State.Playing) {
+				source_states_[i] = State.Free;
+			}
+		}
 
 	} //tick
 

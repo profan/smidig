@@ -694,7 +694,12 @@ struct Game {
 
 struct NewGame {
 
+	import blindfire.engine.sound : SoundID;
 	import blindfire.engine.runtime;
+
+	enum GameResource : ResourceID {
+		Click = Resource.max
+	}
 
 	private {
 
@@ -707,7 +712,12 @@ struct NewGame {
 	void initialize() {
 
 		//initialize engine systems
-		this.engine_.initialize("Project Blindfire", &update);
+		this.engine_.initialize("Project Blindfire", &update, &draw);
+
+		//initialize self
+		initialize_systems();
+		load_resources();
+		bind_actions();
 
 	} //initialize
 
@@ -716,12 +726,34 @@ struct NewGame {
 	} //initialize_systems
 
 	void load_resources() {
+
+		auto rm = ResourceManager.get();
+
+		//load click sound
+		auto click_file = engine_.sound_system_.load_sound_file(cast(char*)"resource/audio/radiy_click.wav".ptr);
+		rm.set_resource!(SoundID)(cast(SoundID*)click_file, GameResource.Click);
 	
 	} //load_resources
+
+	void bind_actions() {
+
+		auto click_id = cast(SoundID)ResourceManager.get().get_resource!SoundID(GameResource.Click);
+		engine_.input_handler_.bind_mousebtn(1, (x, y) => engine_.sound_system_.play_sound(click_id, 0.5f), KeyState.UP);
+
+	} //bind_actions
 
 	void update() {
 
 	} //update
+
+	void draw() {
+
+		auto free_sources = engine_.sound_system_.free_sources;
+
+		auto offset = Vec2i(16, 48);
+		engine_.debug_atlas_.render_string!("free sound sources: %d")(&engine_.window_, offset, free_sources);
+
+	} //draw
 
 	void run() {
 		this.engine_.run();

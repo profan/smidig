@@ -31,7 +31,7 @@ struct Engine {
 	enum MAX_SOUND_SOURCES = 32;
 
 	//default allocator
-	import blindfire.engine.memory : IAllocator, theAllocator, make;
+	import blindfire.engine.memory : allocatorObject, IAllocator, Mallocator, theAllocator, make;
 	IAllocator allocator_;
 
 	//common subsystems
@@ -56,7 +56,7 @@ struct Engine {
 
 	@disable this(this);
 
-	void initialize(in char[] title, UpdateFunc update_func) {
+	void initialize(in char[] title, UpdateFunc update_func, DrawFunc draw_func) {
 
 		import blindfire.engine.pool : construct;
 
@@ -77,7 +77,7 @@ struct Engine {
 		this.network_.construct(cast(ushort)12000, &network_evman_);
 
 		//initialize sound subsystem
-		this.sound_system_.construct(theAllocator, MAX_SOUND_SOURCES);
+		this.sound_system_.construct(allocator_, MAX_SOUND_SOURCES);
 		this.sound_system_.initialize();
 
 		//initialize console subsystem
@@ -88,6 +88,7 @@ struct Engine {
 
 		//set references
 		this.update_function_ = update_func;
+		this.draw_function_ = draw_func;
 
 	} //initialize
 
@@ -126,6 +127,8 @@ struct Engine {
 
 		window_.render_clear(0x428bca);
 
+		draw_function_();
+
 		draw_debug();
 		cursor_.draw(window_.view_projection, Vec2f(input_handler_.mouse_x, input_handler_.mouse_y));
 
@@ -152,6 +155,9 @@ struct Engine {
 
 			//handle input
 			this.input_handler_.handle_events();
+
+			//update sound system
+			this.sound_system_.tick();
 
 			//update game and draw
 			this.update_function_();
