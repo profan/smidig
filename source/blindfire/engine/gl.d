@@ -45,7 +45,7 @@ struct AttribLocation {
 	GLuint offset;
 	char[64] identifier;
 
-}
+} //AttribLocation
 
 struct Cursor {
 
@@ -207,6 +207,82 @@ struct Mesh {
 	mixin OpenGLError;
 
 } //Mesh
+
+struct Particle(V) {
+
+	V position_;
+	V rotation_;
+	V velocity_;
+
+	void tick(float drag) {
+
+		position_ += velocity_;
+		velocity_ -= drag;
+
+	} //simulate
+
+} //Particle
+
+struct ParticleSystem(V) {
+
+	Mesh* mesh_;
+	Shader* shader_;
+	Texture* texture_;
+
+	V origin_;
+	V orientation_;
+
+	IAllocator allocator_;
+	Array!(Particle!V) particles_;
+
+	this(IAllocator allocator, Mesh* mesh, Shader* shader, Texture* texture, V origin, V orientation, size_t initial_size) {
+
+		this.mesh_ = mesh;
+		this.shader_ = shader;
+		this.texture_ = texture;
+
+		this.origin_ = origin;
+		this.orientation_ = orientation;
+
+		this.allocator_ = allocator;
+		this.particles_ = typeof(particles_)(allocator, initial_size);
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+	void fire(size_t particles) {
+
+	} //fire
+
+	void tick() {
+
+		enum drag = 32.0f;
+
+		foreach (ref p; particles_) {
+			p.tick(drag);
+		}
+
+	} //tick
+
+	void draw() {
+
+	} //draw
+
+} //ParticleSystem
+
+unittest {
+
+	import blindfire.engine.defs : Vec2f;
+
+	auto origin = Vec2f(0, 0);
+	auto orientation = Vec2f(0, 1);
+
+	auto part_sys = ParticleSystem!Vec2f(theAllocator, null, null, null, origin, orientation, 32);
+
+}
 
 //use SDL2 for loading textures, since we're already using it for windowing.
 struct Texture {

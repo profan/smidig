@@ -259,7 +259,7 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	bool register(EntityID entity) {
 
-		import std.format : format;
+		import std.string : format;
 		enum premade = format("%s component already exists for entity!", T.stringof);
 		assert(entity !in components, premade);
 
