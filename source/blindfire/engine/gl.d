@@ -176,8 +176,8 @@ struct Mesh {
 
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertices[0].sizeof, cast(const(void)*)null);
-		//0 corresponds to precious attribarray, 3 is number of elements in vertex, set type to float (don't normalize(GL_FALSE))
-		// 0 - skip nothing to find the next attribute, 0 - distance from beginning to find the first attribute
+		//0 corresponds to previous attribarray, 3 is number of elements in vertex, set type to float (don't normalize(GL_FALSE))
+		// bytes to skip to find the next attribute, byte offset from beginning to find the first attribute
 		// use sizeof of tex_coord as stride
 
 		glEnableVertexAttribArray(1);
@@ -235,6 +235,9 @@ struct ParticleSystem(V) {
 	IAllocator allocator_;
 	Array!(Particle!V) particles_;
 
+	@disable this();
+	@disable this(this);
+
 	this(IAllocator allocator, Mesh* mesh, Shader* shader, Texture* texture, V origin, V orientation, size_t initial_size) {
 
 		this.mesh_ = mesh;
@@ -248,6 +251,10 @@ struct ParticleSystem(V) {
 		this.particles_ = typeof(particles_)(allocator, initial_size);
 
 	} //this
+
+	void initialize() {
+
+	} //initialize
 
 	~this() {
 
@@ -268,6 +275,10 @@ struct ParticleSystem(V) {
 	} //tick
 
 	void draw() {
+
+		shader_.bind();
+		texture_.bind();
+		//draw instanced shit here :))))
 
 	} //draw
 
