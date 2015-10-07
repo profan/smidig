@@ -743,12 +743,25 @@ unittest {
 
 }
 
-struct DHeap(T) {
+struct DHeap(int N, T) {
+
+	enum State {
+		Free,
+		Data
+	} //State
+
+	struct Entry {
+		T data;
+		State state = State.Free;
+		alias data this;
+	} //Entry
 
 	private {
 
-		T[] array_;
-		IAllocator allocator;
+		Entry[] array_;
+		IAllocator allocator_;
+		size_t capacity_;
+		size_t size_;
 
 	}
 
@@ -756,18 +769,63 @@ struct DHeap(T) {
 	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size) {
-
+		this.allocator_ = allocator;
+		this.array_ = allocator.makeArray!Entry(initial_size);
 	} //this
 
 	~this() {
 
 	} //~this
 
+	uint left_child(uint i) {
+		return (N * i) + 1;
+	}
+
+	uint right_child(uint i) {
+		return (N * i) + 2;
+	}
+
+	size_t parent(size_t i) {
+
+		return cast(size_t)(cast(float)i / cast(float)N);
+
+	} //parent
+
+	void percolateUp(size_t i) {
+
+		auto p = parent(i);
+		if (array_[i] < array_[p]) {
+			return;
+		} else {
+			swap(i, p);
+			percolateUp(p);
+		}
+
+	} //percolateUp
+
+	void swap(size_t i1, size_t i2) {
+
+		import blindfire.engine.memory : memmove;
+		memmove(&array_[i2], &array_[i1]);
+
+	} //swap
+
+	void insert(T thing) {
+
+		array_[size_] = Entry(thing, State.Data);
+		percolateUp(size_);
+		size_++;
+
+	} //insert
+
 	void decreaseKey() {
 
 	} //decreaseKey
 
-	void deleteMin() {
+	T deleteMin() {
+
+		array_[size_].state = State.Free;
+		return array_[size_];
 
 	} //deleteMin
 
@@ -775,9 +833,35 @@ struct DHeap(T) {
 
 version (unittest) {
 
+	struct CompThing {
+
+		int thing;
+
+		int opCmp(ref CompThing other) {
+
+			if (thing > other.thing) return 1;
+			if (thing < other.thing) return -1;
+
+			return 0;
+
+		} //opCmp
+
+	} //CompThing
+
 } 
 
 unittest {
+
+	auto heap = DHeap!(3, CompThing)(theAllocator, 16);
+
+	heap.insert(CompThing(10));
+	heap.insert(CompThing(32));
+	heap.insert(CompThing(52));
+	heap.insert(CompThing(12));
+	heap.insert(CompThing(65));
+	heap.insert(CompThing(11));
+
+	assert(heap.deleteMin() == CompThing(10));
 
 }
 
