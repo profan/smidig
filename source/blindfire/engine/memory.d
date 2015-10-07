@@ -17,6 +17,13 @@ void memmove(T)(T[] src, T[] target) {
 	
 } //memmove
 
+void memmove(T)(T* src, T* target) {
+
+	import core.stdc.string : memmove;
+	memmove(target, src, T.sizeof);
+
+} //memmove
+
 private interface Instance {
 	void destroy_object();
 }
@@ -186,29 +193,6 @@ struct LinearAllocator {
 unittest {
 
 } //LinearAllocator Tests
-
-unittest {
-
-	import std.random : uniform;
-
-	enum total_alloc_size = 65536;
-	auto sa = StackAllocator(total_alloc_size, "Test");
-	size_t min_size = 3, max_size = 2048;
-
-	size_t total_allocated = 0;
-	while (total_allocated < total_alloc_size*0.75) {
-
-		size_t alloc_size;
-		do { alloc_size = uniform(min_size, max_size); } while (cast(long)alloc_size > cast(long)(sa.remaining_size - alloc_size));
-
-		auto allocated_bytes = sa.alloc(alloc_size);
-		total_allocated += allocated_bytes.length;
-
-	}
-
-	sa.dealloc(total_allocated);
-
-} //StackAllocator Tests
 
 //returns an aligned offset in bytes from current to allocate from.
 private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) nothrow @nogc pure {
