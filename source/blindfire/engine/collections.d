@@ -242,9 +242,7 @@ size_t toHash(int k) @nogc @safe pure nothrow {
 } //toHash
 
 template isCopyable(T) {
-
 	enum isCopyable = __traits(compiles, function T(T t) { return t; });
-
 } //isCopyable
 
 /* quadratic probing hashmap implementation */
@@ -277,8 +275,23 @@ struct HashMap(K, V) {
 
 	}
 
-	static if (isCopyable!V) { /* it only makes sense to define this if the thing is copyable */
+	@disable this(this);
 
+	static if (isCopyable!K) { /* define only if key type is copyable too */
+		@property Array!K keys() {
+
+			auto arr = Array!K(allocator_, used_capacity_);
+
+			foreach (ref k, ref v; this) {
+				arr.add(k);
+			}
+
+			return arr;
+
+		} //keys
+	}
+
+	static if (isCopyable!V) { /* it only makes sense to define this if value type is copyable */
 		@property Array!V values() {
 
 			auto arr = Array!V(allocator_, used_capacity_);
@@ -290,7 +303,6 @@ struct HashMap(K, V) {
 			return arr;
 
 		} //values
-
 	}
 
 	@property size_t length() const {
@@ -314,6 +326,17 @@ struct HashMap(K, V) {
 	void free() {
 		this.allocator_.dispose(array_);
 	} //free
+
+	/* move other instance into self */
+	void move_from(ref typeof(this) other) {
+
+		this.free();
+		this.array_ = move(other.array_);
+		this.capacity_ = move(other.capacity_);
+		this.used_capacity_ = move(other.used_capacity_);
+		this.allocator_ = move(other.allocator_);
+
+	} //move
 
 	V* opBinaryRight(string op = "in")(K key) nothrow {
 
@@ -375,9 +398,7 @@ struct HashMap(K, V) {
 			temp_map[k] = move(v);
 		}
 
-		this.free();
-		this = temp_map;
-		temp_map.allocator_ = null;
+		this.move_from(temp_map);
 
 	} //rehash
 
