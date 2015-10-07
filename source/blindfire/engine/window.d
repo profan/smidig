@@ -17,6 +17,7 @@ struct Window {
 	import blindfire.engine.collections : String;
 
 	private {
+
 		bool alive;
 		String title_;
 		SDL_Window* window;

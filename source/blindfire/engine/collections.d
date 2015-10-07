@@ -779,6 +779,7 @@ unittest {
 }
 
 /* our string type, it has a length and a null terminator. */
+/* - null terminator to make interop with c stuff easier. */
 struct String {
 
 	private {
