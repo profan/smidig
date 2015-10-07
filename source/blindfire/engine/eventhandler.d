@@ -30,12 +30,18 @@ struct MouseBind {
 
 struct EventHandler {
 
+	import blindfire.engine.collections : Array;
+	import blindfire.engine.memory : IAllocator;
+
+	enum INITIAL_SIZE = 8;
+	IAllocator allocator_;
+
 	SDL_Event ev;
-	EventDelegate[] delegates;
-	MouseBind[] mouse_events;
-	MouseBind[] motion_events;
-	KeyBind[] input_events;
-	KeyBind[] key_events;
+	Array!EventDelegate delegates;
+	Array!MouseBind mouse_events;
+	Array!MouseBind motion_events;
+	Array!KeyBind input_events;
+	Array!KeyBind key_events;
 
 	//mutated by SDL2
 	Uint8* pressed_keys;
@@ -46,18 +52,30 @@ struct EventHandler {
 	@disable this();
 	@disable this(this);
 
-	this(Uint8* pressed_keys) {
-		this.pressed_keys = pressed_keys;
+	@property int mouse_x() const { return last_x[0]; }
+	@property int mouse_y() const { return last_y[0]; }
+
+	void mouse_pos(out int x, out int y) {
+		x = last_x[0];
+		y = last_y[0];
 	}
 
-	static auto construct() {
-		auto keys = SDL_GetKeyboardState(null);
-		return EventHandler(keys);
-	}
+	this(IAllocator allocator) {
+
+		this.delegates = typeof(delegates)(allocator, INITIAL_SIZE);
+		this.mouse_events = typeof(mouse_events)(allocator, INITIAL_SIZE);
+		this.motion_events = typeof(motion_events)(allocator, INITIAL_SIZE);
+		this.input_events = typeof(input_events)(allocator, INITIAL_SIZE);
+		this.key_events = typeof(key_events)(allocator, INITIAL_SIZE);
+		this.allocator_ = allocator;
+
+		this.pressed_keys = SDL_GetKeyboardState(null);
+
+	} //this
 
 	void add_listener(EventDelegate ed) {
 		delegates ~= ed;
-	}
+	} //add_listener
 
 	void bind_keyevent(SDL_Scancode key, KeyDelegate kd) {
 		KeyBind kb = {key: key, func: kd};
@@ -120,11 +138,12 @@ struct EventHandler {
 
 		SDL_GetMouseState(&last_x[1], &last_y[1]);
 		foreach (ref bind; motion_events) {
-			if (last_x[0] != last_x[1] || last_y[0] != last_y[1]) {
-				bind.func(last_x[1], last_y[1]);
-				last_x[0] = last_x[1];
-				last_y[0] = last_y[1];
-			}
+			bind.func(last_x[1], last_y[1]);
+		}
+
+		if (last_x[0] != last_x[1] || last_y[0] != last_y[1]) {
+			last_x[0] = last_x[1];
+			last_y[0] = last_y[1];
 		}
 
 	}

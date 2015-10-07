@@ -702,12 +702,12 @@ struct NewGame {
 
 	}
 
-	@disable this();
 	@disable this(this);
 
 	void initialize() {
 
-		this.engine_.initialize("Project Blindfire");
+		//initialize engine systems
+		this.engine_.initialize("Project Blindfire", &update);
 
 	} //initialize
 
@@ -719,8 +719,12 @@ struct NewGame {
 	
 	} //load_resources
 
-	void run() {
+	void update() {
 
+	} //update
+
+	void run() {
+		this.engine_.run();
 	} //run
 
 } //NewGame

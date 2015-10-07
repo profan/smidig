@@ -53,6 +53,7 @@ struct Cursor {
 	Shader* shader;
 	Texture* texture;
 	
+	@disable this();
 	@disable this(this);
 
 	this(Texture* cursor_texture, Shader* cursor_shader) nothrow @nogc {

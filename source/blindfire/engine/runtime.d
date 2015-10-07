@@ -23,6 +23,9 @@ enum Resource {
 
 struct Engine {
 
+	alias UpdateFunc = void delegate();
+	alias DrawFunc = void delegate();
+
 	//defaults
 	enum DEFAULT_WINDOW_WIDTH = 640, DEFAULT_WINDOW_HEIGHT = 480;
 	enum MAX_SOUND_SOURCES = 32;
@@ -43,41 +46,54 @@ struct Engine {
 
 	SoundSystem sound_system_ = void;
 
-	FontAtlas debug_atlas = void;
-	Console console = void;
-	Cursor cursor = void;
+	FontAtlas debug_atlas_ = void;
+	Console console_ = void;
+	Cursor cursor_ = void;
 
-	@disable this();
+	//external references
+	UpdateFunc update_function_;
+	DrawFunc draw_function_;
+
 	@disable this(this);
 
-	void initialize(in char[] title) {
+	void initialize(in char[] title, UpdateFunc update_func) {
+
+		import blindfire.engine.pool : construct;
 
 		//allocator for shit
 		this.allocator_ = theAllocator;
 
 		//initialize window and input handler
-		this.window_ = Window(title, 640, 480);
-		this.input_handler_ = EventHandler.construct();
+		this.window_.construct(title, 640, 480);
+		this.input_handler_.construct(allocator_);
+		this.input_handler_.add_listener(&window_.handle_events);
 
 		//initialize renderer and event manager for rendering events
-		this.renderer_evman_ = EventManager(EventMemory, DrawEventType.max);
+		this.renderer_evman_.construct(EventMemory, DrawEventType.max);
 		this.renderer_ = allocator_.make!OpenGLRenderer();
 
 		//initialize network system and event manager for communication
-		this.network_evman_ = EventManager(EventMemory, NetEventType.max);
-		this.network_ = NetworkPeer(12000, &network_evman_);
+		this.network_evman_.construct(EventMemory, NetEventType.max);
+		this.network_.construct(cast(ushort)12000, &network_evman_);
 
 		//initialize sound subsystem
-		this.sound_system_ = SoundSystem(theAllocator, MAX_SOUND_SOURCES);
+		this.sound_system_.construct(theAllocator, MAX_SOUND_SOURCES);
 		this.sound_system_.initialize();
 
 		//initialize console subsystem
-		this.console = Console(&debug_atlas, null);
+		this.console_.construct(&debug_atlas_, null);
+
+		//load engine-required resources
+		this.load_resources();
+
+		//set references
+		this.update_function_ = update_func;
 
 	} //initialize
 
 	void load_resources() {
 
+		import blindfire.engine.pool : construct;
 		import blindfire.engine.gl : AttribLocation, Shader, Texture;
 
 		auto rm = ResourceManager.get();
@@ -97,11 +113,58 @@ struct Engine {
 		//mouse pointer texture
 		auto cursor_texture = allocator_.make!Texture("resource/img/other_cursor.png");
 		rm.set_resource(cursor_texture, Resource.CursorTexture);
-		this.cursor = Cursor(cursor_texture, shader);
+		this.cursor_.construct(cursor_texture, shader);
 
 		//text atlases
-		this.debug_atlas = FontAtlas("fonts/OpenSans-Regular.ttf", 12, text_shader);
+		this.debug_atlas_.construct("fonts/OpenSans-Regular.ttf", 12, text_shader);
 
 	} //load_resources
+
+	void draw() {
+
+		import blindfire.engine.defs : Vec2f;
+
+		window_.render_clear(0x428bca);
+
+		draw_debug();
+		cursor_.draw(window_.view_projection, Vec2f(input_handler_.mouse_x, input_handler_.mouse_y));
+
+		window_.render_present();
+
+	} //draw
+
+	void draw_debug() {
+
+		import blindfire.engine.defs : Vec2i;
+		import blindfire.engine.util : render_string;
+
+		int x, y;
+		input_handler_.mouse_pos(x, y);
+
+		auto offset = Vec2i(16, 32);
+		debug_atlas_.render_string!("mouse x: %d, y: %d")(&window_, offset, x, y);
+
+	}
+
+	void run() {
+
+		import std.stdio : writefln;
+
+		while (window_.is_alive) {
+
+			//handle input
+			this.input_handler_.handle_events();
+
+			//update game and draw
+			this.update_function_();
+			this.draw();
+
+		}
+
+	} //run
+
+	void step() {
+
+	} //step
 
 } //Engine

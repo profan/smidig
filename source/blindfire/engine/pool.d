@@ -6,6 +6,15 @@ template hasMember(alias obj, string Member) {
 	enum hasMember = __traits(hasMember, typeof(obj), Member);
 } //hasMember
 
+/* in-place construction, it's a bit ergh. */
+void construct(T, Args...)(ref T thing, Args args)
+	if (is(T == struct))
+{
+
+	thing.__ctor(args);
+
+} //construct
+
 void reinitialize(ClassName, CtorArgs...)(ClassName obj, CtorArgs args) {
 
 	assert(typeid(obj) == typeid(ClassName), "Don't use this on interfaces or base classes!");
