@@ -878,6 +878,22 @@ struct String {
 
 	@disable this(this);
 
+	@property size_t length() const nothrow @nogc {
+		return array_.length;
+	} //length
+
+	this(ref String str, in char[] input) {
+
+		this.allocator_ = theAllocator;
+		this.array_ = typeof(array_)(allocator_, str.length + input.length + 1);
+		this.array_.length = str.length + input.length;
+
+		this.array_[][0..str.length] = str[];
+		this.array_[][str.length..input.length] = input[];
+		this.array_[$] = '\0'; //HELLA NULL TERMINATION SON
+
+	} //this
+
 	this(in char[] input) {
 
 		this.allocator_ = theAllocator;
@@ -893,15 +909,54 @@ struct String {
 
 	} //~this
 
+	char[] opSlice() nothrow {
+		return array_[0..length];
+	} //opSlice
+
+	bool opEquals(in char[] other) {
+
+		foreach (i, ref c; array_) {
+			if (array_[i] != other[i]) {
+				return false;
+			}
+		}
+
+		return true;
+
+	} //opEquals
+
+	bool opEquals(ref String other) {
+
+		if (other is this) {
+			return true;
+		}
+
+		return this.opEquals(other.array_[]);
+
+	} //opEquals
+
+	String opBinary(string op: "~")(in char[] chars) {
+		return String(this, chars);
+	} //opOpAssign
+
 	const(char*) c_str() const {
 		return array_.ptr;
 	} //c_string
 
-	string d_string() {
-		return cast(string)array_.data[0..array_.length];
-	} //d_string
+	string d_str() {
+		return cast(string)array_[0..$-1];
+	} //this
 
 } //String
+
+unittest {
+
+	auto str = String("yes");
+	auto new_string = str ~ "other_thing";
+
+	assert(new_string.d_str == "yesother_thing");
+
+}
 
 struct ScopedBuffer(T) {
 

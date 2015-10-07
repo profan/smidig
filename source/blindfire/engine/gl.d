@@ -208,6 +208,10 @@ struct Mesh {
 
 } //Mesh
 
+struct Graph {
+
+} //Graph
+
 struct Particle(V) {
 
 	V position_;
@@ -224,6 +228,9 @@ struct Particle(V) {
 } //Particle
 
 struct ParticleSystem(V) {
+
+	import blindfire.engine.memory : IAllocator;
+	import blindfire.engine.collections : Array;
 
 	Mesh* mesh_;
 	Shader* shader_;
@@ -277,16 +284,19 @@ struct ParticleSystem(V) {
 	void draw() {
 
 		shader_.bind();
-		texture_.bind();
+		texture_.bind(0);
 		//draw instanced shit here :))))
 
 	} //draw
+
+	mixin OpenGLError;
 
 } //ParticleSystem
 
 unittest {
 
 	import blindfire.engine.defs : Vec2f;
+	import blindfire.engine.memory : theAllocator;
 
 	auto origin = Vec2f(0, 0);
 	auto orientation = Vec2f(0, 1);
@@ -530,7 +540,7 @@ import blindfire.engine.util : load_file;
 
 char* load_shader(in char[] file_name) {
 	return load_file(toStringz(file_name));
-}
+} //load_shader
 
 bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] shader_path) nothrow {
 
@@ -558,7 +568,7 @@ bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] sh
 
 	return true;
 
-}
+} //check_shader_error
 
 GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type, in char[] shader_path) nothrow {
 
@@ -575,7 +585,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type, in char
 
 	return new_shader;
 
-}
+} //compile_shader
 
 GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) nothrow {
 
@@ -603,7 +613,7 @@ GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) n
 
 	return program;
 
-}
+} //create_shader_program
 
 /* OpenGL color related functions, darkening and stuff. */
 GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc pure {
@@ -617,7 +627,7 @@ GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc pure {
 
 	return gl_color;
 
-}
+} //int_to_gl_color
 
 int darken(int color, uint percentage) nothrow @nogc pure {
 
@@ -632,7 +642,7 @@ int darken(int color, uint percentage) nothrow @nogc pure {
 
 	return result;
 
-}
+} //darken
 
 /* Primitives? */
 
@@ -650,7 +660,7 @@ auto create_rectangle_vec3f(float w, float h) nothrow @nogc pure {
 
 	return vertices;
 
-}
+} //create_rectangle_vec3f
 
 auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc pure {
 
@@ -666,4 +676,4 @@ auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc pure {
 
 	return vertices;
 
-}
+} //create_rectangle_vec3f2f

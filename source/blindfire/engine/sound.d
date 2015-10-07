@@ -21,6 +21,7 @@ struct SoundSystem {
 
 	enum INITIAL_BUFFERS = 16;
 
+	//allocator yes
 	IAllocator allocator_;
 
 	//audio device and context
@@ -37,18 +38,6 @@ struct SoundSystem {
 
 	@disable this();
 	@disable this(this);
-
-	@property uint free_sources() {
-
-		auto free = 0;
-
-		foreach (i, ref state; source_states_) {
-			free += (state == State.Free) ? 1 : 0;
-		}
-
-		return free;
-
-	} //free_sources
 
 	this(size_t num_sources) {
 		this.allocator_ = theAllocator;
@@ -151,5 +140,17 @@ struct SoundSystem {
 		}
 
 	} //tick
+
+	@property uint free_sources() {
+
+		auto free = 0;
+
+		foreach (i, ref state; source_states_) {
+			free += (state == State.Free) ? 1 : 0;
+		}
+
+		return free;
+
+	} //free_sources
 
 } //SoundSystem
