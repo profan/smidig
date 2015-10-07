@@ -801,7 +801,7 @@ struct String {
 		this.array_.length = input.length;
 
 		this.array_[][0..input.length] = input[];
-		this.array_[$] = '\0';
+		this.array_[$] = '\0'; //HELLA NULL TERMINATION SON
 
 	} //this
 
@@ -817,7 +817,7 @@ struct String {
 		return cast(string)array_.data[0..array_.length];
 	} //d_string
 
-} //RCString
+} //String
 
 struct ScopedBuffer(T) {
 

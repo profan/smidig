@@ -16,7 +16,6 @@ import blindfire.engine.defs :
 
 import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.collections : ScopedBuffer, StaticArray;
-import blindfire.engine.memory : StackAllocator;
 import blindfire.engine.event : EventManager;
 
 struct NetworkStats {
