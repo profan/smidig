@@ -23,14 +23,16 @@ struct SoundSystem {
 
 	IAllocator allocator_;
 
+	//audio device and context
 	ALCdevice* device_;
 	ALCcontext* context_;
 
+	//containers for references to buffers and sources
 	HashMap!(SoundID, ALuint) buffers_;
-
 	Array!State source_states_;
 	Array!ALuint sources_;
 
+	//counter for resource ids for loaded sounds
 	SoundID current_sound_id;
 
 	@disable this();
