@@ -596,7 +596,7 @@ unittest {
 
 unittest { //test expansion
 
-	enum initial_size = 4, rounds = 32;
+	enum initial_size = 4, rounds = 128;
 	auto hash_map = HashMap!(uint, bool)(theAllocator, 4);
 
 	foreach (i; 0..rounds) {
