@@ -12,12 +12,23 @@ alias SoundID = int;
 alias SoundVolume = float;
 alias SoundSource = ALuint;
 
+auto to(T:ALboolean)(bool b) {
+	return (b) ? AL_TRUE : AL_FALSE;
+} //to
+
 struct SoundSystem {
 
 	enum State {
 		Playing,
+		Looping,
+		Paused,
 		Free
 	} //State
+
+	struct SourceState {
+		State current;
+		State last;
+	} //SourceState
 
 	enum INITIAL_BUFFERS = 16;
 
@@ -75,6 +86,14 @@ struct SoundSystem {
 
 	} //~this
 
+	void expand_sources() {
+
+		sources_.reserve(sources_.length + 16); //add 16 to sources capacity
+		sources_.length = sources_.capacity;
+		alGenSources(cast(int)sources_.capacity, sources_.ptr);
+
+	} //expand_sources
+
 	auto load_sound_file(char* path) {
 		
 		import std.string : format, fromStringz;
@@ -89,45 +108,57 @@ struct SoundSystem {
 
 	} //load_sound_file
 
-	void expand_sources() {
+	ALint find_free_source_index() {
 
-		sources_.reserve(sources_.length + 16); //add 16 to sources capacity
-		sources_.length = sources_.capacity;
-		alGenSources(cast(int)sources_.capacity, sources_.ptr);
+		auto source_index = -1;
 
-	} //expand_sources
-
-	ALuint find_free_source() {
-
-		auto i = 0;
-
-		while (source_states_[i++] == State.Playing) {
+		while (source_states_[++source_index] != State.Free) {
 
 		}
 
-		auto source = sources_[i];
-		source_states_[i] = State.Playing;
+		return source_index;
 
-		return source;
+	} //find_free_source_index
 
-	} //find_free_source
-
-	void play_sound(SoundID sound_id, SoundSource sound_source, SoundVolume volume) {
+	void play_sound(SoundID sound_id, SoundSource source_id, SoundVolume volume, bool loop) {
 
 		auto sound_buffer = buffers_[sound_id];
+		auto sound_source = sources_[source_id];
+		source_states_[source_id] = (loop) ? State.Looping : State.Playing;
 
+		alSourcei(sound_source, AL_LOOPING, to!ALboolean(loop));
 		alSourcei(sound_source, AL_BUFFER, sound_buffer); //associate source with buffer
 		alSourcef(sound_source, AL_GAIN, volume);
 		alSourcePlay(sound_source);
 
 	} //play_sound
 
-	void play_sound(SoundID sound_id, SoundVolume volume) {
+	void play_sound(SoundID sound_id, SoundVolume volume, bool loop = false) {
 
-		auto sound_source = find_free_source();
-		play_sound(sound_id, sound_source, volume);
+		auto sound_source = find_free_source_index();
+
+		if (sound_source != -1) { //otherwise, we couldn't find a source
+			play_sound(sound_id, sound_source, volume, loop);
+		}
 
 	} //play_sound
+
+	void pause_all_sounds() {
+
+		foreach (i, src_id; sources_) {
+			alSourcePause(src_id);
+		}
+
+	} //pause_all_sounds
+
+	void stop_all_sounds() {
+
+		foreach (i, src_id; sources_) {
+			source_states_[src_id] = State.Free;
+			alSourceStop(src_id);
+		}
+
+	} //stop_all_sounds
 
 	void tick() {
 
