@@ -62,7 +62,7 @@ struct Array(T) {
 
 	@property T[] data() nothrow @nogc {
 		return array_;
-	}
+	} //data
 
 	@property const(T*) ptr() const nothrow {
 		return array_.ptr;
@@ -117,7 +117,7 @@ struct Array(T) {
 
 	void opIndexAssign(T value, size_t index) @nogc nothrow {
 		array_[index] = move(value);
-	}
+	} //opIndexAssign
 
 	void opIndexAssign(ref T value, size_t index) @nogc nothrow {
 		array_[index] = value;
@@ -259,7 +259,8 @@ struct HashMap(K, V) {
 
 	import std.algorithm : move;
 
-	enum LOAD_FACTOR_THRESHOLD = 0.75; // when used_capacity_ / capacity_ > threshold, expand!
+	// when used_capacity_ / capacity_ > threshold, expand & rehash!
+	enum LOAD_FACTOR_THRESHOLD = 0.75;
 
 	enum State {
 		Free,
@@ -623,15 +624,8 @@ struct SparseArray(T) {
 struct LinkedList(T) {
 
 	struct Node {
-
-		this(Node* n, T d) {
-			this.next = n;
-			this.data = d;
-		} //this
-
 		Node* next;
 		T data;
-
 	} //Node
 	
 	private {
@@ -678,9 +672,9 @@ struct LinkedList(T) {
 	void poll() {
 
 		if (head_) {
-			auto f = head_;
+			auto last_head = head_;
 			head_ = head_.next;
-			allocator_.dispose(f);
+			allocator_.dispose(last_head);
 		}
 
 	} //poll
@@ -913,6 +907,10 @@ struct String {
 		return array_[0..length];
 	} //opSlice
 
+	char[] opSlice(size_t h, size_t t) nothrow {
+		return array_[h..t];
+	} //opSlice
+
 	bool opEquals(in char[] other) {
 
 		foreach (i, ref c; array_) {
@@ -954,7 +952,7 @@ unittest {
 	auto str = String("yes");
 	auto new_string = str ~ "other_thing";
 
-	assert(new_string.d_str == "yesother_thing");
+	assert(new_string.d_str == "yes" ~ "other_thing");
 
 }
 
