@@ -739,6 +739,7 @@ struct NewGame {
 
 		auto click_id = cast(SoundID)ResourceManager.get().get_resource!SoundID(GameResource.Click);
 		engine_.input_handler_.bind_mousebtn(1, (x, y) => engine_.sound_system_.play_sound(click_id, 0.5f, true), KeyState.UP);
+		engine_.input_handler_.bind_mousebtn(3, (x, y) => engine_.sound_system_.stop_all_sounds(), KeyState.UP);
 
 	} //bind_actions
 

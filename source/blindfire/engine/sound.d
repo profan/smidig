@@ -10,6 +10,7 @@ import blindfire.engine.collections : Array, HashMap;
 
 alias SoundID = int;
 alias SoundVolume = float;
+alias SoundBuffer = ALuint;
 alias SoundSource = ALuint;
 
 auto to(T:ALboolean)(bool b) {
@@ -40,9 +41,9 @@ struct SoundSystem {
 	ALCcontext* context_;
 
 	//containers for references to buffers and sources
-	HashMap!(SoundID, ALuint) buffers_;
+	HashMap!(SoundID, SoundBuffer) buffers_;
 	Array!State source_states_;
-	Array!ALuint sources_;
+	Array!SoundSource sources_;
 
 	//counter for resource ids for loaded sounds
 	SoundID current_sound_id;
@@ -120,7 +121,7 @@ struct SoundSystem {
 
 	} //find_free_source_index
 
-	void play_sound(SoundID sound_id, SoundSource source_id, SoundVolume volume, bool loop) {
+	void play_sound(SoundID sound_id, ALint source_id, SoundVolume volume, bool loop) {
 
 		auto sound_buffer = buffers_[sound_id];
 		auto sound_source = sources_[source_id];
@@ -145,17 +146,17 @@ struct SoundSystem {
 
 	void pause_all_sounds() {
 
-		foreach (i, src_id; sources_) {
-			alSourcePause(src_id);
+		foreach (src_id, source; sources_) {
+			alSourcePause(source);
 		}
 
 	} //pause_all_sounds
 
 	void stop_all_sounds() {
 
-		foreach (i, src_id; sources_) {
+		foreach (src_id, source; sources_) {
 			source_states_[src_id] = State.Free;
-			alSourceStop(src_id);
+			alSourceStop(source);
 		}
 
 	} //stop_all_sounds
