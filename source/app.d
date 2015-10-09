@@ -13,13 +13,6 @@ import derelict.imgui.imgui;
 import derelict.util.loader;
 import derelict.util.exception;
 
-import blindfire.game;
-import blindfire.engine.window;
-import blindfire.engine.eventhandler;
-
-const uint DEFAULT_WINDOW_WIDTH = 640;
-const uint DEFAULT_WINDOW_HEIGHT = 480;
-
 ShouldThrow missingSymFunc( string symName ) {
 
 	//introduced at a later version than what I can find as a binary on windows
@@ -48,7 +41,7 @@ void initialize_systems() {
 
 	alias libs = AliasSeq!(
 		DerelictSDL2, DerelictSDL2Image,
-		DerelictSDL2ttf,DerelictFT,
+		DerelictSDL2ttf, DerelictFT,
 		DerelictGL, DerelictAL,
 		DerelictALURE, DerelictImgui);
 
@@ -57,6 +50,7 @@ void initialize_systems() {
 		T.load();
 	}
 
+	//initiate SDL2 ttf
 	if (TTF_Init() == -1) {
 		writefln("[GAME] TTF_Init: %s\n", TTF_GetError());
 		exit(2);
@@ -65,6 +59,8 @@ void initialize_systems() {
 }
 
 void main() {
+
+	import blindfire.game : NewGame;
 
 	initialize_systems();
 
