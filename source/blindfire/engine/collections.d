@@ -19,7 +19,7 @@ struct Array(T) {
 
 	}
 
-	@disable this();
+	//@disable this();
 	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size) {
@@ -115,13 +115,15 @@ struct Array(T) {
 		this.add(item);
 	} //opOpAssign
 
-	void opIndexAssign(T value, size_t index) @nogc nothrow {
+	void opIndexAssign(T value, size_t index) {
 		array_[index] = move(value);
 	} //opIndexAssign
 
-	void opIndexAssign(ref T value, size_t index) @nogc nothrow {
-		array_[index] = value;
-	} //opIndexAssign
+	static if (isCopyable!T) {
+		void opIndexAssign(ref T value, size_t index) nothrow {
+			array_[index] = value;
+		} //opIndexAssign
+	}
 
 	ref T opIndex(size_t index) @nogc nothrow {
 		return array_[index];
@@ -150,19 +152,21 @@ struct Array(T) {
 			this.expand(length_);
 		}
 
-		array_[length_++] = item;
+		array_[length_++] = move(item);
 
 	} //add
 
-	void add(ref T item) {
+	static if (isCopyable!T) {
+		void add(ref T item) {
 
-		if (length_ == capacity_) {
-			this.expand(length_);
-		}
+			if (length_ == capacity_) {
+				this.expand(length_);
+			}
 
-		array_[length_++] = item;
+			array_[length_++] = item;
 
-	} //add
+		} //add
+	}
 
 	ref T get(size_t index) {
 		return array_[index];
@@ -953,6 +957,53 @@ unittest {
 	auto new_string = str ~ "other_thing";
 
 	assert(new_string.d_str == "yes" ~ "other_thing");
+
+}
+
+/* tree used for fuzzy string searching */
+struct BKTree {
+
+	/* hey look, we don't need to write it ourselves :U~ */
+	import std.algorithm.comparison : levenshteinDistance;
+	import std.typecons : Nullable;
+	import std.algorithm : move;
+
+	struct Node {
+
+		enum prealloc_size = 5;
+
+		String word;
+		Array!Node children;
+
+		this(ref BKTree tree, ref String str) {
+			this.children = typeof(children)(tree.allocator_, prealloc_size);
+			this.word = move(str);
+		}
+
+	} //Node
+
+	IAllocator allocator_;
+	Node root_;
+
+	this(IAllocator allocator) {
+		this.allocator_ = allocator;
+	} //this
+
+	~this() {
+
+	} //~this
+
+	void insert(String string) {
+
+	} //insert
+
+	ref String query(ref String str, int max_distance) {
+		return root_.word;
+	} //query
+
+} //BKTree
+
+unittest {
 
 }
 
