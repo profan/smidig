@@ -3,13 +3,13 @@ import std.c.process : exit;
 
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
-import derelict.sdl2.mixer;
 import derelict.sdl2.ttf;
 
 import derelict.openal.al;
 import derelict.alure.alure;
 import derelict.opengl3.gl;
 import derelict.freetype.ft;
+import derelict.imgui.imgui;
 import derelict.util.loader;
 import derelict.util.exception;
 
@@ -23,10 +23,20 @@ const uint DEFAULT_WINDOW_HEIGHT = 480;
 ShouldThrow missingSymFunc( string symName ) {
 
 	//introduced at a later version than what I can find as a binary on windows
-	//also not used in the project, so lets not care about this dependency.
-    if( symName == "FT_Gzip_Uncompress") {
-        return ShouldThrow.No;
-    }
+	//also not used in the project, so lets not care about this dependency (gzip_uncompress)
+
+	if (symName == "FT_Gzip_Uncompress"
+		|| symName == "SDL_QueueAudio"
+		|| symName == "SDL_GetQueuedAudioSize"
+		|| symName == "SDL_ClearQueuedAudio"
+		|| symName == "SDL_HasAVX2"
+		|| symName == "SDL_GetGlobalMouseState"
+		|| symName == "SDL_WarpMouseGlobal"
+		|| symName == "SDL_CaptureMouse"
+		|| symName == "SDL_RenderIsClipEnabled"
+		|| symName == "SDL_SetWindowHitTest") {
+		return ShouldThrow.No;
+	}
 
     // Any other missing symbol should throw.
     return ShouldThrow.Yes;
@@ -34,20 +44,18 @@ ShouldThrow missingSymFunc( string symName ) {
 
 void initialize_systems() {
 
-	DerelictFT.missingSymbolCallback = &missingSymFunc;
-	DerelictGL.missingSymbolCallback = &missingSymFunc;
-	DerelictFT.missingSymbolCallback = &missingSymFunc;
-	DerelictAL.missingSymbolCallback = &missingSymFunc;
-	DerelictALURE.missingSymbolCallback = &missingSymFunc;
+	import std.meta : AliasSeq;
 
-	DerelictSDL2.load();
-	DerelictSDL2Image.load();
-	DerelictSDL2Mixer.load();
-	DerelictSDL2ttf.load();
-	DerelictGL.load();
-	DerelictFT.load();
-	DerelictAL.load();
-	DerelictALURE.load();
+	alias libs = AliasSeq!(
+		DerelictSDL2, DerelictSDL2Image,
+		DerelictSDL2ttf,DerelictFT,
+		DerelictGL, DerelictAL,
+		DerelictALURE, DerelictImgui);
+
+	foreach (T; libs) {
+		T.missingSymbolCallback = &missingSymFunc;
+		T.load();
+	}
 
 	if (TTF_Init() == -1) {
 		writefln("[GAME] TTF_Init: %s\n", TTF_GetError());

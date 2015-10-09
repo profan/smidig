@@ -4,9 +4,10 @@
 		"derelict-gl3": "1.0.15",
 		"derelict-sdl2": "1.9.7",
 		"derelict-util": "2.0.3",
-		"derelict-al": "1.0.1",
+		"derelict-al": "~master",
 		"derelict-ft": "1.0.2",
 		"gfm": "2.3.37",
+		"derelict-imgui": "0.7.0",
 		"derelict-enet": "2.0.0"
 	},
 	"fileVersion": 1
