@@ -366,7 +366,7 @@ struct HashMap(K, V) {
 
 		return ptr;
 
-	}
+	} //opBinaryRight
 
 	int opApply(int delegate(ref K, ref V) dg) {
 
@@ -547,7 +547,7 @@ version(unittest) {
 	} //HashThing
 
 }
-
+/*
 unittest {
 
 	auto hash_map = HashMap!(HashThing, uint)(theAllocator, 32);
@@ -613,7 +613,7 @@ unittest { //test expansion
 	}
 
 }
-
+*/
 struct SparseArray(T) {
 
 	struct Entry {
@@ -688,7 +688,7 @@ struct LinkedList(T) {
 	} //first
 
 } //LinkedList
-
+/*
 version(unittest) {
 
 }
@@ -696,7 +696,7 @@ version(unittest) {
 unittest {
 
 }
-
+*/
 struct Stack(T) {
 
 	private LinkedList!T list_;
@@ -727,7 +727,7 @@ struct Stack(T) {
 	} //pop
 
 }
-
+/*
 version(unittest) {
 
 }
@@ -740,7 +740,7 @@ unittest {
 	assert(*stack.peek() == 25);
 
 }
-
+*/
 struct DHeap(int N, T) {
 
 	enum State {
@@ -828,7 +828,7 @@ struct DHeap(int N, T) {
 	} //deleteMin
 
 } //DHeap
-
+/*
 version (unittest) {
 
 	struct CompThing {
@@ -862,7 +862,7 @@ unittest {
 	assert(heap.deleteMin() == CompThing(10));
 
 }
-
+*/
 struct HashSet(T) {
 
 	IAllocator allocator_;
@@ -870,6 +870,7 @@ struct HashSet(T) {
 
 	this(IAllocator allocator, size_t initial_size) {
 		this.allocator_ = allocator;
+		this.hashmap_ = typeof(hashmap_)(allocator_, initial_size);
 	} //this
 
 	bool add(T item) {
@@ -932,7 +933,7 @@ struct String {
 		this.array_.length = str.length + input.length;
 
 		this.array_[][0..str.length] = str[];
-		this.array_[][str.length..input.length] = input[];
+		this.array_[][str.length.. str.length+input.length] = input[];
 		this.array_[$] = '\0'; //HELLA NULL TERMINATION SON
 
 	} //this
@@ -991,7 +992,7 @@ struct String {
 	} //c_string
 
 	string d_str() {
-		return cast(string)array_[0..$-1];
+		return cast(immutable(char)[])array_[];
 	} //this
 
 } //String
@@ -1001,6 +1002,7 @@ unittest {
 	auto str = String("yes");
 	auto new_string = str ~ "other_thing";
 
+	assert(new_string == "yes" ~ "other_thing");
 	assert(new_string.d_str == "yes" ~ "other_thing");
 
 }
