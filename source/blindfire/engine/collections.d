@@ -997,8 +997,8 @@ struct BKTree {
 
 	} //insert
 
-	ref String query(ref String str, int max_distance) {
-		return root_.word;
+	string query(in char[] str_view, int max_distance) {
+		return root_.word.d_str;
 	} //query
 
 } //BKTree
