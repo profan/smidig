@@ -6,6 +6,10 @@ alias void delegate(ref SDL_Event) EventDelegate;
 alias void delegate() KeyDelegate;
 alias void delegate(int, int) MouseDelegate;
 
+MouseKeyState to(S : MouseKeyState)(KeyState state) {
+	return (state == state.UP) ? MouseKeyState.UP : MouseKeyState.DOWN;
+} //to
+
 enum MouseKeyState {
 
 	UP = SDL_MOUSEBUTTONUP,
@@ -93,7 +97,7 @@ struct EventHandler {
 	} //bind_keyevent
 
 	void bind_mousebtn(Uint8 button, MouseDelegate md, KeyState state) {
-		MouseBind mb = {mousebtn: button, func: md, state: cast(MouseKeyState)state};
+		MouseBind mb = {mousebtn: button, func: md, state: to!MouseKeyState(state)};
 		mouse_events ~= mb;
 	} //bind_mousebtn
 

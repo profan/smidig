@@ -731,7 +731,7 @@ struct Stack(T) {
 		}
 	} //pop
 
-}
+} //Stack
 
 version(unittest) {
 
@@ -743,6 +743,16 @@ unittest {
 	stack.push(25);
 
 	assert(*stack.peek() == 25);
+
+}
+
+struct Queue(T) {
+
+	private LinkedList!T list_;
+
+} //Queue
+
+unittest {
 
 }
 
@@ -985,15 +995,15 @@ struct String {
 
 	String opBinary(string op: "~")(in char[] chars) {
 		return String(this, chars);
-	} //opOpAssign
+	} //opBinary
 
 	const(char*) c_str() const {
 		return array_.ptr;
-	} //c_string
+	} //c_str
 
 	string d_str() {
 		return cast(immutable(char)[])array_[];
-	} //this
+	} //d_str
 
 } //String
 
