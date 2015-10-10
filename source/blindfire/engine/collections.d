@@ -863,6 +863,51 @@ unittest {
 
 }
 
+struct HashSet(T) {
+
+	IAllocator allocator_;
+	HashMap!(T, bool) hashmap_;
+
+	this(IAllocator allocator, size_t initial_size) {
+		this.allocator_ = allocator;
+	} //this
+
+	bool add(T item) {
+
+		auto exists = item in hashmap_;
+
+		if (!exists) {
+			hashmap_[item] = true;
+		}
+
+		return !exists;
+
+	} //add
+
+	bool exists(T item) {
+
+		auto ptr = item in hashmap_;
+		return !!ptr;
+
+	} //exists
+
+	bool remove(T item) {
+
+		return hashmap_.remove(item);
+
+	} //remove
+
+} //HashSet
+
+unittest {
+
+	auto set = HashSet!int(theAllocator, 32);
+
+	set.add(24);
+	assert(set.exists(24));
+
+}
+
 /* our string type, it has a length and a null terminator. */
 /* - null terminator to make interop with c stuff easier. */
 struct String {

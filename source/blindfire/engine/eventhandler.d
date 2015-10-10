@@ -6,10 +6,17 @@ alias void delegate(ref SDL_Event) EventDelegate;
 alias void delegate() KeyDelegate;
 alias void delegate(int, int) MouseDelegate;
 
-enum KeyState {
+enum MouseKeyState {
 
 	UP = SDL_MOUSEBUTTONUP,
 	DOWN = SDL_MOUSEBUTTONDOWN
+
+} //MouseKeyState
+
+enum KeyState {
+
+	UP = SDL_RELEASED,
+	DOWN = SDL_PRESSED
 
 } //KeyState
 
@@ -17,6 +24,7 @@ struct KeyBind {
 
 	SDL_Scancode key;
 	KeyDelegate func;
+	KeyState state;
 
 } //KeyBind
 
@@ -24,9 +32,11 @@ struct MouseBind {
 
 	Uint8 mousebtn;
 	MouseDelegate func;
-	KeyState state;
+	MouseKeyState state;
 
 } //MouseBind
+
+enum AnyKey = -1;
 
 struct EventHandler {
 
@@ -55,10 +65,10 @@ struct EventHandler {
 	@property int mouse_x() const { return last_x[0]; }
 	@property int mouse_y() const { return last_y[0]; }
 
-	void mouse_pos(out int x, out int y) {
+	void mouse_pos(out int x, out int y) const {
 		x = last_x[0];
 		y = last_y[0];
-	}
+	} //mouse_pos
 
 	this(IAllocator allocator) {
 
@@ -80,32 +90,34 @@ struct EventHandler {
 	void bind_keyevent(SDL_Scancode key, KeyDelegate kd) {
 		KeyBind kb = {key: key, func: kd};
 		input_events ~= kb;
-	}
+	} //bind_keyevent
 
 	void bind_mousebtn(Uint8 button, MouseDelegate md, KeyState state) {
-		MouseBind mb = {mousebtn: button, func: md, state: state};
+		MouseBind mb = {mousebtn: button, func: md, state: cast(MouseKeyState)state};
 		mouse_events ~= mb;
-	}
+	} //bind_mousebtn
 
 	void bind_key(SDL_Scancode key, KeyDelegate kd) {
 		KeyBind kb = {key: key, func: kd};
 		key_events ~= kb;
-	}
+	} //bind_key
 
 	void bind_mousemov(MouseDelegate md) {
 		MouseBind mb = {mousebtn: 0, func: md};
 		motion_events ~= mb;
-	}
+	} //bind_mousemov
 
 	void handle_events() {
 		
 		while(SDL_PollEvent(&ev)) {
 		
-			switch (ev.type ) {
-				case SDL_KEYUP:
+			switch (ev.type) {
+				case SDL_KEYDOWN, SDL_KEYUP:
 					foreach (ref bind; input_events) {
 						if (ev.key.keysym.scancode == bind.key) {
-							bind.func();
+							if (bind.state == ev.key.state) {
+								bind.func();
+							}
 						}
 					}
 					break;
@@ -131,7 +143,7 @@ struct EventHandler {
 		}
 
 		foreach (ref bind; key_events) {
-			if (pressed_keys[bind.key]) {
+			if (pressed_keys[bind.key] || bind.key == AnyKey) {
 				bind.func();
 			}
 		}
@@ -146,6 +158,6 @@ struct EventHandler {
 			last_y[0] = last_y[1];
 		}
 
-	}
+	} //handle_events
 
 } //EventHandler

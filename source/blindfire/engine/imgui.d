@@ -4,14 +4,14 @@ import std.traits : isDelegate, ReturnType, ParameterTypeTuple;
 auto bindDelegate(T, string file = __FILE__, size_t line = __LINE__)(T t) if(isDelegate!T) {
 
     static T dg;
-    dg = t;
+	dg = t;
 
     extern(C)
 		static ReturnType!T func(ParameterTypeTuple!T args) {
-            return dg(args);
+			return dg(args);
 		}
 
-    return &func;
+	return &func;
 
 } //bindDelegate (thanks Destructionator)
 
@@ -19,7 +19,9 @@ struct ImguiContext {
 
 	import derelict.sdl2.types;
 	import derelict.imgui.imgui;
+
 	import blindfire.engine.gl : Shader, Texture;
+	import blindfire.engine.eventhandler : AnyKey, EventHandler;
 
 	Shader* vs_shader;
 	Shader* fs_shader;
@@ -50,6 +52,26 @@ struct ImguiContext {
 		io.GetClipboardTextFn = bindDelegate(&get_clipboard_text);
 
 	} //initialize
+
+	void on_event(ref SDL_Event ev) {
+
+		switch (ev.type) {
+
+			case SDL_KEYDOWN, SDL_KEYUP:
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+				break;
+
+			case SDL_MOUSEWHEEL:
+				break;
+
+			default:
+				break;
+
+		}
+
+	} //on_event
 
 	void render_draw_lists(ImDrawData* data) nothrow {
 

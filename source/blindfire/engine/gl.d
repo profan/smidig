@@ -215,8 +215,8 @@ struct Graph {
 struct Particle(V) {
 
 	V position_;
-	V rotation_;
 	V velocity_;
+
 
 	void tick(float drag) {
 

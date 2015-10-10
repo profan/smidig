@@ -25,6 +25,7 @@ struct Engine {
 
 	import blindfire.engine.memory : allocatorObject, IAllocator, Mallocator, theAllocator, make;
 	import blindfire.engine.dbg : DebugContext, render_string;
+	import blindfire.engine.imgui : ImguiContext;
 
 	alias UpdateFunc = void delegate();
 	alias DrawFunc = void delegate();
@@ -53,6 +54,7 @@ struct Engine {
 	Cursor cursor_ = void;
 
 	DebugContext debug_context_ = void;
+	ImguiContext imgui_context_;
 
 	//external references
 	UpdateFunc update_function_;
@@ -86,6 +88,12 @@ struct Engine {
 
 		//initialize console subsystem
 		this.console_.construct(&debug_atlas_, null);
+
+		//initialize imgui context
+		this.imgui_context_.initialize();
+
+		//link up imgui context to event shite
+		this.input_handler_.add_listener(&imgui_context_.on_event);
 
 		//load engine-required resources
 		this.load_resources();
