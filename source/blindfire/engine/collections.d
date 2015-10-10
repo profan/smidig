@@ -695,6 +695,11 @@ version(unittest) {
 
 unittest {
 
+	auto list = LinkedList!int(theAllocator);
+
+	list.add(35);
+	assert(*list.head() == 35);
+
 }
 
 struct Stack(T) {

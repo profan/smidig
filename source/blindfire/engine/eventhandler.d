@@ -59,9 +59,6 @@ struct EventHandler {
 	//mouse pos, last first, current second
 	int[2] last_x, last_y;
 
-	@disable this();
-	@disable this(this);
-
 	@property int mouse_x() const { return last_x[0]; }
 	@property int mouse_y() const { return last_y[0]; }
 
@@ -69,6 +66,9 @@ struct EventHandler {
 		x = last_x[0];
 		y = last_y[0];
 	} //mouse_pos
+
+	@disable this();
+	@disable this(this);
 
 	this(IAllocator allocator) {
 

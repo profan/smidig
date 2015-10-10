@@ -161,7 +161,7 @@ struct Engine {
 
 		debug_context_.reset();
 
-	}
+	} //draw_debug
 
 	void run() {
 
