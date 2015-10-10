@@ -547,7 +547,7 @@ version(unittest) {
 	} //HashThing
 
 }
-/*
+
 unittest {
 
 	auto hash_map = HashMap!(HashThing, uint)(theAllocator, 32);
@@ -613,7 +613,7 @@ unittest { //test expansion
 	}
 
 }
-*/
+
 struct SparseArray(T) {
 
 	struct Entry {
@@ -688,7 +688,7 @@ struct LinkedList(T) {
 	} //first
 
 } //LinkedList
-/*
+
 version(unittest) {
 
 }
@@ -696,7 +696,7 @@ version(unittest) {
 unittest {
 
 }
-*/
+
 struct Stack(T) {
 
 	private LinkedList!T list_;
@@ -727,7 +727,7 @@ struct Stack(T) {
 	} //pop
 
 }
-/*
+
 version(unittest) {
 
 }
@@ -740,7 +740,7 @@ unittest {
 	assert(*stack.peek() == 25);
 
 }
-*/
+
 struct DHeap(int N, T) {
 
 	enum State {
@@ -756,9 +756,8 @@ struct DHeap(int N, T) {
 
 	private {
 
-		Entry[] array_;
+		Array!Entry array_;
 		IAllocator allocator_;
-		size_t capacity_;
 		size_t size_;
 
 	}
@@ -768,12 +767,8 @@ struct DHeap(int N, T) {
 
 	this(IAllocator allocator, size_t initial_size) {
 		this.allocator_ = allocator;
-		this.array_ = allocator.makeArray!Entry(initial_size);
+		this.array_ = typeof(array_)(allocator_, initial_size);
 	} //this
-
-	~this() {
-
-	} //~this
 
 	uint left_child(uint i) {
 		return (N * i) + 1;
@@ -828,7 +823,7 @@ struct DHeap(int N, T) {
 	} //deleteMin
 
 } //DHeap
-/*
+
 version (unittest) {
 
 	struct CompThing {
@@ -862,7 +857,7 @@ unittest {
 	assert(heap.deleteMin() == CompThing(10));
 
 }
-*/
+
 struct HashSet(T) {
 
 	IAllocator allocator_;
