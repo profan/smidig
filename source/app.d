@@ -1,5 +1,6 @@
 import std.stdio : writefln;
 import std.c.process : exit;
+import std.meta : AliasSeq;
 
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
@@ -18,17 +19,20 @@ ShouldThrow missingSymFunc( string symName ) {
 	//introduced at a later version than what I can find as a binary on windows
 	//also not used in the project, so lets not care about this dependency (gzip_uncompress)
 
-	if (symName == "FT_Gzip_Uncompress"
-		|| symName == "SDL_QueueAudio"
-		|| symName == "SDL_GetQueuedAudioSize"
-		|| symName == "SDL_ClearQueuedAudio"
-		|| symName == "SDL_HasAVX2"
-		|| symName == "SDL_GetGlobalMouseState"
-		|| symName == "SDL_WarpMouseGlobal"
-		|| symName == "SDL_CaptureMouse"
-		|| symName == "SDL_RenderIsClipEnabled"
-		|| symName == "SDL_SetWindowHitTest") {
-		return ShouldThrow.No;
+	alias symbols = AliasSeq!(
+		"FT_Gzip_Uncompress",
+		"SDL_QueueAudio",
+		"SDL_GetQueuedAudioSize",
+		"SDL_ClearQueuedAudio",
+		"SDL_HasAVX2",
+		"SDL_GetGlobalMouseState",
+		"SDL_WarpMouseGlobal",
+		"SDL_CaptureMouse",
+		"SDL_RenderIsClipEnabled",
+		"SDL_SetWindowHitTest");
+
+	foreach (sym; symbols) {
+		if (symName == sym) return ShouldThrow.No;
 	}
 
     // Any other missing symbol should throw.
@@ -37,7 +41,6 @@ ShouldThrow missingSymFunc( string symName ) {
 
 void initialize_systems() {
 
-	import std.meta : AliasSeq;
 
 	alias libs = AliasSeq!(
 		DerelictSDL2, DerelictSDL2Image,
