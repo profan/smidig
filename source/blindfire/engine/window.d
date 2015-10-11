@@ -51,7 +51,7 @@ struct Window {
 		SDL_Window* new_window = SDL_CreateWindowFrom(external_window);
 		this(new_window);
 
-	}
+	} //this
 
 	this(in char[] title, uint width, uint height) {
 
@@ -70,7 +70,7 @@ struct Window {
 
 		this(new_window);
 
-	}
+	} //this
 
 	this(SDL_Window* in_window) {
 
@@ -104,14 +104,14 @@ struct Window {
 
 		view_projection = Mat4f.orthographic(0.0f, width, height, 0.0f, 0.0f, 1.0f);
 
-	}
+	} //this
 
 	~this() {
 
 		SDL_GL_DeleteContext(glcontext);
 		SDL_DestroyWindow(window);
 
-	}
+	} //~this
 
 	void render_clear(int color) {
 
@@ -121,11 +121,20 @@ struct Window {
 		glClearColor(col[0], col[1], col[2], col[3]);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-	}
+	} //render_clear
 
 	void render_present() {
 		SDL_GL_SwapWindow(window);
-	}
+	} //render_present
+
+	void toggle_fullscreen() {
+
+		static bool is_fullscreen = false;
+
+		SDL_SetWindowFullscreen(this.window, (is_fullscreen) ? 0 : SDL_WINDOW_FULLSCREEN);
+		is_fullscreen = !is_fullscreen;
+
+	} //toggle_fullscreen
 
 	void toggle_wireframe() {
 		
@@ -133,7 +142,7 @@ struct Window {
 		current = (current == GL_FILL) ? GL_LINE : GL_FILL;
 		glPolygonMode(GL_FRONT_AND_BACK, current);
 
-	}
+	} //toggle_wireframe
 
 	void handle_events(ref SDL_Event ev) {
 		if (ev.type == SDL_QUIT) {
@@ -164,6 +173,6 @@ struct Window {
 					break;
 			}
 		}
-	}
+	} //handle_events
 
 } //Window

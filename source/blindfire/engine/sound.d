@@ -77,6 +77,11 @@ struct SoundSystem {
 
 	} //initialize
 
+	import blindfire.engine.imgui : ImguiContext;
+	void register_info(ImguiContext* context) {
+
+	} //register_info
+
 	~this() {
 
 		alDeleteSources(cast(int)sources_.length, sources_.ptr);

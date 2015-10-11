@@ -134,7 +134,7 @@ struct Engine {
 
 		//text atlases
 		this.debug_atlas_.construct("fonts/OpenSans-Regular.ttf", 12, text_shader);
-		this.debug_context_.construct(&debug_atlas_, &window_, Vec2i(16, 32));
+		this.debug_context_.construct(allocator_, &imgui_context_, &debug_atlas_, &window_, Vec2i(16, 32));
 
 	} //load_resources
 

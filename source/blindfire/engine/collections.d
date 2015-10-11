@@ -249,6 +249,14 @@ unittest {
 
 }
 
+struct SegmentedArray(T) {
+
+} //SegmentedArray
+
+unittest {
+
+}
+
 size_t toHash(string str) @trusted nothrow {
 	return typeid(str).getHash(&str) % 31;
 } //toHash for string

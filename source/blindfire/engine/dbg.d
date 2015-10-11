@@ -7,17 +7,38 @@ void render_string(string format, Args...)(ref DebugContext ctx, Args args) {
 
 struct DebugContext {
 
+	struct Option {
+
+		enum Type {
+			Int
+		}
+
+	} //Option
+
+	import blindfire.engine.collections : Array, HashMap;
+	import blindfire.engine.memory : IAllocator;
+	import blindfire.engine.imgui : ImguiContext;
 	import blindfire.engine.text : FontAtlas;
 	import blindfire.engine.window : Window;
 	import blindfire.engine.defs : Vec2i;
 
+	/* allocator */
+	IAllocator allocator_;
+
+	/* generic state */
 	FontAtlas* atlas_;
 	Window* window_;
 	Vec2i offset_;
 
 	Vec2i initial_offset_;
 
-	this(FontAtlas* atlas, Window* window, Vec2i initial_offset) {
+	/* imgui related state */
+	ImguiContext* context_;
+	Option* option_root_;
+
+	this(IAllocator allocator, ImguiContext* context, FontAtlas* atlas, Window* window, Vec2i initial_offset) {
+		this.allocator_ = allocator;
+		this.context_ = context;
 		this.atlas_ = atlas;
 		this.window_ = window;
 		this.offset_ = initial_offset;

@@ -738,8 +738,9 @@ struct NewGame {
 	void bind_actions() {
 
 		auto click_id = cast(SoundID)ResourceManager.get().get_resource!SoundID(GameResource.Click);
-		engine_.input_handler_.bind_mousebtn(1, (x, y) => engine_.sound_system_.play_sound(click_id, 0.5f, true), KeyState.UP);
+		engine_.input_handler_.bind_mousebtn(1, (x, y) => engine_.sound_system_.play_sound(click_id, 0.5f, false), KeyState.UP);
 		engine_.input_handler_.bind_mousebtn(3, (x, y) => engine_.sound_system_.stop_all_sounds(), KeyState.UP);
+		engine_.input_handler_.bind_keyevent(SDL_SCANCODE_SPACE, () => engine_.window_.toggle_fullscreen());
 
 	} //bind_actions
 
@@ -747,7 +748,7 @@ struct NewGame {
 
 	} //update
 
-	void draw() {
+	void draw_debug() {
 
 		import blindfire.engine.dbg : render_string;
 
@@ -755,6 +756,12 @@ struct NewGame {
 
 		auto offset = Vec2i(16, 48);
 		engine_.debug_context_.render_string!("free sound sources: %d")(free_sources);
+
+	} //draw_debug
+
+	void draw() {
+
+		draw_debug();
 
 	} //draw
 

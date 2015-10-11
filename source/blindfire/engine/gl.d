@@ -47,6 +47,13 @@ struct AttribLocation {
 
 } //AttribLocation
 
+struct Camera {
+
+	Mat4f projection;
+	Transform position;
+
+} //Camera
+
 struct Cursor {
 
 	Mesh mesh;
