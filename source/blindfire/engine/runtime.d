@@ -93,7 +93,9 @@ struct Engine {
 		this.imgui_context_.initialize();
 
 		//link up imgui context to event shite
-		this.input_handler_.add_listener(&imgui_context_.on_event);
+		import derelict.sdl2.types;
+		this.input_handler_.add_listener(&imgui_context_.on_event,
+			SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEWHEEL);
 
 		//load engine-required resources
 		this.load_resources();

@@ -24,6 +24,8 @@ void memmove(T)(T* src, T* target) {
 
 } //memmove
 
+
+
 private interface Instance {
 	void destroy_object();
 } //Instance

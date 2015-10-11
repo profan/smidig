@@ -41,7 +41,6 @@ ShouldThrow missingSymFunc( string symName ) {
 
 void initialize_systems() {
 
-
 	alias libs = AliasSeq!(
 		DerelictSDL2, DerelictSDL2Image,
 		DerelictSDL2ttf, DerelictFT,

@@ -59,3 +59,29 @@ char* load_file(const char *filename) nothrow @nogc {
 	return buf;
 
 }
+
+string makeFlagEnum(string EnumName, KeyType, ValueType, Args...)(Args args) {
+
+	import std.string : format;
+
+	string mixinFields() {
+
+		auto str = "";
+
+		foreach (i, field; args) {
+			auto n = i ^ 2;
+			str ~= q{%s : 0x%s}.format(field, n);
+			if (i < args.length-1) str ~= ",";
+		}
+
+		return str;
+
+	} //mixinFields
+
+	auto str = q{enum : %s[%s] {
+		%s = [%s]
+	}}.format(KeyType.stringof, ValueType.stringof, EnumName, mixinFields());
+
+	return str;
+
+} //makeFlagEnum

@@ -1,6 +1,7 @@
 module blindfire.engine.eventhandler;
 
 import derelict.sdl2.sdl;
+import blindfire.engine.util : makeFlagEnum;
 
 alias void delegate(ref SDL_Event) EventDelegate;
 alias void delegate() KeyDelegate;
@@ -40,10 +41,66 @@ struct MouseBind {
 
 } //MouseBind
 
+struct EventSpec {
+
+	EventDelegate ed;
+	EventMask mask;
+	alias ed this;
+
+} //EventSpec
+
 enum AnyKey = -1;
+alias EventMask = ulong;
+
+mixin(makeFlagEnum!("EventToMask", SDL_EventType, EventMask)
+	(SDL_FIRSTEVENT,
+	SDL_APP_TERMINATING,
+	SDL_APP_LOWMEMORY,
+	SDL_APP_WILLENTERBACKGROUND,
+	SDL_APP_DIDENTERBACKGROUND,
+	SDL_APP_WILLENTERFOREGROUND,
+	SDL_APP_DIDENTERFOREGROUND,
+	SDL_WINDOWEVENT,
+	SDL_SYSWMEVENT,
+	SDL_KEYDOWN,
+	SDL_KEYUP,
+	SDL_TEXTEDITING,
+	SDL_TEXTINPUT,
+	SDL_MOUSEMOTION,
+	SDL_MOUSEBUTTONDOWN,
+	SDL_MOUSEBUTTONUP,
+	SDL_MOUSEWHEEL,
+	SDL_JOYAXISMOTION,
+	SDL_JOYBALLMOTION,
+	SDL_JOYHATMOTION,
+	SDL_JOYBUTTONDOWN,
+	SDL_JOYBUTTONUP,
+	SDL_JOYDEVICEADDED,
+	SDL_JOYDEVICEREMOVED,
+	SDL_CONTROLLERAXISMOTION,
+	SDL_CONTROLLERBUTTONDOWN,
+	SDL_CONTROLLERBUTTONUP,
+	SDL_CONTROLLERDEVICEADDED,
+	SDL_CONTROLLERDEVICEREMOVED,
+	SDL_CONTROLLERDEVICEREMAPPED,
+	SDL_FINGERDOWN,
+	SDL_FINGERUP,
+	SDL_FINGERMOTION,
+	SDL_DOLLARGESTURE,
+	SDL_DOLLARRECORD,
+	SDL_MULTIGESTURE,
+	SDL_CLIPBOARDUPDATE,
+	SDL_DROPFILE,
+	SDL_AUDIODEVICEADDED,
+	SDL_AUDIODEVICEREMOVED,
+	SDL_RENDER_TARGETS_RESET,
+	SDL_RENDER_DEVICE_RESET,
+	SDL_USEREVENT,
+	SDL_LASTEVENT));
 
 struct EventHandler {
 
+		import std.stdio : writefln;
 	import blindfire.engine.collections : Array;
 	import blindfire.engine.memory : IAllocator;
 
@@ -51,7 +108,7 @@ struct EventHandler {
 	IAllocator allocator_;
 
 	SDL_Event ev;
-	Array!EventDelegate delegates;
+	Array!EventSpec delegates;
 	Array!MouseBind mouse_events;
 	Array!MouseBind motion_events;
 	Array!KeyBind input_events;
@@ -88,7 +145,21 @@ struct EventHandler {
 	} //this
 
 	void add_listener(EventDelegate ed) {
-		delegates ~= ed;
+
+		delegates ~= EventSpec(ed, EventMask.max);
+
+	} //add_listener
+
+	/* filtering add_listener, combines all types sent in to form single mask */
+	void add_listener(SDL_EventType...)(EventDelegate ed, SDL_EventType types) {
+
+		auto mask = 0;
+		foreach (t; types) {
+			mask |= 1 << EventToMask[t];
+		}
+
+		delegates ~= EventSpec(ed, mask);
+
 	} //add_listener
 
 	void bind_keyevent(SDL_Scancode key, KeyDelegate kd) {
@@ -141,7 +212,9 @@ struct EventHandler {
 			}
 	
 			foreach(ref receiver; delegates) {
-				receiver(ev);
+				if ((receiver.mask >> EventToMask[ev.type]) & 1) {
+					receiver.ed(ev);
+				}
 			}
 
 		}

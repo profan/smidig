@@ -1,5 +1,7 @@
 module blindfire.engine.imgui;
 
+import std.stdio : writefln;
+
 import std.traits : isDelegate, ReturnType, ParameterTypeTuple;
 auto bindDelegate(T, string file = __FILE__, size_t line = __LINE__)(T t) if(isDelegate!T) {
 
@@ -55,6 +57,8 @@ struct ImguiContext {
 
 	void on_event(ref SDL_Event ev) {
 
+		writefln("got event: %s", ev.type);
+
 		switch (ev.type) {
 
 			case SDL_KEYDOWN, SDL_KEYUP:
@@ -67,6 +71,7 @@ struct ImguiContext {
 				break;
 
 			default:
+				writefln("got other event: %s", ev.type);
 				break;
 
 		}

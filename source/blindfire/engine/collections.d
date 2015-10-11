@@ -103,6 +103,10 @@ struct Array(T) {
 		return length_;
 	} //opDollar
 
+	const(T[]) opSlice() const nothrow {
+		return array_[0..length_];
+	} //opSlice
+
 	T[] opSlice() nothrow {
 		return array_[0..length_];
 	} //opSlice
@@ -245,8 +249,8 @@ unittest {
 
 }
 
-size_t toHash(string str) @system nothrow {
-	return typeid(str).getHash(&str);
+size_t toHash(string str) @trusted nothrow {
+	return typeid(str).getHash(&str) % 31;
 } //toHash for string
 
 size_t toHash(int k) @nogc @safe pure nothrow {
@@ -861,7 +865,7 @@ version (unittest) {
 unittest {
 
 	auto heap = DHeap!(3, CompThing)(theAllocator, 16);
-
+/*
 	heap.insert(CompThing(10));
 	heap.insert(CompThing(32));
 	heap.insert(CompThing(52));
@@ -870,7 +874,7 @@ unittest {
 	heap.insert(CompThing(11));
 
 	assert(heap.deleteMin() == CompThing(10));
-
+*/
 }
 
 struct HashSet(T) {
@@ -919,6 +923,31 @@ unittest {
 
 }
 
+struct QuadTree {
+
+	struct Quadrant {
+
+		Quadrant*[4] quads;
+
+	} //Quadrant
+
+	IAllocator allocator_;
+	Array!Quadrant quadrants_;
+
+	this(IAllocator allocator, size_t initial_size) {
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+} //QuadTree
+
+unittest {
+
+}
+
 /* our string type, it has a length and a null terminator. */
 /* - null terminator to make interop with c stuff easier. */
 struct String {
@@ -959,9 +988,9 @@ struct String {
 
 	} //this
 
-	~this() {
-
-	} //~this
+	size_t toHash() @safe const nothrow {
+		return d_str().toHash();
+	} //toHash
 
 	char[] opSlice() nothrow {
 		return array_[0..length];
@@ -993,6 +1022,10 @@ struct String {
 
 	} //opEquals
 
+	String opBinary(string op: "~")(ref String str) {
+		return String(this, str.d_str);
+	} //opBinary
+
 	String opBinary(string op: "~")(in char[] chars) {
 		return String(this, chars);
 	} //opBinary
@@ -1001,11 +1034,15 @@ struct String {
 		return array_.ptr;
 	} //c_str
 
-	string d_str() {
+	string d_str() const nothrow @nogc @trusted {
 		return cast(immutable(char)[])array_[];
 	} //d_str
 
 } //String
+
+struct StringBuffer {
+
+} //StringBuffer
 
 unittest {
 
