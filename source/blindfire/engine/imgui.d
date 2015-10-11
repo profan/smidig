@@ -225,14 +225,14 @@ struct ImguiContext {
 
 	} //render_draw_lists
 
-	void new_frame(ref EventHandler ev) {
+	void new_frame(ref EventHandler ev, double dt) {
 
 		auto io = igGetIO();
 
 		int display_w = window_.width;
 		int display_h = window_.height;
 		io.DisplaySize = ImVec2(cast(float)display_w, cast(float)display_h);
-		io.DeltaTime = 1;
+		io.DeltaTime = cast(float)dt;
 
 		int m_x, m_y;
 		ev.mouse_pos(m_x, m_y);

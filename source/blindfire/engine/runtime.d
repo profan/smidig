@@ -138,7 +138,7 @@ struct Engine {
 
 	} //load_resources
 
-	void draw() {
+	void draw(double delta_time) {
 
 		import blindfire.engine.defs : Vec2f;
 
@@ -149,7 +149,7 @@ struct Engine {
 		bool show_another_window;
 
 		import derelict.imgui.imgui;
-		imgui_context_.new_frame(input_handler_);
+		imgui_context_.new_frame(input_handler_, delta_time);
 		igSetNextWindowSize(ImVec2(200,100), ImGuiSetCond_FirstUseEver);
 		igBegin("Another Window", &show_another_window);
 
@@ -164,7 +164,7 @@ struct Engine {
 
 		imgui_context_.end_frame();
 
-		draw_debug();
+		draw_debug(delta_time);
 		cursor_.draw(window_.view_projection, Vec2f(input_handler_.mouse_x, input_handler_.mouse_y));
 
 		window_.render_present();
@@ -172,34 +172,70 @@ struct Engine {
 
 	} //draw
 
-	void draw_debug() {
+	void draw_debug(double delta_time) {
 
 		import blindfire.engine.defs : Vec2i;
 		import blindfire.engine.dbg : render_string;
 
 		int x, y;
 		input_handler_.mouse_pos(x, y);
+		debug_context_.render_string!("update deltatime: %f")(update_time);
+		debug_context_.render_string!("draw deltatime: %f")(delta_time);
+		debug_context_.render_string!("framerate: %f")(1.0 / frame_time);
 		debug_context_.render_string!("mouse x: %d, y: %d")(x, y);
 
 		debug_context_.reset();
 
 	} //draw_debug
 
+	double update_time, frame_time, draw_time;
+
 	void run() {
+
+		import blindfire.engine.timer : StopWatch;
+
+		static StopWatch main_timer, update_timer, draw_timer, frame_timer;
+		static long iter, last_update, last_render;
+		static long clock_ticks_per_second;
+
+		iter = main_timer.ticks_per_second() / 60;
+		clock_ticks_per_second = StopWatch.ticks_per_second();
+
+		main_timer.start();
+		update_timer.start();
+		draw_timer.start();
+		frame_timer.start();
 
 		while (window_.is_alive) {
 
-			//handle input
-			this.input_handler_.handle_events();
+			if (main_timer.peek() - last_update > iter) {
 
-			//update sound system
-			this.sound_system_.tick();
+				update_timer.start();
 
-			//update game and draw
-			this.update_function_();
-			this.draw();
+				//handle input
+				this.input_handler_.handle_events();
+
+				//update sound system
+				this.sound_system_.tick();
+
+				//update game and draw
+				this.update_function_();
+				update_time = cast(double)update_timer.peek() / cast(double)update_timer.ticks_per_second();
+				last_update = update_timer.peek();
+				update_timer.reset();
+
+			}
+
+			draw_timer.start();
+			this.draw((draw_time > 0) ? draw_time : 1.0);
+			draw_time = cast(double)draw_timer.peek() / cast(double)draw_timer.ticks_per_second();
+			frame_time = cast(double)frame_timer.peek() / cast(double)frame_timer.ticks_per_second();
+			last_render = draw_timer.peek();
+			draw_timer.reset();
+			frame_timer.reset();
 
 		}
+
 
 	} //run
 
