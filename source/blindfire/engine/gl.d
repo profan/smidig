@@ -215,6 +215,85 @@ struct Mesh {
 
 } //Mesh
 
+struct FrameBuffer {
+
+	GLuint frame_buffer_;
+	GLenum bound_target_;
+
+	@disable this();
+	@disable this(this);
+
+	this(int width, int height) {
+
+		glGenFramebuffers(1, &frame_buffer_);
+		glFramebufferParameteri(bound_target_, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
+		glFramebufferParameteri(bound_target_, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
+
+	} //this
+
+	~this() {
+
+		glDeleteFramebuffers(1, &frame_buffer_);
+
+	} //~this
+
+	void bind(GLenum target) {
+
+		bound_target_ = target;
+		glBindFramebuffer(bound_target_, frame_buffer_);
+
+	} //bind
+
+	void unbind() {
+
+		bound_target_ = 0;
+		glBindFramebuffer(bound_target_, 0);
+
+	} //unbind
+
+	mixin OpenGLError;
+
+} //FrameBuffer
+
+struct RenderBuffer {
+
+	GLuint render_buffer_;
+
+	@disable this();
+	@disable this(this);
+
+	this(ref FrameBuffer fbo, GLsizei width, GLsizei height) {
+
+		glGenRenderbuffers(1, &render_buffer_);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+
+	} //this
+
+	~this() {
+
+		glDeleteRenderbuffers(1, &render_buffer_);
+
+	} //~this
+
+	void bind() {
+
+		glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_);
+
+	} //bind
+
+	void unbind() {
+
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	} //unbind
+
+	mixin OpenGLError;
+
+} //RenderBuffer
+
+/* Graph Structure */
+/* - allows graphing a number of parameters over time, */
+/*  for example frametimes/profiling results live. */
 struct Graph {
 
 } //Graph
@@ -223,7 +302,6 @@ struct Particle(V) {
 
 	V position_;
 	V velocity_;
-
 
 	void tick(float drag) {
 
@@ -430,7 +508,7 @@ struct Transform {
 		this.rotation = rotation;
 		this.scale = scale;
 		this.origin = Vec3f(0.0f, 0.0f, 0.0f);
-	}
+	} //this
 
 	@property Mat4f transform() const nothrow @nogc {
 
@@ -446,21 +524,25 @@ struct Transform {
 
 		return posMatrix * rotMatrix * originMatrix * scaleMatrix;
 
-	}
+	} //transform
 
 } //Transform
 
 struct Vertex {
+
+	Vec3f pos;
+	Vec2f tex_coord;
 
 	this(in Vec3f pos, in Vec2f tex_coord) nothrow @nogc pure {
 		this.pos = pos;
 		this.tex_coord = tex_coord;
 	}
 
-	Vec3f pos;
-	Vec2f tex_coord;
-
 } //Vertex
+
+struct VertexSpec(T...) {
+
+} //VertexSpec
 
 struct Shader {
 
