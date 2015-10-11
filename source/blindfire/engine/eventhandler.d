@@ -210,7 +210,8 @@ struct EventHandler {
 				default:
 					break;
 			}
-	
+
+			/* forward events to listeners, filtered with a bitmask */
 			foreach(ref receiver; delegates) {
 				if ((receiver.mask >> EventToMask[ev.type]) & 1) {
 					receiver.ed(ev);
@@ -226,13 +227,16 @@ struct EventHandler {
 		}
 
 		SDL_GetMouseState(&last_x[1], &last_y[1]);
-		foreach (ref bind; motion_events) {
-			bind.func(last_x[1], last_y[1]);
-		}
-
 		if (last_x[0] != last_x[1] || last_y[0] != last_y[1]) {
+
 			last_x[0] = last_x[1];
 			last_y[0] = last_y[1];
+
+			//call only if change occured
+			foreach (ref bind; motion_events) {
+				bind.func(last_x[1], last_y[1]);
+			}
+
 		}
 
 	} //handle_events
