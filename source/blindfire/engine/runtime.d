@@ -90,7 +90,7 @@ struct Engine {
 		this.console_.construct(&debug_atlas_, null);
 
 		//initialize imgui context
-		this.imgui_context_.construct(allocator_);
+		this.imgui_context_.construct(allocator_, &window_);
 		this.imgui_context_.initialize();
 
 		//link up imgui context to event shite
@@ -146,10 +146,29 @@ struct Engine {
 
 		draw_function_();
 
+		bool show_another_window;
+
+		import derelict.imgui.imgui;
+		imgui_context_.new_frame(input_handler_);
+		igSetNextWindowSize(ImVec2(200,100), ImGuiSetCond_FirstUseEver);
+		igBegin("Another Window", &show_another_window);
+
+		{
+			static float f = 0.0f;
+			igText("Hello, world!");
+			igSliderFloat("float", &f, 0.0f, 1.0f);
+			igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().Framerate, igGetIO().Framerate);
+		}
+
+		igEnd();
+
+		imgui_context_.end_frame();
+
 		draw_debug();
 		cursor_.draw(window_.view_projection, Vec2f(input_handler_.mouse_x, input_handler_.mouse_y));
 
 		window_.render_present();
+
 
 	} //draw
 

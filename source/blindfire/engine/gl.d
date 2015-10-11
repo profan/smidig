@@ -469,8 +469,8 @@ struct Shader {
 
 		assert(uniforms.length <= bound_uniforms.length);
 
-		char* vs = load_shader(file_name ~ ".vs");
-		char* fs = load_shader(file_name ~ ".fs");
+		const char* vs = load_shader(file_name ~ ".vs");
+		const char* fs = load_shader(file_name ~ ".fs");
 		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER, file_name);
 		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER, file_name);
 
@@ -538,8 +538,9 @@ struct Shader {
 
 import blindfire.engine.util : load_file;
 
-char* load_shader(in char[] file_name) {
-	return load_file(toStringz(file_name));
+const(char*) load_shader(in char[] file_name) {
+	import std.file : read;
+	return toStringz(cast(immutable char[])read(file_name));
 } //load_shader
 
 bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] shader_path) nothrow {

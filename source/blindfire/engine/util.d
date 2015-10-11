@@ -53,7 +53,8 @@ char* load_file(const char *filename) nothrow @nogc {
 	char *buf = cast(char*)malloc((char.sizeof*filesize)+1);
 	if (!buf) printf("Memory error. \n");
 	result = fread_str(buf, (*buf).sizeof, filesize, file);
-	if (result != filesize) printf("Reading error. \n");
+	if (result != filesize) printf("Error reading file: %s, filesize was: %zu, expected: %zu. \n", 
+		filename, result, filesize);
 	fclose(file);
 
 	return buf;
