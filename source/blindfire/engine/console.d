@@ -1,13 +1,14 @@
 module blindfire.engine.console;
 
 import std.stdio : writefln;
-import derelict.sdl2.sdl;
 
+import derelict.sdl2.types : SDL_Event, SDL_TEXTINPUT;
+import derelict.sdl2.functions : SDL_StartTextInput, SDL_StopTextInput;
+
+import blindfire.engine.collections : StaticArray;
+import blindfire.engine.event : EventManager, EventCast;
 import blindfire.engine.text : FontAtlas;
 import blindfire.engine.window : Window;
-import blindfire.engine.event : EventManager, EventCast;
-
-import profan.collections : StaticArray;
 
 enum ConsoleCommand {
 
@@ -179,7 +180,7 @@ struct Console {
 
 	}
 
-	void draw(Window* window) nothrow @nogc {
+	void draw(Window* window) {
 
 		if (!enabled) { return; }
 

@@ -1,9 +1,9 @@
-#version 120
+#version 330
 
-attribute vec3 position;
-attribute vec2 tex_coord;
+in vec3 position;
+in vec2 tex_coord;
 
-varying vec2 tex_coord0;
+out vec2 tex_coord0;
 
 uniform mat4 transform;
 uniform mat4 perspective;

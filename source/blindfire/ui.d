@@ -6,23 +6,24 @@ import core.stdc.stdlib;
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl;
 
+import blindfire.engine.collections : StaticArray;
 import blindfire.engine.window;
 import blindfire.engine.util;
 import blindfire.engine.defs;
 import blindfire.engine.text;
 import blindfire.engine.gl;
 
-import profan.collections;
-
 enum LayoutType {
-	LINEAR
-}
+	Linear,
+	Horizontal
+} //LayoutType
 
 struct Layout {
 
 	LayoutType type;
 	int width, height;
 	int offset_x, offset_y;
+
 	this(LayoutType type, int offset_x, int offset_y, int width, int height) {
 		this.type = type;
 		this.offset_x = offset_x;
@@ -31,20 +32,7 @@ struct Layout {
 		this.height = height;
 	}
 
-}
-
-enum DrawCommand {
-	Rectangle,
-	Label
-}
-
-struct RectangleDrawCommand {
-
-}
-
-struct LabelDrawCommand {
-
-}
+} //Layout
 
 struct UIState {
 
@@ -61,7 +49,7 @@ struct UIState {
 	//encapsulate this, this is TEMPORARY
 	GLuint box_vao;
 	GLuint box_vbo;
-	Shader box_shader;
+	Shader box_shader = void;
 	uint box_num_vertices;
 
 	FontAtlas* font_atlas;
@@ -95,9 +83,9 @@ struct UIState {
 
 		}
 
-	}
+	} //update_ui
 
-	void init(LinearAllocator* allocator) {
+	void initialize(LinearAllocator* allocator) {
 		
 		ui_allocator = allocator;
 		assert (ui_allocator !is null);
@@ -135,13 +123,13 @@ struct UIState {
 		auto text_shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
 		font_atlas = ui_allocator.alloc!(FontAtlas)("fonts/OpenSans-Bold.ttf", 22, text_shader);
 
-	}
+	} //init
 
 	~this() {
 
 		glDeleteVertexArrays(1, &box_vao);
 
-	}
+	} //~this
 
 } //UIState
 
@@ -150,7 +138,7 @@ void before_ui(ref UIState ui) {
 
 	ui.hot_item = 0;
 
-}
+} //before_ui
 
 void reset_ui(ref UIState ui) {
 
@@ -162,7 +150,7 @@ void reset_ui(ref UIState ui) {
 		}
 	}
 
-}
+} //reset_ui
 
 //Immediate Mode GUI (IMGUI, see Muratori)
 void draw_rectangle(UIState* state, Window* window, float x, float y, float width, float height, int color, ubyte alpha = 255) {
@@ -180,7 +168,7 @@ void draw_rectangle(UIState* state, Window* window, float x, float y, float widt
 
 	state.box_shader.unbind();
 
-}
+} //draw_rectangle
 
 void draw_label(UIState* ui, Window* window, in char[] label, int x, int y, int width, int height, int color) {
 
@@ -188,18 +176,20 @@ void draw_label(UIState* ui, Window* window, in char[] label, int x, int y, int 
 	float label_width = (label.length * cw);
 	ui.font_atlas.render_text(window, label, (x - label_width/2) - cw*2.05f, y + (cw-cw/5), 1, 1, color);
 
-}
+} //draw_label
 
 struct TextSpec {
 	char[] label;
 	int text_color;
-}
+} //TextSpec
 
 bool mouse_in_rect(UIState* ui, int x, int y, int width, int height) {
 
+	import blindfire.engine.math : point_in_rect;
+
 	return point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
 
-}
+} //mouse_in_rect
 
 void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, int height, ref StaticArray!(char, 64) text_box, int color, int text_color) {
 
@@ -239,7 +229,7 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 	ui.draw_rectangle(window, x - width/2, y - height/2, width, height, color);
 	ui.font_atlas.render_text(window, text_box[], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
 
-}
+} //do_textbox
 
 bool do_button(UIState* ui, uint id, Window* window, int x, int y, int width, int height, int color, ubyte alpha = 255, in char[] label = "", int text_color = 0xFFFFFF) {
 
@@ -280,10 +270,10 @@ bool do_button(UIState* ui, uint id, Window* window, int x, int y, int width, in
 
 	return result;
 
-}
+} //do_button
 
 bool is_btn_down(UIState* ui, uint button) {
 
 	return (ui.mouse_buttons >> button-1) & 1;
 
-}
+} //is_btn_down

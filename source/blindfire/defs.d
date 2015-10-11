@@ -4,12 +4,24 @@ import std.socket : InternetAddress;
 import std.datetime : TickDuration;
 
 import blindfire.engine.event : Event, EventID, EventManager, expandEventsToMap;
-import blindfire.engine.state : State;
+import blindfire.engine.state : StateID;
+
+// game states
+enum State : StateID {
+
+	Menu,
+	Joining,
+	Game,
+	Options,
+	Lobby,
+	Waiting
+
+} //State
 
 alias ClientConnectEvent = Event!(EventType.ClientConnect, InternetAddress);
 alias ClientDisconnectEvent = Event!(EventType.ClientDisconnect, bool);
 alias ClientSetConnectedEvent = Event!(EventType.ClientSetConnected, bool);
-alias CreateGameEvent = Event!(EventType.CreateGame, bool);
+alias StartGameEvent = Event!(EventType.StartGame, bool);
 alias GameCreatedEvent = Event!(EventType.GameCreated, bool);
 
 //console commands
@@ -22,7 +34,7 @@ enum EventType : EventID {
 	ClientConnect,
 	ClientDisconnect,
 	ClientSetConnected,
-	CreateGame,
+	StartGame,
 	GameCreated,
 
 	//console commands
@@ -31,10 +43,11 @@ enum EventType : EventID {
 
 } //EventType
 
-mixin(expandEventsToMap!(ClientConnectEvent,
+mixin(expandEventsToMap!("EventIdentifier",
+						 ClientConnectEvent,
 						 ClientDisconnectEvent,
 						 ClientSetConnectedEvent,
-						 CreateGameEvent,
+						 StartGameEvent,
 						 GameCreatedEvent,
 						 SetTickrateEvent,
 						 PushGameStateEvent));

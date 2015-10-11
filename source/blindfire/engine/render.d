@@ -1,14 +1,21 @@
 module blindfire.engine.render;
 
+import std.stdio : writefln;
+
 import blindfire.engine.defs : RenderSpriteEvent;
 
-struct Renderer {
+interface IRenderer {
 
-	@disable this();
-	@disable this(this); //disallow copying and default construction
-
-	void onRenderSprite(RenderSpriteEvent* ev) {
-
-	} //onRenderSprite
+	void on_render_sprite_event(RenderSpriteEvent* event);
 
 } //Renderer
+
+class OpenGLRenderer : IRenderer {
+
+	void on_render_sprite_event(RenderSpriteEvent* event) {
+
+		writefln("rendered sprite: %s", event.payload);
+
+	} //on_render_sprite_event
+
+} //OpenGLRenderer

@@ -10,10 +10,13 @@ import std.typecons : Tuple;
 import std.conv : to;
 
 import blindfire.engine.log : Logger;
-import blindfire.engine.defs : ClientID;
-import blindfire.engine.stream : InputStream, OutputStream;
+import blindfire.engine.defs :
+		Command, ConnectionState, DisconnectReason, ClientID, AssignIDEvent, 
+		ConnectionNotificationEvent, DisconnectedEvent, GameUpdateEvent, SetConnectionStatusEvent;
 
-import profan.collections : StaticArray;
+import blindfire.engine.stream : InputStream, OutputStream;
+import blindfire.engine.collections : ScopedBuffer, StaticArray;
+import blindfire.engine.event : EventManager;
 
 struct NetworkStats {
 
@@ -61,36 +64,6 @@ enum MessageType : uint {
 	SEND_PEER_LIST
 
 } //MessageType
-
-enum ConnectionState {
-
-	CONNECTED, //not accepting connections, active
-	UNCONNECTED, //not accepting connections, can create
-	CONNECTING //accepting connections, has created session or is in created lobby
-
-} //ConnectionState
-
-enum Command {
-
-	//set network id
-	ASSIGN_ID,
-
-	CREATE,
-	CONNECT,
-	DISCONNECT,
-	TERMINATE,
-	UPDATE,
-	PING,
-
-	//replacement commands
-	SET_CONNECTED,
-	SET_UNCONNECTED,
-
-	//notifications to game thread
-	NOTIFY_CONNECTION
-
-} //Command
-
 
 /******************************
 * Packet Structure ************
@@ -200,39 +173,141 @@ struct NetworkState {
 	}
 } //NetworkState
 
+struct NetworkPeerFSM {
+
+	import blindfire.engine.fsm : FSM, FStateID, FStateTuple;
+
+	alias State = ConnectionState;
+	alias ExecFunc = void delegate();
+
+	mixin FSM!([State.CONNECTED, State.UNCONNECTED, State.CONNECTING], //states
+		[FStateTuple(State.CONNECTED, State.UNCONNECTED),
+		FStateTuple(State.CONNECTING, State.CONNECTED),
+		FStateTuple(State.UNCONNECTED, State.CONNECTING)],
+		ExecFunc);
+
+	private {
+
+		/* network */
+		UdpSocket socket;
+		Address bound_address;
+
+		/* clients */
+		Peer[ClientID] peers;
+		Peer* host_peer;
+		Peer self_peer;
+
+		/* book-keeping */
+		ClientID id_counter;
+
+		/* state */
+		ScopedBuffer!ubyte data_buffer;
+
+		/* communication */
+		EventManager* net_evman;
+
+	}
+
+	this(ushort port, EventManager* net_event_manager) {
+
+		this.socket = new UdpSocket();
+		this.socket.blocking = false;
+
+		this.net_evman = net_event_manager;
+
+		setInitialState(State.UNCONNECTED)
+			.attachFunction(State.UNCONNECTED, &onUnconnectedEnter, &onUnconnectedExecute, &onUnconnectedLeave)
+			.attachFunction(State.CONNECTED, &onConnectedEnter, &onConnectedExecute, &onConnectedLeave)
+			.attachFunction(State.CONNECTING, &onConnectingEnter, &onConnectingExecute, &onConnectingLeave);
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+	void onUnconnectedEnter(FStateID from) {
+
+	} //onUnconnectedEnter
+
+	void onUnconnectedExecute() {
+
+	} //onUnconnectedEnter
+
+	void onUnconnectedLeave(FStateID target) {
+
+	} //onUnconnnectedLeave
+
+	void onConnectedEnter(FStateID from) {
+
+	} //onConnectedEnter
+
+	void onConnectedExecute() {
+
+	} //onConnectedExecute
+
+	void onConnectedLeave(FStateID target) {
+
+	} //onConnectedLeave
+
+	void onConnectingEnter(FStateID from) {
+
+	} //onConnectingEnter
+
+	void onConnectingExecute() {
+
+	} //onConnectingExecute
+
+	void onConnectingLeave(FStateID target) {
+
+	} //onConnectingLeave
+
+	void init() {
+
+	} //init
+
+	void update() {
+
+	} //tick
+
+} //NetworkPeerFSM
+
 struct NetworkPeer {
 
 	enum DEFAULT_CLIENT_ID = ClientID.max;
 	enum MAX_PACKET_SIZE = 65507;
 
 	bool open;
-	UdpSocket socket;
-	ConnectionState state = ConnectionState.UNCONNECTED;
-
-	//keep track of if Peer is host as well?
+	ushort port;
 	bool is_host = false;
 
-	//list of connected peers as a hashmap, identified by their UUID
-	Peer[ClientID] peers;
-
-	Tid game_thread;
+	UdpSocket socket;
+	ConnectionState state = ConnectionState.UNCONNECTED;
+	Peer[ClientID] peers; //list of connected peers as a hashmap, identified by their UUID
 	ClientID client_uuid;
-	ushort port;
+	Peer host_peer;
 
 	NetworkState net_state;
 	Logger!("NET", NetworkState) logger;
 
-	Peer host_peer;
-	ClientID id_counter;
+	ClientID id_counter; //keeps track of what to assign connected clients
 
-	this(ushort port, Tid game_tid) {
+	//from refactor, currently bound address
+	Address addr;
+	ScopedBuffer!ubyte data;
+	EventManager* net_evman;
+
+	@disable this();
+	@disable this(this);
+
+	this(ushort port, EventManager* net_event_manager) {
 
 		//set socket to nonblocking, since one thread is used both for transmission and receiving, doesn't block on receive.
 		this.socket = new UdpSocket();
 		this.socket.blocking = false;
 
-		//thread id to pass messages back to
-		this.game_thread = game_tid;
+		//event handler to pass messages back to
+		this.net_evman = net_event_manager;
 		
 		//unique network identifier
 		this.client_uuid = DEFAULT_CLIENT_ID; //if it's still 255 when in session, something is wrong.
@@ -258,7 +333,7 @@ struct NetworkPeer {
 
 	void send_data_packet(UpdateMessage msg, immutable(ubyte)[] data, Address target) {
 		ubyte[4096] ubyte_data = void; //FIXME look at this later
-		auto send_data = OutputStream(ubyte_data.ptr, ubyte_data.length);
+		auto send_data = OutputStream(ubyte_data);
 		send_data.write(msg);
 		send_data.write(data);
 		auto bytes_sent = socket.sendTo(cast(void[])send_data[], target);
@@ -301,7 +376,7 @@ struct NetworkPeer {
 			peers[cast(ClientID)(id_counter-1)] = new_peer;
 
 			if (is_host) {
-				send(game_thread, Command.NOTIFY_CONNECTION, id_counter-1);
+				net_evman.push!ConnectionNotificationEvent(cast(ClientID)(id_counter - 1));
 			}
 
 		} else {
@@ -311,12 +386,12 @@ struct NetworkPeer {
 		if (!is_host) {
 			host_peer = Peer(cmsg.client_uuid, from);
 			client_uuid = cmsg.assigned_id;
-			send(game_thread, Command.ASSIGN_ID, cmsg.assigned_id);
+			net_evman.push!AssignIDEvent(cmsg.assigned_id);
 		}
 
 		if (state == ConnectionState.CONNECTING) {
 			state = switch_state(ConnectionState.CONNECTED);
-			send(game_thread, Command.SET_CONNECTED);
+			net_evman.push!SetConnectionStatusEvent(state);
 		}
 
 	}
@@ -359,7 +434,7 @@ struct NetworkPeer {
 
 				if (!is_host && host_peer.client_uuid == cmsg.client_uuid) { //if disconnecting client is the host, disconnect too.
 					state = switch_state(ConnectionState.UNCONNECTED);
-					send(game_thread, Command.DISCONNECT);
+					net_evman.push!DisconnectedEvent(DisconnectReason.HostDisconnected);
 				}
 
 				peers.remove(cmsg.client_uuid);
@@ -376,8 +451,7 @@ struct NetworkPeer {
 					break;
 				}
 
-				send(game_thread, Command.UPDATE,
-					 cast(immutable(ubyte)[])stream.pointer[0..umsg.data_size].idup);
+				net_evman.push!GameUpdateEvent(cast(immutable(ubyte)[])stream.pointer[0..umsg.data_size].idup);
 				//this cast is not useless, DO NOT REMOVE THIS UNLESS YOU ACTUALLY FIX THE PROBLEM
 				break;
 
@@ -454,7 +528,7 @@ struct NetworkPeer {
 				this.is_host = true;
 				this.state = switch_state(ConnectionState.CONNECTED);
 
-				send(game_thread, Command.ASSIGN_ID, id_counter++);
+				net_evman.push!AssignIDEvent(id_counter++);
 				break;
 
 			default:
@@ -572,27 +646,28 @@ struct NetworkPeer {
 
 	}
 
-	void listen() {
+	void initialize() {
 
-		Address addr;
-		bind_to_port(addr);
+		import std.experimental.allocator : theAllocator;
 
-		open = true;
-		logger.log("Listening on - %s:%d", addr.toAddrString(), port);
+		bind_to_port(this.addr);
+		logger.log("Listening on - %s:%d", this.addr.toAddrString(), this.port);
 		network_stats.timer.start();
 
-		Address from;
-		import core.stdc.stdlib : malloc, free;
-		void[] data = malloc(MAX_PACKET_SIZE)[0..MAX_PACKET_SIZE];
-		scope (exit) { free(data.ptr); }
+		this.data = ScopedBuffer!ubyte(theAllocator, MAX_PACKET_SIZE);
 
-		while (open) {
+	} //init
 
+	void tick() {
+
+		if (open) {
+
+			Address from;
 			auto bytes = socket.receiveFrom(data, from);
 			update_stats(bytes);
 
 			bool packet_ready = (bytes != -1 && bytes >= MessageType.sizeof);
-		
+
 			InputStream stream;
 			MessageType type;
 
@@ -623,13 +698,6 @@ struct NetworkPeer {
 
 		}
 
-	}
+	} //tick
 
 } //NetworkPeer
-
-void launch_peer(Tid game_tid) {
-
-	auto peer = NetworkPeer(12000, game_tid);
-	peer.listen();
-
-}

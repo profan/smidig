@@ -14,91 +14,104 @@ struct Event(EventID ID, T) {
 		return cast(OT*)(&this);
 	} //extract
 
-	import std.format : format;
+	import std.string : format;
 	static assert(this.sizeof <= 32u, format("Event: %s too big: %d", typeof(this).stringof, this.sizeof));
 } //Event
 
 struct EventManager {
 
 	import std.stdio : writefln;
-	import blindfire.engine.memory : LinearAllocator;
+	import blindfire.engine.collections : Array;
+	import blindfire.engine.memory : IAllocator, Mallocator, theAllocator, Region, make, dispose;
+
+	IAllocator allocator_;
+	Region!Mallocator region_allocator_;
+
+	Array!(Array!EventDelegate*) delegates;
+	Array!(Array!(EventCast*)*) events;
 
 	@disable this();
 	@disable this(this);
 
-	LinearAllocator allocator;
-	EventDelegate[][] delegates;
-	EventCast*[][] events;
-
 	this(size_t to_allocate, EventID number_types) {
-		this.allocator = LinearAllocator(to_allocate, "EventAllocator");
-		delegates = new EventDelegate[][](number_types+1, 0);
-		events = new EventCast*[][](number_types+1, 0);
+
+		auto num_to_alloc = number_types + 1;
+
+		this.allocator_ = theAllocator;
+		this.region_allocator_ = Region!Mallocator(to_allocate);
+		this.delegates = typeof(delegates)(allocator_, num_to_alloc);
+		this.events = typeof(events)(allocator_, num_to_alloc);
+
+		foreach (i; 0..num_to_alloc) {
+			delegates.add(allocator_.make!(Array!EventDelegate)(allocator_, 8));
+			events.add(allocator_.make!(Array!(EventCast*))(allocator_, 8));
+		}
+
 	} //this
 
+	~this() {
+
+		foreach (ref arr; delegates) {
+			this.allocator_.dispose(arr);
+		}
+
+		foreach (ref arr; events) {
+			this.allocator_.dispose(arr);
+		}
+
+	} //~this
+
 	void push(E, Args...)(Args args) {
-		auto thing = allocator.alloc!(E)(args);
-		events[thing.message_id] ~= cast(EventCast*)thing;
+
+		auto thing = region_allocator_.make!(E)(args);
+		(*events[thing.message_id]) ~= cast(EventCast*)thing;
+
 	} //push
 
 	void push(E)(ref E e) {
-		import orb.memory : get_size;
-		auto allocated_space = cast(E*)allocator.alloc(get_size!E(), E.alignof);
+
+		auto allocated_thing = region_allocator_.make(E)();
 		*allocated_space = e;
-		events[e.message_id] ~= cast(EventCast*)allocated_space;
+		(*events[e.message_id]) ~= cast(EventCast*)allocated_space;
+
 	} //push
 
 	static mixin template checkValidity(T, ED) {
+
 		import std.traits : isImplicitlyConvertible, ParameterTypeTuple;
 		alias first_param = ParameterTypeTuple!(ED)[0];
+
 		static assert (isImplicitlyConvertible!(T, first_param),
 					   "can't call function: " ~ ED.stringof ~ " with: " ~ T.stringof);
+
 	} //checkValidity
 
-	void register(T, ED)(ED dele) {
-		mixin checkValidity!(T, ED);
-		delegates[T.message_id] ~= cast(EventDelegate)dele;
+	void register(E, ED)(ED dele) {
+		mixin checkValidity!(E, ED);
+		(*delegates[E.message_id]) ~= cast(EventDelegate)dele;
 	} //register
 
-	void unregister(T, ED)(ED base_dele) { //CAUUTIIOON
-		import std.algorithm : remove;
+	void unregister(E, ED)(ED base_dele) { //CAUUTIIOON
 		auto dele = cast(EventDelegate) base_dele;
-		delegates[T.message_id][].remove!(e => e == dele);
+		delegates[E.message_id].remove(dele);
 	} //unregister
 
-	void test(T)(size_t rounds) {
+	void fire(E, Args...)(Args args) {
 
-		import std.range : iota;
-		import std.datetime : StopWatch;
+		alias ED = void delegate(ref E);
+		mixin checkValidity!(E, ED);
 
-		alias TestEvent = Event!(0, uint);
+		auto event = E(args);
+		auto cur_dels = (*delegates[E.message_id])[];
 
-		void receiveSomeEvent(EventCast* event) {
-			auto ev = event.extract!TestEvent;
+		foreach (key, ref del_func; cur_dels) {
+			auto casted_func = cast(ED) del_func;
+			casted_func(event);
 		}
-
-		auto sw = StopWatch();
-
-		register!TestEvent(&receiveSomeEvent);
-
-		sw.start();
-		foreach (i; iota(0, rounds)) {
-			push!TestEvent(10);
-			tick!T();
-		}
-		sw.stop();
-
-		unregister!TestEvent(&receiveSomeEvent);
-
-		writefln("Sending and Receiving %s events took: %s msecs", rounds, sw.peek.msecs);
-
-	} //test
-
-	void fire() {
 
 	} //fire
 
-	void schedule() {
+	void schedule(size_t in_ticks) { //TODO implement
 
 	} //schedule
 
@@ -120,39 +133,45 @@ struct EventManager {
 					}, id, type, type);
 
 			}
+
 			return str;
 
 		} //doSwitchEntry
 
 		static void tick(alias EvTypesMap)(ref EventManager ev_man) {
-			foreach (id, ref ev_list; ev_man.events) {
-				if (ev_list.length == 0) continue;
-				auto cur_dels = ev_man.delegates[id];
-				if (cur_dels.length > 0) {
-					foreach (ref ev; ev_list) {
-						foreach (key, ref del_func; cur_dels) {
 
+			foreach (id, ref ev_list; ev_man.events) {
+
+				if (ev_list.length == 0) continue;
+				auto cur_dels = (*ev_man.delegates[id])[];
+
+				if (cur_dels.length > 0) {
+					foreach (ref ev; *ev_list) {
+						foreach (key, ref del_func; cur_dels) {
 							switch (id) {
 								mixin(doSwitchEntry!EvTypesMap());
 								default: writefln("unhandled event type: %d", id);
 							}
-
 						}
 					}
 				}
-				ev_list.length = 0;
+
+				ev_list.clear();
+
 			}
-			ev_man.allocator.reset();
+
+			ev_man.region_allocator_.deallocateAll();
+
 		} //tick
 
-	}
+	} //do_tick
 
 } //EventManager
 
-template expandEventsToMap(Events...) {
+template expandEventsToMap(string name, Events...) {
 	enum expandEventsToMap =
 		"enum : int[string] {
-			EventIdentifier = [" ~ expandEvents!Events ~ "]
+			" ~ name ~ " = [" ~ expandEvents!Events ~ "]
 		}";
 } //expandEventsToMap
 
@@ -169,6 +188,96 @@ template expandEvents(Events...) {
 	}
 } //expandEvents
 
+version (unittest) {
+
+	import std.stdio : writefln;
+	import std.string : format;
+
+	enum TestEvent : EventID {
+		Foo,
+		Bar
+	}
+
+	alias FooEvent = Event!(TestEvent.Foo, bool);
+	alias BarEvent = Event!(TestEvent.Bar, long);
+
+	mixin (expandEventsToMap!("TestEventIdentifier",
+				  FooEvent,
+				  BarEvent));
+
+	mixin EventManager.doTick;
+
+}
+
 unittest {
 
+	auto evman = EventManager(EventMemory, TestEvent.max);
+
+	auto received_result = false;
+	auto func = (ref FooEvent foo) { received_result = foo; };
+	evman.register!FooEvent(func);
+	evman.push!FooEvent(true);
+
+	tick!TestEventIdentifier(evman);
+	assert(received_result == true, 
+		   format("received_result wasn't %s, event not received properly?", true));
+
 } //TODO write some tests up in this motherfucker
+
+unittest {
+
+	auto evman = EventManager(EventMemory, TestEvent.max);
+
+	long received_result = 0;
+	auto func = (ref BarEvent bar) { received_result = bar; };
+	evman.register!BarEvent(func);
+	evman.fire!BarEvent(25);
+
+	assert(received_result == 25, format("received result wasn't %d, event not received properly?", 25));
+
+}
+
+unittest {
+
+	import std.datetime : StopWatch;
+	auto evman = EventManager(EventMemory, TestEvent.max);
+	enum rounds = 100_000;
+
+	auto sw = StopWatch();
+
+	void receiveSomeEvent(ref FooEvent event) {}
+
+	evman.register!FooEvent(&receiveSomeEvent);
+
+	sw.start();
+	foreach (i; 0..rounds) {
+		evman.push!FooEvent(true);
+		tick!TestEventIdentifier(evman);
+	}
+	sw.stop();
+
+	writefln("[EventManager] took %s ms to push/tick %s events.", sw.peek().msecs, rounds);
+
+}
+
+unittest {
+
+	import std.datetime : StopWatch;
+	auto evman = EventManager(EventMemory, TestEvent.max);
+	enum rounds = 100_000;
+
+	auto sw = StopWatch();
+
+	void receiveSomeEvent(ref FooEvent event) {}
+
+	evman.register!FooEvent(&receiveSomeEvent);
+
+	sw.start();
+	foreach (i; 0..rounds) {
+		evman.fire!FooEvent(true);
+	}
+	sw.stop();
+
+	writefln("[EventManager] took %s ms to fire %s events.", sw.peek().msecs, rounds);
+
+}

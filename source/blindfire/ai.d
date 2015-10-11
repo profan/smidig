@@ -31,6 +31,7 @@ struct MovingFSM {
 	} //this
 
 	void onStatEnter(FStateID from) {
+
 	} //onStatEnter
 
 	void onStatExecute(int new_speed) {

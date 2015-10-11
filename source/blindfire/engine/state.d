@@ -6,17 +6,6 @@ import blindfire.engine.net;
 
 alias StateID = ulong;
 
-enum State {
-
-	MENU,
-	JOIN,
-	GAME,
-	OPTIONS,
-	LOBBY,
-	WAIT
-
-} //State
-
 class GameStateHandler {
 
 	GameState[] stack;
@@ -24,17 +13,17 @@ class GameStateHandler {
 
 	this() {
 		//asd
-	}
+	} //this
 
-	void add_state(GameState state, State type) nothrow {
-		states[type] = state;
-	}
+	void add_state(GameState state) nothrow {
+		states[state.id] = state;
+	} //add_state
 
-	void push_state(State state) {
+	void push_state(StateID state) {
 		GameState st = states[state];
 		st.enter(); //entering the state
 		stack ~= st;
-	}
+	} //push_state
 
 	GameState pop_state() {
 		GameState st = stack[$-1];
@@ -42,23 +31,31 @@ class GameStateHandler {
 		stack = stack[0..$-1];
 		stack[$-1].enter(); //entering the state now on top of stack
 		return st;
-	}
+	} //pop_state
+
+	void switch_state(StateID state) {
+		stack[$-1].leave();
+		stack[$-1] = states[state];
+		stack[$-1].enter();
+	} //switch_state
 
 	void update(double dt) {
 		stack[$-1].update(dt);
-	}
+	} //update
 
 	void draw(Window* window) {
 		stack[$-1].draw(window);
-	}
+	} //draw
 
 	GameState peek() nothrow {
 		return stack[$-1];
-	}
+	} //peek
 
 } //GameStateHandler
 
 interface GameState {
+
+	@property StateID id() const nothrow @nogc;
 
 	void enter();
 	void leave();

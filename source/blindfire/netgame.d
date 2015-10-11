@@ -1,6 +1,5 @@
 module blindfire.netgame;
 
-import std.concurrency : Tid, receiveTimeout, send;
 import std.datetime : dur;
 
 import blindfire.engine.stream : InputStream, OutputStream;
@@ -21,16 +20,6 @@ struct PlayerData {
 
 } //PlayerData
 
-alias TempBuf = OutputStream;
-alias ActionType = uint;
-
-interface Action {
-
-	ActionType identifier() const;
-	void serialize(ref TempBuf buf);
-	void execute(EntityManager em);
-
-} //Action
 
 enum UpdateType {
 
@@ -124,6 +113,8 @@ struct ClientFSM {
 
 class GameNetworkManager {
 
+	import blindfire.engine.defs;
+
 	struct Server {
 		StaticArray!(char, 64) server_name;
 	}
@@ -137,7 +128,6 @@ class GameNetworkManager {
 		SESSION_ACTIVE
 	}
 
-
 	public {
 
 		float turn_length = 0.2f;
@@ -148,7 +138,7 @@ class GameNetworkManager {
 		TurnID turn_id;
 		TurnManager tm;
 		EntityManager em;
-		Tid network_thread;
+		EventManager* network_client;
 
 		ClientID client_id;
 
@@ -165,8 +155,8 @@ class GameNetworkManager {
 
 	}
 
-	this(Tid net_tid, GameStateHandler state_han, ConfigMap* config, TurnManager tm, EventManager* eventman) {
-		this.network_thread = net_tid;
+	this(EventManager* net_ev_man, GameStateHandler state_han, ConfigMap* config, TurnManager tm, EventManager* eventman) {
+		this.network_client = net_ev_man;
 		this.game_state_handler = state_han;
 		this.config_map = config;
 		this.tm = tm;
@@ -174,7 +164,7 @@ class GameNetworkManager {
 
 		evman.register!ClientConnectEvent(&onClientConnect);
 		evman.register!ClientDisconnectEvent(&onClientDisconnect);
-		evman.register!CreateGameEvent(&onCreateGame);
+		evman.register!StartGameEvent(&onCreateGame);
 
 	}
 
@@ -208,7 +198,7 @@ class GameNetworkManager {
 	void process_actions() {
 
 		ubyte[2048] buf; //FIXME deal with this artificial limitation
-		auto stream = OutputStream(buf.ptr, buf.length);
+		auto stream = OutputStream(buf);
 		foreach (action; tm.pending_actions) {
 
 			auto type = UpdateType.ACTION;
@@ -221,169 +211,131 @@ class GameNetworkManager {
 		}
 	
 		if (stream.current > 0) {
-			send(network_thread, Command.UPDATE, cast(immutable(ubyte[]))stream[].idup);
+			network_client.push!GameUpdateEvent(stream[].idup);
 		}
 
 		tm.do_pending_actions(em);
 
 	}
 
-	void handle_messages() {
+	void onCreateGameEvent(ref CreateGameEvent ev) {
 
-		auto result = receiveTimeout(dur!("nsecs")(1),
-		(Command cmd) {
+		//notify active game state
+		active_session = new Session(this);
+		evman.push!GameCreatedEvent(true);
 
-			writefln("[GAME] Recieved %s from net thread.", to!string(cmd));
+	} //onCreateGameEvent
 
-			auto active_game_state = game_state_handler.peek();
-			switch (cmd) with (Command) {
+	void onAssignIDEvent(ref AssignIDEvent ev) {
 
-				case CREATE:
-					//notify active game state
-					active_session = new Session(this);
-					evman.push!GameCreatedEvent(true);
+		auto id = ev.payload;
+		writefln("[GAME] Recieved id assignment: %d from net thread.", id);
+		this.client_id = id;
+
+	} //onAssignIDEvent
+
+	void onConnectionNotification(ref ConnectionNotificationEvent ev) {
+
+		writefln("[GAME] Client %d connected.", ev.payload);
+
+	} //onConnectionNotification
+
+	void onGameUpdate(ref GameUpdateEvent ev) {
+
+		import blindfire.serialize : deserialize;
+
+		bool done = false;
+		auto data = ev.payload;
+		auto input_stream = InputStream(cast(ubyte*)data.ptr, data.length);
+
+		writefln("[GAME] Received packet, %d bytes", data.length);
+
+		UpdateType type = input_stream.read!UpdateType();
+		while (!done && input_stream.current < data.length) {
+
+			switch (type) {
+
+				case UpdateType.PLAYER_DATA: {
+
+					PlayerData player = input_stream.read!PlayerData();
+					writefln("[GAME] Handling player data - username: %s", 
+							 player.player_name[0..player.length]);
+					active_session.connections ~= Connection(StaticArray!(char, 64)(player.player_name[0..player.length]));
+
 					break;
 
-				case SET_CONNECTED:
+				}
 
-					//send player data
-					ubyte[4096] buf; //FIXME deal with this artificial limitation
-					auto stream = OutputStream(buf.ptr, buf.length);
+				case UpdateType.ACTION: {
 
-					auto type = UpdateType.PLAYER_DATA;
-					stream.write(type);
+					import blindfire.action : handle_action;
+					ActionType action_type = input_stream.read!(ActionType)();
 
-					import std.algorithm : min;
-					auto name = config_map.get("username");
-					char[64] username;
-					username[0..min(name.length, 64)] = name[0..min(name.length, 64)];
-					auto data = PlayerData(cast(ubyte)name.length, username);
-					stream.write(data);
-
-					send_message(Command.UPDATE, cast(immutable(ubyte[]))stream[].idup);
-
-					evman.push!ClientSetConnectedEvent(true);
-					break;
-
-				case DISCONNECT:
-					evman.push!ClientDisconnectEvent(true);
-					break;
-
-				default:
-					writefln("[GAME] Unhandled message from net thread: %s", to!string(cmd));
-
-			}
-
-		},
-		(Command cmd, ClientID id) {
-
-			if (cmd == Command.ASSIGN_ID) {
-				writefln("[GAME] Recieved id assignment: %d from net thread.", id);
-				this.client_id = id;
-			} else if (cmd == Command.NOTIFY_CONNECTION) {
-				writefln("[GAME] Client %d connected. ", id);
-			}
-
-		},
-		(Command cmd, immutable(ubyte)[] data) {
-
-			import blindfire.serialize : deserialize;
-
-			bool done = false;
-			auto input_stream = InputStream(cast(ubyte*)data.ptr, data.length);
-
-			writefln("[GAME] Received packet, %d bytes", data.length);
-
-			UpdateType type = input_stream.read!UpdateType();
-			while (!done && input_stream.current < data.length) {
-
-				switch (type) {
-
-					string handle_action() {
-
-						import std.string : format;
-
-						auto str = "";
-
-						foreach (type, id; ActionIdentifier) {
-
-							str ~= format(
-									q{case %d:
-										auto action = new %s();
-										deserialize!(%s)(input_stream, &action);
-										action.execute(em);
-										break;
-									}, id, type, type);
-
-						}
-
-						return str;
-
+					switch (action_type) {
+						mixin(handle_action()); //generates code for handling each action type
+						default:
+							writefln("[GAME] Unhandled action type: %s", to!string(action_type));
 					}
 
-					case UpdateType.PLAYER_DATA:
-						PlayerData player = input_stream.read!PlayerData();
-						writefln("[GAME] Handling player data - username: %s", 
-								 player.player_name[0..player.length]);
-						active_session.connections ~= Connection(StaticArray!(char, 64)(player.player_name[0..player.length]));
-						break;
+					break;
 
-					case UpdateType.ACTION:
+				}
 
-						ActionType action_type = input_stream.read!(ActionType)();
-
-						switch (action_type) {
-
-							mixin(handle_action()); //generates code for handling each action type
-
-							default:
-								writefln("[GAME] Unhandled action type: %s", to!string(action_type));
-
-						}
-
-						break;
-
-					default:
-						writefln("[GAME] Unhandled Update Type: %s", to!string(type));
-						done = true; //halt, or would get stuck in a loop.
-
+				default: {
+					writefln("[GAME] Unhandled Update Type: %s", to!string(type));
+					done = true; //halt, or would get stuck in a loop.
 				}
 
 			}
 
-		});
+		}
 
-	}
+	} //onGameUpdate
 
-	void onCreateGame(ref CreateGameEvent ev) {
-		send_message(Command.CREATE);
-	}
+	void onSetConnectionStatus(ref SetConnectionStatusEvent ev) {
+
+		//send player data
+		ubyte[4096] buf; //FIXME deal with this artificial limitation
+		auto stream = OutputStream(buf);
+
+		auto type = UpdateType.PLAYER_DATA;
+		stream.write(type);
+
+		import std.algorithm : min;
+		auto name = config_map.get("username");
+		char[64] username;
+		username[0..min(name.length, 64)] = name[0..min(name.length, 64)];
+		auto data = PlayerData(cast(ubyte)name.length, username);
+		stream.write(data);
+
+		send_message(stream[]);
+		evman.push!ClientSetConnectedEvent(true);
+
+	} //onSetConnectionStatus
+
+	void onDisconnectedEvent(ref DisconnectedEvent ev) {
+		evman.push!ClientDisconnectEvent(true);
+	} //onDisconnectedEvent
+
+	void onCreateGame(ref StartGameEvent ev) {
+		network_client.push!CreateGameEvent(true);
+	} //onCreateGame
 
 	void onClientConnect(ref ClientConnectEvent ev) {
-		send_message(Command.CONNECT);
-	}
+		network_client.push!DoConnectEvent(true);
+	} //onClientConnect
 
 	void onClientDisconnect(ref ClientDisconnectEvent ev) {
-		send_message(Command.DISCONNECT);
-	}
-
-	void send_message(Args...)(Args args) {
-
-		send(network_thread, args);
-
-	}
+		network_client.push!DoDisconnectEvent(true);
+	} //onClientDisconnect
 
 	void send_action(T, Args...)(Args args) {
-
 		tm.create_action!(T)(args);
-
 	}
 
 	void send_message(in ubyte[] data) {
-
 		//copy data, send.
-		send(network_thread, data.idup); //FIXME this allocates, aaaargh?!
-
+		network_client.push!GameUpdateEvent(data.idup);
 	}
 
 	@property Connection[] connected_players() {

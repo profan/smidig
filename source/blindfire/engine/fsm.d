@@ -25,6 +25,11 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 		return this;
 	} //attachFunction
 
+	ref typeof(this) attachState(S)(FStateID id, S state) {
+		states[id] = TripleRunFunc(&state.enter, &state.execute, &state.leave);
+		return this;
+	} //attachState
+
 	void tick(Args...)(Args args) {
 		states[current_state](args);
 	} //tick

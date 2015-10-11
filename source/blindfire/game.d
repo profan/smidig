@@ -1,7 +1,6 @@
 module blindfire.game;
 
 import std.stdio : writefln;
-import std.concurrency : spawn, thisTid;
 
 import derelict.sdl2.sdl;
 
@@ -33,6 +32,8 @@ final class MenuState : GameState {
 	UIState* ui_state;
 	GameStateHandler statehan;
 	EventManager* evman;
+
+	@property StateID id() const { return State.Menu; }
 	
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 
@@ -64,16 +65,16 @@ final class MenuState : GameState {
 
 		uint item_width = height / 2, item_height = 32;
 		if (do_button(ui_state, 1, window, window.width/2, window.height/2 - item_height/2, item_width, item_height, ITEM_COLOR, 255, "Join Game", MENU_COLOR)) {
-			statehan.push_state(State.JOIN);
+			statehan.push_state(State.Joining);
 		} //join
 
 		if (do_button(ui_state, 2, window, window.width/2, window.height/2 + item_height/2*2, item_width, item_height, ITEM_COLOR, 255, "Create Game", MENU_COLOR)) {
 			evman.push!CreateGameEvent(true);
-			statehan.push_state(State.LOBBY);
+			statehan.push_state(State.Lobby);
 		} //create
 
 		if (do_button(ui_state, 12, window, window.width/2, window.height/2 + item_height/2*5, item_width, item_height, ITEM_COLOR, 255, "Options", MENU_COLOR)) {
-			statehan.push_state(State.OPTIONS);
+			statehan.push_state(State.Options);
 		} //create
 
 		if (do_button(ui_state, 3, window, window.width/2, window.height/2 + (item_height/2)*8, item_width, item_height, ITEM_COLOR, 255, "Quit Game", MENU_COLOR)) {
@@ -90,6 +91,8 @@ final class JoiningState : GameState {
 	GameStateHandler statehan;
 	GameNetworkManager netman;
 	EventManager* evman;
+
+	@property StateID id() const { return State.Joining; }
 
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
@@ -111,8 +114,7 @@ final class JoiningState : GameState {
 	} //leave
 
 	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
-		statehan.pop_state();
-		statehan.push_state(State.LOBBY);
+		statehan.switch_state(State.Lobby);
 	} //onClientSetConnected
 
 	void update(double dt) {
@@ -126,7 +128,6 @@ final class JoiningState : GameState {
 			evman.push!ClientDisconnectEvent(true);
 			statehan.pop_state();
 		} //back to menu, cancel
-
 
 		auto offset = Vec2i(0, 0);
 		ui_state.draw_label(window, "Local Servers", offset.x, offset.y, 0, 0, 0x428bca);
@@ -151,6 +152,8 @@ final class LobbyState : GameState {
 	GameNetworkManager netman;
 	EventManager* evman;
 
+	@property StateID id() const { return State.Lobby; }
+
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -167,8 +170,7 @@ final class LobbyState : GameState {
 	} //leave
 
 	void onClientSetConnected(ref ClientSetConnectedEvent ev) {
-		statehan.pop_state();
-		statehan.push_state(State.GAME);
+		statehan.switch_state(State.Game);
 	} //onClientSetConnected
 
 	void update(double dt) {
@@ -194,8 +196,7 @@ final class LobbyState : GameState {
 		//bottom left for quit button
 		if (do_button(ui_state, 8, window, item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Start Game", 0x428bca)) {
 			evman.push!ClientSetConnectedEvent(true);
-			statehan.pop_state();
-			statehan.push_state(State.GAME);
+			statehan.switch_state(State.Game);
 		}
 
 		if (do_button(ui_state, 9, window, item_width + item_width/2, window.height - item_height, item_width, item_height, ITEM_COLOR, 255, "Quit Game", 0x428bca)) {
@@ -227,6 +228,8 @@ final class MatchState : GameState {
 
 	LinearAllocator entity_allocator;
 
+	@property StateID id() const { return State.Game; }
+
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, GameNetworkManager net_man, Console* console, FontAtlas* atlas, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -236,16 +239,16 @@ final class MatchState : GameState {
 		this.console = console;
 		this.debug_atlas = atlas;
 
-		this.entity_allocator = LinearAllocator(1024 * 32, "EntityAllocator"); //32 megabytes :D
+		import blindfire.engine.memory : theAllocator, make;
 
-		alias ea = entity_allocator;
-		this.em = ea.alloc!(EntityManager)();
-		this.em.addSystem(ea.alloc!(TransformManager)());
-		this.em.addSystem(ea.alloc!(CollisionManager)(Vec2i(640, 480)));
-		this.em.addSystem(ea.alloc!(SpriteManager)());
-		this.em.addSystem(ea.alloc!(InputManager)());
-		this.em.addSystem(ea.alloc!(OrderManager)(&sbox, net_man.tm));
-		this.em.addSystem(ea.alloc!(SelectionManager)());
+		alias ac = theAllocator;
+		this.em = ac.make!EntityManager(theAllocator);
+		this.em.addSystem(ac.make!TransformManager());
+		this.em.addSystem(ac.make!(CollisionManager)(Vec2i(640, 480)));
+		this.em.addSystem(ac.make!(SpriteManager)());
+		this.em.addSystem(ac.make!(InputManager)());
+		this.em.addSystem(ac.make!(OrderManager)(&sbox, net_man.tm));
+		this.em.addSystem(ac.make!(SelectionManager)());
 
 		this.sbox = SelectionBox();
 
@@ -327,6 +330,8 @@ final class WaitingState : GameState {
 	GameStateHandler statehan;
 	EventManager* evman;
 
+	@property StateID id() const { return State.Waiting; }
+
 	this(GameStateHandler statehan, EventHandler* evhan, UIState* state, EventManager* eventman) {
 		this.statehan = statehan;
 		this.ui_state = state;
@@ -368,6 +373,8 @@ final class OptionsState : GameState {
 
 	//options
 	StaticArray!(char, 64) player_name;
+
+	@property StateID id() const { return State.Options; }
 
 	this(GameStateHandler state_handler, EventHandler* event_handler, UIState* ui, ConfigMap* conf, EventManager* eventman) {
 		this.statehan = state_handler;
@@ -411,16 +418,20 @@ final class OptionsState : GameState {
 struct Game {
 
 	import blindfire.res : Resource;
+	import blindfire.engine.sound : SoundSystem, SoundID;
 
 	private {
 
 		Window* window;
+		EventManager net_evman;
+		NetworkPeer network_client;
+		SoundSystem* sound_system;
+
 		EventManager evman;
 		EventHandler* evhan;
 		GameStateHandler state;
 		UIState ui_state;
 
-		Tid network_thread;
 		GameNetworkManager net_man;
 		ConfigMap config_map;
 		TurnManager tm;
@@ -441,13 +452,16 @@ struct Game {
 
 	this(Window* window, EventHandler* evhan) {
 
+		this.window = window;
+		this.net_evman = EventManager(EventMemory, NetEventType.max);
+		this.network_client = NetworkPeer(12000, &net_evman);
+
 		this.master_allocator = LinearAllocator(65536, "MasterAllocator");
 		this.resource_allocator = master_allocator.alloc!(LinearAllocator)(16384, "ResourceAllocator", &master_allocator);
 		this.system_allocator = master_allocator.alloc!(LinearAllocator)(32768, "SystemAllocator", &master_allocator);
 
 		this.evman = EventManager(EventMemory, EventType.max);
 		this.evhan = evhan;
-		this.window = window;
 		this.ui_state = UIState();
 		this.config_map = ConfigMap("game.cfg");
 		
@@ -500,16 +514,16 @@ struct Game {
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
 		auto shader = ra.alloc!(Shader)("shaders/basic", attributes[], uniforms[]);
-		rm.set_resource!(Shader)(shader, Resource.BASIC_SHADER);
+		rm.set_resource(shader, Resource.BASIC_SHADER);
 
 		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
 		char[16][2] text_uniforms = ["color", "projection"];
 		auto text_shader = ra.alloc!(Shader)("shaders/text", text_attribs[], text_uniforms[]); 
-		rm.set_resource!(Shader)(text_shader, Resource.TEXT_SHADER);
+		rm.set_resource(text_shader, Resource.TEXT_SHADER);
 
 		//textures
 		auto unit_tex = ra.alloc!(Texture)("resource/img/dude2.png");
-		rm.set_resource!(Texture)(unit_tex, Resource.UNIT_TEXTURE);
+		rm.set_resource(unit_tex, Resource.UNIT_TEXTURE);
 
 		//font atlases and such
 		this.debug_atlas = system_allocator.alloc!(FontAtlas)("fonts/OpenSans-Regular.ttf", 12, text_shader);
@@ -517,31 +531,43 @@ struct Game {
 
 		//mouse pointer texture
 		auto cursor_texture = ra.alloc!(Texture)("resource/img/other_cursor.png");
-		rm.set_resource!(Texture)(cursor_texture, Resource.CURSOR_TEXTURE);
+		rm.set_resource(cursor_texture, Resource.CURSOR_TEXTURE);
 		this.cursor = system_allocator.alloc!(Cursor)(cursor_texture, shader);
 		SDL_ShowCursor(SDL_DISABLE); //make sure to disable default cursor
 
 	} //load_resources
 
+	void load_sounds() {
+
+		auto rm = ResourceManager.get();
+		auto music_file = sound_system.load_sound_file(cast(char*)"resource/audio/paniq.wav".ptr);
+		rm.set_resource!(SoundID)(cast(SoundID*)music_file, Resource.PANIQ);
+
+	} //load_sounds
+
 	void initialize_systems() {
 
+		this.network_client.initialize();
+
 		//upload vertices for ui to gpu, set up shaders.
-		this.ui_state.init(system_allocator);
+		this.ui_state.initialize(system_allocator);
 
 		alias ra = system_allocator;
+		this.sound_system = ra.alloc!(SoundSystem)(32);
+		this.sound_system.initialize();
+
 		this.state = ra.alloc!(GameStateHandler)();
-		this.network_thread = spawn(&launch_peer, thisTid); //pass game thread so it can pass recieved messages back
 
 		this.tm = ra.alloc!(TurnManager)();
-		this.net_man = ra.alloc!(GameNetworkManager)(network_thread, state, &config_map, tm, &evman);
+		this.net_man = ra.alloc!(GameNetworkManager)(&net_evman, state, &config_map, tm, &evman);
 
-		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, &evman), State.MENU);
-		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas, &evman), State.GAME);
-		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, net_man, &evman), State.JOIN);
-		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man, &evman), State.LOBBY);
-		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, &evman), State.WAIT);
-		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map, &evman), State.OPTIONS);
-		state.push_state(State.MENU); //set initial state
+		state.add_state(ra.alloc!(MenuState)(state, evhan, &ui_state, &evman));
+		state.add_state(ra.alloc!(MatchState)(state, evhan, &ui_state, net_man, console, debug_atlas, &evman));
+		state.add_state(ra.alloc!(JoiningState)(state, evhan, &ui_state, net_man, &evman));
+		state.add_state(ra.alloc!(LobbyState)(state, evhan, &ui_state, net_man, &evman));
+		state.add_state(ra.alloc!(WaitingState)(state, evhan, &ui_state, &evman));
+		state.add_state(ra.alloc!(OptionsState)(state, evhan, &ui_state, &config_map, &evman));
+		state.push_state(State.Menu); //set initial state
 
 		evhan.add_listener(&ui_state.update_ui);
 		evhan.bind_keyevent(SDL_SCANCODE_RALT, &window.toggle_wireframe);
@@ -600,8 +626,14 @@ struct Game {
 		//allocate resources for systems
 		initialize_systems();
 
+		//load sounds
+		load_sounds();
+
+		auto retrieved_sound = ResourceManager.get().get_resource!(SoundID)(Resource.PANIQ);
+		sound_system.play_sound(cast(SoundID)retrieved_sound, 0.25f);
+
 		//terminate network worker when run goes out of scope, because the game has ended
-		scope(exit) { net_man.send_message(Command.TERMINATE); }
+		//scope(exit) { net_man.send_message(Command.TERMINATE); } TODO REVISIT
 
 		//register console commands
 		register_concommands();
@@ -620,8 +652,6 @@ struct Game {
 		while(window.is_alive) {
 
 			ft_sw.start();
-			net_man.handle_messages();
-			net_man.process_actions();
 
 			if (sw.peek() - last > iter) {
 
@@ -629,8 +659,13 @@ struct Game {
 
 				ut_sw.start();
 				tick!EventIdentifier(evman);
+				tick!NetEventIdentifier(net_evman);
+
 				evhan.handle_events();
+				network_client.tick();
+				net_man.process_actions();
 				update(1.0);
+
 				last = sw.peek();
 				updatetime = ut_sw.peek().msecs;
 				ut_sw.reset();
@@ -641,7 +676,6 @@ struct Game {
 			window.render_clear(0x428bca);
 			draw();
 			window.render_present();
-
 			drawtime = dt_sw.peek().msecs;
 			frametime = ft_sw.peek().msecs;
 			dt_sw.reset();
@@ -657,3 +691,84 @@ struct Game {
 	} //run
 
 } //Game
+
+struct NewGame {
+
+	import blindfire.engine.sound : SoundID;
+	import blindfire.engine.runtime;
+
+	enum GameResource : ResourceID {
+		Click = Resource.max
+	} //GameResource
+
+	private {
+
+		Engine engine_;
+
+	}
+
+	@disable this(this);
+
+	void initialize() {
+
+		//initialize engine systems
+		this.engine_.initialize("Project Blindfire", &update, &draw);
+
+		//initialize self
+		initialize_systems();
+		load_resources();
+		bind_actions();
+
+	} //initialize
+
+	void initialize_systems() {
+
+	} //initialize_systems
+
+	void load_resources() {
+
+		auto rm = ResourceManager.get();
+
+		//load click sound
+		auto click_file = engine_.sound_system_.load_sound_file(cast(char*)"resource/audio/radiy_click.wav".ptr);
+		rm.set_resource!(SoundID)(cast(SoundID*)click_file, GameResource.Click);
+	
+	} //load_resources
+
+	void bind_actions() {
+
+		auto click_id = cast(SoundID)ResourceManager.get().get_resource!SoundID(GameResource.Click);
+		engine_.input_handler_.bind_mousebtn(1, (x, y) => engine_.sound_system_.play_sound(click_id, 0.5f, false), KeyState.UP);
+		engine_.input_handler_.bind_mousebtn(3, (x, y) => engine_.sound_system_.stop_all_sounds(), KeyState.UP);
+		engine_.input_handler_.bind_keyevent(SDL_SCANCODE_SPACE, () => engine_.window_.toggle_fullscreen());
+
+	} //bind_actions
+
+	void update() {
+
+	} //update
+
+	void draw_debug() {
+
+		import blindfire.engine.dbg : render_string;
+
+		auto free_sources = engine_.sound_system_.free_sources;
+
+		auto offset = Vec2i(16, 48);
+		engine_.debug_context_.render_string!("free sound sources: %d")(free_sources);
+
+	} //draw_debug
+
+	void draw() {
+
+		draw_debug();
+
+	} //draw
+
+	void run() {
+
+		this.engine_.run();
+
+	} //run
+
+} //NewGame

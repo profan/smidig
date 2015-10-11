@@ -1,6 +1,6 @@
-#version 120
+#version 330
 
-varying vec2 tex_coord;
+in vec2 tex_coord;
 
 uniform sampler2D tex;
 uniform vec4 color;

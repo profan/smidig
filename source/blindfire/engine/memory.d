@@ -6,9 +6,29 @@ import core.stdc.stdlib : malloc, free;
 import std.stdio : writefln;
 import std.conv : emplace;
 
+public import std.experimental.allocator : allocatorObject, IAllocator, theAllocator, make, makeArray, dispose;
+public import std.experimental.allocator.building_blocks.region : Region;
+public import std.experimental.allocator.mallocator : Mallocator;
+
+void memmove(T)(T[] src, T[] target) {
+
+	import core.stdc.string : memmove;
+	memmove(target.ptr, src.ptr, src.length * T.sizeof);
+	
+} //memmove
+
+void memmove(T)(T* src, T* target) {
+
+	import core.stdc.string : memmove;
+	memmove(target, src, T.sizeof);
+
+} //memmove
+
+
+
 private interface Instance {
 	void destroy_object();
-}
+} //Instance
 
 private class MemoryObject(T) : Instance {
 
@@ -32,7 +52,7 @@ private class MemoryObject(T) : Instance {
 		}
 	}
 
-}
+} //MemoryObject
 
 private mixin template AllocatorCommon() {
 
@@ -57,7 +77,7 @@ private mixin template AllocatorCommon() {
 
 		return emplace!(T)(memory, args);
 
-	}
+	} //alloc_item
 
 	@property size_t remaining_size() const nothrow @nogc {
 
@@ -66,7 +86,7 @@ private mixin template AllocatorCommon() {
 
 		return remaining;
 
-	}
+	} //remaining_size
 
 } //AllocatorCommon
 
@@ -104,7 +124,7 @@ struct LinearAllocator {
 		this.current = buffer;
 		this.name = name;
 
-	}
+	} //this
 
 	this(size_t size, string name, LinearAllocator* master) nothrow @nogc {
 
@@ -114,7 +134,7 @@ struct LinearAllocator {
 		this.current = buffer;
 		this.name = name;
 
-	}
+	} //this
 
 	~this() {
 
@@ -130,7 +150,7 @@ struct LinearAllocator {
 			free(buffer);
 		}
 
-	}
+	} //~this
 
 	void* alloc(size_t size, size_t alignment) nothrow @nogc {
 
@@ -147,7 +167,7 @@ struct LinearAllocator {
 
 		return allocated_start;
 
-	}
+	} //alloc
 
 	auto alloc(T, Args...)(Args args) {
 
@@ -158,12 +178,14 @@ struct LinearAllocator {
 
 		return element;
 
-	}
+	} //alloc
 
 	void reset() nothrow {
+
 		allocated_size = 0;
 		current = buffer;
-	}
+
+	} //reset
 
 	mixin AllocatorInvariant;
 	mixin AllocatorCommon;
@@ -174,240 +196,16 @@ unittest {
 
 } //LinearAllocator Tests
 
-struct StackAllocator {
-
-	struct Handle(T) {
-		MemoryObject!T obj;
-	}
-
-	struct Header {
-
-		this(size_t bytes) {
-			this.size = bytes;
-		}
-
-		size_t size;
-
-	}
-
-	size_t pointer_count = 0;
-	Instance[100] allocated_pointers = void; //FIXME get rid of this limitation, this is... very bad :D
-
-	@disable this(this);
-
-	this(size_t size, string name) nothrow {
-
-		this.total_size = size;
-		this.allocated_size = 0;
-
-		this.buffer = malloc(total_size);
-		this.current = buffer;
-
-		GC.addRange(buffer, total_size);
-		this.name = name;
-
-	}
-
-	~this() {
-
-		if (total_size > 0) {
-			writefln("[StackAllocator:%s] freed %d bytes, %d bytes allocated.", name, total_size, allocated_size);
-		}
-
-	}
-
-
-	void[] alloc(bool header = false)(size_t bytes) {
-
-		assert (allocated_size + bytes <= total_size, "tried to allocate TOO DAMN MUCH");
-
-		auto item_alignment = get_aligned!(void*)(current);
-		allocated_size += item_alignment;
-		current += item_alignment;
-
-		auto block = current;
-		allocated_size += bytes;
-		current += bytes;
-
-		static if (header) {
-			auto header = alloc_item!(Header)(bytes);
-		}
-
-		return block[0..bytes];
-
-	}
-
-	auto alloc(T, Args...)(Args args) {
-
-		auto element = alloc_item!(T, Args)(args);
-		auto header = alloc_item!(Header)(get_size!T());
-
-		return element;
-
-	}
-
-	void dealloc(size_t size) nothrow @nogc {
-
-		allocated_size -= size;
-		current -= size;
-
-	}
-
-	void dealloc() nothrow @nogc {
-
-		auto header_size = get_size!Header();
-		auto header = *cast(Header*)(current - header_size);
-
-		allocated_size -= (header_size - header.size);
-		current -= (header_size - header.size);
-
-	}
-
-
-	mixin AllocatorInvariant;
-	mixin AllocatorCommon;
-
-} //StackAllocator
-
-unittest {
-
-	import std.random : uniform;
-
-	enum total_alloc_size = 65536;
-	auto sa = StackAllocator(total_alloc_size, "Test");
-	size_t min_size = 3, max_size = 2048;
-
-	size_t total_allocated = 0;
-	while (total_allocated < total_alloc_size*0.75) {
-
-		size_t alloc_size;
-		do { alloc_size = uniform(min_size, max_size); } while (cast(long)alloc_size > cast(long)(sa.remaining_size - alloc_size));
-
-		auto allocated_bytes = sa.alloc(alloc_size);
-		total_allocated += allocated_bytes.length;
-
-	}
-
-	sa.dealloc(total_allocated);
-
-} //StackAllocator Tests
-
-struct FreeListAllocator {
-
-	struct Block {
-		size_t size;
-		Block* next;
-	} //Block
-
-	Block* first;
-
-	@disable this(this);
-
-	this(size_t size, string name) {
-
-		this.total_size = size;
-		this.allocated_size = 0;
-
-		this.buffer = malloc(total_size);
-		this.current = buffer;
-
-		GC.addRange(buffer, total_size);
-		this.name = name;
-
-		first = alloc_item!(Block)(total_size - Block.sizeof, null);
-
-	} //this
-
-	~this() {
-
-	} //~this
-
-	auto alloc(T, Args...)(Args args) {
-
-		auto obj_size = get_size!T;
-		return emplace!(T, Args)(alloc(obj_size), args);
-
-	} //alloc
-
-	void[] alloc(size_t alloc_size) {
-
-		Block* cur = first;
-		Block* prev = null;
-
-		do {
-
-			if (cur.size >= alloc_size) {
-
-				size_t remaining_size = cur.size - alloc_size;
-				cur.size = remaining_size;
-
-				auto obj_mem = (cur + cur.size)[0..alloc_size];
-
-				writefln("[FreeListAllocator:%s] allocated %d bytes", name, alloc_size);
-
-				return obj_mem;
-
-			}
-
-			cur = cur.next;
-			
-		} while (cur != null);
-
-		return null;
-
-	} //alloc
-
-	void dealloc(void[] returned_block) {
-
-		Block* cur = first;
-		while (cur.next != null) {
-			cur = cur.next;
-		}
-
-		assert(!(cur.size - Block.sizeof) > cur.size, "size - block size was more than initial size!");
-
-		auto ret_size = returned_block.length;
-		auto alloc_offset = cur.size - Block.sizeof;
-		auto mem = cur[alloc_offset .. alloc_offset + Block.sizeof];
-		cur.next = emplace!Block(mem, ret_size, null);
-		cur.size = cur.size - Block.sizeof;
-
-	} //dealloc
-
-	mixin AllocatorInvariant;
-	mixin AllocatorCommon;
-
-} //FreeListAllocator
-
-unittest {
-
-	/* tests by making a bunch of allocations and deallocations */
-	
-	import std.random : uniform;
-
-	immutable size_t alloc_size = 1024 * 1024 * 8;
-	auto allocator = FreeListAllocator(alloc_size, "TestFreeList"); // 8 megabytes
-	
-	auto max_alloc_size = 32768, min_alloc_size = 16;
-
-	size_t total_allocated = 0;
-	void[][] allocated_things = [];
-	while (total_allocated < (alloc_size / 2)) {
-
-		auto allocated_data = allocator.alloc(uniform(min_alloc_size, max_alloc_size));
-		allocated_things ~= allocated_data;
-		total_allocated += allocated_data.length;
-		
-	}
-
-	foreach (ref data; allocated_things) {
-		allocator.dealloc(data);
-	}
-
-} //FreeListAllocator Tests
-
 //returns an aligned offset in bytes from current to allocate from.
 private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) nothrow @nogc pure {
+
+	import std.traits : classInstanceAlignment;
+	import std.conv : to;
+
+	static if (is(T == class)) {
+		enum class_alignment = classInstanceAlignment!T;
+		alignment = class_alignment;
+	}
 
 	ptrdiff_t diff = alignment - (cast(ptrdiff_t)current & (alignment-1));
 	return (diff == T.alignof) ? 0 : diff;

@@ -14,6 +14,9 @@ enum Resource : ResourceID {
 	CURSOR_TEXTURE,
 
 	//units
-	UNIT_TEXTURE
+	UNIT_TEXTURE,
+
+	//sounds
+	PANIQ
 
 }

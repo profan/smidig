@@ -5,12 +5,22 @@ import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.defs : Vec2f;
 import blindfire.engine.ecs;
 
-import blindfire.serialize : networked;
+import blindfire.serialize : DoSerializable, MakeTypeSerializable, networked;
 import blindfire.ui : UIState, draw_rectangle;
-import blindfire.netgame : Action, ActionType;
 import blindfire.res : Resource;
 import blindfire.sys;
 
+
+alias TempBuf = OutputStream;
+alias ActionType = uint;
+
+interface Action {
+
+	ActionType identifier() const;
+	void serialize(ref TempBuf buf);
+	void execute(EntityManager em);
+
+} //Action
 
 enum : ActionType[string] {
 
@@ -22,6 +32,26 @@ enum : ActionType[string] {
 
 }
 
+string handle_action() {
+
+	import std.string : format;
+
+	auto str = "";
+
+	foreach (type, id; ActionIdentifier) {
+		str ~= format(
+				q{case %d:
+					auto action = new %s();
+					deserialize!(%s)(input_stream, &action);
+					action.execute(em);
+					break;
+				}, id, type, type);
+	}
+
+	return str;
+
+} //handle_action
+
 class NoAction : Action {
 
 	mixin DoSerializable;
@@ -31,9 +61,6 @@ class NoAction : Action {
 	}
 
 } //NoAction
-
-import blindfire.serialize : DoSerializable, MakeTypeSerializable;
-import profan.collections : StaticArray;
 
 class MoveAction : Action {
 

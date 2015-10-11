@@ -1,30 +1,39 @@
 import std.stdio : writefln;
 import std.c.process : exit;
+import std.meta : AliasSeq;
 
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
-import derelict.sdl2.mixer;
 import derelict.sdl2.ttf;
 
+import derelict.openal.al;
+import derelict.alure.alure;
 import derelict.opengl3.gl;
 import derelict.freetype.ft;
+import derelict.imgui.imgui;
 import derelict.util.loader;
 import derelict.util.exception;
-
-import blindfire.game;
-import blindfire.engine.window;
-import blindfire.engine.eventhandler;
-
-const uint DEFAULT_WINDOW_WIDTH = 640;
-const uint DEFAULT_WINDOW_HEIGHT = 480;
 
 ShouldThrow missingSymFunc( string symName ) {
 
 	//introduced at a later version than what I can find as a binary on windows
-	//also not used in the project, so lets not care about this dependency.
-    if( symName == "FT_Gzip_Uncompress") {
-        return ShouldThrow.No;
-    }
+	//also not used in the project, so lets not care about this dependency (gzip_uncompress)
+
+	alias symbols = AliasSeq!(
+		"FT_Gzip_Uncompress",
+		"SDL_QueueAudio",
+		"SDL_GetQueuedAudioSize",
+		"SDL_ClearQueuedAudio",
+		"SDL_HasAVX2",
+		"SDL_GetGlobalMouseState",
+		"SDL_WarpMouseGlobal",
+		"SDL_CaptureMouse",
+		"SDL_RenderIsClipEnabled",
+		"SDL_SetWindowHitTest");
+
+	foreach (sym; symbols) {
+		if (symName == sym) return ShouldThrow.No;
+	}
 
     // Any other missing symbol should throw.
     return ShouldThrow.Yes;
@@ -32,15 +41,18 @@ ShouldThrow missingSymFunc( string symName ) {
 
 void initialize_systems() {
 
-	DerelictFT.missingSymbolCallback = &missingSymFunc;
+	alias libs = AliasSeq!(
+		DerelictSDL2, DerelictSDL2Image,
+		DerelictSDL2ttf, DerelictFT,
+		DerelictGL, DerelictAL,
+		DerelictALURE, DerelictImgui);
 
-	DerelictSDL2.load();
-	DerelictSDL2Image.load();
-	DerelictSDL2Mixer.load();
-	DerelictSDL2ttf.load();
-	DerelictGL.load();
-	DerelictFT.load();
+	foreach (T; libs) {
+		T.missingSymbolCallback = &missingSymFunc;
+		T.load();
+	}
 
+	//initiate SDL2 ttf
 	if (TTF_Init() == -1) {
 		writefln("[GAME] TTF_Init: %s\n", TTF_GetError());
 		exit(2);
@@ -50,12 +62,13 @@ void initialize_systems() {
 
 void main() {
 
-	initialize_systems();
-	auto event_handler = EventHandler(SDL_GetKeyboardState(null));
-	auto window = Window("Project Blindfire", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
-	auto game = Game(&window, &event_handler);
+	import blindfire.game : NewGame;
 
-	event_handler.add_listener(&window.handle_events);
+	initialize_systems();
+
+	auto game = NewGame();
+	game.initialize();
+
 	game.run();
 
 }

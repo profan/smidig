@@ -1,7 +1,7 @@
-#version 120
+#version 330
 
-attribute vec4 coord;
-varying vec2 tex_coord;
+in vec4 coord;
+out vec2 tex_coord;
 
 uniform mat4 projection;
 

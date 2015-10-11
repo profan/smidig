@@ -7,9 +7,8 @@ import std.stdio : writefln;
 import std.file : read;
 
 import derelict.opengl3.gl3;
-import gfm.math;
 
-import blindfire.engine.defs;
+import blindfire.engine.defs : Vec2i, Vec2f, Vec3f, Mat3f, Mat4f;
 
 mixin template OpenGLError() {
 
@@ -46,12 +45,14 @@ struct AttribLocation {
 	GLuint offset;
 	char[64] identifier;
 
-}
+} //AttribLocation
 
-//some kind of line-based graph, for visual profiling of performance.
-struct Graph {
+struct Camera {
 
-} //Graph
+	Mat4f projection;
+	Transform position;
+
+} //Camera
 
 struct Cursor {
 
@@ -59,6 +60,7 @@ struct Cursor {
 	Shader* shader;
 	Texture* texture;
 	
+	@disable this();
 	@disable this(this);
 
 	this(Texture* cursor_texture, Shader* cursor_shader) nothrow @nogc {
@@ -71,7 +73,10 @@ struct Cursor {
 		this.mesh = Mesh(vertices);
 		this.shader = cursor_shader;
 
-	}
+		import derelict.sdl2.sdl : SDL_ShowCursor, SDL_DISABLE;
+		SDL_ShowCursor(SDL_DISABLE); //make sure to disable default cursor
+
+	} //this
 
 	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
 		
@@ -84,7 +89,7 @@ struct Cursor {
 		texture.unbind();
 		shader.unbind();
 
-	}
+	} //draw
 
 } //Cursor
 
@@ -125,11 +130,11 @@ struct Text {
 		this.mesh = Mesh(vertices);
 		this.shader = text_shader;
 	
-	}
+	} //this
 
 	~this() {
 
-	}
+	} //~this
 
 	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
 
@@ -142,7 +147,7 @@ struct Text {
 		texture.unbind();
 		shader.unbind();
 
-	}
+	} //draw
 
 	mixin OpenGLError;
 
@@ -178,8 +183,8 @@ struct Mesh {
 
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertices[0].sizeof, cast(const(void)*)null);
-		//0 corresponds to precious attribarray, 3 is number of elements in vertex, set type to float (don't normalize(GL_FALSE))
-		// 0 - skip nothing to find the next attribute, 0 - distance from beginning to find the first attribute
+		//0 corresponds to previous attribarray, 3 is number of elements in vertex, set type to float (don't normalize(GL_FALSE))
+		// bytes to skip to find the next attribute, byte offset from beginning to find the first attribute
 		// use sizeof of tex_coord as stride
 
 		glEnableVertexAttribArray(1);
@@ -188,13 +193,13 @@ struct Mesh {
 		//UNBIND
 		glBindVertexArray(0); //unbind
 
-	}
+	} //this
 
 	~this() nothrow @nogc {
 
 		glDeleteVertexArrays(1, &vao);
 
-	}
+	} //~this
 
 	void draw() nothrow @nogc {
 
@@ -204,11 +209,108 @@ struct Mesh {
 
 		glBindVertexArray(0); //unbind
 
-	}
+	} //draw
 
 	mixin OpenGLError;
 
 } //Mesh
+
+struct Graph {
+
+} //Graph
+
+struct Particle(V) {
+
+	V position_;
+	V velocity_;
+
+
+	void tick(float drag) {
+
+		position_ += velocity_;
+		velocity_ -= drag;
+
+	} //simulate
+
+} //Particle
+
+struct ParticleSystem(V) {
+
+	import blindfire.engine.memory : IAllocator;
+	import blindfire.engine.collections : Array;
+
+	Mesh* mesh_;
+	Shader* shader_;
+	Texture* texture_;
+
+	V origin_;
+	V orientation_;
+
+	IAllocator allocator_;
+	Array!(Particle!V) particles_;
+
+	@disable this();
+	@disable this(this);
+
+	this(IAllocator allocator, Mesh* mesh, Shader* shader, Texture* texture, V origin, V orientation, size_t initial_size) {
+
+		this.mesh_ = mesh;
+		this.shader_ = shader;
+		this.texture_ = texture;
+
+		this.origin_ = origin;
+		this.orientation_ = orientation;
+
+		this.allocator_ = allocator;
+		this.particles_ = typeof(particles_)(allocator, initial_size);
+
+	} //this
+
+	void initialize() {
+
+	} //initialize
+
+	~this() {
+
+	} //~this
+
+	void fire(size_t particles) {
+
+	} //fire
+
+	void tick() {
+
+		enum drag = 32.0f;
+
+		foreach (ref p; particles_) {
+			p.tick(drag);
+		}
+
+	} //tick
+
+	void draw() {
+
+		shader_.bind();
+		texture_.bind(0);
+		//draw instanced shit here :))))
+
+	} //draw
+
+	mixin OpenGLError;
+
+} //ParticleSystem
+
+unittest {
+
+	import blindfire.engine.defs : Vec2f;
+	import blindfire.engine.memory : theAllocator;
+
+	auto origin = Vec2f(0, 0);
+	auto orientation = Vec2f(0, 1);
+
+	auto part_sys = ParticleSystem!Vec2f(theAllocator, null, null, null, origin, orientation, 32);
+
+}
 
 //use SDL2 for loading textures, since we're already using it for windowing.
 struct Texture {
@@ -220,6 +322,10 @@ struct Texture {
 	int width, height;
 
 	@disable this(this);
+
+	@property GLuint handle() {
+		return texture;
+	} //handle
 
 	this(in char[] file_name) {
 
@@ -236,7 +342,7 @@ struct Texture {
 
 		this(image.pixels, image.w, image.h, GL_RGBA, GL_RGBA);
 
-	}
+	} //this
 
 	this(int width, int height, GLenum input_format, GLenum output_format, GLenum unpack_alignment) nothrow @nogc {
 
@@ -257,7 +363,7 @@ struct Texture {
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-	}
+	} //this
 
 	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) nothrow @nogc {
 
@@ -283,13 +389,14 @@ struct Texture {
 
 		//UNBIND
 		glBindTexture(GL_TEXTURE_2D, 0);
-	}
+
+	} //this
 
 	~this() nothrow @nogc {
 
 		glDeleteTextures(1, &texture);
 
-	}
+	} //~this
 
 	//since OpenGL lets you bind multiple textures at once, maximum(32?)
 	void bind(int unit) nothrow @nogc {
@@ -298,17 +405,18 @@ struct Texture {
 		glActiveTexture(GL_TEXTURE0 + unit); //since this is sequential, this works
 		glBindTexture(GL_TEXTURE_2D, texture);
 
-	}
+	} //bind
 
 	void unbind() nothrow @nogc {
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-	}
+	} //unbind
 
 	mixin OpenGLError;
 
 } //Texture
+
 struct Transform {
 
 	Vec2f position;
@@ -365,12 +473,19 @@ struct Shader {
 	//alias this for implicit conversions
 	alias program this;
 
-	this (in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
+	@disable this();
+	@disable this(this);
+
+	@property GLuint handle() {
+		return program;
+	} //handle
+
+	this(in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
 
 		assert(uniforms.length <= bound_uniforms.length);
 
-		char* vs = load_shader(file_name ~ ".vs");
-		char* fs = load_shader(file_name ~ ".fs");
+		const char* vs = load_shader(file_name ~ ".vs");
+		const char* fs = load_shader(file_name ~ ".fs");
 		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER, file_name);
 		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER, file_name);
 
@@ -386,13 +501,13 @@ struct Shader {
 		glDeleteShader(vshader);
 		glDeleteShader(fshader);
 
-	}
+	} //this
 
 	~this() nothrow @nogc {
 
 		glDeleteProgram(program);
 
-	}
+	} //~this
 
 	void update(ref Mat4f projection, ref Transform transform) nothrow @nogc {
 
@@ -402,7 +517,7 @@ struct Shader {
 		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, model.ptr);
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
-	}
+	} //update
 
 	void update(ref Mat4f projection, ref Mat4f transform) nothrow @nogc {
 
@@ -410,25 +525,25 @@ struct Shader {
 		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, transform.ptr);
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
-	}
+	} //update
 
 	void update(ref Mat4f projection) nothrow @nogc {
 
 		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
-	}
+	} //update
 
 	void bind() nothrow @nogc {
 
 		glUseProgram(program);
 
-	}
+	} //bind
 
 	void unbind() nothrow @nogc {
 
 		glUseProgram(0);
 
-	}
+	} //unbind
 
 	mixin OpenGLError;
 
@@ -438,9 +553,10 @@ struct Shader {
 
 import blindfire.engine.util : load_file;
 
-char* load_shader(in char[] file_name) {
-	return load_file(toStringz(file_name));
-}
+const(char*) load_shader(in char[] file_name) {
+	import std.file : read;
+	return toStringz(cast(immutable char[])read(file_name));
+} //load_shader
 
 bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] shader_path) nothrow {
 
@@ -468,7 +584,7 @@ bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] sh
 
 	return true;
 
-}
+} //check_shader_error
 
 GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type, in char[] shader_path) nothrow {
 
@@ -485,7 +601,7 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type, in char
 
 	return new_shader;
 
-}
+} //compile_shader
 
 GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) nothrow {
 
@@ -513,7 +629,7 @@ GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) n
 
 	return program;
 
-}
+} //create_shader_program
 
 /* OpenGL color related functions, darkening and stuff. */
 GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc pure {
@@ -527,7 +643,7 @@ GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc pure {
 
 	return gl_color;
 
-}
+} //int_to_gl_color
 
 int darken(int color, uint percentage) nothrow @nogc pure {
 
@@ -542,7 +658,7 @@ int darken(int color, uint percentage) nothrow @nogc pure {
 
 	return result;
 
-}
+} //darken
 
 /* Primitives? */
 
@@ -560,7 +676,7 @@ auto create_rectangle_vec3f(float w, float h) nothrow @nogc pure {
 
 	return vertices;
 
-}
+} //create_rectangle_vec3f
 
 auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc pure {
 
@@ -576,4 +692,4 @@ auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc pure {
 
 	return vertices;
 
-}
+} //create_rectangle_vec3f2f
