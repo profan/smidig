@@ -237,6 +237,13 @@ struct FrameBuffer {
 
 	} //~this
 
+	/* for example attach_texbuffer(5, GL_COLOR_ATTACHMENT0); */
+	void attach_texbuffer(GLuint texture_handle, GLenum type) {
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, type, GL_TEXTURE_2D, texture_handle, 0);
+
+	} //attach_buffer
+
 	void bind(GLenum target) {
 
 		bound_target_ = target;
