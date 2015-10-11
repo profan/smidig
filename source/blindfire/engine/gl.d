@@ -465,7 +465,7 @@ struct Shader {
 	@disable this();
 	@disable this(this);
 
-	this (in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
+	this(in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
 
 		assert(uniforms.length <= bound_uniforms.length);
 

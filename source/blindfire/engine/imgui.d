@@ -21,15 +21,41 @@ struct ImguiContext {
 
 	import derelict.sdl2.types;
 	import derelict.imgui.imgui;
+	import derelict.opengl3.gl;
 
-	import blindfire.engine.gl : Shader, Texture;
+	import blindfire.engine.gl : AttribLocation, Shader, Texture;
+	import blindfire.engine.memory : theAllocator, IAllocator, make, dispose;
 	import blindfire.engine.eventhandler : AnyKey, EventHandler;
 
-	Shader* vs_shader;
-	Shader* fs_shader;
-	Texture* font_texture;
+	IAllocator allocator_;
+
+	Shader* shader_;
+	Texture* font_texture_;
+
+	double time_;
+	bool[3] mouse_buttons_pressed_;
+	float scroll_wheel_;
+
+	@disable this();
+	@disable this(this);
+
+	this(IAllocator allocator) {
+
+		this.allocator_ = allocator;
+
+	} //this
+
+	~this() {
+
+		allocator_.dispose(shader_);
+		allocator_.dispose(font_texture_);
+
+	} //~this
 
 	void initialize() {
+
+		/* set the memory allocator */
+		allocator_ = theAllocator;
 
 		ImGuiIO* io = igGetIO();
 
@@ -57,26 +83,57 @@ struct ImguiContext {
 
 	void on_event(ref SDL_Event ev) {
 
-		writefln("got event: %s", ev.type);
+		import std.stdio : writefln;
+
+		auto io = igGetIO();
 
 		switch (ev.type) {
 
 			case SDL_KEYDOWN, SDL_KEYUP:
+				io.KeysDown[ev.key.keysym.scancode] = (ev.type == SDL_KEYDOWN);
 				break;
 
-			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				if (ev.button.button < 4) {
+					mouse_buttons_pressed_[ev.button.button-1] = true;
+				}
 				break;
 
 			case SDL_MOUSEWHEEL:
+				scroll_wheel_ += ev.wheel.y;
 				break;
 
 			default:
-				writefln("got other event: %s", ev.type);
+				writefln("unhandled event type in imgui: %d", ev.type);
 				break;
 
 		}
 
 	} //on_event
+
+	void create_device_objects() {
+
+		AttribLocation[3] attrs = [
+			AttribLocation(0, "Position"),
+			AttribLocation(1, "UV"),
+			AttribLocation(2, "Color")];
+
+		char[16][2] uniforms = ["Texture", "ProjMtx"];
+		shader_ = allocator_.make!Shader("shaders/imgui", attrs, uniforms);
+
+	} //create_device_objects
+
+	void create_font_texture() {
+
+		auto io = igGetIO();
+
+		ubyte* pixels;
+		int width, height;
+		ImFontAtlas_GetTexDataAsRGBA32(io.Fonts, &pixels, &width, &height, null);
+
+		font_texture_ = allocator_.make!Texture(pixels, width, height, GL_RGBA, GL_RGBA);
+
+	} //create_font_texture
 
 	void render_draw_lists(ImDrawData* data) nothrow {
 

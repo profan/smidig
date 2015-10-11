@@ -54,7 +54,7 @@ struct Engine {
 	Cursor cursor_ = void;
 
 	DebugContext debug_context_ = void;
-	ImguiContext imgui_context_;
+	ImguiContext imgui_context_ = void;
 
 	//external references
 	UpdateFunc update_function_;
@@ -90,12 +90,13 @@ struct Engine {
 		this.console_.construct(&debug_atlas_, null);
 
 		//initialize imgui context
+		this.imgui_context_.construct(allocator_);
 		this.imgui_context_.initialize();
 
 		//link up imgui context to event shite
 		import derelict.sdl2.types;
 		this.input_handler_.add_listener(&imgui_context_.on_event,
-			SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEWHEEL);
+			SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL);
 
 		//load engine-required resources
 		this.load_resources();
