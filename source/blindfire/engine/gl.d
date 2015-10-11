@@ -316,6 +316,10 @@ struct Texture {
 
 	@disable this(this);
 
+	@property GLuint handle() {
+		return texture;
+	} //handle
+
 	this(in char[] file_name) {
 
 		//SDL_Surface struct
@@ -464,6 +468,10 @@ struct Shader {
 
 	@disable this();
 	@disable this(this);
+
+	@property GLuint handle() {
+		return program;
+	} //handle
 
 	this(in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
 

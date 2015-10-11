@@ -172,6 +172,7 @@ struct ImguiContext {
 		ImFontAtlas_GetTexDataAsRGBA32(io.Fonts, &pixels, &width, &height, null);
 
 		font_texture_ = allocator_.make!Texture(pixels, width, height, GL_RGBA, GL_RGBA);
+		ImFontAtlas_SetTexID(io.Fonts, cast(void*)font_texture_.handle);
 
 	} //create_font_texture
 
