@@ -7,18 +7,35 @@ struct StopWatch {
 	import core.time : MonoTimeImpl, ClockType;
 	alias Clock = MonoTimeImpl!(ClockType.precise);
 
-	long initial_ticks;
-	long passed_ticks;
+	private {
+
+		bool started_;
+		long initial_ticks_;
+		long passed_ticks_;
+
+	}
 
 	void start() {
 
-		initial_ticks = Clock.currTime.ticks;
+		initial_ticks_ = Clock.currTime.ticks;
+		started_ = true;
 
 	} //start
 
+	void stop() {
+
+		passed_ticks_ += Clock.currTime.ticks - initial_ticks_;
+		started_ = false;
+
+	} //stop
+
 	void reset() {
 
-		initial_ticks = Clock.currTime.ticks;
+		if (started_) {
+			initial_ticks_ = Clock.currTime.ticks;
+		} else {
+			initial_ticks_ = 0;
+		}
 
 	} //reset
 
@@ -30,7 +47,11 @@ struct StopWatch {
 
 	long peek() {
 
-		return Clock.currTime.ticks - initial_ticks + passed_ticks;
+		if (started_) {
+			return Clock.currTime.ticks - initial_ticks_ + passed_ticks_;
+		}
+
+		return passed_ticks_;
 
 	} //peek
 

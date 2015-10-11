@@ -220,16 +220,16 @@ struct Engine {
 
 				//update game and draw
 				this.update_function_();
-				update_time = cast(double)update_timer.peek() / cast(double)update_timer.ticks_per_second();
-				last_update = update_timer.peek();
+				update_time = cast(double)update_timer.peek() / cast(double)clock_ticks_per_second;
+				last_update = main_timer.peek();
 				update_timer.reset();
 
 			}
 
 			draw_timer.start();
 			this.draw((draw_time > 0) ? draw_time : 1.0);
-			draw_time = cast(double)draw_timer.peek() / cast(double)draw_timer.ticks_per_second();
-			frame_time = cast(double)frame_timer.peek() / cast(double)frame_timer.ticks_per_second();
+			draw_time = cast(double)draw_timer.peek() / cast(double)clock_ticks_per_second;
+			frame_time = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
 			last_render = draw_timer.peek();
 			draw_timer.reset();
 			frame_timer.reset();
