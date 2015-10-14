@@ -857,10 +857,6 @@ struct DHeap(int N, T) {
 		auto right_child = right_child(cur);
 		auto capacity = array_.capacity;
 
-		writefln("cur: %d", cur);
-		writefln("left child: %d", left_child);
-		writefln("left child: %d", right_child);
-
 		if (left_child >= capacity || right_child >= capacity) return;
 
 		//check if it's actually bigger
@@ -934,14 +930,15 @@ unittest {
 	heap.insert(CompThing(11));
 	heap.insert(CompThing(7));
 
-	auto min_val = heap.delete_min();
-	auto expected = CompThing(7);
-	assert(min_val == expected, format("expected: %s, got: %s", expected, min_val));
+	auto checks = [7, 10, 11, 12, 32];
 
-	auto min_val2 = heap.delete_min();
-	auto expected2 = CompThing(10);
-	assert(min_val2 == expected2, format("expected: %s, got: %s", expected2, min_val2));
+	foreach (c; checks) {
 
+		auto min_val = heap.delete_min();
+		auto expected = CompThing(c);
+		assert(min_val == expected, format("expected: %s, got: %s", expected, min_val));
+
+	}
 }
 
 struct HashSet(T) {
