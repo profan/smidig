@@ -855,17 +855,18 @@ struct DHeap(int N, T) {
 
 		auto left_child = left_child(cur);
 		auto right_child = right_child(cur);
+		auto capacity = array_.capacity;
 
 		writefln("cur: %d", cur);
 		writefln("left child: %d", left_child);
 		writefln("left child: %d", right_child);
 
-		if (cur == array_.capacity) return;
+		if (left_child >= capacity || right_child >= capacity) return;
 
 		//check if it's actually bigger
 		if (array_[cur] > array_[left_child] || array_[cur] > array_[right_child]) {
 
-			if (array_[left_child] > array_[right_child]) {
+			if (array_[left_child] < array_[right_child]) {
 				swap(cur, left_child);
 				min_heapify(left_child);
 			} else {
