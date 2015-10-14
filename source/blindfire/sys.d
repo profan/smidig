@@ -1,6 +1,5 @@
 module blindfire.sys;
 
-import std.concurrency : send, receiveTimeout, Tid;
 import std.math : cos, sin, PI, pow;
 import std.stdio : writefln;
 
@@ -176,7 +175,6 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 	}
 
 } //OrderManager
-
 
 //TODO order system without polymorphism? hello-switch?
 struct OrderComponent {

@@ -249,6 +249,8 @@ unittest {
 
 }
 
+/* array type which never moves its contents in memory */
+/* - composed of arrays in fixed sizes. */
 struct SegmentedArray(T) {
 
 } //SegmentedArray
@@ -364,7 +366,7 @@ struct HashMap(K, V) {
 		other.allocator_ = null;
 		assert(other.allocator_ is null);
 
-	} //move
+	} //move_from
 
 	V* opBinaryRight(string op = "in")(K key) nothrow {
 
@@ -1019,7 +1021,7 @@ struct String {
 	private {
 
 		IAllocator allocator_;
-		Array!char array_ = void;
+		Array!char array_ = void; //TODO look at this, is this right?
 
 	}
 

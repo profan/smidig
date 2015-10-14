@@ -1,4 +1,4 @@
-import std.stdio : writefln;
+import core.stdc.stdio : printf;
 import std.c.process : exit;
 import std.meta : AliasSeq;
 
@@ -52,9 +52,14 @@ void initialize_systems() {
 		T.load();
 	}
 
+	if (SDL_Init(SDL_INIT_JOYSTICK) < 0) {
+		printf("[GAME] SDL_Init, could not initialize: %s", SDL_GetError());
+		exit(2);
+	}
+
 	//initiate SDL2 ttf
 	if (TTF_Init() == -1) {
-		writefln("[GAME] TTF_Init: %s\n", TTF_GetError());
+		printf("[GAME] TTF_Init: %s\n", TTF_GetError());
 		exit(2);
 	}
 
@@ -62,6 +67,21 @@ void initialize_systems() {
 
 void main() {
 
+	/* set up tracking shit */
+	import std.experimental.allocator.gc_allocator : GCAllocator;
+	import std.experimental.allocator.building_blocks.stats_collector : StatsCollector, Options;
+	import blindfire.engine.memory : theAllocator, processAllocator, allocatorObject, Mallocator;
+
+	alias Allocator = StatsCollector!(GCAllocator, Options.all, Options.all);
+
+	Allocator allocator;
+	processAllocator = allocatorObject(&allocator);
+	theAllocator = processAllocator;
+
+	import std.stdio : stdout;
+	scope(exit) allocator.reportStatistics(stdout);
+
+	/* game part */
 	import blindfire.game : NewGame;
 
 	initialize_systems();
@@ -70,5 +90,6 @@ void main() {
 	game.initialize();
 
 	game.run();
+
 
 }

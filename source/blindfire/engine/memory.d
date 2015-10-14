@@ -6,7 +6,7 @@ import core.stdc.stdlib : malloc, free;
 import std.stdio : writefln;
 import std.conv : emplace;
 
-public import std.experimental.allocator : allocatorObject, IAllocator, theAllocator, make, makeArray, dispose;
+public import std.experimental.allocator : allocatorObject, IAllocator, processAllocator, theAllocator, make, makeArray, dispose;
 public import std.experimental.allocator.building_blocks.region : Region;
 public import std.experimental.allocator.mallocator : Mallocator;
 

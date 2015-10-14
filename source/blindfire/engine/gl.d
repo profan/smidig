@@ -1,7 +1,7 @@
 module blindfire.engine.gl;
 
 import core.stdc.stdio : printf;
-import core.stdc.stdlib : malloc, free;
+
 import std.string : toStringz;
 import std.stdio : writefln;
 import std.file : read;
