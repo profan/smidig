@@ -24,7 +24,13 @@ void memmove(T)(T* src, T* target) {
 
 } //memmove
 
+void memswap(T)(T* src, T* target) {
 
+	auto tmp = *target;
+	memmove(src, target);
+	memmove(&tmp, src);
+
+} //memswap
 
 private interface Instance {
 	void destroy_object();

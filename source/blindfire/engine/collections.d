@@ -770,15 +770,22 @@ unittest {
 
 struct DHeap(int N, T) {
 
+	import std.algorithm : move;
+
 	enum State {
 		Free,
 		Data
 	} //State
 
 	struct Entry {
+
 		T data;
 		State state = State.Free;
-		alias data this;
+
+		int opCmp(ref Entry other) {
+			return data.opCmp(other.data);
+		} //opCmp
+
 	} //Entry
 
 	private {
@@ -798,54 +805,90 @@ struct DHeap(int N, T) {
 	} //this
 
 	uint left_child(uint i) {
+
 		return (N * i) + 1;
-	}
+
+	} //left_child
 
 	uint right_child(uint i) {
+
 		return (N * i) + 2;
-	}
+
+	} //right_child
 
 	size_t parent(size_t i) {
 
-		return cast(size_t)(cast(float)i / cast(float)N);
+		return (i-1) / N;
 
 	} //parent
 
-	void percolateUp(size_t i) {
+	void percolate_up(size_t cur) {
 
-		auto p = parent(i);
-		if (array_[i] < array_[p]) {
+		if (cur == 0) return;
+
+		auto p = parent(cur);
+		if (array_[cur] > array_[p] || array_[cur] == array_[p]) {
 			return;
 		} else {
-			swap(i, p);
-			percolateUp(p);
+			swap(cur, p);
+			percolate_up(p);
 		}
 
 	} //percolateUp
 
-	void swap(size_t i1, size_t i2) {
+	void swap(size_t source, size_t target) {
 
-		import blindfire.engine.memory : memmove;
-		memmove(&array_[i2], &array_[i1]);
+		import blindfire.engine.memory : memswap;
+		memswap(&array_[source], &array_[target]);
 
 	} //swap
 
 	void insert(T thing) {
 
 		array_[size_] = Entry(thing, State.Data);
-		percolateUp(size_);
+		percolate_up(size_);
 		size_++;
 
 	} //insert
 
-	void decreaseKey() {
+	void min_heapify(size_t cur) {
 
-	} //decreaseKey
+		auto left_child = left_child(cur);
+		auto right_child = right_child(cur);
 
-	T deleteMin() {
+		writefln("cur: %d", cur);
+		writefln("left child: %d", left_child);
+		writefln("left child: %d", right_child);
 
-		array_[size_].state = State.Free;
-		return array_[size_];
+		if (cur == array_.capacity) return;
+
+		//check if it's actually bigger
+		if (array_[cur] > array_[left_child] || array_[cur] > array_[right_child]) {
+
+			if (array_[left_child] > array_[right_child]) {
+				swap(cur, left_child);
+				min_heapify(left_child);
+			} else {
+				swap(cur, right_child);
+				min_heapify(right_child);
+			}
+
+		}
+
+	} //min_heapify
+
+	T delete_min() {
+
+		swap(0, size_); //swap root and last (we want root)
+		auto min = array_[size_];
+		auto min_data = move(min.data);
+		min.state = State.Free;
+		min.data = T.max; //value should define a max, so it can be put out of the way in the heap
+
+		min_heapify(0);
+		size_--;
+
+		return min_data;
 
 	} //deleteMin
 
@@ -855,7 +898,7 @@ version (unittest) {
 
 	struct CompThing {
 
-		int thing;
+		int thing = int.max;
 
 		int opCmp(ref CompThing other) {
 
@@ -866,23 +909,38 @@ version (unittest) {
 
 		} //opCmp
 
+		@property static CompThing max() {
+
+			return CompThing(int.max);
+
+		} //max
+
 	} //CompThing
 
 } 
 
 unittest {
 
-	auto heap = DHeap!(3, CompThing)(theAllocator, 16);
-/*
+	import std.string : format;
+
+	auto heap = DHeap!(3, CompThing)(theAllocator, 24);
+
 	heap.insert(CompThing(10));
 	heap.insert(CompThing(32));
 	heap.insert(CompThing(52));
 	heap.insert(CompThing(12));
 	heap.insert(CompThing(65));
 	heap.insert(CompThing(11));
+	heap.insert(CompThing(7));
 
-	assert(heap.deleteMin() == CompThing(10));
-*/
+	auto min_val = heap.delete_min();
+	auto expected = CompThing(7);
+	assert(min_val == expected, format("expected: %s, got: %s", expected, min_val));
+
+	auto min_val2 = heap.delete_min();
+	auto expected2 = CompThing(10);
+	assert(min_val2 == expected2, format("expected: %s, got: %s", expected2, min_val2));
+
 }
 
 struct HashSet(T) {
