@@ -49,23 +49,42 @@ struct ContinousPool(T) {
 
 struct ObjectPool(T, uint ExpandSize = 10, Args...) {
 
+	import blindfire.engine.collections : Array;
+	import blindfire.engine.memory : IAllocator, make, dispose;
+
 	mixin PoolCommon!T;
-	private Item[] pool;
+
+	private{
+
+		IAllocator allocator_;
+		Array!Item pool_;
+
+	}
 
 	@disable this();
 	@disable this(this);
 
-	this(size_t initial_size) {
+	this(IAllocator allocator, size_t initial_size) {
 
+		this.allocator_ = allocator;
+		this.pool_ = typeof(pool_)(allocator_, initial_size);
 		this.expand(initial_size);
 
-	}
+	} //this
+
+	~this() {
+
+		foreach (e; pool_) {
+			this.allocator_.dispose(e.payload);
+		}
+
+	} //~this
 
 	void expand(size_t extra_space) {
 
-		writefln("[ObjectPool] pool.length: %s, new limit: %s", pool.length, pool.length + extra_space);
+		writefln("[ObjectPool] pool_.length: %s, new limit: %s", pool_.length, pool_.length + extra_space);
 		for (size_t i = 0; i < extra_space; ++i) {
-			pool ~= Item(new T(Args));
+			pool_ ~= Item(allocator_.make!T(Args));
 		}
 
 	} //expand
@@ -74,11 +93,11 @@ struct ObjectPool(T, uint ExpandSize = 10, Args...) {
 
 		size_t id = 0;
 
-		if (pool.length < id+1) {
+		if (pool_.length < id+1) {
 			expand(ExpandSize);
 		}
 
-		while (pool[id].active) {
+		while (pool_[id].active) {
 			id += 1;
 		}
 
@@ -89,7 +108,7 @@ struct ObjectPool(T, uint ExpandSize = 10, Args...) {
 	auto create(Args...)(Args args) {
 
 		auto id = find_free_object();
-		auto obj = &pool[id];
+		auto obj = &pool_[id];
 		reinitialize(obj, args);
 		obj.active = true;
 
@@ -99,7 +118,6 @@ struct ObjectPool(T, uint ExpandSize = 10, Args...) {
 
 	static void release(Item* object) {
 
-		//writefln("release called for: %s", object);
 		object.active = false;
 
 	} //release
@@ -125,8 +143,10 @@ unittest {
 	import std.range : iota;
 	import std.random : uniform;
 
+	import blindfire.engine.memory : theAllocator;
+
 	enum total_runs = 1000;
-	auto pool = ObjectPool!(PooledThing, 1000, 0)(32);
+	auto pool = ObjectPool!(PooledThing, 1000, 0)(theAllocator, 32);
 
 	foreach (i; iota(total_runs)) {
 		auto v = uniform(int.min, int.max);

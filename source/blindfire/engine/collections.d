@@ -834,7 +834,7 @@ struct DHeap(int N, T) {
 			percolate_up(p);
 		}
 
-	} //percolateUp
+	} //percolate_up
 
 	void swap(size_t source, size_t target) {
 
@@ -855,7 +855,7 @@ struct DHeap(int N, T) {
 
 		auto left_child = left_child(cur);
 		auto right_child = right_child(cur);
-		auto capacity = array_.capacity;
+		auto capacity = size_;
 
 		if (left_child >= capacity || right_child >= capacity) return;
 
@@ -887,7 +887,7 @@ struct DHeap(int N, T) {
 
 		return min_data;
 
-	} //deleteMin
+	} //delete_min
 
 } //DHeap
 
