@@ -26,7 +26,10 @@ void memmove(T)(T* src, T* target) {
 
 void memswap(T)(T* src, T* target) {
 
-	auto tmp = *target;
+	import core.stdc.string : memcpy;
+
+	T tmp = void;
+	memcpy(&tmp, target, T.sizeof);
 	memmove(src, target);
 	memmove(&tmp, src);
 
