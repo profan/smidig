@@ -116,13 +116,15 @@ struct SoundSystem {
 
 	ALint find_free_source_index() {
 
-		auto source_index = -1;
+		enum error = -1;
 
-		while (source_states_[++source_index] != State.Free) {
-
+		foreach (src_index, state; source_states_) {
+			if (state == State.Free) {
+				return src_index;
+			}
 		}
 
-		return source_index;
+		return error;
 
 	} //find_free_source_index
 
