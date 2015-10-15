@@ -778,25 +778,9 @@ struct DHeap(int N, T) {
 
 	import std.algorithm : move;
 
-	enum State {
-		Free,
-		Data
-	} //State
-
-	struct Entry {
-
-		T data;
-		State state = State.Free;
-
-		int opCmp(ref Entry other) {
-			return data.opCmp(other.data);
-		} //opCmp
-
-	} //Entry
-
 	private {
 
-		Array!Entry array_;
+		Array!T array_;
 		IAllocator allocator_;
 		size_t size_;
 
@@ -851,9 +835,9 @@ struct DHeap(int N, T) {
 
 	void insert(T thing) {
 
-		array_[size_] = Entry(thing, State.Data);
-		percolate_up(size_);
 		size_++;
+		array_[size_] = thing;
+		percolate_up(size_);
 
 	} //insert
 
@@ -863,7 +847,7 @@ struct DHeap(int N, T) {
 		auto right_child = right_child(cur);
 		auto capacity = size_;
 
-		if (left_child >= capacity || right_child >= capacity) return;
+		if (left_child > capacity || right_child > capacity) return;
 
 		//check if it's actually bigger
 		if (array_[cur] > array_[left_child] || array_[cur] > array_[right_child]) {
@@ -883,10 +867,9 @@ struct DHeap(int N, T) {
 	T delete_min() {
 
 		swap(0, size_); //swap root and last (we want root)
-		auto min = array_[size_];
-		auto min_data = move(min.data);
-		min.state = State.Free;
-		min.data = T.max; //value should define a max, so it can be put out of the way in the heap
+		auto min = &array_[size_];
+		auto min_data = move(*min);
+		*min = T.max; //value should define a max, so it can be put out of the way in the heap
 
 		min_heapify(0);
 		size_--;
@@ -925,6 +908,7 @@ version (unittest) {
 unittest {
 
 	import std.string : format;
+	import std.stdio : writefln;
 
 	auto heap = DHeap!(3, CompThing)(theAllocator, 24);
 
@@ -936,13 +920,13 @@ unittest {
 	heap.insert(CompThing(11));
 	heap.insert(CompThing(7));
 
-	auto checks = [7, 10, 11, 12, 32];
+	auto checks = [7, 10, 11, 12, 32, 52, 65];
 
 	foreach (c; checks) {
 
 		auto min_val = heap.delete_min();
 		auto expected = CompThing(c);
-		assert(min_val == expected, format("expected: %s, got: %s", expected, min_val));
+		assert(min_val == expected, format("expected: %s, got: %s, \n tree was: %s", expected, min_val, heap.array_.array_));
 
 	}
 }

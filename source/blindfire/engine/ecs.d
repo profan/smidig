@@ -436,6 +436,8 @@ version(unittest) {
 
 version(unittest) {
 
+	import std.string : format;
+
 	void create_prerequisites(ref EntityManager em, ref EntityID entity) {
 
 		import blindfire.engine.memory : theAllocator;
