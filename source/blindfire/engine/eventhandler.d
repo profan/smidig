@@ -134,12 +134,12 @@ struct EventHandler {
 
 	this(IAllocator allocator) {
 
-		this.delegates = typeof(delegates)(allocator, INITIAL_SIZE);
-		this.mouse_events = typeof(mouse_events)(allocator, INITIAL_SIZE);
-		this.motion_events = typeof(motion_events)(allocator, INITIAL_SIZE);
-		this.input_events = typeof(input_events)(allocator, INITIAL_SIZE);
-		this.key_events = typeof(key_events)(allocator, INITIAL_SIZE);
 		this.allocator_ = allocator;
+		this.delegates = typeof(delegates)(allocator_, INITIAL_SIZE);
+		this.mouse_events = typeof(mouse_events)(allocator_, INITIAL_SIZE);
+		this.motion_events = typeof(motion_events)(allocator_, INITIAL_SIZE);
+		this.input_events = typeof(input_events)(allocator_, INITIAL_SIZE);
+		this.key_events = typeof(key_events)(allocator_, INITIAL_SIZE);
 
 		this.pressed_keys = SDL_GetKeyboardState(null);
 

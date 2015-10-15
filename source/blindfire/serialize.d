@@ -4,6 +4,7 @@ import blindfire.engine.gl;
 import blindfire.engine.ecs;
 import blindfire.engine.defs;
 import blindfire.engine.math;
+import blindfire.engine.meta;
 import blindfire.engine.net : NetVar;
 import blindfire.engine.stream : InputStream, OutputStream;
 
@@ -12,52 +13,6 @@ import blindfire.action;
 
 enum networked = "networked";
 enum ignore = "ignore";
-
-template isAttribute(alias curAttr, alias Attr) {
-	enum isAttribute = is(typeof(curAttr) == typeof(Attr)) && curAttr == Attr;
-} //isAttribute
-
-template hasAttribute(T, alias Member, alias Attribute, Attributes...) {
-
-	static if (Attributes.length > 0 && isAttribute!(Attribute, Attributes[0])) {
-
-		enum hasAttribute = true;
-
-	} else static if (Attributes.length > 0) {
-
-		enum hasAttribute = hasAttribute!(T, Member, Attribute, Attributes[1 .. $]);
-
-	} else {
-
-		enum hasAttribute = false;
-
-	}
-
-} //hasAttribute
-
-template getAttributes(T, alias Member) {
-	enum getAttributes = __traits(getAttributes, __traits(getMember, T, Member));
-} //getAttributes
-
-template Identifier(alias Sym) {
-	enum Identifier = __traits(identifier, Sym);
-} //Identifier
-
-template StringIdentifier(alias T, alias Member) {
-	enum StringIdentifier = typeof(Symbol!(T, Member)).stringof;
-} //StringIdentifier
-
-template Symbol(alias T, alias Member) {
-	enum Symbol = __traits(getMember, T, Member);
-} //Symbol
-
-template Symbol(T, alias Member) {
-	enum Symbol = __traits(getMember, T, Member);
-} //Symbol
-
-template isPOD(T) {
-	enum isPOD = __traits(isPOD, T);
-} //isPOD
 
 template NetVarToSym(T, alias Member) {
 	enum NetVarToSym = Symbol!(T, Member).variable;
@@ -96,7 +51,7 @@ template MakeSerializable(Types...) {
 
 template MakeTypeSerializable(T, members...) {
 
-	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0].stringof))) {
+	static if (members.length > 0 && hasAttribute!(T, members[0].stringof, networked)) {
 
 		enum MakeTypeSerializable = AddSerialization!(T, members[0]) ~ MakeTypeSerializable!(T, members[1..$]);
 
@@ -143,7 +98,6 @@ template DeSerializeEachMember(T, alias data, alias object, members...) {
 
 	}
 
-
 } //DeSerializeEachMember
 
 template Serialize(T, alias data, alias object) {
@@ -156,7 +110,7 @@ template DeSerialize(T, alias data, alias object) {
 
 template TotalNetSize(T, members...) {
 
-	static if (members.length > 0 && hasAttribute!(T, members[0], networked, getAttributes!(T, members[0]))) {
+	static if (members.length > 0 && hasAttribute!(T, members[0], networked)) {
 
 		enum TotalNetSize = typeof(__traits(getMember, T, members[0]).bytes).sizeof + TotalNetSize!(T, members[1 .. $]);
 

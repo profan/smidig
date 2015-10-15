@@ -309,34 +309,11 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	} //clear
 
-	static template isDependency(alias attr) {
-
-		enum isDependency = is(typeof(attr) == typeof(dependency)) && attr == dependency;
-
-	} //isDependency
-
-	//TODO replace with hasAttribute(alias attr, list ...) to make more general
-	static template hasAttribute(list ...) {
-
-		static if (list.length > 0 && isDependency!(list[0])) {
-
-			enum hasAttribute = true;
-
-		} else static if (list.length > 0) {
-
-			enum hasAttribute = hasAttribute!(list[1 .. $]);
-
-		} else {
-
-			enum hasAttribute = false;
-
-		}
-
-	} //hasAttribute
-
 	static template linkDependencies(T, alias comp, alias entsym, list...) {
 
-		static if (list.length > 0 && hasAttribute!(__traits(getAttributes, __traits(getMember, T, list[0])))) {
+		import blindfire.engine.meta : hasAttribute;
+
+		static if (list.length > 0 && hasAttribute!(T, list[0], dependency)) {
 
 			enum linkDependencies =
 				__traits(identifier, comp) ~ "." ~ list[0] ~ " = em.getComponent!"

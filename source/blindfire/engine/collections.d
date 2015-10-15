@@ -947,6 +947,10 @@ unittest {
 	}
 }
 
+struct Graph(T) {
+
+} //Graph
+
 struct HashSet(T) {
 
 	IAllocator allocator_;
