@@ -10,9 +10,7 @@ import blindfire.engine.console : Console;
 import blindfire.engine.net : NetworkPeer;
 
 //probably belongs in the renderer itself later?
-import blindfire.engine.text : FontAtlas;
-import blindfire.engine.gl : Cursor;
-
+import blindfire.engine.gl : Cursor, FontAtlas;
 import blindfire.engine.defs : DrawEventType, NetEventType;
 
 enum Resource {
@@ -140,7 +138,7 @@ struct Engine {
 
 	void draw(double delta_time) {
 
-		import blindfire.engine.defs : Vec2f;
+		import blindfire.engine.math : Vec2f;
 
 		window_.render_clear(0x428bca);
 

@@ -7,8 +7,8 @@ import derelict.sdl2.functions : SDL_StartTextInput, SDL_StopTextInput;
 
 import blindfire.engine.collections : StaticArray;
 import blindfire.engine.event : EventManager, EventCast;
-import blindfire.engine.text : FontAtlas;
 import blindfire.engine.window : Window;
+import blindfire.engine.gl : FontAtlas;
 
 enum ConsoleCommand {
 

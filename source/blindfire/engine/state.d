@@ -1,8 +1,6 @@
 module blindfire.engine.state;
 
-import blindfire.engine.eventhandler;
 import blindfire.engine.window;
-import blindfire.engine.net;
 
 alias StateID = ulong;
 

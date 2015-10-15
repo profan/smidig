@@ -72,7 +72,7 @@ void main() {
 	import std.experimental.allocator.building_blocks.stats_collector : StatsCollector, Options;
 	import blindfire.engine.memory : theAllocator, processAllocator, allocatorObject, Mallocator;
 
-	alias Allocator = StatsCollector!(GCAllocator, Options.all, Options.all);
+	alias Allocator = StatsCollector!(Mallocator, Options.all, Options.all);
 
 	Allocator allocator;
 	processAllocator = allocatorObject(&allocator);

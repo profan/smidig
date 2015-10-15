@@ -3,7 +3,7 @@ module blindfire.ents;
 import std.stdio : writefln;
 
 import blindfire.engine.gl : Mesh, Shader, Texture, Transform, Vertex, create_rectangle_vec3f2f;
-import blindfire.engine.defs : Vec2f, Vec3f;
+import blindfire.engine.math : Vec2f, Vec3f;
 import blindfire.engine.ecs;
 
 import blindfire.sys;

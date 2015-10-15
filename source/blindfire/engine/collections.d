@@ -249,6 +249,10 @@ unittest {
 
 }
 
+struct FixedArray(T) {
+
+} //FixedArray
+
 /* array type which never moves its contents in memory */
 /* - composed of arrays in fixed sizes. */
 struct SegmentedArray(T) {

@@ -100,7 +100,7 @@ mixin(makeFlagEnum!("EventToMask", SDL_EventType, EventMask)
 
 struct EventHandler {
 
-	import std.stdio : writefln;
+	import core.stdc.stdio : printf;
 	import blindfire.engine.collections : Array;
 	import blindfire.engine.memory : IAllocator;
 
@@ -143,7 +143,7 @@ struct EventHandler {
 		this.pressed_keys = SDL_GetKeyboardState(null);
 
 		//temporary check
-		if( SDL_NumJoysticks() < 1 ) { writefln("Warning: No joysticks connected!"); }
+		if( SDL_NumJoysticks() < 1 ) { printf("Warning: No joysticks connected!"); }
 
 	} //this
 

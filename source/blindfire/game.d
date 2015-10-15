@@ -7,7 +7,6 @@ import derelict.sdl2.sdl;
 import blindfire.engine.window;
 import blindfire.engine.eventhandler;
 import blindfire.engine.console : Console;
-import blindfire.engine.text : FontAtlas;
 import blindfire.engine.util : render_string;
 import blindfire.engine.memory : LinearAllocator;
 import blindfire.engine.resource;
@@ -735,12 +734,30 @@ struct NewGame {
 	
 	} //load_resources
 
-	void bind_actions() {
+	void play_click_sound(int x, int y) {
 
 		auto click_id = cast(SoundID)ResourceManager.get().get_resource!SoundID(GameResource.Click);
-		engine_.input_handler_.bind_mousebtn(1, (x, y) => engine_.sound_system_.play_sound(click_id, 0.5f, false), KeyState.UP);
-		engine_.input_handler_.bind_mousebtn(3, (x, y) => engine_.sound_system_.stop_all_sounds(), KeyState.UP);
-		engine_.input_handler_.bind_keyevent(SDL_SCANCODE_SPACE, () => engine_.window_.toggle_fullscreen());
+		engine_.sound_system_.play_sound(click_id, 0.5f, false);
+
+	} //play_click_sound
+
+	void stop_all_sounds(int x, int y ) {
+
+		engine_.sound_system_.stop_all_sounds();
+
+	} //stop_all_sounds
+
+	void toggle_fullscreen() {
+
+		engine_.window_.toggle_fullscreen();
+
+	} //toggle_fullscreen
+
+	void bind_actions() {
+
+		engine_.input_handler_.bind_mousebtn(1, &play_click_sound, KeyState.UP);
+		engine_.input_handler_.bind_mousebtn(3, &stop_all_sounds, KeyState.UP);
+		engine_.input_handler_.bind_keyevent(SDL_SCANCODE_SPACE, &toggle_fullscreen);
 
 	} //bind_actions
 

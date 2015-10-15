@@ -3,6 +3,7 @@ module blindfire.serialize;
 import blindfire.engine.gl;
 import blindfire.engine.ecs;
 import blindfire.engine.defs;
+import blindfire.engine.math;
 import blindfire.engine.net : NetVar;
 import blindfire.engine.stream : InputStream, OutputStream;
 

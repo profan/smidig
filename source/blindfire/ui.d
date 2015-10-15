@@ -10,7 +10,6 @@ import blindfire.engine.collections : StaticArray;
 import blindfire.engine.window;
 import blindfire.engine.util;
 import blindfire.engine.defs;
-import blindfire.engine.text;
 import blindfire.engine.gl;
 
 enum LayoutType {

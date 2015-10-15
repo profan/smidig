@@ -20,7 +20,7 @@ struct Event(EventID ID, T) {
 
 struct EventManager {
 
-	import std.stdio : writefln;
+	import core.stdc.stdio : printf;
 	import blindfire.engine.collections : Array;
 	import blindfire.engine.memory : IAllocator, Mallocator, theAllocator, Region, make, dispose;
 
@@ -150,7 +150,7 @@ struct EventManager {
 						foreach (key, ref del_func; cur_dels) {
 							switch (id) {
 								mixin(doSwitchEntry!EvTypesMap());
-								default: writefln("unhandled event type: %d", id);
+								default: printf("unhandled event type: %d", id);
 							}
 						}
 					}

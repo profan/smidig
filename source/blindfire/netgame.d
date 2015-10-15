@@ -113,6 +113,8 @@ struct ClientFSM {
 
 class GameNetworkManager {
 
+	import gfm.math : Vector;
+	import blindfire.engine.math;
 	import blindfire.engine.defs;
 
 	struct Server {

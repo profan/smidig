@@ -1,5 +1,15 @@
 module blindfire.engine.math;
 
+import gfm.math : Vector, Matrix;
+
+//OpenGL maths related
+alias Vec2i = Vector!(int, 2);
+alias Vec2f = Vector!(float, 2);
+alias Vec3f = Vector!(float, 3);
+alias Vec4f = Vector!(float, 4);
+alias Mat3f = Matrix!(float, 3, 3);
+alias Mat4f = Matrix!(float, 4, 4);
+
 T normalize(T)(T val, T min, T max, T val_max) pure @nogc nothrow {
 	return (min + val) / (val_max / (max - min));
 } //normalize

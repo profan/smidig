@@ -1,8 +1,8 @@
 module blindfire.engine.util;
 
 import blindfire.engine.defs : Vec2i;
-import blindfire.engine.text : FontAtlas;
 import blindfire.engine.window : Window;
+import blindfire.engine.gl : FontAtlas;
 
 void render_string(string format, Args...)(FontAtlas* atlas, Window* window, ref Vec2i offset, Args args) {
 	render_string!(format)(*atlas, window, offset, args);

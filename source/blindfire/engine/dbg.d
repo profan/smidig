@@ -7,6 +7,13 @@ void render_string(string format, Args...)(ref DebugContext ctx, Args args) {
 
 struct DebugContext {
 
+	import blindfire.engine.collections : Array, HashMap;
+	import blindfire.engine.memory : IAllocator;
+	import blindfire.engine.imgui : ImguiContext;
+	import blindfire.engine.window : Window;
+	import blindfire.engine.gl : FontAtlas;
+	import blindfire.engine.defs : Vec2i;
+
 	struct Option {
 
 		enum Type {
@@ -14,13 +21,6 @@ struct DebugContext {
 		}
 
 	} //Option
-
-	import blindfire.engine.collections : Array, HashMap;
-	import blindfire.engine.memory : IAllocator;
-	import blindfire.engine.imgui : ImguiContext;
-	import blindfire.engine.text : FontAtlas;
-	import blindfire.engine.window : Window;
-	import blindfire.engine.defs : Vec2i;
 
 	/* allocator */
 	IAllocator allocator_;
