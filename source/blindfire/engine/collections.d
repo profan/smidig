@@ -870,13 +870,12 @@ struct DHeap(int N, T) {
 
 	T delete_min() {
 
+		size_--;
 		swap(0, size_); //swap root and last (we want root)
 		auto min = &array_[size_];
 		auto min_data = move(*min);
 		*min = T.max; //value should define a max, so it can be put out of the way in the heap
-
 		min_heapify(0);
-		size_--;
 
 		return min_data;
 
