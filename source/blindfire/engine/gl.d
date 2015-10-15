@@ -596,7 +596,7 @@ struct ParticleSystem(V) {
 
 unittest {
 
-	import blindfire.engine.defs : Vec2f;
+	import blindfire.engine.math : Vec2f;
 	import blindfire.engine.memory : theAllocator;
 
 	auto origin = Vec2f(0, 0);

@@ -140,6 +140,8 @@ struct EventManager {
 
 		static void tick(alias EvTypesMap)(ref EventManager ev_man) {
 
+			import core.stdc.stdio : printf;
+
 			foreach (id, ref ev_list; ev_man.events) {
 
 				if (ev_list.length == 0) continue;
