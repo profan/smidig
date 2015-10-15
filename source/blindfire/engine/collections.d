@@ -794,17 +794,11 @@ struct DHeap(int N, T) {
 		this.array_ = typeof(array_)(allocator_, initial_size);
 	} //this
 
-	uint left_child(uint i) {
+	uint nth_child(uint n, uint i) {
 
-		return (N * i) + 1;
+		return (N * i) + n;
 
-	} //left_child
-
-	uint right_child(uint i) {
-
-		return (N * i) + 2;
-
-	} //right_child
+	} //nth_child
 
 	size_t parent(size_t i) {
 
@@ -835,31 +829,41 @@ struct DHeap(int N, T) {
 
 	void insert(T thing) {
 
-		size_++;
 		array_[size_] = thing;
 		percolate_up(size_);
+		size_++;
 
 	} //insert
 
 	void min_heapify(size_t cur) {
 
-		auto left_child = left_child(cur);
-		auto right_child = right_child(cur);
-		auto capacity = size_;
+		size_t[N] children;
+		foreach (i, ref c; children) {
+			c = nth_child(i+1, cur);
+		}
 
-		if (left_child > capacity || right_child > capacity) return;
+		auto capacity = size_;
+		foreach (c; children) { 
+			if (c > capacity) { return; }
+		}
 
 		//check if it's actually bigger
-		if (array_[cur] > array_[left_child] || array_[cur] > array_[right_child]) {
+		foreach (c; children) {
+			if (array_[cur] > array_[c]) {
 
-			if (array_[left_child] < array_[right_child]) {
-				swap(cur, left_child);
-				min_heapify(left_child);
-			} else {
-				swap(cur, right_child);
-				min_heapify(right_child);
+				size_t smallest_child = size_t.max;
+
+				foreach (inner_c; children) {
+					if (smallest_child == size_t.max || array_[smallest_child] > array_[inner_c]) {
+						smallest_child = inner_c;
+					}
+				}
+
+				swap(cur, smallest_child);
+				min_heapify(smallest_child);
+				return;
+
 			}
-
 		}
 
 	} //min_heapify
@@ -909,6 +913,7 @@ unittest {
 
 	import std.string : format;
 	import std.stdio : writefln;
+	import std.algorithm : filter;
 
 	auto heap = DHeap!(3, CompThing)(theAllocator, 24);
 
