@@ -5,7 +5,8 @@ import std.stdio : writefln;
 import derelict.sdl2.types : SDL_Event, SDL_TEXTINPUT;
 import derelict.sdl2.functions : SDL_StartTextInput, SDL_StopTextInput;
 
-import blindfire.engine.collections : StaticArray;
+import blindfire.engine.memory : IAllocator;
+import blindfire.engine.collections : HashMap, StaticArray;
 import blindfire.engine.event : EventManager, EventCast;
 import blindfire.engine.window : Window;
 import blindfire.engine.gl : FontAtlas;
@@ -26,8 +27,12 @@ struct Console {
 
 		enum BUFFER_WIDTH = 80;
 		enum BUFFER_LINES = 30;
+
+		/* reference to allocator used */
+		IAllocator allocator_;
+
 		alias StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] ConsoleBuffer;
-		CommandDelegate[ConsoleCommand] commands;
+		HashMap!(ConsoleCommand, CommandDelegate) commands;
 
 		FontAtlas* atlas;
 		ConsoleBuffer buffers;
@@ -45,9 +50,12 @@ struct Console {
 		EventManager* evman;
 	}
 
-	this(FontAtlas* font_atlas, EventManager* eventman) {
+	this(IAllocator allocator, FontAtlas* font_atlas, EventManager* eventman) {
 
 		import std.traits : EnumMembers;
+
+		this.allocator_ = allocator;
+		this.commands = typeof(commands)(allocator_, 24);
 		this.atlas = font_atlas;
 
 		bind_command(ConsoleCommand.HELP,
@@ -137,9 +145,10 @@ struct Console {
 		else { begin = i; end = i; }
 		const char[] args = slice[begin .. end];
 
-		if (command in commands) {
+		auto found_command = cast(ConsoleCommand)command in commands;
+		if (found_command) {
 			shift_buffer(buffers);
-			commands[command](&this, args);
+			(*found_command)(&this, args);
 			history[0] ~= slice;
 			++history_elements;
 			shift_buffer(history);

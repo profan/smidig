@@ -372,7 +372,7 @@ struct HashMap(K, V) {
 
 	} //move_from
 
-	V* opBinaryRight(string op = "in")(K key) nothrow {
+	V* opBinaryRight(string op = "in")(in K key) nothrow {
 
 		bool found = false;
 		auto index = findIndex(key, found);

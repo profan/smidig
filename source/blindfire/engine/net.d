@@ -701,3 +701,11 @@ struct NetworkPeer {
 	} //tick
 
 } //NetworkPeer
+
+struct NetworkServer {
+
+} //NetworkServer
+
+struct NetworkClient {
+
+} //NetworkClient

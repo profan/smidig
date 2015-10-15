@@ -372,7 +372,6 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	mixin template setUpDependencies(T, alias component, alias entity) {
 
-		import std.string : format;
 		import std.traits : moduleName;
 
 		void linkUpDependencies() {
@@ -497,7 +496,7 @@ unittest {
 	{
 		em.tick!(UpdateSystem)(); //one iteration, value should now be 2
 		auto val = em.getComponent!SomeComponent(entity).value;
-		assert(val == 2, "expected val of SomeComponent to be 2, order of updating is incorrect, was " ~ to!string(val));
+		assert(val == 2, format("expected val of SomeComponent to be 2, order of updating is incorrect, was :%d", val));
 	}
 	{
 		em.tick!(DrawSystem)(10); //one iteration, value should now be 10

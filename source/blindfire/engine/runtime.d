@@ -85,7 +85,7 @@ struct Engine {
 		this.sound_system_.initialize();
 
 		//initialize console subsystem
-		this.console_.construct(&debug_atlas_, null);
+		this.console_.construct(allocator_, &debug_atlas_, null);
 
 		//initialize imgui context
 		this.imgui_context_.construct(allocator_, &window_);
