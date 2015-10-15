@@ -12,7 +12,6 @@ import blindfire.engine.stream : InputStream;
 import blindfire.engine.math : point_in_rect;
 import blindfire.engine.ecs;
 
-import blindfire.netgame;
 import blindfire.action;
 
 interface UpdateSystem : ComponentSystem!(0) {
@@ -143,11 +142,9 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 	import blindfire.engine.math : point_in_rect;
 
 	SelectionBox* sbox;
-	TurnManager tm;
 
-	this(SelectionBox* sb, TurnManager tm) {
+	this(SelectionBox* sb) {
 		this.sbox = sb;
-		this.tm = tm;
 	}
 
 	//TODO make sure this only works for local units that the player is in control of later, probably easy to fix
@@ -166,7 +163,7 @@ class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
 			if (comp.selected && sbox.order_set) with (comp.tc) {
 
 				//emit order command
-				tm.create_action!MoveAction(id, Vec2f(sbox.to_x, sbox.to_y));
+				//tm.create_action!MoveAction(id, Vec2f(sbox.to_x, sbox.to_y));
 
 			}
 

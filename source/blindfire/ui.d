@@ -35,6 +35,9 @@ struct Layout {
 
 struct UIState {
 
+	import blindfire.engine.memory : IAllocator, theAllocator, make, dispose;
+	IAllocator allocator_;
+
 	enum MAX_FIELD_SIZE = 64;
 
 	uint active_item = 0, hot_item = 0, kbd_item = 0;
@@ -52,9 +55,6 @@ struct UIState {
 	uint box_num_vertices;
 
 	FontAtlas* font_atlas;
-
-	import blindfire.engine.memory;
-	LinearAllocator* ui_allocator;
 
 	void update_ui(ref SDL_Event ev) {
 
@@ -84,10 +84,10 @@ struct UIState {
 
 	} //update_ui
 
-	void initialize(LinearAllocator* allocator) {
+	void initialize(IAllocator allocator) {
 		
-		ui_allocator = allocator;
-		assert (ui_allocator !is null);
+		allocator_ = allocator;
+		assert (allocator_ !is null);
 
 		//upload the vertex data, transform it when actually drawing
 
@@ -120,12 +120,13 @@ struct UIState {
 
 		auto rm = ResourceManager.get();
 		auto text_shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
-		font_atlas = ui_allocator.alloc!(FontAtlas)("fonts/OpenSans-Bold.ttf", 22, text_shader);
+		font_atlas = allocator_.make!FontAtlas("fonts/OpenSans-Bold.ttf", 22, text_shader);
 
 	} //init
 
 	~this() {
 
+		allocator_.dispose(font_atlas);
 		glDeleteVertexArrays(1, &box_vao);
 
 	} //~this
