@@ -54,6 +54,7 @@ alias EventMask = ulong;
 
 mixin(makeFlagEnum!("EventToMask", SDL_EventType, EventMask)
 	(SDL_FIRSTEVENT,
+	SDL_QUIT,
 	SDL_APP_TERMINATING,
 	SDL_APP_LOWMEMORY,
 	SDL_APP_WILLENTERBACKGROUND,

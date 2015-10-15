@@ -65,6 +65,12 @@ string makeFlagEnum(string EnumName, KeyType, ValueType, Args...)(Args args) {
 
 	import std.string : format;
 
+	enum max_size = ValueType.sizeof * 8;
+	static assert(args.length <= max_size,
+		   format("can't hold %d flags in type %s (%d bits)", args.length, ValueType.stringof, max_size));
+
+	import std.string : format;
+
 	string mixinFields() {
 
 		auto str = "";
