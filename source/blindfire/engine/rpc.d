@@ -64,17 +64,23 @@ struct RPC {
 
 	} //call
 
-	void register(string name, WrapperFunction func) {
+	ref typeof(this) register(string name, WrapperFunction func) {
 
 		functions_[name] = func;
+
+		return this;
 
 	} //register
 
 	void on_pull(ref InputStream stream) {
 
-		auto name_len = stream.read!uint();
-		auto name = stream.read!(char)(name_len);
-		functions_[cast(string)name](stream);
+		while (!stream.eof) {
+
+			auto name_len = stream.read!uint();
+			auto name = stream.read!(char)(name_len);
+			functions_[cast(string)name](stream);
+
+		}
 
 	} //on_pull
 
@@ -85,7 +91,7 @@ struct RPC {
 
 } //RPC
 
-string generate_wrapper(alias F)() {
+string generateWrapper(alias F)() {
 
 	import std.conv : to;
 	import std.string : format;
@@ -133,7 +139,7 @@ string generate_wrapper(alias F)() {
 
 	return str;
 
-} //generate_wrapper
+} //generateWrapper
 
 unittest {
 
@@ -145,16 +151,24 @@ unittest {
 		writefln("input: %d", input);
 	}
 
+	void goodbye(uint val, bool no) {
+		writefln("goodbye - val : %d, no : %s", val, no);
+	}
+
 	// generates wrapper function which looks sort of like:
 	// void hello_world_wrapper(ref InputStream stream) {
 	//     auto arg0 = stream.read!uint();
 	//     hello_world(arg0);
 	// }
-	mixin(generate_wrapper!(hello_world)());
+	mixin(generateWrapper!hello_world);
+	mixin(generateWrapper!goodbye);
 
 	auto rpc = RPC(theAllocator);
-	rpc.register("hello_world", &hello_world_wrapper);
+	rpc.register("hello_world", &hello_world_wrapper)
+		.register("goodbye", &goodbye_wrapper);
+
 	rpc.call("hello_world", 1234);
+	rpc.call("goodbye", 324, false);
 
 	auto in_stream = InputStream(rpc.out_stream_[]);
 	// reads from the stream, reads function name first which uses hashmap to call wrapper func.

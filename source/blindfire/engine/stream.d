@@ -30,6 +30,11 @@ private mixin template StreamImpl() {
 		return size;
 	} //length
 
+	@property bool eof() nothrow @nogc const {
+		assert(offset <= size, "offset was greater than size, ran past.");
+		return offset == size;
+	} //eof
+
 	ubyte[] opSlice() nothrow @nogc {
 		return buffer[0..offset];
 	} //opSlice
