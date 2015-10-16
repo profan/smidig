@@ -7,7 +7,6 @@ import blindfire.engine.event : EventManager, EventMemory;
 import blindfire.engine.resource : ResourceManager;
 import blindfire.engine.sound : SoundSystem;
 import blindfire.engine.console : Console;
-import blindfire.engine.net : NetworkPeer;
 
 //probably belongs in the renderer itself later?
 import blindfire.engine.gl : Cursor, FontAtlas;
@@ -42,9 +41,6 @@ struct Engine {
 
 	EventManager renderer_evman_ = void;
 	IRenderer renderer_;
-
-	EventManager network_evman_ = void;
-	NetworkPeer network_ = void;
 
 	SoundSystem sound_system_ = void;
 
@@ -83,10 +79,6 @@ struct Engine {
 		//initialize renderer and event manager for rendering events
 		this.renderer_evman_.construct(EventMemory, DrawEventType.max);
 		this.renderer_ = allocator_.make!OpenGLRenderer();
-
-		//initialize network system and event manager for communication
-		this.network_evman_.construct(EventMemory, NetEventType.max);
-		this.network_.construct(cast(ushort)12000, &network_evman_);
 
 		//initialize sound subsystem
 		this.sound_system_.construct(allocator_, MAX_SOUND_SOURCES);

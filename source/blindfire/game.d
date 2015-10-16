@@ -76,9 +76,10 @@ struct NewGame {
 
 	void bind_actions() {
 
-		engine_.input_handler_.bind_mousebtn(1, &play_click_sound, KeyState.UP);
-		engine_.input_handler_.bind_mousebtn(3, &stop_all_sounds, KeyState.UP);
-		engine_.input_handler_.bind_keyevent(SDL_SCANCODE_SPACE, &toggle_fullscreen);
+		engine_.input_handler_
+			.bind_mousebtn(1, &play_click_sound, KeyState.UP)
+			.bind_mousebtn(3, &stop_all_sounds, KeyState.UP)
+			.bind_keyevent(SDL_SCANCODE_SPACE, &toggle_fullscreen);
 
 	} //bind_actions
 

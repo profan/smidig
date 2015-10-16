@@ -7,7 +7,6 @@ import blindfire.engine.window : Window;
 import blindfire.engine.math : rotate, squaredDistanceTo;
 import blindfire.engine.gl : Transform, Shader, Texture, Mesh;
 import blindfire.engine.math : Vec2i, Vec2f, Vec3f, Mat3f;
-import blindfire.engine.net : NetVar, Command, ClientID;
 import blindfire.engine.stream : InputStream;
 import blindfire.engine.math : point_in_rect;
 import blindfire.engine.ecs;
