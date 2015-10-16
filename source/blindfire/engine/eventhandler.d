@@ -165,9 +165,11 @@ struct EventHandler {
 
 	} //initialize_mask
 
-	void add_listener(EventDelegate ed) {
+	ref typeof(this) add_listener(EventDelegate ed) {
 
 		delegates ~= EventSpec(ed, EventMask.max);
+
+		return this;
 
 	} //add_listener
 
@@ -186,24 +188,39 @@ struct EventHandler {
 	} //add_listener
 
 	ref typeof(this) bind_keyevent(SDL_Scancode key, KeyDelegate kd) {
+
 		KeyBind kb = {key: key, func: kd};
 		input_events ~= kb;
+
 		return this;
+
 	} //bind_keyevent
 
-	void bind_mousebtn(Uint8 button, MouseDelegate md, KeyState state) {
+	ref typeof(this) bind_mousebtn(Uint8 button, MouseDelegate md, KeyState state) {
+
 		MouseBind mb = {mousebtn: button, func: md, state: to!MouseKeyState(state)};
 		mouse_events ~= mb;
+
+		return this;
+
 	} //bind_mousebtn
 
-	void bind_key(SDL_Scancode key, KeyDelegate kd) {
+	ref typeof(this) bind_key(SDL_Scancode key, KeyDelegate kd) {
+
 		KeyBind kb = {key: key, func: kd};
 		key_events ~= kb;
+
+		return this;
+
 	} //bind_key
 
-	void bind_mousemov(MouseDelegate md) {
+	ref typeof(this) bind_mousemov(MouseDelegate md) {
+
 		MouseBind mb = {mousebtn: 0, func: md};
 		motion_events ~= mb;
+
+		return this;
+
 	} //bind_mousemov
 
 	void handle_events() {

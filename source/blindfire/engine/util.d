@@ -8,13 +8,15 @@ void render_string(string format, Args...)(FontAtlas* atlas, Window* window, ref
 	render_string!(format)(*atlas, window, offset, args);
 } //render_string
 
-void render_string(string format, Args...)(ref FontAtlas atlas, Window* window, ref Vec2i offset, Args args) {
+ref FontAtlas render_string(string format, Args...)(ref FontAtlas atlas, Window* window, ref Vec2i offset, Args args) {
 
 	char[format.length*2] buf;
 	const char[] str = cformat(buf[], format, args);
 
 	atlas.render_text(window, str, offset.x, offset.y, 1, 1, 0xffffff);
 	offset.y += atlas.char_height*2;
+
+	return atlas;
 
 } //render_string
 

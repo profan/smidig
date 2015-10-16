@@ -1,8 +1,12 @@
 module blindfire.engine.dbg;
 
-void render_string(string format, Args...)(ref DebugContext ctx, Args args) {
+ref DebugContext render_string(string format, Args...)(ref DebugContext ctx, Args args) {
+
 	import blindfire.engine.util : render_string;
 	render_string!(format)(ctx.atlas_, ctx.window_, ctx.offset_, args);
+
+	return ctx;
+
 } //render_string
 
 struct DebugContext {

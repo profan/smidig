@@ -193,10 +193,12 @@ struct Engine {
 
 		int x, y;
 		input_handler_.mouse_pos(x, y);
-		debug_context_.render_string!("update deltatime: %f")(update_time_);
-		debug_context_.render_string!("draw deltatime: %f")(delta_time);
-		debug_context_.render_string!("framerate: %f")(1.0 / frame_time_);
-		debug_context_.render_string!("mouse x: %d, y: %d")(x, y);
+
+		debug_context_
+			.render_string!("update deltatime: %f")(update_time_)
+			.render_string!("draw deltatime: %f")(delta_time)
+			.render_string!("framerate: %f")(1.0 / frame_time_)
+			.render_string!("mouse x: %d, y: %d")(x, y);
 
 		debug_context_.reset();
 
