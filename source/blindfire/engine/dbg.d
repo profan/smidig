@@ -50,9 +50,3 @@ struct DebugContext {
 	} //reset
 
 } //DebugContext
-
-class Debug {
-
-
-
-} //Debug

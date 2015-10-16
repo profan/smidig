@@ -23,7 +23,7 @@ const(char[]) cformat(Args...)(char[] buf, in char[] format, Args args) {
 	import core.stdc.stdio : snprintf;
 
 	auto chars = snprintf(buf.ptr, buf.length, format.ptr, args);
-	char[] str = buf[0 .. (chars > 0) ? chars+1 : 0];
+	const char[] str = buf[0 .. (chars > 0) ? chars+1 : 0];
 
 	return str;
 

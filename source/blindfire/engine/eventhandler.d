@@ -172,7 +172,7 @@ struct EventHandler {
 	} //add_listener
 
 	/* filtering add_listener, combines all types sent in to form single mask */
-	void add_listener(SDL_EventType...)(EventDelegate ed, SDL_EventType types) {
+	ref typeof(this) add_listener(SDL_EventType...)(EventDelegate ed, SDL_EventType types) {
 
 		auto mask = 0;
 		foreach (t; types) {
@@ -181,11 +181,14 @@ struct EventHandler {
 
 		delegates ~= EventSpec(ed, mask);
 
+		return this;
+
 	} //add_listener
 
-	void bind_keyevent(SDL_Scancode key, KeyDelegate kd) {
+	ref typeof(this) bind_keyevent(SDL_Scancode key, KeyDelegate kd) {
 		KeyBind kb = {key: key, func: kd};
 		input_events ~= kb;
+		return this;
 	} //bind_keyevent
 
 	void bind_mousebtn(Uint8 button, MouseDelegate md, KeyState state) {

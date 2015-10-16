@@ -55,6 +55,11 @@ struct Engine {
 	DebugContext debug_context_ = void;
 	ImguiContext imgui_context_ = void;
 
+	//time-related metrics
+	double update_time_;
+	double frame_time_;
+	double draw_time_;
+
 	//external references
 	UpdateFunc update_function_;
 	DrawFunc draw_function_;
@@ -64,6 +69,7 @@ struct Engine {
 
 	void initialize(in char[] title, UpdateFunc update_func, DrawFunc draw_func) {
 
+		import derelict.sdl2.types;
 		import blindfire.engine.pool : construct;
 
 		//allocator for shit
@@ -88,13 +94,19 @@ struct Engine {
 
 		//initialize console subsystem
 		this.console_.construct(allocator_, &debug_atlas_, null);
+		this.input_handler_.add_listener(&console_.handle_event, SDL_TEXTINPUT)
+			.bind_keyevent(SDL_SCANCODE_TAB, &console_.toggle)
+			.bind_keyevent(SDL_SCANCODE_BACKSPACE, &console_.del)
+			.bind_keyevent(SDL_SCANCODE_DELETE, &console_.del)
+			.bind_keyevent(SDL_SCANCODE_RETURN, &console_.run)
+			.bind_keyevent(SDL_SCANCODE_DOWN, &console_.get_prev)
+			.bind_keyevent(SDL_SCANCODE_UP, &console_.get_next);
 
 		//initialize imgui context
 		this.imgui_context_.construct(allocator_, &window_);
 		this.imgui_context_.initialize();
 
 		//link up imgui context to event shite
-		import derelict.sdl2.types;
 		this.input_handler_.add_listener(&imgui_context_.on_event,
 			SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL);
 
@@ -146,6 +158,8 @@ struct Engine {
 
 		draw_function_();
 
+		console_.draw(&window_);
+
 		bool show_another_window;
 
 		import derelict.imgui.imgui;
@@ -179,16 +193,14 @@ struct Engine {
 
 		int x, y;
 		input_handler_.mouse_pos(x, y);
-		debug_context_.render_string!("update deltatime: %f")(update_time);
+		debug_context_.render_string!("update deltatime: %f")(update_time_);
 		debug_context_.render_string!("draw deltatime: %f")(delta_time);
-		debug_context_.render_string!("framerate: %f")(1.0 / frame_time);
+		debug_context_.render_string!("framerate: %f")(1.0 / frame_time_);
 		debug_context_.render_string!("mouse x: %d, y: %d")(x, y);
 
 		debug_context_.reset();
 
 	} //draw_debug
-
-	double update_time, frame_time, draw_time;
 
 	void run() {
 
@@ -220,16 +232,16 @@ struct Engine {
 
 				//update game and draw
 				this.update_function_();
-				update_time = cast(double)update_timer.peek() / cast(double)clock_ticks_per_second;
+				update_time_ = cast(double)update_timer.peek() / cast(double)clock_ticks_per_second;
 				last_update = main_timer.peek();
 				update_timer.reset();
 
 			}
 
 			draw_timer.start();
-			this.draw((draw_time > 0) ? draw_time : 1.0);
-			draw_time = cast(double)draw_timer.peek() / cast(double)clock_ticks_per_second;
-			frame_time = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
+			this.draw((draw_time_ > 0) ? draw_time_ : 1.0);
+			draw_time_ = cast(double)draw_timer.peek() / cast(double)clock_ticks_per_second;
+			frame_time_ = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
 			last_render = draw_timer.peek();
 			draw_timer.reset();
 			frame_timer.reset();

@@ -17,7 +17,7 @@ enum ConsoleCommand {
 	SET_TICKRATE = "set_tickrate",
 	PUSH_STATE = "push_state"
 
-}
+} //ConsoleCommand FIXME should this really be here?
 
 alias void delegate(Console* console, in char[] arguments) CommandDelegate;
 
@@ -42,13 +42,13 @@ struct Console {
 		size_t history_index = 0;
 		size_t history_elements = 0;
 
-		//dependencies
 
 	}
 
-	public {
-		EventManager* evman;
-	}
+	//dependencies
+	EventManager* evman;
+
+	@disable this(this);
 
 	this(IAllocator allocator, FontAtlas* font_atlas, EventManager* eventman) {
 
@@ -66,30 +66,24 @@ struct Console {
 
 		this.evman = eventman;
 
-	}
-
-	@disable this(this);
-
-	~this() {
-
-	}
+	} //this
 
 	void bind_command(ConsoleCommand cmd, CommandDelegate cd) {
 
 		commands[cmd] = cd;
 
-	}
+	} //bind_command
 
 	void print(string format, Args...)(Args args) {
 
-		import std.string : sformat;
+		import blindfire.engine.util : cformat;
 
 		char[128] fmt_str;
-		char[] c = sformat(fmt_str, format, args);
+		const char[] c = cformat(fmt_str, format, args);
 		write(c);
 		shift_buffer(buffers);
 
-	}
+	} //print
 
 	void write(in char[] text) {
 
@@ -108,24 +102,27 @@ struct Console {
 			}
 		}
 
-	}
+	} //write
 
+	/* deletes last written character from input buffer */
 	void del() {
 
 		if (enabled && buffers[0].length != 0) {
 			 buffers[0].length = buffers[0].length - 1;
 		}
 
-	}
+	} //del
 
+	/* toggles console */
 	void toggle() {
 
 		enabled = !enabled;
 		history_index = 0;
 		(enabled) ? SDL_StartTextInput() : SDL_StopTextInput();
 
-	}
+	} //toggle
 
+	/* interprets input in input buffer and tries to execute command */
 	void run() {
 
 		if (!enabled) { return; }
@@ -154,13 +151,14 @@ struct Console {
 			shift_buffer(history);
 		} else {
 			shift_buffer(buffers);
-			print!("Unknown Command: %s")(command);
+			print!("Unknown Command: %s")(command.ptr);
 		}
 			
 		history_index = 0;
 
-	}
+	} //run
 
+	/* go backwards in the command history */
 	void get_prev() {
 
 		if(!enabled) { return; }
@@ -168,8 +166,9 @@ struct Console {
 		if (history_index != 0)
 			buffers[0] = history[--history_index];
 
-	}
+	} //get_prev
 
+	/* go forwards in the command history */
 	void get_next() {
 		
 		if(!enabled) { return; }
@@ -177,8 +176,9 @@ struct Console {
 		if (history_index+1 < BUFFER_LINES && history_index+1 <= history_elements)
 			buffers[0] = history[++history_index];
 
-	}
+	} //get_next
 
+	/* shift lines out, making it circular */
 	void shift_buffer(ref ConsoleBuffer buf_to_shift) {
 
 		for (int i = buf_to_shift.length-1; i >= 0; --i) {
@@ -187,7 +187,7 @@ struct Console {
 			buf_to_shift[i].length = 0;
 		}
 
-	}
+	} //shift_buffer
 
 	void draw(Window* window) {
 
@@ -208,7 +208,7 @@ struct Console {
 
 		}
 	
-	}
+	} //draw
 	
 	void handle_event(ref SDL_Event ev) {
 
@@ -222,6 +222,6 @@ struct Console {
 				
 		}
 
-	}
+	} //handle_event
 
 } //Console
