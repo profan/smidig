@@ -6,18 +6,28 @@ import blindfire.engine.gl : FontAtlas;
 
 void render_string(string format, Args...)(FontAtlas* atlas, Window* window, ref Vec2i offset, Args args) {
 	render_string!(format)(*atlas, window, offset, args);
-}
+} //render_string
 
 void render_string(string format, Args...)(ref FontAtlas atlas, Window* window, ref Vec2i offset, Args args) {
 
-	import std.string : sformat;
-
 	char[format.length*2] buf;
-	const char[] str = sformat(buf, format, args); //this allocates! wtf!!!!
+	const char[] str = cformat(buf[], format, args);
+
 	atlas.render_text(window, str, offset.x, offset.y, 1, 1, 0xffffff);
 	offset.y += atlas.char_height*2;
 
-}
+} //render_string
+
+const(char[]) cformat(Args...)(char[] buf, in char[] format, Args args) {
+
+	import core.stdc.stdio : snprintf;
+
+	auto chars = snprintf(buf.ptr, buf.length, format.ptr, args);
+	char[] str = buf[0 .. (chars > 0) ? chars+1 : 0];
+
+	return str;
+
+} //cformat
 
 import core.stdc.stdlib : free, malloc;
 import core.stdc.stdio : rewind, fopen, fclose, fread, ftell, fseek, printf, FILE, SEEK_END;

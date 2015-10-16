@@ -63,9 +63,6 @@ struct ImguiContext {
 
 	void initialize() {
 
-		/* set the memory allocator */
-		allocator_ = theAllocator;
-
 		ImGuiIO* io = igGetIO();
 
 		io.KeyMap[ImGuiKey_Tab] = SDL_SCANCODE_KP_TAB;
