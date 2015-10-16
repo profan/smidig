@@ -11,28 +11,28 @@ private mixin template StreamImpl() {
 	this(ubyte* data, size_t length) nothrow @nogc {
 		this.buffer = data;
 		this.size = length;
-	}
+	} //this
 
-	this(SA)(ref SA arr) nothrow @nogc {
+	this(ubyte[] arr) nothrow @nogc {
 		this.buffer = arr.ptr;
 		this.size = arr.length;
-	}
+	} //this
 
 	@property const(ubyte*) pointer() nothrow @nogc const {
 		return buffer + offset;
-	}
+	} //pointer
 
 	@property size_t current() nothrow @nogc const {
 		return offset;
-	}
+	} //current
 
 	@property size_t length() nothrow @nogc const {
 		return size;
-	}
+	} //length
 
 	ubyte[] opSlice() nothrow @nogc {
 		return buffer[0..offset];
-	}
+	} //opSlice
 
 }
 
@@ -46,12 +46,29 @@ struct InputStream {
 	mixin StreamImpl;
 
 	T read(T, ReadMode mode = ReadMode.Read)() nothrow @nogc {
+
 		T obj = *(cast(T*)(buffer[offset..offset+T.sizeof].ptr));
+
 		static if (mode != ReadMode.Peek) {
 			offset += T.sizeof;
 		}
+
 		return obj;
-	}
+
+	} //read
+
+	T[] read(T, ReadMode mode = ReadMode.Read)(uint length) nothrow @nogc {
+
+		auto bytes_len = T.sizeof * length;
+		T[] slice = (cast(T*)(buffer[offset..offset].ptr))[0..bytes_len];
+
+		static if(mode != ReadMode.Peek) {
+			offset += bytes_len;
+		}
+
+		return slice;
+
+	} //read
 
 }
 
@@ -70,6 +87,6 @@ struct OutputStream {
 			buffer[offset..offset+obj.sizeof] = (cast(ubyte*)&obj)[0..obj.sizeof];
 			offset += obj.sizeof;
 		}
-	}
+	} //write
 
 }
