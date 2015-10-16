@@ -11,11 +11,11 @@ struct Array(T) {
 
 	private {
 
+		IAllocator allocator_;
+
 		T[] array_;
 		size_t capacity_;
 		size_t length_;
-
-		IAllocator allocator_;
 
 	}
 
@@ -25,7 +25,7 @@ struct Array(T) {
 	this(IAllocator allocator, size_t initial_size) {
 
 		this.allocator_ = allocator;
-		this.array_ = allocator.makeArray!T(initial_size);
+		this.array_ = allocator_.makeArray!T(initial_size);
 		this.capacity_ = initial_size;
 		this.length_ = 0;
 

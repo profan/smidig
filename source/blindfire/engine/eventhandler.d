@@ -52,8 +52,8 @@ struct EventSpec {
 enum AnyKey = -1;
 alias EventMask = ulong;
 
-mixin(makeFlagEnum!("EventToMask", SDL_EventType, EventMask)
-	(SDL_FIRSTEVENT,
+immutable SDL_EventType[45] sdl_events = [
+	SDL_FIRSTEVENT,
 	SDL_QUIT,
 	SDL_APP_TERMINATING,
 	SDL_APP_LOWMEMORY,
@@ -97,12 +97,13 @@ mixin(makeFlagEnum!("EventToMask", SDL_EventType, EventMask)
 	SDL_RENDER_TARGETS_RESET,
 	SDL_RENDER_DEVICE_RESET,
 	SDL_USEREVENT,
-	SDL_LASTEVENT));
+	SDL_LASTEVENT
+];
 
 struct EventHandler {
 
 	import core.stdc.stdio : printf;
-	import blindfire.engine.collections : Array;
+	import blindfire.engine.collections : Array, HashMap;
 	import blindfire.engine.memory : IAllocator;
 
 	enum INITIAL_SIZE = 8;
@@ -114,6 +115,8 @@ struct EventHandler {
 	Array!MouseBind motion_events;
 	Array!KeyBind input_events;
 	Array!KeyBind key_events;
+
+	HashMap!(SDL_EventType, EventMask) event_mask_;
 
 	//mutated by SDL2
 	Uint8* pressed_keys;
@@ -141,12 +144,26 @@ struct EventHandler {
 		this.input_events = typeof(input_events)(allocator_, INITIAL_SIZE);
 		this.key_events = typeof(key_events)(allocator_, INITIAL_SIZE);
 
+		/* set up hashmap for holding event type to mask translation */
+		this.event_mask_ = typeof(event_mask_)(allocator_, sdl_events.length);
+		this.initialize_mask();
+
+		/* initialize pressed keys */
 		this.pressed_keys = SDL_GetKeyboardState(null);
 
 		//temporary check
 		if( SDL_NumJoysticks() < 1 ) { printf("Warning: No joysticks connected!"); }
 
 	} //this
+
+	void initialize_mask() {
+
+		foreach (i, e; sdl_events) {
+			EventMask n = i ^ 2;
+			event_mask_[e] = n;
+		}
+
+	} //initialize_mask
 
 	void add_listener(EventDelegate ed) {
 
@@ -159,7 +176,7 @@ struct EventHandler {
 
 		auto mask = 0;
 		foreach (t; types) {
-			mask |= 1 << EventToMask[t];
+			mask |= 1 << event_mask_[t];
 		}
 
 		delegates ~= EventSpec(ed, mask);
@@ -217,7 +234,7 @@ struct EventHandler {
 
 			/* forward events to listeners, filtered with a bitmask */
 			foreach(ref receiver; delegates) {
-				if ((receiver.mask >> EventToMask[ev.type]) & 1) {
+				if ((receiver.mask >> event_mask_[ev.type]) & 1) {
 					receiver.ed(ev);
 				}
 			}

@@ -27,6 +27,7 @@ struct Engine {
 
 	alias UpdateFunc = void delegate();
 	alias DrawFunc = void delegate();
+	alias RunFunc = void delegate();
 
 	//defaults
 	enum DEFAULT_WINDOW_WIDTH = 640, DEFAULT_WINDOW_HEIGHT = 480;
@@ -57,6 +58,7 @@ struct Engine {
 	//external references
 	UpdateFunc update_function_;
 	DrawFunc draw_function_;
+	RunFunc run_function_;
 
 	@disable this(this);
 
