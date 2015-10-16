@@ -70,7 +70,13 @@ struct InputStream {
 
 	} //read
 
-}
+	void read(Args...)() nothrow @nogc {
+
+
+
+	} //read
+
+} //InputStream
 
 struct OutputStream {
 
@@ -89,4 +95,4 @@ struct OutputStream {
 		}
 	} //write
 
-}
+} //OutputStream

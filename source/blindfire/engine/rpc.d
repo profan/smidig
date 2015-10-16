@@ -19,18 +19,21 @@ struct RPCFunc {
 
 struct RPC {
 
-	enum RegionSize = 1024 * 8; //8 kilobytes yes
-
 	import blindfire.engine.collections : HashMap;
 	import blindfire.engine.memory : IAllocator, Region, Mallocator, makeArray;
 	import blindfire.engine.stream : InputStream, OutputStream;
+	import blindfire.engine.meta : Identifier;
+
+	alias WrapperFunction = void delegate(ref InputStream stream);
+
+	enum RegionSize = 1024 * 8; //8 kilobytes yes
 
 	private {
 
 		IAllocator allocator_;
 		Region!Mallocator region_allocator_;
 
-		HashMap!(string, RPCFunc) functions_;
+		HashMap!(string, WrapperFunction) functions_;
 
 		/* holds temp data */
 		ubyte[] byte_buffer_;
@@ -61,15 +64,17 @@ struct RPC {
 
 	} //call
 
-	void register(F)(F func) {
+	void register(string name, WrapperFunction func) {
+
+		functions_[name] = func;
 
 	} //register
 
 	void on_pull(ref InputStream stream) {
 
 		auto name_len = stream.read!uint();
-		auto name = stream.read!char(name_len);
-		writefln("name: %s", name);
+		auto name = stream.read!(char)(name_len);
+		functions_[cast(string)name](stream);
 
 	} //on_pull
 
@@ -80,21 +85,79 @@ struct RPC {
 
 } //RPC
 
+string generate_wrapper(alias F)() {
+
+	import std.conv : to;
+	import std.string : format;
+	import std.traits : ParameterTypeTuple;
+
+	import blindfire.engine.meta : Identifier;
+
+	string do_reads(ref string[] args) {
+
+		string reads = "";
+
+		foreach (i, param; ParameterTypeTuple!F) {
+			reads ~= q{auto arg%d = stream.read!(%s)();}.format(i, param.stringof);
+			args ~= format("arg%d", i);
+		}
+
+		return reads;
+
+	} //do_reads
+
+	string do_args(string[] args) {
+
+		string in_str = "";
+
+		foreach (i, arg; args) {
+			in_str ~= arg;
+			if (i != args.length-1) in_str ~= ",";
+		}
+
+		return in_str;
+
+	} //do_args
+
+	string do_call(string[] args) {
+
+		return q{%s(%s);}.format(Identifier!F, do_args(args));
+
+	} //do_call
+
+	string[] func_args = [];
+
+	string read_stuff = do_reads(func_args);
+	string str = q{void %s_wrapper(ref InputStream stream) { %s %s }}
+		.format(Identifier!F, read_stuff, do_call(func_args));
+
+	return str;
+
+} //generate_wrapper
+
 unittest {
 
 	import std.stdio : writefln;
 	import blindfire.engine.memory : theAllocator;
 	import blindfire.engine.stream : InputStream, OutputStream;
 
-	void hello_world(int input) {
+	void hello_world(uint input) {
 		writefln("input: %d", input);
 	}
 
+	// generates wrapper function which looks sort of like:
+	// void hello_world_wrapper(ref InputStream stream) {
+	//     auto arg0 = stream.read!uint();
+	//     hello_world(arg0);
+	// }
+	mixin(generate_wrapper!(hello_world)());
+
 	auto rpc = RPC(theAllocator);
+	rpc.register("hello_world", &hello_world_wrapper);
 	rpc.call("hello_world", 1234);
-	writefln("byte buffer: %s", rpc.out_stream_[]);
 
 	auto in_stream = InputStream(rpc.out_stream_[]);
+	// reads from the stream, reads function name first which uses hashmap to call wrapper func.
 	rpc.on_pull(in_stream);
 
 }
