@@ -765,6 +765,9 @@ struct Shader {
 	//the shader program
 	GLuint program;
 
+	//attrib locations
+	GLuint[4] bound_attribs;
+
 	//bound uniforms
 	GLuint[4] bound_uniforms;
 
