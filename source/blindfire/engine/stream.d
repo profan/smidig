@@ -39,7 +39,7 @@ private mixin template StreamImpl() {
 		return buffer[0..offset];
 	} //opSlice
 
-}
+} //StreamImpl
 
 struct InputStream {
 

@@ -93,35 +93,35 @@ struct RPC {
 
 string generateWrapper(alias F)() {
 
-	import std.conv : to;
 	import std.string : format;
 	import std.traits : ParameterTypeTuple;
+	import std.array : appender;
 
 	import blindfire.engine.meta : Identifier;
 
 	string do_reads(ref string[] args) {
 
-		string reads = "";
+		auto reads = appender!string();
 
 		foreach (i, param; ParameterTypeTuple!F) {
 			reads ~= q{auto arg%d = stream.read!(%s)();}.format(i, param.stringof);
 			args ~= format("arg%d", i);
 		}
 
-		return reads;
+		return reads.data;
 
 	} //do_reads
 
 	string do_args(string[] args) {
 
-		string in_str = "";
+		auto in_str = appender!string();
 
 		foreach (i, arg; args) {
 			in_str ~= arg;
 			if (i != args.length-1) in_str ~= ",";
 		}
 
-		return in_str;
+		return in_str.data;
 
 	} //do_args
 
@@ -132,14 +132,26 @@ string generateWrapper(alias F)() {
 	} //do_call
 
 	string[] func_args = [];
-
-	string read_stuff = do_reads(func_args);
 	string str = q{void %s_wrapper(ref InputStream stream) { %s %s }}
-		.format(Identifier!F, read_stuff, do_call(func_args));
+		.format(Identifier!F, do_reads(func_args), do_call(func_args));
 
 	return str;
 
 } //generateWrapper
+
+string generateWrappers(Funcs...)() {
+
+	import std.array : appender;
+
+	auto str = appender!string();
+
+	foreach (fn; Funcs) {
+		str ~= generateWrapper!fn();
+	}
+
+	return str.data;
+
+} //generateWrappers
 
 unittest {
 
@@ -160,12 +172,11 @@ unittest {
 	//     auto arg0 = stream.read!uint();
 	//     hello_world(arg0);
 	// }
-	mixin(generateWrapper!hello_world);
-	mixin(generateWrapper!goodbye);
+	mixin(generateWrappers!(hello_world, goodbye));
 
 	auto rpc = RPC(theAllocator);
-	rpc.register("hello_world", &hello_world_wrapper)
-		.register("goodbye", &goodbye_wrapper);
+	rpc.register("hello_world", &hello_world_wrapper);
+	rpc.register("goodbye", &goodbye_wrapper);
 
 	rpc.call("hello_world", 1234);
 	rpc.call("goodbye", 324, false);
