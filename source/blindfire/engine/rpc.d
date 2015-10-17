@@ -70,12 +70,14 @@ struct RPC {
 
 	} //register
 
-	void on_pull(ref InputStream stream) {
+	void on_pull(in ubyte[] data) {
+
+		auto stream = InputStream(data);
 
 		while (!stream.eof) {
 
-			auto name = stream.read!(char[])();
-			functions_[cast(string)name](stream);
+			auto name = stream.read!string();
+			functions_[name](stream);
 
 		}
 
@@ -176,11 +178,10 @@ unittest {
 	rpc.register("goodbye", &goodbye_wrapper);
 
 	int[3] data = [1, 2, 3];
-	rpc.call("hello_world", 1234, data[]);
+	rpc.call("hello_world", 1234, data);
 	rpc.call("goodbye", 324, false);
 
-	auto in_stream = InputStream(rpc.out_stream_[]);
 	// reads from the stream, reads function name first which uses hashmap to call wrapper func.
-	rpc.on_pull(in_stream);
+	rpc.on_pull(rpc.out_stream_[]);
 
 }

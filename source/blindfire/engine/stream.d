@@ -15,8 +15,8 @@ private mixin template StreamImpl() {
 		this.size = length;
 	} //this
 
-	this(ubyte[] arr) nothrow @nogc {
-		this.buffer = arr.ptr;
+	this(in ubyte[] arr) nothrow @nogc {
+		this.buffer = cast(ubyte*)arr.ptr;
 		this.size = arr.length;
 	} //this
 
