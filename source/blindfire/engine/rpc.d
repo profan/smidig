@@ -156,8 +156,8 @@ unittest {
 	import blindfire.engine.memory : theAllocator;
 	import blindfire.engine.stream : InputStream, OutputStream;
 
-	void hello_world(uint input) {
-		writefln("input: %d", input);
+	void hello_world(uint input, int[] data) {
+		writefln("input: %d %s", input, data);
 	}
 
 	void goodbye(uint val, bool no) {
@@ -175,7 +175,8 @@ unittest {
 	rpc.register("hello_world", &hello_world_wrapper);
 	rpc.register("goodbye", &goodbye_wrapper);
 
-	rpc.call("hello_world", 1234);
+	int[3] data = [1, 2, 3];
+	rpc.call("hello_world", 1234, data[]);
 	rpc.call("goodbye", 324, false);
 
 	auto in_stream = InputStream(rpc.out_stream_[]);

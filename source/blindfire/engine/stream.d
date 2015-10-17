@@ -66,22 +66,22 @@ struct InputStream {
 
 	T[] read(T : T[], ReadMode mode = ReadMode.Read)() nothrow @nogc {
 
-		auto bytes_len = read!(uint, mode)();
-		return read!(T, mode)(bytes_len);
+		auto arr_len = read!(uint, mode)();
+		return read!(T, mode)(arr_len);
 
 	} //read
 
 	T[] readArray(T, ReadMode mode = ReadMode.Read)() nothrow @nogc {
 
-		auto bytes_len = read!(uint, mode)();
-		return read!(T, mode)(bytes_len);
+		auto arr_len = read!(uint, mode)();
+		return read!(T, mode)(arr_len);
 
 	} //readArray
 
 	T[] read(T, ReadMode mode = ReadMode.Read)(uint length) nothrow @nogc {
 
 		auto bytes_len = T.sizeof * length;
-		T[] slice = (cast(T*)(buffer[offset..offset].ptr))[0..bytes_len];
+		T[] slice = (cast(T*)(buffer[offset..offset].ptr))[0..length];
 
 		static if (mode != ReadMode.Peek) {
 			offset += bytes_len;
@@ -100,7 +100,7 @@ struct OutputStream {
 	void write(T)(in T obj) nothrow @nogc {
 		static if (isArray!(T)) {
 			uint data_size = obj[0].sizeof * obj.length;
-			write(data_size); //write array length to stream
+			write(obj.length); //write array length to stream
 			buffer[offset..offset+data_size] = (cast(ubyte*)obj.ptr)[0..data_size];
 			offset += data_size;
 		} else {
