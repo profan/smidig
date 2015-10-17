@@ -22,7 +22,6 @@ struct RPC {
 	import blindfire.engine.collections : HashMap;
 	import blindfire.engine.memory : IAllocator, Region, Mallocator, makeArray;
 	import blindfire.engine.stream : InputStream, OutputStream;
-	import blindfire.engine.meta : Identifier;
 
 	alias WrapperFunction = void delegate(ref InputStream stream);
 
@@ -48,7 +47,7 @@ struct RPC {
 		this.allocator_ = allocator;
 		this.region_allocator_ = typeof(region_allocator_)(RegionSize);
 		this.functions_ = typeof(functions_)(allocator_, 16);
-		this.byte_buffer_ = region_allocator_.makeArray!ubyte(1024 * 8);
+		this.byte_buffer_ = region_allocator_.makeArray!ubyte(RegionSize);
 		this.out_stream_ = OutputStream(byte_buffer_);
 
 	} //this
@@ -85,7 +84,7 @@ struct RPC {
 	} //on_pull
 
 	/* push written byte data to where it is to be used, or something? */
-	void do_push() {
+	void do_push(ref OutputStream stream) {
 
 	} //do_push
 
