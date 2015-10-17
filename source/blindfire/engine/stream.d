@@ -2,6 +2,8 @@ module blindfire.engine.stream;
 
 private mixin template StreamImpl() {
 
+	import std.traits : isArray;
+
 	private {
 		size_t size;
 		size_t offset = 0;
@@ -62,12 +64,26 @@ struct InputStream {
 
 	} //read
 
+	T[] read(T : T[], ReadMode mode = ReadMode.Read)() nothrow @nogc {
+
+		auto bytes_len = read!(uint, mode)();
+		return read!(T, mode)(bytes_len);
+
+	} //read
+
+	T[] readArray(T, ReadMode mode = ReadMode.Read)() nothrow @nogc {
+
+		auto bytes_len = read!(uint, mode)();
+		return read!(T, mode)(bytes_len);
+
+	} //readArray
+
 	T[] read(T, ReadMode mode = ReadMode.Read)(uint length) nothrow @nogc {
 
 		auto bytes_len = T.sizeof * length;
 		T[] slice = (cast(T*)(buffer[offset..offset].ptr))[0..bytes_len];
 
-		static if(mode != ReadMode.Peek) {
+		static if (mode != ReadMode.Peek) {
 			offset += bytes_len;
 		}
 
@@ -75,23 +91,16 @@ struct InputStream {
 
 	} //read
 
-	void read(Args...)() nothrow @nogc {
-
-
-
-	} //read
-
 } //InputStream
 
 struct OutputStream {
-
-	import std.traits : isArray;
 
 	mixin StreamImpl;
 
 	void write(T)(in T obj) nothrow @nogc {
 		static if (isArray!(T)) {
-			size_t data_size = obj[0].sizeof * obj.length;
+			uint data_size = obj[0].sizeof * obj.length;
+			write(data_size); //write array length to stream
 			buffer[offset..offset+data_size] = (cast(ubyte*)obj.ptr)[0..data_size];
 			offset += data_size;
 		} else {

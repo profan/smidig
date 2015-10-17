@@ -935,7 +935,7 @@ unittest {
 	}
 }
 
-struct Graph(T) {
+struct MatrixGraph(T) {
 
 } //Graph
 

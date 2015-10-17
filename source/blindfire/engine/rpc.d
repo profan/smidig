@@ -54,7 +54,6 @@ struct RPC {
 
 	void call(Args...)(string name, Args args) {
 
-		out_stream_.write(name.length);
 		out_stream_.write(name);
 
 		foreach (param; args) {
@@ -75,8 +74,7 @@ struct RPC {
 
 		while (!stream.eof) {
 
-			auto name_len = stream.read!uint();
-			auto name = stream.read!(char)(name_len);
+			auto name = stream.read!(char[])();
 			functions_[cast(string)name](stream);
 
 		}
