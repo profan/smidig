@@ -35,6 +35,53 @@ struct NetVar(T) {
 
 } //NetVar
 
+void initialize_enet() {
+
+	import core.stdc.stdio : printf;
+	import derelict.enet.enet;
+
+	if (auto err = enet_initialize() != 0) {
+
+		printf("[Net] An error occured on initialization: %d", err);
+
+	}
+
+} //initialize_enet
+
+struct NetworkManager {
+
+	import derelict.enet.enet;
+
+	private {
+
+		ENetAddress address;
+		ENetHost* host;
+
+	}
+
+	@property bool is_host() { return true; } //is_host
+
+	@disable this();
+	@disable this(this);
+
+	this(bool is_client) {
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+	void initialize() {
+
+	} //initialize
+
+	void poll() {
+
+	} //poll
+
+} //NetworkManager
+
 struct NetworkServer {
 
 } //NetworkServer

@@ -1,23 +1,8 @@
 module blindfire.engine.rpc;
 
-import std.stdio : writefln;
-
-/* rpc, here to simplify implementing networking functionality. */
-
-enum Parameter {
-
-	Primitive,
-	Struct
-
-} //Parameter
-
-struct RPCFunc {
-
-	const(char[])[] params_;
-
-} //RPCFunc
-
 struct RPC {
+
+	/* rpc, here to simplify implementing networking functionality. */
 
 	import blindfire.engine.collections : HashMap;
 	import blindfire.engine.memory : IAllocator, Region, Mallocator, makeArray;
@@ -166,11 +151,12 @@ unittest {
 		writefln("goodbye - val : %d, no : %s", val, no);
 	}
 
-	// generates wrapper function which looks sort of like:
+	// generates wrapper functions which look like:
 	// void hello_world_wrapper(ref InputStream stream) {
 	//     auto arg0 = stream.read!uint();
 	//     hello_world(arg0);
 	// }
+
 	mixin(generateWrappers!(hello_world, goodbye));
 
 	auto rpc = RPC(theAllocator);

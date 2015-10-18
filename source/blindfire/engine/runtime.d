@@ -3,6 +3,7 @@ module blindfire.engine.runtime;
 import blindfire.engine.window : Window;
 import blindfire.engine.eventhandler : EventHandler;
 import blindfire.engine.render : IRenderer, OpenGLRenderer;
+import blindfire.engine.net : initialize_enet, NetworkManager;
 import blindfire.engine.event : EventManager, EventMemory;
 import blindfire.engine.resource : ResourceManager;
 import blindfire.engine.sound : SoundSystem;
@@ -42,6 +43,8 @@ struct Engine {
 	EventManager renderer_evman_ = void;
 	IRenderer renderer_;
 
+	NetworkManager network_manager_ = void;
+
 	SoundSystem sound_system_ = void;
 
 	FontAtlas debug_atlas_ = void;
@@ -79,6 +82,9 @@ struct Engine {
 		//initialize renderer and event manager for rendering events
 		this.renderer_evman_.construct(EventMemory, DrawEventType.max);
 		this.renderer_ = allocator_.make!OpenGLRenderer();
+
+		//initialize networking subsystem
+		initialize_enet();
 
 		//initialize sound subsystem
 		this.sound_system_.construct(allocator_, MAX_SOUND_SOURCES);

@@ -37,7 +37,7 @@ private mixin template StreamImpl() {
 		return offset == size;
 	} //eof
 
-	ubyte[] opSlice() nothrow @nogc {
+	const(ubyte[]) opSlice() nothrow @nogc const {
 		return buffer[0..offset];
 	} //opSlice
 
