@@ -38,7 +38,8 @@ alias RenderSpriteEvent = Event!(DrawEventType.RenderSprite, RenderSpriteCommand
 enum NetEventType : EventID {
 	Connection,
 	Disconnection,
-	Update
+	Update,
+	Push
 } //NetEventType
 
 enum DisconnectReason : uint {
@@ -58,8 +59,10 @@ import derelict.enet.enet;
 alias ConnectionEvent = Event!(NetEventType.Connection, ENetPeer*);
 alias DisconnectionEvent = Event!(NetEventType.Disconnection, ENetPeer*);
 alias UpdateEvent = Event!(NetEventType.Update, Update);
+alias PushEvent = Event!(NetEventType.Push, const(void[]));
 
 mixin(expandEventsToMap!("NetEventIdentifier",
 	ConnectionEvent,
 	DisconnectionEvent,
-	UpdateEvent));
+	UpdateEvent,
+	PushEvent));

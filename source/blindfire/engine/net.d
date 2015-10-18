@@ -54,7 +54,7 @@ struct NetworkManager {
 	import derelict.enet.enet;
 
 	import blindfire.engine.event : EventManager;
-	import blindfire.engine.defs : ConnectionEvent, DisconnectionEvent, UpdateEvent, Update;
+	import blindfire.engine.defs : ConnectionEvent, DisconnectionEvent, UpdateEvent, PushEvent, Update;
 
 	enum num_channels = 2;
 
@@ -171,6 +171,14 @@ struct NetworkManager {
 		connected_ = false;
 	} //disconnect
 
+	void on_data_push(ref PushEvent ev) {
+
+		printf("[Net] sending packet of size: %u", typeof(ev.payload).sizeof * ev.payload.length);
+		ENetPacket* packet = enet_packet_create(ev.payload.ptr, ev.payload.length, ENET_PACKET_FLAG_RELIABLE);
+		enet_peer_send(peer, 0, packet);
+
+	} //on_data_push
+
 	void send(in ubyte[] data) {
 
 	} //send
@@ -200,7 +208,7 @@ struct NetworkManager {
 							event.peer.data,
 							event.channelID);
 
-					ev_man_.push!UpdateEvent(Update(event.peer, event.peer.data[0..event.packet.dataLength]));
+					ev_man_.fire!UpdateEvent(Update(event.peer, event.packet.data[0..event.packet.dataLength]));
 
 					/* Clean up the packet now that we're done using it. */
 					enet_packet_destroy (event.packet);

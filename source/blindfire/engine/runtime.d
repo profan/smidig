@@ -80,6 +80,7 @@ struct Engine {
 
 		import derelict.sdl2.types;
 		import blindfire.engine.pool : construct;
+		import blindfire.engine.defs : PushEvent;
 
 		//allocator for shit
 		this.allocator_ = theAllocator;
@@ -96,6 +97,7 @@ struct Engine {
 		//initialize networking subsystem
 		this.network_evman_.construct(EventMemory, NetEventType.max);
 		this.network_manager_.construct(&network_evman_);
+		this.network_evman_.register!PushEvent(&network_manager_.on_data_push);
 		initialize_enet();
 
 		//initialize sound subsystem

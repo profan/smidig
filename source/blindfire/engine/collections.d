@@ -1262,6 +1262,25 @@ struct StaticArray(T, size_t size) {
 		return array.length;
 	} //capacity
 
+	@property T* ptr() {
+		return array.ptr;
+	} //ptr
+
+	static if (is(T == char)) {
+		void scan_to_null() {
+
+			auto index = 0;
+			while (index < array.length-1 && array[index] != '\0') {
+				index++;
+			}
+
+			if (index < array.length-1 && array[index] == '\0') {
+				elements = index+1;
+			}
+
+		} //scan_to_null
+	}
+
 	size_t opDollar(int dim)() const {
 		static assert(dim == 0);
 		return elements;
