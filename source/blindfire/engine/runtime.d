@@ -43,7 +43,7 @@ struct Engine {
 	EventManager renderer_evman_ = void;
 	IRenderer renderer_;
 
-	NetworkManager network_manager_ = void;
+	NetworkManager network_manager_;
 
 	SoundSystem sound_system_ = void;
 
@@ -106,7 +106,7 @@ struct Engine {
 
 		//link up imgui context to event shite
 		this.input_handler_.add_listener(&imgui_context_.on_event,
-			SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL);
+			SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL, SDL_TEXTINPUT);
 
 		//load engine-required resources
 		this.load_resources();
@@ -155,30 +155,12 @@ struct Engine {
 		window_.render_clear(0x428bca);
 
 		draw_function_();
-
 		console_.draw(&window_);
-
-		bool show_another_window;
-
-		import derelict.imgui.imgui;
-		imgui_context_.new_frame(input_handler_, delta_time);
-		igSetNextWindowSize(ImVec2(200,100), ImGuiSetCond_FirstUseEver);
-		igBegin("Another Window", &show_another_window);
-
-		{
-			static float f = 0.0f;
-			igText("Hello, world!");
-			igSliderFloat("float", &f, 0.0f, 1.0f);
-			igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().Framerate, igGetIO().Framerate);
-		}
-
-		igEnd();
-
-		imgui_context_.end_frame();
 
 		draw_debug(delta_time);
 		cursor_.draw(window_.view_projection, Vec2f(input_handler_.mouse_x, input_handler_.mouse_y));
 
+		imgui_context_.end_frame();
 		window_.render_present();
 
 
@@ -218,11 +200,15 @@ struct Engine {
 		draw_timer.start();
 		frame_timer.start();
 
+		//initial new frame
+		imgui_context_.new_frame(input_handler_, (frame_time_) > 0 ? frame_time_ : 1.0);
+
 		while (window_.is_alive) {
 
 			if (main_timer.peek() - last_update > iter) {
 
 				update_timer.start();
+				imgui_context_.new_frame(input_handler_, (frame_time_) > 0 ? frame_time_ : 1.0);
 
 				//handle input
 				this.input_handler_.handle_events();
@@ -232,6 +218,10 @@ struct Engine {
 
 				//update game and draw
 				this.update_function_();
+
+				//poll for network updates
+				this.network_manager_.poll();
+
 				update_time_ = cast(double)update_timer.peek() / cast(double)clock_ticks_per_second;
 				last_update = main_timer.peek();
 				update_timer.reset();

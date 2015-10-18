@@ -72,8 +72,10 @@ struct ImguiContext {
 		io.KeyMap[ImGuiKey_DownArrow] = SDL_SCANCODE_DOWN;
 		io.KeyMap[ImGuiKey_Home] = SDL_SCANCODE_HOME;
 		io.KeyMap[ImGuiKey_End] = SDL_SCANCODE_END;
+		io.KeyMap[ImGuiKey_Backspace] = SDL_SCANCODE_BACKSPACE;
 		io.KeyMap[ImGuiKey_Delete] = SDL_SCANCODE_DELETE;
 		io.KeyMap[ImGuiKey_Escape] = SDL_SCANCODE_ESCAPE;
+		io.KeyMap[ImGuiKey_Enter] = SDL_SCANCODE_RETURN;
 		io.KeyMap[ImGuiKey_A] = SDL_SCANCODE_A;
 		io.KeyMap[ImGuiKey_C] = SDL_SCANCODE_C;
 		io.KeyMap[ImGuiKey_V] = SDL_SCANCODE_V;
@@ -99,6 +101,12 @@ struct ImguiContext {
 
 			case SDL_KEYDOWN, SDL_KEYUP:
 				io.KeysDown[ev.key.keysym.scancode] = (ev.type == SDL_KEYDOWN);
+
+				auto mods = ev.key.keysym.mod;
+				io.KeyCtrl = (mods & KMOD_CTRL) != 0;
+				io.KeyShift = (mods & KMOD_SHIFT) != 0;
+				io.KeyAlt = (mods & KMOD_ALT) != 0;
+
 				break;
 
 			case SDL_MOUSEBUTTONDOWN:
@@ -120,9 +128,12 @@ struct ImguiContext {
 				scroll_wheel_ += ev.wheel.y;
 				break;
 
+			case SDL_TEXTINPUT:
+				ImGuiIO_AddInputCharacter(cast(ushort)ev.text.text[0]);
+				break;
+
 			default:
 				writefln("unhandled event type in imgui: %d", ev.type);
-				break;
 
 		}
 
