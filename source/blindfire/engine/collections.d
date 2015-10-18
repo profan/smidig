@@ -1047,8 +1047,11 @@ struct String {
 	this(in char[] input) {
 
 		auto input_length = input.length;
-		if(input[$-1] == '\0') {
-			input_length -= 1;
+
+		if (input_length != 0) {
+			if(input[$-1] == '\0') {
+				input_length -= 1;
+			}
 		}
 
 		this.allocator_ = theAllocator;
