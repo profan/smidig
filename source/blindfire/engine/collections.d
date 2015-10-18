@@ -1046,11 +1046,16 @@ struct String {
 
 	this(in char[] input) {
 
-		this.allocator_ = theAllocator;
-		this.array_ = typeof(array_)(allocator_, input.length+1);
-		this.array_.length = input.length;
+		auto input_length = input.length;
+		if(input[$-1] == '\0') {
+			input_length -= 1;
+		}
 
-		this.array_[][0..input.length] = input[];
+		this.allocator_ = theAllocator;
+		this.array_ = typeof(array_)(allocator_, input_length + 1);
+		this.array_.length = input_length;
+
+		this.array_[][0..input_length] = input[0..input_length];
 		this.array_[$] = '\0'; //HELLA NULL TERMINATION SON
 
 	} //this
