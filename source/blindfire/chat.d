@@ -36,19 +36,19 @@ struct Chat {
 
 	void on_peer_connect(ref ConnectionEvent cev) {
 		char[512] buff;
-		buffer_ = buffer_ ~ cformat(buff, "connection from: %x:%u \n", cev.payload.address.host, cev.payload.address.port)[0..$-1];
+		buffer_ = buffer_ ~ cformat(buff, "connection from: %x:%u \n", cev.payload.address.host, cev.payload.address.port);
 	} //on_peer_connect
 
 	void on_peer_disconnect(ref DisconnectionEvent dev) {
 		char[512] buff;
-		buffer_ = buffer_ ~ cformat(buff, "disconnection from: %x:%u \n", dev.payload.address.host, dev.payload.address.port)[0..$-1];
+		buffer_ = buffer_ ~ cformat(buff, "disconnection from: %x:%u \n", dev.payload.address.host, dev.payload.address.port);
 	} //on_peer_disconnect
 
 	void on_network_update(ref UpdateEvent ev) {
 		char[512] buff;
 		auto peer = ev.payload.peer;
 		auto data = ev.payload.data;
-		buffer_ = buffer_ ~ cformat(buff, "%x:%u > %s \n", peer.address.host, peer.address.port, cast(char*)data.ptr)[0..$-1];
+		buffer_ = buffer_ ~ cformat(buff, "%x:%u > %s \n", peer.address.host, peer.address.port, cast(char*)data.ptr);
 	} //on_receive
 
 	void tick() {

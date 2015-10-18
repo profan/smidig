@@ -1028,13 +1028,18 @@ struct String {
 	} //length
 
 	this(ref String str, in char[] input) {
+		
+		auto input_length = input.length;
+		if(input[$-1] == '\0') {
+			input_length -= 1;
+		}
 
 		this.allocator_ = theAllocator;
-		this.array_ = typeof(array_)(allocator_, str.length + input.length + 1);
-		this.array_.length = str.length + input.length;
+		this.array_ = typeof(array_)(allocator_, str.length + input_length + 1);
+		this.array_.length = str.length + input_length;
 
 		this.array_[][0..str.length] = str[];
-		this.array_[][str.length..str.length+input.length] = input[];
+		this.array_[][str.length..str.length+input_length] = input[0..input_length];
 		this.array_[$] = '\0'; //HELLA NULL TERMINATION SON
 
 	} //this
