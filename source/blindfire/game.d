@@ -15,7 +15,10 @@ import blindfire.ui;
 struct NewGame {
 
 	import blindfire.engine.sound : SoundID;
+	import blindfire.engine.pool : construct;
 	import blindfire.engine.runtime;
+
+	import blindfire.chat;
 
 	enum GameResource : ResourceID {
 		Click = Resource.max
@@ -24,6 +27,7 @@ struct NewGame {
 	private {
 
 		Engine engine_;
+		Chat chat_ = void;
 
 	}
 
@@ -42,6 +46,11 @@ struct NewGame {
 	} //initialize
 
 	void initialize_systems() {
+
+		this.chat_.construct(engine_.allocator_, &engine_.network_evman_);
+		engine_.network_evman_.register!ConnectionEvent(&chat_.on_peer_connect);
+		engine_.network_evman_.register!DisconnectionEvent(&chat_.on_peer_disconnect);
+		engine_.network_evman_.register!UpdateEvent(&chat_.on_network_update);
 
 	} //initialize_systems
 
@@ -93,7 +102,7 @@ struct NewGame {
 
 		is_active = (engine_.network_manager_.is_active);
 
-		igSetNextWindowSize(ImVec2(200,100), ImGuiSetCond_FirstUseEver);
+		igSetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
 		igBegin("Network Manager", &show_another_window); 
 
 		{
@@ -122,8 +131,9 @@ struct NewGame {
 
 			}
 			
-			if (engine_.network_manager_.is_active) {
+			if (is_active) {
 				igValueBool("is host: ", engine_.network_manager_.is_host);
+				chat_.tick(); //draw chat window!
 			}
 
 			igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().Framerate, igGetIO().Framerate);

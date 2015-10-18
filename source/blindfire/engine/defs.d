@@ -35,69 +35,31 @@ struct RenderLineCommand {
 
 alias RenderSpriteEvent = Event!(DrawEventType.RenderSprite, RenderSpriteCommand);
 
-//networking related
-enum ConnectionState {
-
-	CONNECTED, //not accepting connections, active
-	UNCONNECTED, //not accepting connections, can create
-	CONNECTING //accepting connections, has created session or is in created lobby
-
-} //ConnectionState
-
-enum Command {
-
-	//set network id
-	ASSIGN_ID,
-
-	CREATE,
-	CONNECT,
-	DISCONNECT,
-	TERMINATE,
-	UPDATE,
-	PING,
-
-	//replacement commands
-	SET_CONNECTED,
-	SET_UNCONNECTED,
-
-	//notifications to game thread
-	NOTIFY_CONNECTION
-
-} //Command
-
 enum NetEventType : EventID {
-	AssignID,
-	SetConnected,
-	Disconnected,
-	DoConnect,
-	DoDisconnect,
-	CreateGame,
-	GameUpdate,
-	SetConnectionStatus,
-	ConnectionNotification
+	Connection,
+	Disconnection,
+	Update
 } //NetEventType
 
 enum DisconnectReason : uint {
 	HostDisconnected
 } //DisconnectReason
 
-alias AssignIDEvent = Event!(NetEventType.AssignID, ClientID);
-alias IsConnectedEvent = Event!(NetEventType.SetConnected, bool);
-alias DisconnectedEvent = Event!(NetEventType.Disconnected, DisconnectReason);
-alias DoConnectEvent = Event!(NetEventType.DoConnect, bool);
-alias DoDisconnectEvent = Event!(NetEventType.DoDisconnect, bool);
-alias CreateGameEvent = Event!(NetEventType.CreateGame, bool);
-alias GameUpdateEvent = Event!(NetEventType.GameUpdate, immutable(ubyte[]));
-alias SetConnectionStatusEvent = Event!(NetEventType.SetConnectionStatus, ConnectionState);
-alias ConnectionNotificationEvent = Event!(NetEventType.ConnectionNotification, ClientID);
+struct Update {
+
+	ENetPeer* peer;
+	const(void[]) data;
+
+	alias data this;
+
+} //Update
+
+import derelict.enet.enet;
+alias ConnectionEvent = Event!(NetEventType.Connection, ENetPeer*);
+alias DisconnectionEvent = Event!(NetEventType.Disconnection, ENetPeer*);
+alias UpdateEvent = Event!(NetEventType.Update, Update);
 
 mixin(expandEventsToMap!("NetEventIdentifier",
-						 AssignIDEvent,
-						 IsConnectedEvent,
-						 DisconnectedEvent,
-						 DoConnectEvent,
-						 DoDisconnectEvent,
-						 CreateGameEvent,
-						 GameUpdateEvent,
-						 SetConnectionStatusEvent,
-						 ConnectionNotificationEvent));
+	ConnectionEvent,
+	DisconnectionEvent,
+	UpdateEvent));

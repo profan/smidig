@@ -52,7 +52,8 @@ struct Engine {
 	EventManager renderer_evman_ = void;
 	IRenderer renderer_;
 
-	NetworkManager network_manager_;
+	EventManager network_evman_ = void;
+	NetworkManager network_manager_ = void;
 
 	SoundSystem sound_system_ = void;
 
@@ -93,6 +94,8 @@ struct Engine {
 		this.renderer_ = allocator_.make!OpenGLRenderer();
 
 		//initialize networking subsystem
+		this.network_evman_.construct(EventMemory, NetEventType.max);
+		this.network_manager_.construct(&network_evman_);
 		initialize_enet();
 
 		//initialize sound subsystem
@@ -216,6 +219,11 @@ struct Engine {
 
 			if (main_timer.peek() - last_update > iter) {
 
+				import derelict.enet.enet;
+				import blindfire.engine.defs : NetEventIdentifier, Update;
+				import blindfire.engine.event : Event;
+				mixin EventManager.doTick;
+
 				update_timer.start();
 				imgui_context_.new_frame((frame_time_) > 0 ? frame_time_ : 1.0);
 
@@ -230,6 +238,7 @@ struct Engine {
 
 				//poll for network updates
 				this.network_manager_.poll();
+				tick!NetEventIdentifier(network_evman_);
 
 				update_time_ = cast(double)update_timer.peek() / cast(double)clock_ticks_per_second;
 				last_update = main_timer.peek();

@@ -53,9 +53,14 @@ struct NetworkManager {
 	import core.stdc.stdio : printf;
 	import derelict.enet.enet;
 
+	import blindfire.engine.event : EventManager;
+	import blindfire.engine.defs : ConnectionEvent, DisconnectionEvent, UpdateEvent, Update;
+
 	enum num_channels = 2;
 
 	private {
+
+		EventManager* ev_man_;
 
 		ENetHost* host;
 		ENetPeer* peer;
@@ -67,7 +72,14 @@ struct NetworkManager {
 	@property bool is_active() { return connected_; }
 	@property bool is_host() { return is_host_; }
 
+	@disable this();
 	@disable this(this);
+
+	this(EventManager* ev_man) {
+
+		this.ev_man_ = ev_man;
+
+	} //this
 
 	~this() {
 
@@ -139,12 +151,13 @@ struct NetworkManager {
 		}
 
 		ENetEvent event;
-		if (enet_host_service(host, &event, 5000) > 0 &&
+		if (enet_host_service(host, &event, 5000) > 0 && 
 			event.type == ENET_EVENT_TYPE_CONNECT) 
 		{
 			printf("[Net] connection to %s:%u succeeded. \n", to_address, port);
 		} else {
 			printf("[Net] connection to %s:%u failed. \n", to_address, port);
+			return false;
 		}
 
 		connected_ = true;
@@ -157,6 +170,10 @@ struct NetworkManager {
 		enet_peer_disconnect(peer, 0);
 		connected_ = false;
 	} //disconnect
+
+	void send(in ubyte[] data) {
+
+	} //send
 
 	void poll() {
 
@@ -171,6 +188,9 @@ struct NetworkManager {
 					printf("[Net] new connection from %x:%u.\n", 
 						   event.peer.address.host,
 						   event.peer.address.port);
+
+					ev_man_.push!ConnectionEvent(event.peer);
+
 					break;
 
 				case ENET_EVENT_TYPE_RECEIVE:
@@ -179,14 +199,21 @@ struct NetworkManager {
 							event.packet.data,
 							event.peer.data,
 							event.channelID);
+
+					ev_man_.push!UpdateEvent(Update(event.peer, event.peer.data[0..event.packet.dataLength]));
+
 					/* Clean up the packet now that we're done using it. */
 					enet_packet_destroy (event.packet);
+
 					break;
 
 				case ENET_EVENT_TYPE_DISCONNECT:
 					printf("[Net] %x:%u disconnected. \n", 
 						   event.peer.address.host,
 						   event.peer.address.port);
+
+					ev_man_.push!DisconnectionEvent(event.peer);
+
 					event.peer.data = null;
 					break;
 

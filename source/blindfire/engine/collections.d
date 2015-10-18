@@ -1034,7 +1034,7 @@ struct String {
 		this.array_.length = str.length + input.length;
 
 		this.array_[][0..str.length] = str[];
-		this.array_[][str.length.. str.length+input.length] = input[];
+		this.array_[][str.length..str.length+input.length] = input[];
 		this.array_[$] = '\0'; //HELLA NULL TERMINATION SON
 
 	} //this
