@@ -19,6 +19,15 @@ enum Resource {
 	CursorTexture
 } //Resource
 
+enum SubSystems {
+
+	Audio,
+	Rendering,
+	Networking,
+	DebugUi
+
+} //SubSystems
+
 struct Engine {
 
 	import blindfire.engine.memory : allocatorObject, IAllocator, Mallocator, theAllocator, make;
@@ -101,7 +110,7 @@ struct Engine {
 			.bind_keyevent(SDL_SCANCODE_UP, &console_.get_next);
 
 		//initialize imgui context
-		this.imgui_context_.construct(allocator_, &window_);
+		this.imgui_context_.construct(allocator_, &window_, &input_handler_);
 		this.imgui_context_.initialize();
 
 		//link up imgui context to event shite
@@ -201,14 +210,14 @@ struct Engine {
 		frame_timer.start();
 
 		//initial new frame
-		imgui_context_.new_frame(input_handler_, (frame_time_) > 0 ? frame_time_ : 1.0);
+		imgui_context_.new_frame((frame_time_) > 0 ? frame_time_ : 1.0);
 
 		while (window_.is_alive) {
 
 			if (main_timer.peek() - last_update > iter) {
 
 				update_timer.start();
-				imgui_context_.new_frame(input_handler_, (frame_time_) > 0 ? frame_time_ : 1.0);
+				imgui_context_.new_frame((frame_time_) > 0 ? frame_time_ : 1.0);
 
 				//handle input
 				this.input_handler_.handle_events();

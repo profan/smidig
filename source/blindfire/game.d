@@ -122,7 +122,10 @@ struct NewGame {
 
 			}
 			
-			igValueBool("is host: ", engine_.network_manager_.is_host);
+			if (engine_.network_manager_.is_active) {
+				igValueBool("is host: ", engine_.network_manager_.is_host);
+			}
+
 			igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().Framerate, igGetIO().Framerate);
 
 		}

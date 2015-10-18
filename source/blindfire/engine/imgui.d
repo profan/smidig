@@ -42,14 +42,16 @@ struct ImguiContext {
 
 	//external state
 	Window* window_;
+	EventHandler* input_handler_;
 
 	@disable this();
 	@disable this(this);
 
-	this(IAllocator allocator, Window* window) {
+	this(IAllocator allocator, Window* window, EventHandler* input_handler) {
 
 		this.allocator_ = allocator;
 		this.window_ = window;
+		this.input_handler_ = input_handler;
 
 	} //this
 
@@ -233,7 +235,7 @@ struct ImguiContext {
 
 	} //render_draw_lists
 
-	void new_frame(ref EventHandler ev, double dt) {
+	void new_frame(double dt) {
 
 		auto io = igGetIO();
 
@@ -243,7 +245,7 @@ struct ImguiContext {
 		io.DeltaTime = cast(float)dt;
 
 		int m_x, m_y;
-		ev.mouse_pos(m_x, m_y);
+		input_handler_.mouse_pos(m_x, m_y);
 		io.MousePos = ImVec2(m_x, m_y);
 
 		foreach (i; 0..3) {
