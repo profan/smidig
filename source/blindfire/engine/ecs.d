@@ -3,7 +3,6 @@ module blindfire.engine.ecs;
 import std.algorithm : sort;
 import std.traits : PointerTarget;
 import std.typecons : Tuple;
-import std.conv : to;
 
 //FIXME defines in one place, consider if they should actually be there?
 import blindfire.engine.defs : ClientID, LocalEntityID;
@@ -47,7 +46,7 @@ class EntityManager {
 		systems[id] ~= cm;
 		sort(systems[id]);
 		cms ~= cm;
-		sort(cms[]);
+		sort(cms[]); //todo replace
 
 	} //addSystem
 

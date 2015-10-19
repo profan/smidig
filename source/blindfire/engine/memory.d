@@ -33,7 +33,6 @@ void memswap(T)(T* src, T* target) {
 private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) nothrow @nogc pure {
 
 	import std.traits : classInstanceAlignment;
-	import std.conv : to;
 
 	static if (is(T == class)) {
 		enum class_alignment = classInstanceAlignment!T;

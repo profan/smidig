@@ -95,7 +95,7 @@ struct ImguiContext {
 
 	void on_event(ref SDL_Event ev) {
 
-		import std.stdio : writefln;
+		import core.stdc.stdio : printf;
 
 		auto io = igGetIO();
 
@@ -135,7 +135,7 @@ struct ImguiContext {
 				break;
 
 			default:
-				writefln("unhandled event type in imgui: %d", ev.type);
+				printf("unhandled event type in imgui: %d", ev.type);
 
 		}
 

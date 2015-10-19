@@ -24,6 +24,7 @@ struct Chat {
 
 	}
 
+	@disable this();
 	@disable this(this);
 
 	this(IAllocator allocator, EventManager* ev_man) {

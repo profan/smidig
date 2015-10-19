@@ -4,7 +4,7 @@ import core.stdc.stdio : printf;
 
 import std.string : toStringz;
 import std.stdio : writefln;
-import std.file : read;
+import std.file : read; //TODO remove and replace
 
 import derelict.opengl3.gl3;
 

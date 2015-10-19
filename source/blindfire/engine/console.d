@@ -1,7 +1,5 @@
 module blindfire.engine.console;
 
-import std.stdio : writefln;
-
 import derelict.sdl2.types : SDL_Event, SDL_TEXTINPUT;
 import derelict.sdl2.functions : SDL_StartTextInput, SDL_StopTextInput;
 
@@ -87,7 +85,7 @@ struct Console {
 
 	void write(in char[] text) {
 
-		import std.algorithm : min;
+		import std.algorithm : min; //TODO remove
 		size_t elements = buffers[0].length;
 
 		if (elements + text.length < BUFFER_WIDTH) {

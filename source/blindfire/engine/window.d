@@ -1,9 +1,6 @@
 module blindfire.engine.window;
 
-import std.utf : toUTFz;
-import std.stdio : writefln;
 import core.stdc.stdio;
-import std.conv;
 
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl3;
