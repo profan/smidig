@@ -1158,6 +1158,12 @@ struct StringBuffer {
 
 	} //opOpAssign
 
+	void opOpAssign(string op: "~")(ref String str) {
+
+		array_ ~= str[];
+
+	} ///opOpAssign
+
 	const(char*) c_str() const nothrow @nogc {
 		return array_.ptr;
 	} //c_str
