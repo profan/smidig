@@ -119,6 +119,12 @@ struct Array(T) {
 		this.add(item);
 	} //opOpAssign
 
+	void opOpAssign(string op: "~")(in T[] items) {
+		foreach (ref item; items) {
+			this.add(item);
+		}
+	} //opOpAssign
+
 	void opIndexAssign(T value, size_t index) {
 		array_[index] = move(value);
 	} //opIndexAssign
@@ -1021,11 +1027,11 @@ struct String {
 
 	}
 
-	@disable this(this);
-
 	@property size_t length() const nothrow @nogc {
 		return array_.length;
 	} //length
+
+	@disable this(this);
 
 	this(ref String str, in char[] input) {
 		
@@ -1067,11 +1073,11 @@ struct String {
 		return d_str().toHash();
 	} //toHash
 
-	char[] opSlice() nothrow {
+	const(char[]) opSlice() nothrow {
 		return array_[0..length];
 	} //opSlice
 
-	char[] opSlice(size_t h, size_t t) nothrow {
+	const(char[]) opSlice(size_t h, size_t t) nothrow {
 		return array_[h..t];
 	} //opSlice
 
@@ -1105,7 +1111,7 @@ struct String {
 		return String(this, chars);
 	} //opBinary
 
-	const(char*) c_str() const {
+	const(char*) c_str() const nothrow @nogc {
 		return array_.ptr;
 	} //c_str
 
@@ -1115,10 +1121,6 @@ struct String {
 
 } //String
 
-struct StringBuffer {
-
-} //StringBuffer
-
 unittest {
 
 	auto str = String("yes");
@@ -1126,6 +1128,50 @@ unittest {
 
 	assert(new_string == "yes" ~ "other_thing");
 	assert(new_string.d_str == "yes" ~ "other_thing");
+
+}
+
+/* mutable char buffer */
+struct StringBuffer {
+
+	private {
+
+		Array!char array_;
+
+	}
+
+	this(size_t initial_size) {
+
+		this.array_ = typeof(array_)(theAllocator, initial_size);
+
+	} //this
+
+	void opOpAssign(string op: "~")(in char[] str) {
+
+		array_ ~= str;
+
+		if (str[$-1] != '\0') {
+			array_ ~= '\0';
+		}
+		
+		array_.length(array_.length-1);
+
+	} //opOpAssign
+
+	const(char*) c_str() const nothrow @nogc {
+		return array_.ptr;
+	} //c_str
+
+} //StringBuffer
+
+unittest {
+
+	import core.stdc.stdio : printf;
+
+	auto strbuf = StringBuffer(32);
+	strbuf ~= "yes \n";
+
+	printf("strbuf: %s", strbuf.c_str());
 
 }
 

@@ -7,7 +7,7 @@ struct Chat {
 	import derelict.enet.enet;
 
 	import blindfire.engine.defs : ConnectionEvent, DisconnectionEvent, UpdateEvent, PushEvent;
-	import blindfire.engine.collections : String, StaticArray;
+	import blindfire.engine.collections : StringBuffer, StaticArray;
 	import blindfire.engine.memory : IAllocator;
 	import blindfire.engine.event : EventManager;
 	import blindfire.engine.util : cformat;
@@ -17,7 +17,7 @@ struct Chat {
 		IAllocator allocator_;
 
 		EventManager* ev_man_;
-		String buffer_;
+		StringBuffer buffer_;
 
 		//input the texts
 		StaticArray!(char, 256) input_buffer_;
@@ -30,25 +30,25 @@ struct Chat {
 
 		this.allocator_ = allocator;
 		this.ev_man_ = ev_man;
-		this.buffer_ = "";
+		this.buffer_ = typeof(buffer_)(256);
 
 	} //this
 
 	void on_peer_connect(ref ConnectionEvent cev) {
 		char[512] buff;
-		buffer_ = buffer_ ~ cformat(buff, "connection from: %x:%u \n", cev.payload.address.host, cev.payload.address.port);
+		buffer_ ~= cformat(buff, "connection from: %x:%u \n", cev.payload.address.host, cev.payload.address.port);
 	} //on_peer_connect
 
 	void on_peer_disconnect(ref DisconnectionEvent dev) {
 		char[512] buff;
-		buffer_ = buffer_ ~ cformat(buff, "disconnection from: %x:%u \n", dev.payload.address.host, dev.payload.address.port);
+		buffer_ ~= cformat(buff, "disconnection from: %x:%u \n", dev.payload.address.host, dev.payload.address.port);
 	} //on_peer_disconnect
 
 	void on_network_update(ref UpdateEvent ev) {
 		char[512] buff;
 		auto peer = ev.payload.peer;
 		auto data = ev.payload.data;
-		buffer_ = buffer_ ~ cformat(buff, "%x:%u > %s \n", peer.address.host, peer.address.port, cast(char*)data.ptr);
+		buffer_ ~= cformat(buff, "%x:%u > %s \n", peer.address.host, peer.address.port, cast(char*)data.ptr);
 	} //on_receive
 
 	void tick() {
