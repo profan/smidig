@@ -55,7 +55,7 @@ struct NetworkManager {
 
 	import blindfire.engine.event : EventManager;
 	import blindfire.engine.collections : Array;
-	import blindfire.engine.memory : theAllocator, IAllocator;
+	import blindfire.engine.memory : IAllocator;
 	import blindfire.engine.defs : ConnectionEvent, DisconnectionEvent, UpdateEvent, PushEvent, Update;
 
 	enum num_channels = 2;
@@ -78,10 +78,10 @@ struct NetworkManager {
 	@disable this();
 	@disable this(this);
 
-	this(EventManager* ev_man) {
+	this(IAllocator allocator, EventManager* ev_man) {
 
 		this.ev_man_ = ev_man;
-		this.peers_ = typeof(peers_)(theAllocator, 16);
+		this.peers_ = typeof(peers_)(allocator, 1);
 
 	} //this
 
@@ -111,6 +111,8 @@ struct NetworkManager {
 								num_channels, /* number of data channels */
 								0, /* max incoming */
 								0); /* max outgoing */
+
+		this.peers_.reserve(max_connections);
 
 		if (!host_) {
 			printf("[Net] failed creating server! \n");
