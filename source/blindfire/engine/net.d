@@ -62,8 +62,8 @@ struct NetworkManager {
 
 		EventManager* ev_man_;
 
-		ENetHost* host;
-		ENetPeer* peer;
+		ENetHost* host_;
+		ENetPeer* peer_;
 		bool is_host_;
 		bool connected_;
 
@@ -83,9 +83,9 @@ struct NetworkManager {
 
 	~this() {
 
-		if (host) {
+		if (host_) {
 			printf("[Net] destroyed server. \n");
-			enet_host_destroy(host);
+			enet_host_destroy(host_);
 		}
 
 	} //~this
@@ -96,19 +96,19 @@ struct NetworkManager {
 
 	bool create_server(ushort binding_port, ubyte max_connections) {
 
-		assert(!host, "host was not null on create server!");
+		assert(!host_, "host was not null on create server!");
 
 		ENetAddress address;
 		address.host = ENET_HOST_ANY;
 		address.port = binding_port;
 
-		host = enet_host_create(&address,
+		host_ = enet_host_create(&address,
 								max_connections,
 								num_channels, /* number of data channels */
 								0, /* max incoming */
 								0); /* max outgoing */
 
-		if (!host) {
+		if (!host_) {
 			printf("[Net] failed creating server! \n");
 			return false;
 		} else {
@@ -124,15 +124,15 @@ struct NetworkManager {
 
 	bool create_client(char* to_address, ushort port) {
 
-		if (!host) {
+		if (!host_) {
 
-			host = enet_host_create(null,
+			host_ = enet_host_create(null,
 									1,
 									num_channels,
 									0,
 									0);
 
-			if (!host) {
+			if (!host_) {
 				printf("[Net] failed creating client! \n");
 				return false;
 			}
@@ -143,15 +143,15 @@ struct NetworkManager {
 		enet_address_set_host(&address, to_address);
 		address.port = port;
 
-		peer = enet_host_connect(host, &address, num_channels, 0);
+		peer_ = enet_host_connect(host_, &address, num_channels, 0);
 
-		if (!peer) {
+		if (!peer_) {
 			printf("[Net] no available peers for initiating an ENet connection. \n");
 			return false;
 		}
 
 		ENetEvent event;
-		if (enet_host_service(host, &event, 5000) > 0 && 
+		if (enet_host_service(host_, &event, 5000) > 0 &&
 			event.type == ENET_EVENT_TYPE_CONNECT) 
 		{
 			printf("[Net] connection to %s:%u succeeded. \n", to_address, port);
@@ -167,7 +167,7 @@ struct NetworkManager {
 	} //create_client
 
 	void disconnect() {
-		enet_peer_disconnect(peer, 0);
+		enet_peer_disconnect(peer_, 0);
 		connected_ = false;
 	} //disconnect
 
@@ -175,16 +175,16 @@ struct NetworkManager {
 
 		printf("[Net] sending packet of size: %u \n", typeof(ev.payload).sizeof * ev.payload.length);
 		ENetPacket* packet = enet_packet_create(ev.payload.ptr, ev.payload.length, ENET_PACKET_FLAG_RELIABLE);
-		enet_peer_send(peer, 0, packet);
+		enet_peer_send(peer_, 0, packet);
 
 	} //on_data_push
 
 	void poll() {
 
-		if (!host) return;
+		if (!host_) return;
 
 		ENetEvent event;
-		while (enet_host_service(host, &event, 0) > 0) {
+		while (enet_host_service(host_, &event, 0) > 0) {
 
 			final switch (event.type) {
 

@@ -1016,7 +1016,7 @@ unittest {
 
 }
 
-/* our string type, it has a length and a null terminator. */
+/* our immutable string type, it has a length and a null terminator. */
 /* - null terminator to make interop with c stuff easier. */
 struct String {
 
@@ -1153,7 +1153,7 @@ struct StringBuffer {
 		if (str[$-1] != '\0') {
 			array_ ~= '\0';
 		}
-		
+
 		array_.length(array_.length-1);
 
 	} //opOpAssign
