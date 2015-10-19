@@ -54,6 +54,8 @@ struct NetworkManager {
 	import derelict.enet.enet;
 
 	import blindfire.engine.event : EventManager;
+	import blindfire.engine.collections : Array;
+	import blindfire.engine.memory : theAllocator, IAllocator;
 	import blindfire.engine.defs : ConnectionEvent, DisconnectionEvent, UpdateEvent, PushEvent, Update;
 
 	enum num_channels = 2;
@@ -63,9 +65,10 @@ struct NetworkManager {
 		EventManager* ev_man_;
 
 		ENetHost* host_;
-		ENetPeer* peer_;
-		bool is_host_;
+		Array!(ENetPeer*) peers_;
+
 		bool connected_;
+		bool is_host_;
 
 	}
 
@@ -78,6 +81,7 @@ struct NetworkManager {
 	this(EventManager* ev_man) {
 
 		this.ev_man_ = ev_man;
+		this.peers_ = typeof(peers_)(theAllocator, 16);
 
 	} //this
 
@@ -143,11 +147,13 @@ struct NetworkManager {
 		enet_address_set_host(&address, to_address);
 		address.port = port;
 
-		peer_ = enet_host_connect(host_, &address, num_channels, 0);
+		ENetPeer* new_peer = enet_host_connect(host_, &address, num_channels, 0);
 
-		if (!peer_) {
+		if (!new_peer) {
 			printf("[Net] no available peers for initiating an ENet connection. \n");
 			return false;
+		} else {
+			peers_ ~= new_peer;
 		}
 
 		ENetEvent event;
@@ -167,15 +173,24 @@ struct NetworkManager {
 	} //create_client
 
 	void disconnect() {
-		enet_peer_disconnect(peer_, 0);
+
+		foreach (peer; peers_) {
+			enet_peer_disconnect(peer, 0);
+		}
+
+		peers_.clear();
 		connected_ = false;
+
 	} //disconnect
 
 	void on_data_push(ref PushEvent ev) {
 
 		printf("[Net] sending packet of size: %u \n", typeof(ev.payload).sizeof * ev.payload.length);
 		ENetPacket* packet = enet_packet_create(ev.payload.ptr, ev.payload.length, ENET_PACKET_FLAG_RELIABLE);
-		enet_peer_send(peer_, 0, packet);
+
+		foreach (peer; peers_) {
+			enet_peer_send(peer, 0, packet);
+		}
 
 	} //on_data_push
 
@@ -193,6 +208,7 @@ struct NetworkManager {
 						   event.peer.address.host,
 						   event.peer.address.port);
 
+					peers_ ~= event.peer;
 					ev_man_.push!ConnectionEvent(event.peer);
 
 					break;
@@ -216,6 +232,7 @@ struct NetworkManager {
 						   event.peer.address.host,
 						   event.peer.address.port);
 
+					peers_.remove(event.peer);
 					ev_man_.push!DisconnectionEvent(event.peer);
 
 					event.peer.data = null;

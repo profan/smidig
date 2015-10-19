@@ -28,6 +28,7 @@ enum SubSystems {
 
 struct Engine {
 
+	import blindfire.engine.cpu : CPU;
 	import blindfire.engine.memory : allocatorObject, IAllocator, Mallocator, theAllocator, make;
 	import blindfire.engine.dbg : DebugContext, render_string;
 	import blindfire.engine.imgui : ImguiContext;
@@ -81,6 +82,9 @@ struct Engine {
 
 		//allocator for shit
 		this.allocator_ = theAllocator;
+
+		//report supported cpu characteristics
+		CPU.report_supported();
 
 		//initialize window and input handler
 		this.window_.construct(title, 640, 480);
