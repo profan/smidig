@@ -14,9 +14,7 @@ import blindfire.engine.gl : Cursor, FontAtlas;
 import blindfire.engine.defs : DrawEventType, NetEventType;
 
 enum Resource {
-	BasicShader,
-	TextShader,
-	CursorTexture
+	TextShader
 } //Resource
 
 enum SubSystems {
@@ -59,7 +57,6 @@ struct Engine {
 
 	FontAtlas debug_atlas_ = void;
 	Console console_ = void;
-	Cursor cursor_ = void;
 
 	DebugContext debug_context_ = void;
 	ImguiContext imgui_context_ = void;
@@ -71,12 +68,12 @@ struct Engine {
 
 	//external references
 	UpdateFunc update_function_;
-	DrawFunc draw_function_;
+	DrawFunc draw_function_, after_draw_function_;
 	RunFunc run_function_;
 
 	@disable this(this);
 
-	void initialize(in char[] title, UpdateFunc update_func, DrawFunc draw_func) {
+	void initialize(in char[] title, UpdateFunc update_func, DrawFunc draw_func, DrawFunc after_draw_func) {
 
 		import derelict.sdl2.types;
 		import blindfire.engine.pool : construct;
@@ -128,6 +125,7 @@ struct Engine {
 		//set references
 		this.update_function_ = update_func;
 		this.draw_function_ = draw_func;
+		this.after_draw_function_ = after_draw_func;
 
 	} //initialize
 
@@ -139,22 +137,11 @@ struct Engine {
 
 		auto rm = ResourceManager.get();
 
-		//basic shader
-		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
-		char[16][2] uniforms = ["transform", "perspective"];
-		auto shader = allocator_.make!Shader("shaders/basic", attributes[], uniforms[]);
-		rm.set_resource(shader, Resource.BasicShader);
-
 		//text shader
 		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
 		char[16][2] text_uniforms = ["color", "projection"];
 		auto text_shader = allocator_.make!Shader("shaders/text", text_attribs[], text_uniforms[]); 
 		rm.set_resource(text_shader, Resource.TextShader);
-
-		//mouse pointer texture
-		auto cursor_texture = allocator_.make!Texture("resource/img/other_cursor.png");
-		rm.set_resource(cursor_texture, Resource.CursorTexture);
-		this.cursor_.construct(cursor_texture, shader);
 
 		//text atlases
 		this.debug_atlas_.construct("fonts/OpenSans-Regular.ttf", 12, text_shader);
@@ -172,11 +159,10 @@ struct Engine {
 		console_.draw(&window_);
 
 		draw_debug(delta_time);
-		cursor_.draw(window_.view_projection, Vec2f(input_handler_.mouse_x, input_handler_.mouse_y));
 
 		imgui_context_.end_frame();
+		after_draw_function_();
 		window_.render_present();
-
 
 	} //draw
 

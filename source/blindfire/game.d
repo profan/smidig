@@ -21,13 +21,18 @@ struct NewGame {
 	import blindfire.chat;
 
 	enum GameResource : ResourceID {
-		Click = Resource.max
+		Click = Resource.max+1,
+		BasicShader,
+		CursorTexture
 	} //GameResource
 
 	private {
 
 		Engine engine_;
 		Chat chat_ = void;
+	
+		//resource cursor
+		Cursor cursor_ = void;
 
 	}
 
@@ -36,7 +41,7 @@ struct NewGame {
 	void initialize() {
 
 		//initialize engine systems
-		this.engine_.initialize("Project Blindfire", &update, &draw);
+		this.engine_.initialize("Project Blindfire", &update, &draw, &last_draw);
 
 		//initialize self
 		initialize_systems();
@@ -56,12 +61,26 @@ struct NewGame {
 
 	void load_resources() {
 
+		import blindfire.engine.gl : AttribLocation, Shader, Texture;
+		import blindfire.engine.memory : make;
+
 		auto rm = ResourceManager.get();
 
 		//load click sound
 		auto click_file = engine_.sound_system_.load_sound_file(cast(char*)"resource/audio/radiy_click.wav".ptr);
 		rm.set_resource!(SoundID)(cast(SoundID*)click_file, GameResource.Click);
-	
+
+		//basic shader
+		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
+		char[16][2] uniforms = ["transform", "perspective"];
+		auto shader = engine_.allocator_.make!Shader("shaders/basic", attributes[], uniforms[]);
+		rm.set_resource(shader, GameResource.BasicShader);
+
+		//mouse pointer texture
+		auto cursor_texture = engine_.allocator_.make!Texture("resource/img/other_cursor.png");
+		rm.set_resource(cursor_texture, GameResource.CursorTexture);
+		this.cursor_.construct(cursor_texture, shader);
+
 	} //load_resources
 
 	void play_click_sound(int x, int y) {
@@ -160,6 +179,15 @@ struct NewGame {
 		draw_debug();
 
 	} //draw
+
+	void last_draw() {
+
+		import blindfire.engine.math : Vec2f;
+
+		cursor_.draw(engine_.window_.view_projection, 
+			Vec2f(engine_.input_handler_.mouse_x, engine_.input_handler_.mouse_y));
+
+	} //last_draw
 
 	void run() {
 
