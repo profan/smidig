@@ -103,11 +103,11 @@ struct Array(T) {
 		return length_;
 	} //opDollar
 
-	const(T[]) opSlice() const nothrow {
+	const(T[]) opSlice() @safe const nothrow {
 		return array_[0..length_];
 	} //opSlice
 
-	T[] opSlice() nothrow {
+	T[] opSlice() @safe nothrow {
 		return array_[0..length_];
 	} //opSlice
 
@@ -139,7 +139,7 @@ struct Array(T) {
 		return array_[index];
 	} //opIndex
 
-	void reserve(size_t requested_size) {
+	void reserve(size_t requested_size) @trusted {
 
 		if (capacity_ < requested_size) {
 			this.expand(requested_size - capacity_);
@@ -147,7 +147,7 @@ struct Array(T) {
 
 	} //reserve
 
-	void expand(size_t extra_size) {
+	void expand(size_t extra_size) @trusted {
 
 		bool success = allocator_.expandArray!T(array_, extra_size);
 		capacity_ += extra_size;
@@ -156,7 +156,7 @@ struct Array(T) {
 
 	} //expand
 
-	void add(T item) {
+	void add(T item) @trusted {
 
 		if (length_ == capacity_) {
 			this.expand(length_);
@@ -197,7 +197,7 @@ struct Array(T) {
 
 	} //remove
 
-	void remove(ref T thing) {
+	void remove(ref T thing) @trusted {
 
 		foreach(ref i, ref e; this) {
 			if (e == thing) {
@@ -427,15 +427,15 @@ struct HashMap(K, V) {
 
 	} //opApply
 
-	void opIndexAssign(V value, K key) {
+	void opIndexAssign(V value, K key) @trusted {
 		put(key, move(value));
 	} //opIndexAssign
 
-	ref V opIndex(in K key) {
+	ref V opIndex(in K key) @safe {
 		return get(key);
 	} //opIndex
 
-	void rehash() {
+	void rehash() @trusted {
 
 		auto temp_map = HashMap!(K, V)(allocator_, capacity_ * 2);
 
@@ -447,11 +447,11 @@ struct HashMap(K, V) {
 
 	} //rehash
 
-	ref V get(in K key) nothrow {
+	ref V get(in K key) @safe nothrow {
 		return get_(key);
 	} //get
 
-	private size_t findIndex(in K key, out bool found) nothrow {
+	private size_t findIndex(in K key, out bool found) @safe nothrow {
 
 		auto index = key.toHash() % capacity_;
 		uint searched_elements = 0;
@@ -483,7 +483,7 @@ struct HashMap(K, V) {
 
 	} //findIndex
 
-	private ref V get_(in K key) nothrow {
+	private ref V get_(in K key) @safe nothrow {
 
 		bool found = false;
 		auto index = findIndex(key, found);
@@ -491,7 +491,7 @@ struct HashMap(K, V) {
 
 	} //get
 
-	void put(ref K key, V value) {
+	void put(ref K key, V value) @trusted {
 
 		import std.algorithm : move;
 
@@ -514,7 +514,7 @@ struct HashMap(K, V) {
 
 	} //put
 
-	bool remove(K key) {
+	bool remove(K key) @trusted {
 
 		auto index = key.toHash() % capacity_;
 		uint searched_elements = 0;
@@ -539,7 +539,7 @@ struct HashMap(K, V) {
 		
 	} //remove
 
-	void clear() {
+	void clear() @trusted {
 
 		foreach (i, ref e; array_[]) {
 			e = Entry.init;
@@ -718,7 +718,7 @@ struct LinkedList(T) {
 	} //head
 
 	T* tail() {
-		return &head_.data;
+		return &tail_.data;
 	} //tail
 
 } //LinkedList

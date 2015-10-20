@@ -12,26 +12,26 @@ struct NetVar(T) {
 
 	this(T var) {
 		this.variable = var;
-	}
+	} //this
 
 	T opUnary(string op)() if (s == "++" || s == "--") {
 		changed = true;
 		mixin("return " ~ op ~ " variable;");
-	}
+	} //opUnary
 
 	void opAssign(T rhs) {
 		changed = true;
 		variable = rhs;
-	}
+	} //opAssign
 
 	void opOpAssign(string op)(T rhs) {
 		changed = true;
 		mixin("variable " ~ op ~ "= rhs;");
-	}
+	} //opOpAssign
 
 	T opBinary(string op)(T rhs) {
 		mixin("return variable " ~ op ~ " rhs;");
-	}
+	} //opBinary
 
 } //NetVar
 
@@ -118,7 +118,7 @@ struct NetworkManager {
 			printf("[Net] failed creating server! \n");
 			return false;
 		} else {
-			printf("[Net] created server at %s:%u \n", cast(char*)"localhost".ptr, binding_port);
+			printf("[Net] created server at %s:%u \n", cast(const(char*))"localhost".ptr, binding_port);
 		}
 
 		is_host_ = true;
