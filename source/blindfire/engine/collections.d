@@ -22,7 +22,7 @@ struct Array(T) {
 	//@disable this();
 	@disable this(this);
 
-	this(IAllocator allocator, size_t initial_size) {
+	this(IAllocator allocator, size_t initial_size) @trusted {
 
 		this.allocator_ = allocator;
 		this.array_ = allocator_.makeArray!T(initial_size);
@@ -31,7 +31,7 @@ struct Array(T) {
 
 	} //this
 
-	~this() {
+	~this() @trusted {
 		if (allocator_ !is null) {
 			this.free();
 		}
@@ -41,19 +41,19 @@ struct Array(T) {
 		this.allocator_.dispose(array_);
 	} //free
 
-	void clear() nothrow @nogc { //note, does not run destructors!
+	void clear() @safe nothrow @nogc { //note, does not run destructors!
 		this.length_ = 0;
 	} //clear
 
-	@property size_t capacity() const nothrow @nogc {
+	@property size_t capacity() @safe const nothrow @nogc {
 		return capacity_;
 	} //capacity
 
-	@property size_t length() const nothrow @nogc {
+	@property size_t length() @safe const nothrow @nogc {
 		return length_;
 	} //length
 
-	@property size_t length(size_t new_length) nothrow @nogc { //no-op if length is too large
+	@property size_t length(size_t new_length) @safe nothrow @nogc { //no-op if length is too large
 		if (new_length <= capacity_) {
 			length_ = new_length;
 		}
@@ -115,17 +115,17 @@ struct Array(T) {
 		return array_[h..t];
 	} //opSlice
 
-	void opOpAssign(string op: "~")(T item) {
+	void opOpAssign(string op: "~")(T item) @safe {
 		this.add(item);
 	} //opOpAssign
 
-	void opOpAssign(string op: "~")(in T[] items) {
+	void opOpAssign(string op: "~")(in T[] items) @safe {
 		foreach (ref item; items) {
 			this.add(item);
 		}
 	} //opOpAssign
 
-	void opIndexAssign(T value, size_t index) {
+	void opIndexAssign(T value, size_t index) @trusted {
 		array_[index] = move(value);
 	} //opIndexAssign
 
@@ -167,7 +167,7 @@ struct Array(T) {
 	} //add
 
 	static if (isCopyable!T) {
-		void add(ref T item) {
+		void add(ref T item) @safe {
 
 			if (length_ == capacity_) {
 				this.expand(length_);
@@ -320,7 +320,7 @@ struct HashMap(K, V) {
 	@disable this(this);
 
 	static if (isCopyable!K) { /* define only if key type is copyable too */
-		@property Array!K keys() {
+		@property Array!K keys() @trusted {
 
 			auto arr = Array!K(allocator_, used_capacity_);
 
@@ -334,7 +334,7 @@ struct HashMap(K, V) {
 	}
 
 	static if (isCopyable!V) { /* it only makes sense to define this if value type is copyable */
-		@property Array!V values() {
+		@property Array!V values() @trusted {
 
 			auto arr = Array!V(allocator_, used_capacity_);
 
@@ -347,11 +347,11 @@ struct HashMap(K, V) {
 		} //values
 	}
 
-	@property size_t length() const {
+	@property size_t length() @safe const {
 		return capacity_;
 	} //length
 
-	this(IAllocator allocator, size_t initial_size) {
+	this(IAllocator allocator, size_t initial_size) @trusted {
 
 		this.allocator_ = allocator;
 		this.array_ = allocator.makeArray!Entry(initial_size);
@@ -359,7 +359,7 @@ struct HashMap(K, V) {
 
 	} //this
 
-	~this() {
+	~this() @trusted {
 		if (allocator_ !is null) {
 			this.free();
 		}
