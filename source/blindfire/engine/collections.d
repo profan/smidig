@@ -1163,6 +1163,9 @@ struct StringBuffer {
 
 	}
 
+	@disable this();
+	@disable this(this);
+
 	this(size_t initial_size) {
 
 		this.array_ = typeof(array_)(theAllocator, initial_size);
@@ -1190,6 +1193,19 @@ struct StringBuffer {
 	const(char*) c_str() const nothrow @nogc {
 		return array_.ptr;
 	} //c_str
+
+	void scan_to_null() {
+
+		auto index = 0;
+		while (index < array_.capacity-1 && array_[index] != '\0') {
+			index++;
+		}
+
+		if (index < array_.capacity-1 && array_[index] == '\0') {
+			array_.length = index+1;
+		}
+
+	} //scan_to_null
 
 } //StringBuffer
 

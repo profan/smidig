@@ -228,6 +228,7 @@ struct InputHandler {
 		while(SDL_PollEvent(&ev)) {
 
 			switch (ev.type) {
+
 				case SDL_KEYDOWN, SDL_KEYUP:
 					foreach (ref bind; input_events) {
 						if (ev.key.keysym.scancode == bind.key) {
@@ -237,6 +238,7 @@ struct InputHandler {
 						}
 					}
 					break;
+
 				case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
 					foreach (ref bind; mouse_events) {
 						if (ev.button.button == bind.mousebtn) {
@@ -246,10 +248,52 @@ struct InputHandler {
 						}
 					}
 					break;
+
 				case SDL_MOUSEMOTION:
 					break;
+
+				case SDL_JOYDEVICEADDED:
+					break;
+
+				case SDL_JOYDEVICEREMOVED:
+					break;
+
+				case SDL_JOYAXISMOTION:
+					break;
+
+				case SDL_JOYBALLMOTION:
+					break;
+
+				case SDL_JOYHATMOTION:
+					break;
+
+				case SDL_JOYBUTTONDOWN:
+					break;
+
+				case SDL_JOYBUTTONUP:
+					break;
+
+				case SDL_CONTROLLERAXISMOTION:
+					break;
+
+				case SDL_CONTROLLERBUTTONDOWN:
+					break;
+
+				case SDL_CONTROLLERBUTTONUP:
+					break;
+
+				case SDL_CONTROLLERDEVICEADDED:
+					break;
+
+				case SDL_CONTROLLERDEVICEREMOVED:
+					break;
+
+				case SDL_CONTROLLERDEVICEREMAPPED:
+					break;
+
 				default:
 					break;
+
 			}
 
 			/* forward events to listeners, filtered with a bitmask */
