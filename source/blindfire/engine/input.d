@@ -1,4 +1,4 @@
-module blindfire.engine.eventhandler;
+module blindfire.engine.input;
 
 import derelict.sdl2.sdl;
 import blindfire.engine.util : makeFlagEnum;
@@ -100,7 +100,7 @@ immutable SDL_EventType[45] sdl_events = [
 	SDL_LASTEVENT
 ];
 
-struct EventHandler {
+struct InputHandler {
 
 	import core.stdc.stdio : printf;
 	import blindfire.engine.collections : Array, HashMap;
@@ -224,9 +224,9 @@ struct EventHandler {
 	} //bind_mousemov
 
 	void handle_events() {
-		
+
 		while(SDL_PollEvent(&ev)) {
-		
+
 			switch (ev.type) {
 				case SDL_KEYDOWN, SDL_KEYUP:
 					foreach (ref bind; input_events) {
@@ -282,4 +282,4 @@ struct EventHandler {
 
 	} //handle_events
 
-} //EventHandler
+} //InputHandler

@@ -1,7 +1,7 @@
 module blindfire.engine.runtime;
 
 import blindfire.engine.window : Window;
-import blindfire.engine.eventhandler : EventHandler;
+import blindfire.engine.input : InputHandler;
 import blindfire.engine.render : IRenderer, OpenGLRenderer;
 import blindfire.engine.net : initialize_enet, NetworkManager;
 import blindfire.engine.event : EventManager, EventMemory;
@@ -46,7 +46,7 @@ struct Engine {
 
 	//common subsystems
 	Window window_ = void;
-	EventHandler input_handler_ = void;
+	InputHandler input_handler_ = void;
 
 	EventManager renderer_evman_ = void;
 	IRenderer renderer_;

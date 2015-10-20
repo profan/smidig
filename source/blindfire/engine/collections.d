@@ -666,6 +666,7 @@ struct LinkedList(T) {
 		IAllocator allocator_;
 
 		Node* head_;
+		Node* tail_;
 
 	}
 
@@ -714,7 +715,11 @@ struct LinkedList(T) {
 
 	T* head() {
 		return &head_.data;
-	} //first
+	} //head
+
+	T* tail() {
+		return &head_.data;
+	} //tail
 
 } //LinkedList
 
@@ -781,6 +786,14 @@ struct Queue(T) {
 	private LinkedList!T list_;
 
 } //Queue
+
+unittest {
+
+}
+
+struct AtomicQueue(T) {
+
+} //AtomicQueue
 
 unittest {
 

@@ -2,7 +2,7 @@ module blindfire.game;
 
 import derelict.sdl2.sdl;
 
-import blindfire.engine.eventhandler : KeyState;
+import blindfire.engine.input : KeyState;
 import blindfire.engine.util : render_string;
 import blindfire.engine.resource;
 import blindfire.engine.event;
