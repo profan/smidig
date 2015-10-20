@@ -255,12 +255,17 @@ unittest {
 
 }
 
+/* non resizeable heap allocated array. */
 struct FixedArray(T) {
 
 } //FixedArray
 
+unittest {
+
+}
+
 /* array type which never moves its contents in memory */
-/* - composed of arrays in fixed sizes. */
+/* - composed of fixed size arrays. */
 struct SegmentedArray(T) {
 
 } //SegmentedArray
@@ -304,11 +309,11 @@ struct HashMap(K, V) {
 
 	private {
 
+		IAllocator allocator_;
+
 		Entry[] array_;
 		size_t capacity_;
 		size_t used_capacity_;
-
-		IAllocator allocator_;
 
 	}
 
@@ -658,9 +663,9 @@ struct LinkedList(T) {
 	
 	private {
 
-		Node* head_;
-
 		IAllocator allocator_;
+
+		Node* head_;
 
 	}
 
@@ -726,6 +731,7 @@ unittest {
 
 }
 
+/* LIFO Stack */
 struct Stack(T) {
 
 	private LinkedList!T list_;
@@ -787,7 +793,6 @@ struct DHeap(int N, T) {
 	private {
 
 		Array!T array_;
-		IAllocator allocator_;
 		size_t size_;
 
 	}
@@ -796,8 +801,7 @@ struct DHeap(int N, T) {
 	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size) {
-		this.allocator_ = allocator;
-		this.array_ = typeof(array_)(allocator_, initial_size);
+		this.array_ = typeof(array_)(allocator, initial_size);
 	} //this
 
 	uint nth_child(uint n, uint i) {
@@ -887,6 +891,14 @@ struct DHeap(int N, T) {
 
 	} //delete_min
 
+	void increase_key(size_t i) {
+
+	} //increase_key
+
+	void decrease_key(size_t i) {
+
+	} //decrease_key
+
 } //DHeap
 
 version (unittest) {
@@ -947,12 +959,10 @@ struct MatrixGraph(T) {
 
 struct HashSet(T) {
 
-	IAllocator allocator_;
 	HashMap!(T, bool) hashmap_;
 
 	this(IAllocator allocator, size_t initial_size) {
-		this.allocator_ = allocator;
-		this.hashmap_ = typeof(hashmap_)(allocator_, initial_size);
+		this.hashmap_ = typeof(hashmap_)(allocator, initial_size);
 	} //this
 
 	bool add(T item) {
