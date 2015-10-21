@@ -14,13 +14,16 @@ import blindfire.ui;
 
 struct NewGame {
 
+	import blindfire.engine.memory : make;
 	import blindfire.engine.profiler : Profiler;
 	import blindfire.engine.sound : SoundID;
 	import blindfire.engine.pool : construct;
 	import blindfire.engine.runtime;
 	import blindfire.engine.joy;
+	import blindfire.engine.ecs;
 
 	import blindfire.chat;
+	import blindfire.sys;
 
 	enum GameResource : ResourceID {
 		Click = Resource.max+1,
@@ -42,6 +45,10 @@ struct NewGame {
 		//visualizing joystick shit
 		JoyVisualizer visualizer_ = void;
 
+		//game test
+		EventManager event_manager_ = void;
+		EntityManager entity_manager_;
+
 	}
 
 	@disable this(this);
@@ -60,13 +67,27 @@ struct NewGame {
 
 	void initialize_systems() {
 
-		this.chat_.construct(engine_.allocator_, &engine_.network_evman_);
+		auto ea = engine_.allocator_;
+
+		this.chat_.construct(ea, &engine_.network_evman_);
 		engine_.network_evman_.register!ConnectionEvent(&chat_.on_peer_connect);
 		engine_.network_evman_.register!DisconnectionEvent(&chat_.on_peer_disconnect);
 		engine_.network_evman_.register!UpdateEvent(&chat_.on_network_update);
 
-		this.profiler_.construct(engine_.allocator_);
+		this.profiler_.construct(ea);
 		this.visualizer_.construct(&engine_.input_handler_);
+
+		//game test
+		this.event_manager_.construct(EventMemory, EventType.max);
+		this.entity_manager_ = ea.make!EntityManager(engine_.allocator_);
+
+		//systems
+		auto t_man = ea.make!TransformManager();
+		auto c_man = ea.make!CollisionManager(Vec2i(640, 480));
+		auto s_man = ea.make!SpriteManager();
+
+		event_manager_.register!AnalogAxisEvent(&t_man.onAnalogMovement);
+		entity_manager_.addSystems(t_man, c_man, s_man);
 
 	} //initialize_systems
 
@@ -76,6 +97,7 @@ struct NewGame {
 		import blindfire.engine.memory : make;
 
 		auto rm = ResourceManager.get();
+		auto ea = engine_.allocator_;
 
 		//load click sound
 		auto click_file = engine_.sound_system_.load_sound_file(cast(char*)"resource/audio/radiy_click.wav".ptr);
@@ -84,13 +106,24 @@ struct NewGame {
 		//basic shader
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
-		auto shader = engine_.allocator_.make!Shader("shaders/basic", attributes[], uniforms[]);
+		auto shader = ea.make!Shader("shaders/basic", attributes[], uniforms[]);
 		rm.set_resource(shader, GameResource.BasicShader);
 
 		//mouse pointer texture
-		auto cursor_texture = engine_.allocator_.make!Texture("resource/img/other_cursor.png");
+		auto cursor_texture = ea.make!Texture("resource/img/other_cursor.png");
 		rm.set_resource(cursor_texture, GameResource.CursorTexture);
 		this.cursor_.construct(cursor_texture, shader);
+
+		//create unit
+		import blindfire.ents : create_unit;
+		auto unit = create_unit(entity_manager_, Vec2f(320, 240), shader, cursor_texture);
+
+		void on_axis(int value) {
+			event_manager_.push!AnalogAxisEvent(AxisPayload(unit, value));
+		} //on_axis
+
+		engine_.input_handler_.bind_controlleraxis
+			(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, &on_axis);
 
 	} //load_resources
 
@@ -126,14 +159,16 @@ struct NewGame {
 			.bind_mousebtn(1, &play_click_sound, KeyState.UP)
 			.bind_mousebtn(3, &stop_all_sounds, KeyState.UP);
 
-		engine_.input_handler_
-			.bind_controllerbtn(SDL_CONTROLLER_BUTTON_A, &play_click_sound, KeyState.UP);
-
 	} //bind_actions
 
 	void update() {
 
+		mixin EventManager.doTick;
+
 		bool is_active = (engine_.network_manager_.is_active);
+
+		tick!EventIdentifier(event_manager_);
+		entity_manager_.tick!UpdateSystem();
 
 		engine_.network_manager_.draw();
 		profiler_.tick();
@@ -159,6 +194,8 @@ struct NewGame {
 	} //draw_debug
 
 	void draw() {
+
+		entity_manager_.tick!DrawSystem(&engine_.window_);
 
 		draw_debug();
 		profiler_.sample_frame(engine_.frame_time_);

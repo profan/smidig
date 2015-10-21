@@ -27,6 +27,16 @@ interface DrawSystem : ComponentSystem!(1) {
 
 class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) {
 
+	import blindfire.defs;
+
+	void onAnalogMovement(ref AnalogAxisEvent ev) {
+		components[ev.id].velocity += ev.value;
+	} //onAnalogMovement
+
+	void onAnalogRotation(ref AnalogAxisEvent ev) {
+
+	} //onAnalogRotation
+
 	void update() {
 
 		foreach (id, ref comp; components) with (comp) {
@@ -84,24 +94,6 @@ struct CollisionComponent {
 	@dependency TransformComponent* mc;
 
 } //CollisionComponent
-
-class InputManager : ComponentManager!(UpdateSystem, InputComponent, 1) {
-
-	void update() {
-
-		foreach (id, ref comp; components) {
-			//DO ALL THE CALLBACKS
-		}
-
-	}
-
-} //InputManager
-
-struct InputComponent {
-
-	//.. callbacks?
-
-} //InputComponent
 
 class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 

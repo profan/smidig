@@ -25,8 +25,6 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 	auto cc = em.getComponent!CollisionComponent(unit);
 	cc.radius = texture.width/2; //arbitrary number :D
 
-	em.register!InputComponent(unit);
-
 	int w = texture.width;
 	int h = texture.height;
 	Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
