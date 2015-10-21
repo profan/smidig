@@ -8,7 +8,8 @@
 		"derelict-imgui": "~>0.7.0",
 		"derelict-al": "~master",
 		"derelict-ft": "~>1.0.2",
-		"gfm:math": "~>2.0"
+		"gfm:math": "~>2.0",
+		"windows-headers": "~>1.0.1"
 	},
 	"buildTypes": {
 		"debug-profile": {
