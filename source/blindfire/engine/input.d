@@ -47,6 +47,10 @@ struct Controller {
 	int device_id;
 	SDL_GameController* handle;
 
+	bool opEquals(ref Controller other) {
+		return device_id == other.device_id;
+	} //opEquals
+
 } //Controller
 
 struct ControllerBind {
@@ -307,7 +311,6 @@ struct InputHandler {
 					break;
 
 				case SDL_CONTROLLERAXISMOTION:
-
 					foreach (ref bind; controller_axis_binds) {
 						if (ev.caxis.axis == bind.axis) {
 							bind.func(ev.caxis.value);
@@ -317,7 +320,6 @@ struct InputHandler {
 					break;
 
 				case SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP:
-
 					foreach (ref bind; controller_binds) {
 						if (ev.cbutton.button == bind.button) {
 							if (bind.state == ev.cbutton.state) {
@@ -339,6 +341,11 @@ struct InputHandler {
 				case SDL_CONTROLLERDEVICEREMOVED:
 
 					/* remove controller unplugged */
+					foreach (ref c; controllers) {
+						if (c.device_id == ev.cdevice.which) 
+							SDL_GameControllerClose(c.handle);
+					}
+
 					auto removed = Controller(ev.cdevice.which);
 					controllers.remove(removed);
 
