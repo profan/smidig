@@ -112,53 +112,13 @@ struct NewGame {
 
 	void update() {
 
-		import derelict.imgui.imgui;
+		bool is_active = (engine_.network_manager_.is_active);
 
-		static bool is_active;
-		static bool show_another_window;
-		static int host_port = 12300;
+		engine_.network_manager_.draw();
 
-		is_active = (engine_.network_manager_.is_active);
-
-		igSetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-		igBegin("Network Manager", &show_another_window); 
-
-		{
-
-			if (!is_active) {
-
-				auto do_server = igButton("Create Server.");
-				auto do_connect = igButton("Connect to Server.");
-				igInputInt("port: ", &host_port);
-				
-				if (do_server) {
-					engine_.network_manager_.create_server(cast(ushort)host_port, cast(ubyte)32);
-				}
-
-				if (do_connect) {
-					engine_.network_manager_.create_client(cast(char*)"localhost".ptr, cast(ushort)host_port);
-				}
-
-			} else if (!engine_.network_manager_.is_host) {
-
-				auto do_disconnect = igButton("Disconnect from Server.");
-
-				if (do_disconnect) {
-					engine_.network_manager_.disconnect();
-				}
-
-			}
-			
-			if (is_active) {
-				igValueBool("is host: ", engine_.network_manager_.is_host);
-				chat_.tick(); //draw chat window!
-			}
-
-			igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().Framerate, igGetIO().Framerate);
-
+		if (is_active) {
+			chat_.tick(); //draw chat window!
 		}
-
-		igEnd();
 
 	} //update
 

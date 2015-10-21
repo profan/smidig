@@ -107,22 +107,27 @@ struct InputHandler {
 	import blindfire.engine.memory : IAllocator;
 
 	enum INITIAL_SIZE = 8;
-	IAllocator allocator_;
 
-	SDL_Event ev;
-	Array!EventSpec delegates;
-	Array!MouseBind mouse_events;
-	Array!MouseBind motion_events;
-	Array!KeyBind input_events;
-	Array!KeyBind key_events;
+	private {
 
-	HashMap!(SDL_EventType, EventMask) event_mask_;
+		IAllocator allocator_;
 
-	//mutated by SDL2
-	Uint8* pressed_keys;
+		SDL_Event ev;
+		Array!EventSpec delegates;
+		Array!MouseBind mouse_events;
+		Array!MouseBind motion_events;
+		Array!KeyBind input_events;
+		Array!KeyBind key_events;
 
-	//mouse pos, last first, current second
-	int[2] last_x, last_y;
+		HashMap!(SDL_EventType, EventMask) event_mask_;
+
+		//mutated by SDL2
+		Uint8* pressed_keys;
+
+		//mouse pos, last first, current second
+		int[2] last_x, last_y;
+
+	}
 
 	@property int mouse_x() const { return last_x[0]; }
 	@property int mouse_y() const { return last_y[0]; }

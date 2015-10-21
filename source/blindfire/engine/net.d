@@ -246,6 +246,52 @@ struct NetworkManager {
 
 	} //poll
 
+	void draw() {
+
+		import derelict.imgui.imgui;
+
+		static bool show_another_window;
+		static int host_port = 12300;
+
+		igSetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+		igBegin("Network Manager", &show_another_window);
+
+		{
+
+			if (!is_active) {
+
+				auto do_server = igButton("Create Server.");
+				auto do_connect = igButton("Connect to Server.");
+				igInputInt("port: ", &host_port);
+
+				if (do_server) {
+					create_server(cast(ushort)host_port, cast(ubyte)32);
+				}
+
+				if (do_connect) {
+					create_client(cast(char*)"localhost".ptr, cast(ushort)host_port);
+				}
+
+			} else if (!is_host) {
+
+				auto do_disconnect = igButton("Disconnect from Server.");
+
+				if (do_disconnect) {
+					disconnect();
+				}
+
+			}
+
+			if (is_active) {
+				igValueBool("is host: ", is_host);
+			}
+
+		}
+
+		igEnd();
+
+	} //draw
+
 } //NetworkManager
 
 struct NetworkServer {
