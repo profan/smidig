@@ -835,7 +835,7 @@ struct CircularBuffer(T) {
 		return array_.capacity;
 	} //length
 
-	@property T* ptr() {
+	@property const(T*) ptr() {
 		return array_.ptr;
 	} //ptr
 

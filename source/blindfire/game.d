@@ -14,6 +14,7 @@ import blindfire.ui;
 
 struct NewGame {
 
+	import blindfire.engine.profiler : Profiler;
 	import blindfire.engine.sound : SoundID;
 	import blindfire.engine.pool : construct;
 	import blindfire.engine.runtime;
@@ -33,6 +34,9 @@ struct NewGame {
 	
 		//resource cursor
 		Cursor cursor_ = void;
+
+		//profiler
+		Profiler profiler_ = void;
 
 	}
 
@@ -56,6 +60,8 @@ struct NewGame {
 		engine_.network_evman_.register!ConnectionEvent(&chat_.on_peer_connect);
 		engine_.network_evman_.register!DisconnectionEvent(&chat_.on_peer_disconnect);
 		engine_.network_evman_.register!UpdateEvent(&chat_.on_network_update);
+
+		this.profiler_.construct(engine_.allocator_);
 
 	} //initialize_systems
 
@@ -115,6 +121,7 @@ struct NewGame {
 		bool is_active = (engine_.network_manager_.is_active);
 
 		engine_.network_manager_.draw();
+		profiler_.tick();
 
 		if (is_active) {
 			chat_.tick(); //draw chat window!
@@ -136,6 +143,7 @@ struct NewGame {
 	void draw() {
 
 		draw_debug();
+		profiler_.sample(engine_.frame_time_);
 
 	} //draw
 
