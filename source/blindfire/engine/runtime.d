@@ -193,9 +193,11 @@ struct Engine {
 		import blindfire.engine.timer : StopWatch;
 
 		static StopWatch main_timer, update_timer, draw_timer, frame_timer;
-		static long iter, last_update, last_render;
+		static long update_iter, draw_iter, last_update, last_render;
 		static long clock_ticks_per_second;
+
 		static int update_rate = 60;
+		static int draw_rate = 120;
 
 		clock_ticks_per_second = StopWatch.ticks_per_second();
 
@@ -209,9 +211,10 @@ struct Engine {
 
 		while (window_.is_alive) {
 
-			iter = main_timer.ticks_per_second() / update_rate;
+			update_iter = main_timer.ticks_per_second() / update_rate;
+			draw_iter = main_timer.ticks_per_second() / draw_rate;
 
-			if (main_timer.peek() - last_update > iter) {
+			if (main_timer.peek() - last_update > update_iter) {
 
 				import derelict.enet.enet;
 				import blindfire.engine.defs : NetEventIdentifier, Update;
@@ -223,6 +226,7 @@ struct Engine {
 
 				import derelict.imgui.imgui : igSliderInt;
 				igSliderInt("update rate", &update_rate, 1, 800);
+				igSliderInt("draw rate", &draw_rate, 1, 800);
 
 				//handle input
 				this.input_handler_.handle_events();
@@ -251,7 +255,7 @@ struct Engine {
 
 			import derelict.sdl2.sdl;
 			uint frame_ms = cast(uint)((cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second) * 1000);
-			uint wanted_time = cast(uint)((cast(double)iter / cast(double)clock_ticks_per_second) * 1000);
+			uint wanted_time = cast(uint)((cast(double)draw_iter / cast(double)clock_ticks_per_second) * 1000);
 			uint wait_time = wanted_time - frame_ms;
 
 			auto t = (wait_time < wanted_time) ? wait_time : wanted_time;
