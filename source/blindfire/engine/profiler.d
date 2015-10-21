@@ -53,6 +53,10 @@ struct Profiler {
 
 	} //do_callback;
 
+	void push(in char[] name, long ticks) {
+
+	} //push
+
 	void tick() {
 
 		import derelict.imgui.imgui;
@@ -71,3 +75,24 @@ struct Profiler {
 	} //tick
 
 } //Profiler
+
+struct ProfilerRegion {
+
+	import blindfire.engine.timer : StopWatch;
+
+	const(char[]) name_;
+	StopWatch sw_;
+	Profiler* output_;
+
+	this(in char[] name, ref Profiler output) {
+		this.name_ = name;
+		this.output_ = &output;
+		sw_.start();
+	} //this
+
+	~this() {
+		sw_.stop();
+		output_.push(name_, sw_.peek());
+	} //~this
+
+} //ProfilerRegion
