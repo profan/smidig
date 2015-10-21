@@ -798,6 +798,54 @@ unittest {
 
 }
 
+struct CircularBuffer(T) {
+
+	private {
+
+		Array!T array_;
+		size_t cur_index;
+
+	}
+
+	@disable this();
+	@disable this(this);
+
+	this(IAllocator allocator, size_t buffer_size) {
+		this.array_ = typeof(array_)(allocator, buffer_size);
+	} //this
+
+	ref T opIndex(size_t index) @safe @nogc nothrow {
+		return array_[index % array_.capacity];
+	} //opIndex
+
+	void opOpAssign(string op: "~")(T item) @safe @nogc nothrow {
+		array_[cur_index % array_.capacity] = item;
+		cur_index = (cur_index + 1) % array_.capacity;
+	} //opOpAssign
+
+	int opApply(int delegate(ref size_t i, ref T) dg) {
+		return array_.opApply(dg);
+	} //opApply
+
+	int opApply(int delegate(ref T) dg) {
+		return array_.opApply(dg);
+	} //opApply
+
+} //CircularBuffer
+
+unittest {
+
+	auto c_buf = CircularBuffer!double(theAllocator, 32);
+
+	c_buf ~= 15;
+	c_buf ~= 25;
+
+	foreach (sample; c_buf) {
+
+	}
+
+}
+
 struct DHeap(int N, T) {
 
 	import std.algorithm : move;
