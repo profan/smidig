@@ -6,6 +6,7 @@ import blindfire.engine.util : makeFlagEnum;
 alias void delegate(ref SDL_Event) EventDelegate;
 alias void delegate() KeyDelegate;
 alias void delegate(int, int) MouseDelegate;
+alias void delegate(int) AxisDelegate;
 
 MouseKeyState to(S : MouseKeyState)(KeyState state) {
 	return (state == state.UP) ? MouseKeyState.UP : MouseKeyState.DOWN;
@@ -40,6 +41,28 @@ struct MouseBind {
 	MouseKeyState state;
 
 } //MouseBind
+
+struct Controller {
+
+	int device_id;
+	SDL_GameController* handle;
+
+} //Controller
+
+struct ControllerBind {
+
+	int button;
+	KeyDelegate func;
+	KeyState state;
+
+} //ControllerBind
+
+struct ControllerAxis {
+
+	SDL_GameControllerAxis axis;
+	AxisDelegate func;
+
+} //ControllerAxis
 
 struct EventSpec {
 
@@ -119,6 +142,10 @@ struct InputHandler {
 		Array!KeyBind input_events;
 		Array!KeyBind key_events;
 
+		Array!Controller controllers;
+		Array!ControllerBind controller_binds;
+		Array!ControllerAxis controller_axis_binds;
+
 		HashMap!(SDL_EventType, EventMask) event_mask_;
 
 		//mutated by SDL2
@@ -143,11 +170,18 @@ struct InputHandler {
 	this(IAllocator allocator) {
 
 		this.allocator_ = allocator;
+
+		/* mouse and keyboard events */
 		this.delegates = typeof(delegates)(allocator_, INITIAL_SIZE);
 		this.mouse_events = typeof(mouse_events)(allocator_, INITIAL_SIZE);
 		this.motion_events = typeof(motion_events)(allocator_, INITIAL_SIZE);
 		this.input_events = typeof(input_events)(allocator_, INITIAL_SIZE);
 		this.key_events = typeof(key_events)(allocator_, INITIAL_SIZE);
+
+		/* controller events */
+		this.controllers = typeof(controllers)(allocator_, INITIAL_SIZE);
+		this.controller_binds = typeof(controller_binds)(allocator_, INITIAL_SIZE);
+		this.controller_axis_binds = typeof(controller_axis_binds)(allocator_, INITIAL_SIZE);
 
 		/* set up hashmap for holding event type to mask translation */
 		this.event_mask_ = typeof(event_mask_)(allocator_, sdl_events.length);
@@ -155,9 +189,6 @@ struct InputHandler {
 
 		/* initialize pressed keys */
 		this.pressed_keys = SDL_GetKeyboardState(null);
-
-		//temporary check
-		if( SDL_NumJoysticks() < 1 ) { printf("Warning: No joysticks connected!"); }
 
 	} //this
 
@@ -200,6 +231,24 @@ struct InputHandler {
 		return this;
 
 	} //bind_keyevent
+
+	ref typeof(this) bind_controllerbtn(SDL_GameControllerButton btn, KeyDelegate fn, KeyState st) {
+
+		ControllerBind cb = {button: btn, func: fn, state: st};
+		controller_binds ~= cb;
+
+		return this;
+
+	} //bind_controllerbtn
+
+	ref typeof(this) bind_controlleraxis(SDL_GameControllerAxis ax, AxisDelegate fn) {
+
+		ControllerAxis axis_bind = {axis: ax, func: fn};
+		controller_axis_binds ~= axis_bind;
+
+		return this;
+
+	} //bind_controlleraxis
 
 	ref typeof(this) bind_mousebtn(Uint8 button, MouseDelegate md, KeyState state) {
 
@@ -257,40 +306,42 @@ struct InputHandler {
 				case SDL_MOUSEMOTION:
 					break;
 
-				case SDL_JOYDEVICEADDED:
-					break;
-
-				case SDL_JOYDEVICEREMOVED:
-					break;
-
-				case SDL_JOYAXISMOTION:
-					break;
-
-				case SDL_JOYBALLMOTION:
-					break;
-
-				case SDL_JOYHATMOTION:
-					break;
-
-				case SDL_JOYBUTTONDOWN:
-					break;
-
-				case SDL_JOYBUTTONUP:
-					break;
-
 				case SDL_CONTROLLERAXISMOTION:
+
+					foreach (ref bind; controller_axis_binds) {
+						if (ev.caxis.axis == bind.axis) {
+							bind.func(ev.caxis.value);
+						}
+					}
+
 					break;
 
-				case SDL_CONTROLLERBUTTONDOWN:
-					break;
+				case SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP:
 
-				case SDL_CONTROLLERBUTTONUP:
+					foreach (ref bind; controller_binds) {
+						if (ev.cbutton.button == bind.button) {
+							if (bind.state == ev.cbutton.state) {
+								bind.func();
+							}
+						}
+					}
+
 					break;
 
 				case SDL_CONTROLLERDEVICEADDED:
+
+					/* add controller to devices */
+					auto new_device = SDL_GameControllerOpen(ev.cdevice.which);
+					controllers ~= Controller(ev.cdevice.which, new_device);
+
 					break;
 
 				case SDL_CONTROLLERDEVICEREMOVED:
+
+					/* remove controller unplugged */
+					auto removed = Controller(ev.cdevice.which);
+					controllers.remove(removed);
+
 					break;
 
 				case SDL_CONTROLLERDEVICEREMAPPED:

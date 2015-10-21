@@ -26,8 +26,6 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 	cc.radius = texture.width/2; //arbitrary number :D
 
 	em.register!InputComponent(unit);
-	em.register!SelectionComponent(unit);
-	em.register!OrderComponent(unit);
 
 	int w = texture.width;
 	int h = texture.height;

@@ -96,6 +96,13 @@ struct NewGame {
 
 	} //play_click_sound
 
+	void play_click_sound() {
+
+		auto click_id = cast(SoundID)ResourceManager.get().get_resource!SoundID(GameResource.Click);
+		engine_.sound_system_.play_sound(click_id, 0.5f, false);
+
+	} //play_click_sound
+
 	void stop_all_sounds(int x, int y ) {
 
 		engine_.sound_system_.stop_all_sounds();
@@ -113,6 +120,10 @@ struct NewGame {
 		engine_.input_handler_
 			.bind_mousebtn(1, &play_click_sound, KeyState.UP)
 			.bind_mousebtn(3, &stop_all_sounds, KeyState.UP);
+
+		import derelict.sdl2.types;
+		engine_.input_handler_
+			.bind_controllerbtn(SDL_CONTROLLER_BUTTON_A, &play_click_sound, KeyState.UP);
 
 	} //bind_actions
 
