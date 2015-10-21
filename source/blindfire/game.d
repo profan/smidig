@@ -127,6 +127,8 @@ struct NewGame {
 			chat_.tick(); //draw chat window!
 		}
 
+		profiler_.sample_update(engine_.update_time_);
+
 	} //update
 
 	void draw_debug() {
@@ -143,7 +145,7 @@ struct NewGame {
 	void draw() {
 
 		draw_debug();
-		profiler_.sample(engine_.frame_time_);
+		profiler_.sample_frame(engine_.frame_time_);
 
 	} //draw
 

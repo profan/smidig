@@ -831,13 +831,18 @@ struct CircularBuffer(T) {
 		return array_.opApply(dg);
 	} //opApply
 
-	@property size_t length() {
+	@property size_t length() @safe {
 		return array_.capacity;
 	} //length
 
 	@property const(T*) ptr() {
 		return array_.ptr;
 	} //ptr
+
+	@property T last(int idx) {
+		auto i = (idx + cur_index) % array_.capacity;
+		return array_[i];
+	} //last
 
 } //CircularBuffer
 
