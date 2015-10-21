@@ -6,7 +6,7 @@ struct Profiler {
 	import blindfire.engine.collections : CircularBuffer;
 	import blindfire.engine.memory : IAllocator;
 
-	enum FRAME_SAMPLES = 512;
+	enum FRAME_SAMPLES = 256;
 
 	private {
 

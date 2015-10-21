@@ -246,9 +246,7 @@ struct Engine {
 			draw_timer.start();
 			this.draw((draw_time_ > 0) ? draw_time_ : 1.0);
 			draw_time_ = cast(double)draw_timer.peek() / cast(double)clock_ticks_per_second;
-			frame_time_ = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
 			last_render = draw_timer.peek();
-			frame_timer.reset();
 			draw_timer.reset();
 
 			import derelict.sdl2.sdl;
@@ -256,7 +254,10 @@ struct Engine {
 			uint wanted_time = cast(uint)((cast(double)iter / cast(double)clock_ticks_per_second) * 1000);
 			uint wait_time = wanted_time - frame_ms;
 
-			SDL_Delay((wait_time < wanted_time) ? wait_time-1 : wanted_time-2);
+			auto t = (wait_time < wanted_time) ? wait_time : wanted_time;
+			SDL_Delay((t > 0) ? t-1 : 0);
+			frame_time_ = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
+			frame_timer.reset();
 
 		}
 
