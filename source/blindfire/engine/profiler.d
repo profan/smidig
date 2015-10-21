@@ -6,13 +6,16 @@ struct Profiler {
 	import blindfire.engine.collections : CircularBuffer;
 	import blindfire.engine.memory : IAllocator;
 
-	enum FRAME_SAMPLES = 200;
+	enum FRAME_SAMPLES = 512;
 
 	private {
 
 		IAllocator allocator_;
 
-		CircularBuffer!double frametimes_;
+		CircularBuffer!float frametimes_;
+
+		uint samples_past;
+		float cur_max;
 
 	}
 
@@ -26,15 +29,21 @@ struct Profiler {
 
 	} //this
 
-	void tick(double frametime) {
+	void sample(double frametime) {
 
 		//add sample to buffer
-		frametimes_ ~= frametime;
+		frametimes_ ~= cast(float)frametime;
+
+	} //sample
+
+	void tick() {
 
 		import derelict.imgui.imgui;
 
 		igSetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
 		igBegin("Profiler");
+
+		igPlotLines("frametimes", frametimes_.ptr, frametimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
 
 		igEnd();
 

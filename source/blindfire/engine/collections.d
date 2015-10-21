@@ -831,6 +831,14 @@ struct CircularBuffer(T) {
 		return array_.opApply(dg);
 	} //opApply
 
+	@property size_t length() {
+		return array_.capacity;
+	} //length
+
+	@property T* ptr() {
+		return array_.ptr;
+	} //ptr
+
 } //CircularBuffer
 
 unittest {
