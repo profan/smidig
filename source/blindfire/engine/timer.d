@@ -103,3 +103,9 @@ ulong ticks_per_second() {
 	return SDL_GetPerformanceFrequency();
 
 } //ticks_per_second
+
+void delayMs(uint ms) {
+
+	SDL_Delay(ms);
+
+} //delayMs

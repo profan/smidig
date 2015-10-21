@@ -253,13 +253,13 @@ struct Engine {
 			last_render = draw_timer.peek();
 			draw_timer.reset();
 
-			import derelict.sdl2.sdl;
-			uint frame_ms = cast(uint)((cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second) * 1000);
-			uint wanted_time = cast(uint)((cast(double)draw_iter / cast(double)clock_ticks_per_second) * 1000);
+			import blindfire.engine.timer : delayMs;
+			uint frame_ms = cast(uint)((cast(real)frame_timer.peek() / cast(real)clock_ticks_per_second) * 1000);
+			uint wanted_time = cast(uint)((cast(real)draw_iter / cast(real)clock_ticks_per_second) * 1000);
 			uint wait_time = wanted_time - frame_ms;
 
 			auto t = (wait_time < wanted_time) ? wait_time : wanted_time;
-			SDL_Delay((t > 0) ? t-1 : 0);
+			delayMs((t > 0) ? t-1 : 0);
 			frame_time_ = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
 			frame_timer.reset();
 
