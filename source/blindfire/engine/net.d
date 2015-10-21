@@ -160,9 +160,10 @@ struct NetworkManager {
 
 		ENetEvent event;
 		if (enet_host_service(host_, &event, 5000) > 0 &&
-			event.type == ENET_EVENT_TYPE_CONNECT) 
+			event.type == ENET_EVENT_TYPE_CONNECT)
 		{
 			printf("[Net] connection to %s:%u succeeded. \n", to_address, port);
+			ev_man_.push!ConnectionEvent(new_peer);
 		} else {
 			printf("[Net] connection to %s:%u failed. \n", to_address, port);
 			return false;
@@ -187,7 +188,7 @@ struct NetworkManager {
 
 	void on_data_push(ref PushEvent ev) {
 
-		printf("[Net] sending packet of size: %u \n", typeof(ev.payload).sizeof * ev.payload.length);
+		printf("[Net] sending packet of size: %u \n", typeof(ev.payload[0]).sizeof * ev.payload.length);
 		ENetPacket* packet = enet_packet_create(ev.payload.ptr, ev.payload.length, ENET_PACKET_FLAG_RELIABLE);
 
 		foreach (peer; peers_) {
@@ -216,9 +217,8 @@ struct NetworkManager {
 					break;
 
 				case ENET_EVENT_TYPE_RECEIVE:
-					printf("A packet of length %u containing %s was received from %s on channel %u.\n",
+					printf("A packet of length %u was received from %s on channel %u.\n",
 							event.packet.dataLength,
-							event.packet.data,
 							event.peer.data,
 							event.channelID);
 

@@ -736,7 +736,6 @@ unittest {
 
 }
 
-/* LIFO Stack */
 struct Stack(T) {
 
 	private LinkedList!T list_;
