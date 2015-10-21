@@ -195,8 +195,8 @@ struct Engine {
 		static StopWatch main_timer, update_timer, draw_timer, frame_timer;
 		static long iter, last_update, last_render;
 		static long clock_ticks_per_second;
+		static int update_rate = 60;
 
-		iter = main_timer.ticks_per_second() / 60;
 		clock_ticks_per_second = StopWatch.ticks_per_second();
 
 		main_timer.start();
@@ -209,6 +209,8 @@ struct Engine {
 
 		while (window_.is_alive) {
 
+			iter = main_timer.ticks_per_second() / update_rate;
+
 			if (main_timer.peek() - last_update > iter) {
 
 				import derelict.enet.enet;
@@ -218,6 +220,9 @@ struct Engine {
 
 				update_timer.start();
 				imgui_context_.new_frame((frame_time_) > 0 ? frame_time_ : 1.0);
+
+				import derelict.imgui.imgui : igSliderInt;
+				igSliderInt("update rate", &update_rate, 1, 800);
 
 				//handle input
 				this.input_handler_.handle_events();
@@ -243,8 +248,15 @@ struct Engine {
 			draw_time_ = cast(double)draw_timer.peek() / cast(double)clock_ticks_per_second;
 			frame_time_ = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
 			last_render = draw_timer.peek();
-			draw_timer.reset();
 			frame_timer.reset();
+			draw_timer.reset();
+
+			import derelict.sdl2.sdl;
+			uint frame_ms = cast(uint)((cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second) * 1000);
+			uint wanted_time = cast(uint)((cast(double)iter / cast(double)clock_ticks_per_second) * 1000);
+			uint wait_time = wanted_time - frame_ms;
+
+			SDL_Delay((wait_time < wanted_time) ? wait_time-1 : wanted_time-2);
 
 		}
 
