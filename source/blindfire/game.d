@@ -18,6 +18,7 @@ struct NewGame {
 	import blindfire.engine.sound : SoundID;
 	import blindfire.engine.pool : construct;
 	import blindfire.engine.runtime;
+	import blindfire.engine.joy;
 
 	import blindfire.chat;
 
@@ -37,6 +38,9 @@ struct NewGame {
 
 		//profiler
 		Profiler profiler_ = void;
+
+		//visualizing joystick shit
+		JoyVisualizer visualizer_ = void;
 
 	}
 
@@ -62,6 +66,7 @@ struct NewGame {
 		engine_.network_evman_.register!UpdateEvent(&chat_.on_network_update);
 
 		this.profiler_.construct(engine_.allocator_);
+		this.visualizer_.construct(&engine_.input_handler_);
 
 	} //initialize_systems
 
@@ -121,7 +126,6 @@ struct NewGame {
 			.bind_mousebtn(1, &play_click_sound, KeyState.UP)
 			.bind_mousebtn(3, &stop_all_sounds, KeyState.UP);
 
-		import derelict.sdl2.types;
 		engine_.input_handler_
 			.bind_controllerbtn(SDL_CONTROLLER_BUTTON_A, &play_click_sound, KeyState.UP);
 
@@ -133,6 +137,7 @@ struct NewGame {
 
 		engine_.network_manager_.draw();
 		profiler_.tick();
+		visualizer_.tick();
 
 		if (is_active) {
 			chat_.tick(); //draw chat window!
