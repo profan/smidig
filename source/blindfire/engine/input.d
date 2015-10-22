@@ -310,15 +310,6 @@ struct InputHandler {
 				case SDL_MOUSEMOTION:
 					break;
 
-				case SDL_CONTROLLERAXISMOTION:
-					foreach (ref bind; controller_axis_binds) {
-						if (ev.caxis.axis == bind.axis) {
-							bind.func(ev.caxis.value);
-						}
-					}
-
-					break;
-
 				case SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP:
 					foreach (ref bind; controller_binds) {
 						if (ev.cbutton.button == bind.button) {
@@ -368,6 +359,13 @@ struct InputHandler {
 
 		}
 
+		/* handle joystick axis input each frame */
+		foreach (ref bind; controller_axis_binds) {
+			auto axis_value = SDL_GameControllerGetAxis(controllers[0].handle, bind.axis);
+			bind.func(axis_value);
+		}
+
+		/* keys pressed each frame */
 		foreach (ref bind; key_events) {
 			if (pressed_keys[bind.key] || bind.key == AnyKey) {
 				bind.func();

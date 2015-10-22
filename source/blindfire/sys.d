@@ -58,6 +58,7 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 
 		foreach (id, ref comp; components) with (comp) {
 			transform.position += velocity;
+			velocity /= 1.05;
 		}
 
 	} //update
