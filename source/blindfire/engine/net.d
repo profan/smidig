@@ -98,7 +98,7 @@ struct NetworkManager {
 
 	} //initialize
 
-	bool create_server(ushort binding_port, ubyte max_connections) {
+	bool createServer(ushort binding_port, ubyte max_connections) {
 
 		assert(!host_, "host was not null on create server!");
 
@@ -126,9 +126,9 @@ struct NetworkManager {
 
 		return true;
 
-	} //create_server
+	} //createServer
 
-	bool create_client(char* to_address, ushort port) {
+	bool createClient(char* to_address, ushort port) {
 
 		if (!host_) {
 
@@ -173,7 +173,7 @@ struct NetworkManager {
 
 		return true;
 
-	} //create_client
+	} //createClient
 
 	void disconnect() {
 
@@ -265,11 +265,11 @@ struct NetworkManager {
 				igInputInt("port: ", &host_port);
 
 				if (do_server) {
-					create_server(cast(ushort)host_port, cast(ubyte)32);
+					createServer(cast(ushort)host_port, cast(ubyte)32);
 				}
 
 				if (do_connect) {
-					create_client(cast(char*)"localhost".ptr, cast(ushort)host_port);
+					createClient(cast(char*)"localhost".ptr, cast(ushort)host_port);
 				}
 
 			} else if (!is_host) {

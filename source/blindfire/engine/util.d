@@ -13,7 +13,7 @@ ref FontAtlas render_string(string format, Args...)(ref FontAtlas atlas, Window*
 	char[format.length*2] buf;
 	const char[] str = cformat(buf[], format, args);
 
-	atlas.render_text(window, str, offset.x, offset.y, 1, 1, 0xffffff);
+	atlas.renderText(window, str, offset.x, offset.y, 1, 1, 0xffffff);
 	offset.y += atlas.char_height*2;
 
 	return atlas;

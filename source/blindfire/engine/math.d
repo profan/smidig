@@ -35,13 +35,13 @@ unittest {
 
 }
 
-bool point_in_rect(int x, int y, int r_x, int r_y, int w, int h) nothrow @nogc pure {
+bool pointInRect(int x, int y, int r_x, int r_y, int w, int h) nothrow @nogc pure {
 	return (x < r_x + w && y < r_y + h && x > r_x && y > r_y);
-} //point_in_rect
+} //pointInRect
 
-bool point_in_rect(T)(Vector!(T, 2) point, Vector!(T, 4) rect) nothrow @nogc pure {
-	return point_in_rect(point.x, point.y, rect.x, rect.y, rect.z, rect.w);
-} //point_in_rect
+bool pointInRect(T)(Vector!(T, 2) point, Vector!(T, 4) rect) nothrow @nogc pure {
+	return pointInRect(point.x, point.y, rect.x, rect.y, rect.z, rect.w);
+} //pointInRect
 
 /* vector related ufcs extensions */
 T rotate(T)(ref T vec, double radians) nothrow @nogc pure {

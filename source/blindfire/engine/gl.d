@@ -220,7 +220,7 @@ struct FontAtlas {
 		glDeleteVertexArrays(1, &vao);
 	} //~this
 
-	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
+	void renderText(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
 
 		struct Point {
 			GLfloat x;
@@ -293,7 +293,7 @@ struct FontAtlas {
 		shader.unbind();
 		atlas.unbind();
 
-	} //render_text
+	} //renderText
 
 	mixin OpenGLError;
 
@@ -859,8 +859,8 @@ struct Shader {
 //C-ish code ahoy
 StringBuffer load_shader(in char[] file_name) {
 
-	import blindfire.engine.file : read_file;
-	return read_file(file_name);
+	import blindfire.engine.file : readFile;
+	return readFile(file_name);
 
 } //load_shader
 

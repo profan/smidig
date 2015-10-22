@@ -9,44 +9,44 @@ struct JoyVisualizer {
 		import derelict.sdl2.types;
 
 		handler
-			.bind_controlleraxis(SDL_CONTROLLER_AXIS_LEFTX, &left_x)
-			.bind_controlleraxis(SDL_CONTROLLER_AXIS_LEFTY, &left_y)
-			.bind_controlleraxis(SDL_CONTROLLER_AXIS_RIGHTX, &right_x)
-			.bind_controlleraxis(SDL_CONTROLLER_AXIS_RIGHTY, &right_y)
-			.bind_controlleraxis(SDL_CONTROLLER_AXIS_TRIGGERLEFT, &trigger_left)
-			.bind_controlleraxis(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, &trigger_right);
+			.bindControllerAxis(SDL_CONTROLLER_AXIS_LEFTX, &leftX)
+			.bindControllerAxis(SDL_CONTROLLER_AXIS_LEFTY, &leftY)
+			.bindControllerAxis(SDL_CONTROLLER_AXIS_RIGHTX, &rightX)
+			.bindControllerAxis(SDL_CONTROLLER_AXIS_RIGHTY, &rightY)
+			.bindControllerAxis(SDL_CONTROLLER_AXIS_TRIGGERLEFT, &triggerLeft)
+			.bindControllerAxis(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, &triggerRight);
 
 	} //this
 
 	int l_x;
-	void left_x(int i) {
+	void leftX(int i) {
 		l_x = i;
-	} //left_x
+	} //leftX
 
 	int l_y;
-	void left_y(int i) {
+	void leftY(int i) {
 		l_y = i;
-	} //left_y
+	} //leftY
 
 	int r_x;
-	void right_x(int i) {
+	void rightX(int i) {
 		r_x = i;
-	} //right_x
+	} //rightX
 
 	int r_y;
-	void right_y(int i) {
+	void rightY(int i) {
 		r_y = i;
-	} //right_y
+	} //rightY
 
 	int t_l;
-	void trigger_left(int i) {
+	void triggerLeft(int i) {
 		t_l = i;
-	} //trigger_left
+	} //triggerLeft
 
 	int t_r;
-	void trigger_right(int i) {
+	void triggerRight(int i) {
 		t_r = i;
-	} //trigger_right
+	} //triggerRight
 
 	void tick() {
 

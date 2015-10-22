@@ -8,7 +8,7 @@ import blindfire.engine.math : rotate, squaredDistanceTo;
 import blindfire.engine.gl : Transform, Shader, Texture, Mesh;
 import blindfire.engine.math : Vec2i, Vec2f, Vec3f, Mat3f;
 import blindfire.engine.stream : InputStream;
-import blindfire.engine.math : point_in_rect;
+import blindfire.engine.math : pointInRect;
 import blindfire.engine.ecs;
 
 import blindfire.action;
@@ -89,7 +89,7 @@ class CollisionManager : ComponentManager!(UpdateSystem, CollisionComponent, 2) 
 		foreach (id, ref comp; components) {
 
 			with (comp.mc.transform) {
-				if (!point_in_rect(cast(int)position.x, cast(int)position.y, 0, 0, map_size.x, map_size.y)) {
+				if (!pointInRect(cast(int)position.x, cast(int)position.y, 0, 0, map_size.x, map_size.y)) {
 					comp.mc.velocity = Vec2f(-comp.mc.velocity.x, -comp.mc.velocity.y);
 					comp.mc.transform.rotation.z += 1*PI;
 				}
@@ -105,7 +105,7 @@ class CollisionManager : ComponentManager!(UpdateSystem, CollisionComponent, 2) 
 			}
 		}
 
-	}
+	} //update
 
 } //CollisionManager
 
@@ -130,7 +130,7 @@ class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 			shader.unbind();
 		}
 
-	}
+	} //update
 
 } //SpriteManager
 
@@ -149,7 +149,7 @@ struct SpriteComponent {
 		this.shader = shader;
 		this.texture = texture;
 
-	}
+	} //this
 
 } //SpriteComponent
 

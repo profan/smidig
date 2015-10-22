@@ -19,20 +19,20 @@ struct ConfigMap {
 		this.file_name = file_name[];
 
 		if (exists(file_name)) {
-			auto data = load_file(file_name);
-			parse_file(data);
+			auto data = loadFile(file_name);
+			parseFile(data);
 		}
 
 	} //this
 
-	const(char[]) load_file(in char[] file_name) {
+	const(char[]) loadFile(in char[] file_name) {
 
 		auto input = cast(const char[])read(file_name);
 		return input;
 
-	} //load_file
+	} //loadFile
 
-	void parse_file(in char[] lines) {
+	void parseFile(in char[] lines) {
 		
 		foreach (line; lines.splitter("\n")) {
 
@@ -47,9 +47,9 @@ struct ConfigMap {
 
 		}
 
-	} //parse_file
+	} //parseFile
 
-	void save_file() {
+	void saveFile() {
 
 		string buf = "";
 		foreach (key, value; config) {
@@ -58,7 +58,7 @@ struct ConfigMap {
 
 		write(file_name, buf);
 
-	} //save_file
+	} //saveFile
 
 	void set(in Key key, in Value value) {
 		config[key] = value.dup;

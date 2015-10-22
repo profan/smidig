@@ -110,7 +110,7 @@ struct Window {
 
 	} //~this
 
-	void render_clear(int color) {
+	void renderClear(int color) {
 
 		import blindfire.engine.gl : int_to_glcolor;
 
@@ -118,13 +118,13 @@ struct Window {
 		glClearColor(col[0], col[1], col[2], col[3]);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-	} //render_clear
+	} //renderClear
 
-	void render_present() {
+	void renderPresent() {
 		SDL_GL_SwapWindow(window);
-	} //render_present
+	} //renderPresent
 
-	void toggle_fullscreen() {
+	void toggleFullscreen() {
 
 		static bool is_fullscreen = false;
 
@@ -141,7 +141,7 @@ struct Window {
 
 	} //toggle_wireframe
 
-	void handle_events(ref SDL_Event ev) {
+	void handleEvents(ref SDL_Event ev) {
 		if (ev.type == SDL_QUIT) {
 			alive = false;
 		} else if (ev.type == SDL_WINDOWEVENT) {
@@ -170,6 +170,6 @@ struct Window {
 					break;
 			}
 		}
-	} //handle_events
+	} //handleEvents
 
 } //Window

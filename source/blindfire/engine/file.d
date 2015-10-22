@@ -4,7 +4,7 @@ import core.stdc.stdio;
 import core.stdc.stdlib;
 import blindfire.engine.collections : String, StringBuffer;
 
-StringBuffer read_file(in char[] file_path) {
+StringBuffer readFile(in char[] file_path) {
 
 	FILE *file;
 	size_t result;
@@ -30,7 +30,7 @@ StringBuffer read_file(in char[] file_path) {
 
 	return string_buf;
 
-} //read_file
+} //readFile
 
 void save_file(in char[] path, String contents) {
 

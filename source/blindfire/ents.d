@@ -8,11 +8,7 @@ import blindfire.engine.ecs;
 
 import blindfire.sys;
 
-auto create_wall(EntityManager em, Vec2f pos, Vec2f bottom_right, Shader* shader, Texture* texture) {
-
-}
-
-auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) {
+auto createUnit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) {
 
 	assert (em !is null);
 	auto unit = em.createEntity();
@@ -32,4 +28,4 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 	
 	return unit;
 
-}
+} //createUnit

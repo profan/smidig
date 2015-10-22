@@ -189,32 +189,32 @@ struct InputHandler {
 
 		/* set up hashmap for holding event type to mask translation */
 		this.event_mask_ = typeof(event_mask_)(allocator_, sdl_events.length);
-		this.initialize_mask();
+		this.initializeMask();
 
 		/* initialize pressed keys */
 		this.pressed_keys = SDL_GetKeyboardState(null);
 
 	} //this
 
-	void initialize_mask() {
+	void initializeMask() {
 
 		foreach (i, e; sdl_events) {
 			EventMask n = i ^ 2;
 			event_mask_[e] = n;
 		}
 
-	} //initialize_mask
+	} //initializeMask
 
-	ref typeof(this) add_listener(EventDelegate ed) {
+	ref typeof(this) addListener(EventDelegate ed) {
 
 		delegates ~= EventSpec(ed, EventMask.max);
 
 		return this;
 
-	} //add_listener
+	} //addListener
 
-	/* filtering add_listener, combines all types sent in to form single mask */
-	ref typeof(this) add_listener(SDL_EventType...)(EventDelegate ed, SDL_EventType types) {
+	/* filtering addListener, combines all types sent in to form single mask */
+	ref typeof(this) addListener(SDL_EventType...)(EventDelegate ed, SDL_EventType types) {
 
 		auto mask = 0;
 		foreach (t; types) {
@@ -225,63 +225,63 @@ struct InputHandler {
 
 		return this;
 
-	} //add_listener
+	} //addListener
 
-	ref typeof(this) bind_keyevent(SDL_Scancode key, KeyDelegate kd) {
+	ref typeof(this) bindKeyEvent(SDL_Scancode key, KeyDelegate kd) {
 
 		KeyBind kb = {key: key, func: kd};
 		input_events ~= kb;
 
 		return this;
 
-	} //bind_keyevent
+	} //bindKeyEvent
 
-	ref typeof(this) bind_controllerbtn(SDL_GameControllerButton btn, KeyDelegate fn, KeyState st) {
+	ref typeof(this) bindControllerBtn(SDL_GameControllerButton btn, KeyDelegate fn, KeyState st) {
 
 		ControllerBind cb = {button: btn, func: fn, state: st};
 		controller_binds ~= cb;
 
 		return this;
 
-	} //bind_controllerbtn
+	} //bindControllerBtn
 
-	ref typeof(this) bind_controlleraxis(SDL_GameControllerAxis ax, AxisDelegate fn) {
+	ref typeof(this) bindControllerAxis(SDL_GameControllerAxis ax, AxisDelegate fn) {
 
 		ControllerAxis axis_bind = {axis: ax, func: fn};
 		controller_axis_binds ~= axis_bind;
 
 		return this;
 
-	} //bind_controlleraxis
+	} //bindControllerAxis
 
-	ref typeof(this) bind_mousebtn(Uint8 button, MouseDelegate md, KeyState state) {
+	ref typeof(this) bindMouseBtn(Uint8 button, MouseDelegate md, KeyState state) {
 
 		MouseBind mb = {mousebtn: button, func: md, state: to!MouseKeyState(state)};
 		mouse_events ~= mb;
 
 		return this;
 
-	} //bind_mousebtn
+	} //bindMouseBtn
 
-	ref typeof(this) bind_key(SDL_Scancode key, KeyDelegate kd) {
+	ref typeof(this) bindKey(SDL_Scancode key, KeyDelegate kd) {
 
 		KeyBind kb = {key: key, func: kd};
 		key_events ~= kb;
 
 		return this;
 
-	} //bind_key
+	} //bindKey
 
-	ref typeof(this) bind_mousemov(MouseDelegate md) {
+	ref typeof(this) bindMouseMov(MouseDelegate md) {
 
 		MouseBind mb = {mousebtn: 0, func: md};
 		motion_events ~= mb;
 
 		return this;
 
-	} //bind_mousemov
+	} //bindMouseMov
 
-	void handle_events() {
+	void handleEvents() {
 
 		while(SDL_PollEvent(&ev)) {
 
@@ -385,6 +385,6 @@ struct InputHandler {
 
 		}
 
-	} //handle_events
+	} //handleEvents
 
 } //InputHandler

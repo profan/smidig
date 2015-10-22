@@ -45,16 +45,16 @@ struct Chat {
 
 	} //this
 
-	void on_peer_connect(ref ConnectionEvent cev) {
+	void onPeerConnect(ref ConnectionEvent cev) {
 
 		char[512] buff;
 		buffer_ ~= cformat(buff, "connection from: %x:%u \n", cev.payload.address.host, cev.payload.address.port);
 
 		clients_ ~= Client(cev.payload);
 
-	} //on_peer_connect
+	} //onPeerConnect
 
-	void on_peer_disconnect(ref DisconnectionEvent dev) {
+	void onPeerDisconnect(ref DisconnectionEvent dev) {
 
 		char[512] buff;
 		buffer_ ~= cformat(buff, "disconnection from: %x:%u \n", dev.payload.address.host, dev.payload.address.port);
@@ -62,7 +62,7 @@ struct Chat {
 		auto to_remove = Client(dev.payload);
 		clients_.remove(to_remove);
 
-	} //on_peer_disconnect
+	} //onPeerDisconnect
 
 	void on_network_update(ref UpdateEvent ev) {
 

@@ -246,16 +246,16 @@ struct SmartPointer(T) {
 		if (is(s.Type:Type)) 
 	{
 		if (data != s.data) {
-			do_destroy();
+			doDestroy();
 		}
 		data = s.data;
 		data.ref_count += 1;
 		//writefln("[SmartPointer] converted from object: %s", s.data.object);
 	} //opAssign(S, F)
 
-	auto get_weak() {
+	auto getWeak() {
 		return WeakPointer!(typeof(this))(this);
-	} //get_weak
+	} //getWeak
 
 	@property auto opDispatch(string name)() {
 		return mixin("data." ~ name);
@@ -267,7 +267,7 @@ struct SmartPointer(T) {
 
 	//TODO assignment? do we actually want assignment?
 
-	void do_destroy() {
+	void doDestroy() {
 		data.ref_count -= 1;
 		if (data.ref_count == 0) {
 			//writefln("[SmartPointer] destroyed object: %s", data.object);
@@ -276,10 +276,10 @@ struct SmartPointer(T) {
 				allocator_.dispose(data);
 			}
 		}
-	} //do_destroy
+	} //doDestroy
 
 	~this() {
-		do_destroy();
+		doDestroy();
 	} //~this
 
 } //SmartPointer
@@ -358,16 +358,16 @@ struct SmartPointer(T, alias FreeFunc) {
 		if (is(s.Type:Type)) 
 	{
 		if (data != s.data) {
-			do_destroy();
+			doDestroy();
 		}
 		data = s.data;
 		data.ref_count += 1;
 		//writefln("[SmartPointer] converted from object: %s", s.data.object);
 	} //opAssign(S, F)
 
-	auto get_weak() {
+	auto getWeak() {
 		return WeakPoolPointer!(typeof(this))(this);
-	} //get_weak
+	} //getWeak
 
 	@property auto opDispatch(string name)() {
 		return mixin("data." ~ name);
@@ -379,7 +379,7 @@ struct SmartPointer(T, alias FreeFunc) {
 
 	//TODO assignment? do we actually want assignment?
 
-	void do_destroy() {
+	void doDestroy() {
 		data.ref_count -= 1;
 		if (data.ref_count == 0) {
 			//writefln("[SmartPointer] destroyed object: %s", data.object);
@@ -388,10 +388,10 @@ struct SmartPointer(T, alias FreeFunc) {
 				free(data);
 			}
 		}
-	} //do_destroy
+	} //doDestroy
 
 	~this() {
-		do_destroy();
+		doDestroy();
 	} //~this
 
 } //SmartPointer
@@ -433,7 +433,7 @@ struct WeakPointer(SmartPtr) {
 		return SmartPtr(data);
 	} //get
 
-	void do_destroy() {
+	void doDestroy() {
 		data.weak_count -= 1;
 		if (data.ref_count == 0 && data.weak_count == 0) {
 			writefln("[WeakPointer] destroyed container: %s", data);
@@ -442,7 +442,7 @@ struct WeakPointer(SmartPtr) {
 	} //doDestroy
 
 	~this() {
-		do_destroy();
+		doDestroy();
 		writefln("[WeakPointer] destroyed.");
 	} //~this
 
@@ -477,7 +477,7 @@ struct WeakPoolPointer(SmartPtr) {
 		return SmartPtr(data);
 	} //get
 
-	void do_destroy() {
+	void doDestroy() {
 		data.weak_count -= 1;
 		if (data.ref_count == 0 && data.weak_count == 0) {
 			writefln("[WeakPointer] destroyed container: %s", data);
@@ -486,7 +486,7 @@ struct WeakPoolPointer(SmartPtr) {
 	} //doDestroy
 
 	~this() {
-		do_destroy();
+		doDestroy();
 		writefln("[WeakPointer] destroyed.");
 	} //~this
 

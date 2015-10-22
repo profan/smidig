@@ -40,19 +40,19 @@ class ResourceManager {
 		return instance;
 	} //get
 
-	__gshared void set_resource(T)(T* resource, ResourceID identifier) {
+	__gshared void setResource(T)(T* resource, ResourceID identifier) {
 
 		resources[identifier] = ResourceHandle(resource, T.stringof);
 
-	} //set_resource
+	} //setResource
 
-	__gshared T* get_resource(T)(ResourceID identifier) {
+	__gshared T* getResource(T)(ResourceID identifier) {
 
 		import std.string : format;
 		assert (resources[identifier].type == T.stringof, format("tried to retrieve resource of type: %s with type %s", resources[identifier].type, T.stringof));
 
 		return cast(T*)(resources[identifier].resource);
 
-	} //get_resource
+	} //getResource
 
 } //ResourceManager

@@ -93,7 +93,7 @@ struct ImguiContext {
 
 	} //initialize
 
-	void on_event(ref SDL_Event ev) {
+	void onEvent(ref SDL_Event ev) {
 
 		import core.stdc.stdio : printf;
 
@@ -139,7 +139,7 @@ struct ImguiContext {
 
 		}
 
-	} //on_event
+	} //onEvent
 
 	void create_device_objects() {
 

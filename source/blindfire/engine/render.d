@@ -6,16 +6,16 @@ import blindfire.engine.defs : RenderSpriteEvent;
 
 interface IRenderer {
 
-	void on_render_sprite_event(RenderSpriteEvent* event);
+	void onRenderSpriteEvent(RenderSpriteEvent* event);
 
 } //Renderer
 
 class OpenGLRenderer : IRenderer {
 
-	void on_render_sprite_event(RenderSpriteEvent* event) {
+	void onRenderSpriteEvent(RenderSpriteEvent* event) {
 
 		writefln("rendered sprite: %s", event.payload);
 
-	} //on_render_sprite_event
+	} //onRenderSpriteEvent
 
 } //OpenGLRenderer

@@ -89,7 +89,7 @@ struct Engine {
 		//initialize window and input handler
 		this.window_.construct(title, 640, 480);
 		this.input_handler_.construct(allocator_);
-		this.input_handler_.add_listener(&window_.handle_events);
+		this.input_handler_.addListener(&window_.handleEvents);
 
 		//initialize renderer and event manager for rendering events
 		this.renderer_evman_.construct(EventMemory, DrawEventType.max);
@@ -107,20 +107,20 @@ struct Engine {
 
 		//initialize console subsystem
 		this.console_.construct(allocator_, &debug_atlas_, null);
-		this.input_handler_.add_listener(&console_.handle_event, SDL_TEXTINPUT)
-			.bind_keyevent(SDL_SCANCODE_TAB, &console_.toggle)
-			.bind_keyevent(SDL_SCANCODE_BACKSPACE, &console_.del)
-			.bind_keyevent(SDL_SCANCODE_DELETE, &console_.del)
-			.bind_keyevent(SDL_SCANCODE_RETURN, &console_.run)
-			.bind_keyevent(SDL_SCANCODE_DOWN, &console_.get_prev)
-			.bind_keyevent(SDL_SCANCODE_UP, &console_.get_next);
+		this.input_handler_.addListener(&console_.handleEvent, SDL_TEXTINPUT)
+			.bindKeyEvent(SDL_SCANCODE_TAB, &console_.toggle)
+			.bindKeyEvent(SDL_SCANCODE_BACKSPACE, &console_.del)
+			.bindKeyEvent(SDL_SCANCODE_DELETE, &console_.del)
+			.bindKeyEvent(SDL_SCANCODE_RETURN, &console_.run)
+			.bindKeyEvent(SDL_SCANCODE_DOWN, &console_.getPrev)
+			.bindKeyEvent(SDL_SCANCODE_UP, &console_.getNext);
 
 		//initialize imgui context
 		this.imgui_context_.construct(allocator_, &window_, &input_handler_);
 		this.imgui_context_.initialize();
 
 		//link up imgui context to event shite
-		this.input_handler_.add_listener(&imgui_context_.on_event,
+		this.input_handler_.addListener(&imgui_context_.onEvent,
 			SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL, SDL_TEXTINPUT);
 
 		//load engine-required resources
@@ -145,7 +145,7 @@ struct Engine {
 		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
 		char[16][2] text_uniforms = ["color", "projection"];
 		auto text_shader = allocator_.make!Shader("shaders/text", text_attribs[], text_uniforms[]); 
-		rm.set_resource(text_shader, Resource.TextShader);
+		rm.setResource(text_shader, Resource.TextShader);
 
 		//text atlases
 		this.debug_atlas_.construct("fonts/OpenSans-Regular.ttf", 12, text_shader);
@@ -157,7 +157,7 @@ struct Engine {
 
 		import blindfire.engine.math : Vec2f;
 
-		window_.render_clear(0x428bca);
+		window_.renderClear(0x428bca);
 
 		draw_function_();
 		console_.draw(&window_);
@@ -166,7 +166,7 @@ struct Engine {
 
 		imgui_context_.end_frame();
 		after_draw_function_();
-		window_.render_present();
+		window_.renderPresent();
 
 	} //draw
 
@@ -199,7 +199,7 @@ struct Engine {
 		static int update_rate = 60;
 		static int draw_rate = 120;
 
-		clock_ticks_per_second = StopWatch.ticks_per_second();
+		clock_ticks_per_second = StopWatch.ticksPerSecond();
 
 		main_timer.start();
 		update_timer.start();
@@ -211,8 +211,8 @@ struct Engine {
 
 		while (window_.is_alive) {
 
-			update_iter = main_timer.ticks_per_second() / update_rate;
-			draw_iter = main_timer.ticks_per_second() / draw_rate;
+			update_iter = clock_ticks_per_second / update_rate;
+			draw_iter = clock_ticks_per_second / draw_rate;
 
 			if (main_timer.peek() - last_update > update_iter) {
 
@@ -229,7 +229,7 @@ struct Engine {
 				igSliderInt("draw rate", &draw_rate, 1, 800);
 
 				//handle input
-				this.input_handler_.handle_events();
+				this.input_handler_.handleEvents();
 
 				//update sound system
 				this.sound_system_.tick();

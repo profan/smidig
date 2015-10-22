@@ -46,12 +46,12 @@ struct Profiler {
 		float delegate(int idx) callback;
 	} //Data
 
-	static extern(C) float do_callback(void* ptr, int idx) {
+	static extern(C) float doCallback(void* ptr, int idx) {
 
 		auto d = *(cast(Data*) ptr);
 		return d.callback(idx);
 
-	} //do_callback;
+	} //doCallback;
 
 	void push(in char[] name, long ticks) {
 
@@ -67,8 +67,8 @@ struct Profiler {
 		auto update_callback = Data(&updatetimes_.last);
 		auto frame_callback = Data(&frametimes_.last);
 
-		igPlotLines2("update times", &do_callback, cast(void*)&update_callback, updatetimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
-		igPlotLines2("frame times", &do_callback, cast(void*)&frame_callback, frametimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
+		igPlotLines2("update times", &doCallback, cast(void*)&update_callback, updatetimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
+		igPlotLines2("frame times", &doCallback, cast(void*)&frame_callback, frametimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
 
 		igEnd();
 

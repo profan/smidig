@@ -92,15 +92,15 @@ struct SoundSystem {
 
 	} //~this
 
-	void expand_sources() {
+	void expandSources() {
 
 		sources_.reserve(sources_.length + 16); //add 16 to sources capacity
 		sources_.length = sources_.capacity;
 		alGenSources(cast(int)sources_.capacity, sources_.ptr);
 
-	} //expand_sources
+	} //expandSources
 
-	auto load_sound_file(char* path) {
+	auto loadSoundFile(char* path) {
 		
 		import std.string : format, fromStringz;
 
@@ -112,9 +112,9 @@ struct SoundSystem {
 
 		return current_sound_id++;
 
-	} //load_sound_file
+	} //loadSoundFile
 
-	ALint find_free_source_index() {
+	ALint findFreeSourceIndex() {
 
 		enum error = -1;
 
@@ -126,9 +126,9 @@ struct SoundSystem {
 
 		return error;
 
-	} //find_free_source_index
+	} //findFreeSourceIndex
 
-	void play_sound(SoundID sound_id, ALint source_id, SoundVolume volume, bool loop) {
+	void playSound(SoundID sound_id, ALint source_id, SoundVolume volume, bool loop) {
 
 		auto sound_buffer = buffers_[sound_id];
 		auto sound_source = sources_[source_id];
@@ -139,34 +139,34 @@ struct SoundSystem {
 		alSourcef(sound_source, AL_GAIN, volume);
 		alSourcePlay(sound_source);
 
-	} //play_sound
+	} //playSound
 
-	void play_sound(SoundID sound_id, SoundVolume volume, bool loop = false) {
+	void playSound(SoundID sound_id, SoundVolume volume, bool loop = false) {
 
-		auto sound_source = find_free_source_index();
+		auto sound_source = findFreeSourceIndex();
 
 		if (sound_source != -1) { //otherwise, we couldn't find a source
-			play_sound(sound_id, sound_source, volume, loop);
+			playSound(sound_id, sound_source, volume, loop);
 		}
 
-	} //play_sound
+	} //playSound
 
-	void pause_all_sounds() {
+	void pauseAllSounds() {
 
 		foreach (src_id, source; sources_) {
 			alSourcePause(source);
 		}
 
-	} //pause_all_sounds
+	} //pauseAllSounds
 
-	void stop_all_sounds() {
+	void stopAllSounds() {
 
 		foreach (src_id, source; sources_) {
 			source_states_[src_id] = State.Free;
 			alSourceStop(source);
 		}
 
-	} //stop_all_sounds
+	} //stopAllSounds
 
 	void tick() {
 

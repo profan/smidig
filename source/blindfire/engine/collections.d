@@ -889,7 +889,7 @@ struct DHeap(int N, T) {
 
 	} //parent
 
-	void percolate_up(size_t cur) {
+	void percolateUp(size_t cur) {
 
 		if (cur == 0) return;
 
@@ -898,10 +898,10 @@ struct DHeap(int N, T) {
 			return;
 		} else {
 			swap(cur, p);
-			percolate_up(p);
+			percolateUp(p);
 		}
 
-	} //percolate_up
+	} //percolateUp
 
 	void swap(size_t source, size_t target) {
 
@@ -913,12 +913,12 @@ struct DHeap(int N, T) {
 	void insert(T thing) {
 
 		array_[size_] = thing;
-		percolate_up(size_);
+		percolateUp(size_);
 		size_++;
 
 	} //insert
 
-	void min_heapify(size_t cur) {
+	void minHeapify(size_t cur) {
 
 		size_t[N] children;
 		foreach (i, ref c; children) {
@@ -943,34 +943,34 @@ struct DHeap(int N, T) {
 				}
 
 				swap(cur, smallest_child);
-				min_heapify(smallest_child);
+				minHeapify(smallest_child);
 				return;
 
 			}
 		}
 
-	} //min_heapify
+	} //minHeapify
 
-	T delete_min() {
+	T deleteMin() {
 
 		size_--;
 		swap(0, size_); //swap root and last (we want root)
 		auto min = &array_[size_];
 		auto min_data = move(*min);
 		*min = T.max; //value should define a max, so it can be put out of the way in the heap
-		min_heapify(0);
+		minHeapify(0);
 
 		return min_data;
 
-	} //delete_min
+	} //deleteMin
 
-	void increase_key(size_t i) {
+	void increaseKey(size_t i) {
 
-	} //increase_key
+	} //increaseKey
 
-	void decrease_key(size_t i) {
+	void decreaseKey(size_t i) {
 
-	} //decrease_key
+	} //decreaseKey
 
 } //DHeap
 
@@ -1019,7 +1019,7 @@ unittest {
 
 	foreach (c; checks) {
 
-		auto min_val = heap.delete_min();
+		auto min_val = heap.deleteMin();
 		auto expected = CompThing(c);
 		assert(min_val == expected, format("expected: %s, got: %s, \n tree was: %s", expected, min_val, heap.array_.array_));
 

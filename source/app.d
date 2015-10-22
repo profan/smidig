@@ -39,9 +39,9 @@ ShouldThrow missingSymFunc( string symName ) {
 
     // Any other missing symbol should throw.
     return ShouldThrow.Yes;
-}
+} //missingSymFunc
 
-void initialize_systems() {
+void initializeSystems() {
 
 	alias libs = AliasSeq!(
 		DerelictSDL2, DerelictSDL2Image,
@@ -66,7 +66,7 @@ void initialize_systems() {
 		exit(2);
 	}
 
-}
+} //initializeSystems
 
 void main() {
 
@@ -89,7 +89,7 @@ void main() {
 	auto tracker = allocsTracker();
 	import blindfire.game : NewGame;
 
-	initialize_systems();
+	initializeSystems();
 
 	auto game = NewGame();
 	game.initialize();

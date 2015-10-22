@@ -39,11 +39,11 @@ struct StopWatch {
 
 	} //reset
 
-	static long ticks_per_second() {
+	static long ticksPerSecond() {
 
 		return Clock.ticksPerSecond();
 
-	} //ticks_per_second
+	} //ticksPerSecond
 
 	long peek() {
 
@@ -92,17 +92,17 @@ struct WaitableTimer {
 
 } //WaitableTimer
 
-ulong get_performance_counter() {
+ulong getPerformanceCounter() {
 
 	return SDL_GetPerformanceCounter();
 
 } //get_performance_counter
 
-ulong ticks_per_second() {
+ulong ticksPerSecond() {
 
 	return SDL_GetPerformanceFrequency();
 
-} //ticks_per_second
+} //ticksPerSecond
 
 void delayMs(uint ms) {
 

@@ -5,10 +5,7 @@ import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.math : Vec2f;
 import blindfire.engine.ecs;
 
-import blindfire.serialize : DoSerializable, MakeTypeSerializable, networked;
-import blindfire.ui : UIState, draw_rectangle;
-import blindfire.res : Resource;
-import blindfire.sys;
+import blindfire.ui : UIState, drawRectangle;
 
 alias TempBuf = OutputStream;
 alias ActionType = uint;
@@ -21,7 +18,7 @@ interface Action {
 
 } //Action
 
-string handle_action(alias ActionId)() {
+string handleAction(alias ActionId)() {
 
 	import std.string : format;
 
@@ -75,7 +72,7 @@ struct SelectionBox {
 	void draw(Window* window, UIState* state) {
 
 		if (active) {
-			state.draw_rectangle(window, x, y, w, h, 0x842bca, 30);
+			state.drawRectangle(window, x, y, w, h, 0x842bca, 30);
 		}
 		
 		order_set = false;
