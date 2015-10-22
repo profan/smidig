@@ -1,4 +1,4 @@
-module blindfire.engine.eventhandler;
+module blindfire.engine.input;
 
 import derelict.sdl2.sdl;
 import blindfire.engine.util : makeFlagEnum;
@@ -6,6 +6,7 @@ import blindfire.engine.util : makeFlagEnum;
 alias void delegate(ref SDL_Event) EventDelegate;
 alias void delegate() KeyDelegate;
 alias void delegate(int, int) MouseDelegate;
+alias void delegate(int) AxisDelegate;
 
 MouseKeyState to(S : MouseKeyState)(KeyState state) {
 	return (state == state.UP) ? MouseKeyState.UP : MouseKeyState.DOWN;
@@ -40,6 +41,32 @@ struct MouseBind {
 	MouseKeyState state;
 
 } //MouseBind
+
+struct Controller {
+
+	int device_id;
+	SDL_GameController* handle;
+
+	bool opEquals(ref Controller other) {
+		return device_id == other.device_id;
+	} //opEquals
+
+} //Controller
+
+struct ControllerBind {
+
+	int button;
+	KeyDelegate func;
+	KeyState state;
+
+} //ControllerBind
+
+struct ControllerAxis {
+
+	SDL_GameControllerAxis axis;
+	AxisDelegate func;
+
+} //ControllerAxis
 
 struct EventSpec {
 
@@ -100,29 +127,38 @@ immutable SDL_EventType[45] sdl_events = [
 	SDL_LASTEVENT
 ];
 
-struct EventHandler {
+struct InputHandler {
 
 	import core.stdc.stdio : printf;
 	import blindfire.engine.collections : Array, HashMap;
 	import blindfire.engine.memory : IAllocator;
 
 	enum INITIAL_SIZE = 8;
-	IAllocator allocator_;
 
-	SDL_Event ev;
-	Array!EventSpec delegates;
-	Array!MouseBind mouse_events;
-	Array!MouseBind motion_events;
-	Array!KeyBind input_events;
-	Array!KeyBind key_events;
+	private {
 
-	HashMap!(SDL_EventType, EventMask) event_mask_;
+		IAllocator allocator_;
 
-	//mutated by SDL2
-	Uint8* pressed_keys;
+		SDL_Event ev;
+		Array!EventSpec delegates;
+		Array!MouseBind mouse_events;
+		Array!MouseBind motion_events;
+		Array!KeyBind input_events;
+		Array!KeyBind key_events;
 
-	//mouse pos, last first, current second
-	int[2] last_x, last_y;
+		Array!Controller controllers;
+		Array!ControllerBind controller_binds;
+		Array!ControllerAxis controller_axis_binds;
+
+		HashMap!(SDL_EventType, EventMask) event_mask_;
+
+		//mutated by SDL2
+		Uint8* pressed_keys;
+
+		//mouse pos, last first, current second
+		int[2] last_x, last_y;
+
+	}
 
 	@property int mouse_x() const { return last_x[0]; }
 	@property int mouse_y() const { return last_y[0]; }
@@ -138,43 +174,47 @@ struct EventHandler {
 	this(IAllocator allocator) {
 
 		this.allocator_ = allocator;
+
+		/* mouse and keyboard events */
 		this.delegates = typeof(delegates)(allocator_, INITIAL_SIZE);
 		this.mouse_events = typeof(mouse_events)(allocator_, INITIAL_SIZE);
 		this.motion_events = typeof(motion_events)(allocator_, INITIAL_SIZE);
 		this.input_events = typeof(input_events)(allocator_, INITIAL_SIZE);
 		this.key_events = typeof(key_events)(allocator_, INITIAL_SIZE);
 
+		/* controller events */
+		this.controllers = typeof(controllers)(allocator_, INITIAL_SIZE);
+		this.controller_binds = typeof(controller_binds)(allocator_, INITIAL_SIZE);
+		this.controller_axis_binds = typeof(controller_axis_binds)(allocator_, INITIAL_SIZE);
+
 		/* set up hashmap for holding event type to mask translation */
 		this.event_mask_ = typeof(event_mask_)(allocator_, sdl_events.length);
-		this.initialize_mask();
+		this.initializeMask();
 
 		/* initialize pressed keys */
 		this.pressed_keys = SDL_GetKeyboardState(null);
 
-		//temporary check
-		if( SDL_NumJoysticks() < 1 ) { printf("Warning: No joysticks connected!"); }
-
 	} //this
 
-	void initialize_mask() {
+	void initializeMask() {
 
 		foreach (i, e; sdl_events) {
 			EventMask n = i ^ 2;
 			event_mask_[e] = n;
 		}
 
-	} //initialize_mask
+	} //initializeMask
 
-	ref typeof(this) add_listener(EventDelegate ed) {
+	ref typeof(this) addListener(EventDelegate ed) {
 
 		delegates ~= EventSpec(ed, EventMask.max);
 
 		return this;
 
-	} //add_listener
+	} //addListener
 
-	/* filtering add_listener, combines all types sent in to form single mask */
-	ref typeof(this) add_listener(SDL_EventType...)(EventDelegate ed, SDL_EventType types) {
+	/* filtering addListener, combines all types sent in to form single mask */
+	ref typeof(this) addListener(SDL_EventType...)(EventDelegate ed, SDL_EventType types) {
 
 		auto mask = 0;
 		foreach (t; types) {
@@ -185,49 +225,68 @@ struct EventHandler {
 
 		return this;
 
-	} //add_listener
+	} //addListener
 
-	ref typeof(this) bind_keyevent(SDL_Scancode key, KeyDelegate kd) {
+	ref typeof(this) bindKeyEvent(SDL_Scancode key, KeyDelegate kd) {
 
 		KeyBind kb = {key: key, func: kd};
 		input_events ~= kb;
 
 		return this;
 
-	} //bind_keyevent
+	} //bindKeyEvent
 
-	ref typeof(this) bind_mousebtn(Uint8 button, MouseDelegate md, KeyState state) {
+	ref typeof(this) bindControllerBtn(SDL_GameControllerButton btn, KeyDelegate fn, KeyState st) {
+
+		ControllerBind cb = {button: btn, func: fn, state: st};
+		controller_binds ~= cb;
+
+		return this;
+
+	} //bindControllerBtn
+
+	ref typeof(this) bindControllerAxis(SDL_GameControllerAxis ax, AxisDelegate fn) {
+
+		ControllerAxis axis_bind = {axis: ax, func: fn};
+		controller_axis_binds ~= axis_bind;
+
+		return this;
+
+	} //bindControllerAxis
+
+	ref typeof(this) bindMouseBtn(Uint8 button, MouseDelegate md, KeyState state) {
 
 		MouseBind mb = {mousebtn: button, func: md, state: to!MouseKeyState(state)};
 		mouse_events ~= mb;
 
 		return this;
 
-	} //bind_mousebtn
+	} //bindMouseBtn
 
-	ref typeof(this) bind_key(SDL_Scancode key, KeyDelegate kd) {
+	ref typeof(this) bindKey(SDL_Scancode key, KeyDelegate kd) {
 
 		KeyBind kb = {key: key, func: kd};
 		key_events ~= kb;
 
 		return this;
 
-	} //bind_key
+	} //bindKey
 
-	ref typeof(this) bind_mousemov(MouseDelegate md) {
+	ref typeof(this) bindMouseMov(MouseDelegate md) {
 
 		MouseBind mb = {mousebtn: 0, func: md};
 		motion_events ~= mb;
 
 		return this;
 
-	} //bind_mousemov
+	} //bindMouseMov
 
-	void handle_events() {
-		
+	void handleEvents() {
+
 		while(SDL_PollEvent(&ev)) {
-		
+
 			switch (ev.type) {
+
 				case SDL_KEYDOWN, SDL_KEYUP:
 					foreach (ref bind; input_events) {
 						if (ev.key.keysym.scancode == bind.key) {
@@ -237,6 +296,7 @@ struct EventHandler {
 						}
 					}
 					break;
+
 				case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
 					foreach (ref bind; mouse_events) {
 						if (ev.button.button == bind.mousebtn) {
@@ -246,10 +306,48 @@ struct EventHandler {
 						}
 					}
 					break;
+
 				case SDL_MOUSEMOTION:
 					break;
+
+				case SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP:
+					foreach (ref bind; controller_binds) {
+						if (ev.cbutton.button == bind.button) {
+							if (bind.state == ev.cbutton.state) {
+								bind.func();
+							}
+						}
+					}
+
+					break;
+
+				case SDL_CONTROLLERDEVICEADDED:
+
+					/* add controller to devices */
+					auto new_device = SDL_GameControllerOpen(ev.cdevice.which);
+					controllers ~= Controller(ev.cdevice.which, new_device);
+
+					break;
+
+				case SDL_CONTROLLERDEVICEREMOVED:
+
+					/* remove controller unplugged */
+					foreach (ref c; controllers) {
+						if (c.device_id == ev.cdevice.which) 
+							SDL_GameControllerClose(c.handle);
+					}
+
+					auto removed = Controller(ev.cdevice.which);
+					controllers.remove(removed);
+
+					break;
+
+				case SDL_CONTROLLERDEVICEREMAPPED:
+					break;
+
 				default:
 					break;
+
 			}
 
 			/* forward events to listeners, filtered with a bitmask */
@@ -261,6 +359,13 @@ struct EventHandler {
 
 		}
 
+		/* handle joystick axis input each frame */
+		foreach (ref bind; controller_axis_binds) {
+			auto axis_value = SDL_GameControllerGetAxis(controllers[0].handle, bind.axis);
+			bind.func(axis_value);
+		}
+
+		/* keys pressed each frame */
 		foreach (ref bind; key_events) {
 			if (pressed_keys[bind.key] || bind.key == AnyKey) {
 				bind.func();
@@ -280,6 +385,6 @@ struct EventHandler {
 
 		}
 
-	} //handle_events
+	} //handleEvents
 
-} //EventHandler
+} //InputHandler

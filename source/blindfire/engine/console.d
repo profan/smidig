@@ -1,7 +1,5 @@
 module blindfire.engine.console;
 
-import std.stdio : writefln;
-
 import derelict.sdl2.types : SDL_Event, SDL_TEXTINPUT;
 import derelict.sdl2.functions : SDL_StartTextInput, SDL_StopTextInput;
 
@@ -81,13 +79,13 @@ struct Console {
 		char[128] fmt_str;
 		const char[] c = cformat(fmt_str, format, args);
 		write(c);
-		shift_buffer(buffers);
+		shiftBuffer(buffers);
 
 	} //print
 
 	void write(in char[] text) {
 
-		import std.algorithm : min;
+		import std.algorithm : min; //TODO remove
 		size_t elements = buffers[0].length;
 
 		if (elements + text.length < BUFFER_WIDTH) {
@@ -98,7 +96,7 @@ struct Console {
 				auto s = text[written .. min($, BUFFER_WIDTH-buffers[0].length)];
 				buffers[0] ~= s;
 				written += s.length;
-				shift_buffer(buffers);
+				shiftBuffer(buffers);
 			}
 		}
 
@@ -144,13 +142,13 @@ struct Console {
 
 		auto found_command = cast(ConsoleCommand)command in commands;
 		if (found_command) {
-			shift_buffer(buffers);
+			shiftBuffer(buffers);
 			(*found_command)(&this, args);
 			history[0] ~= slice;
 			++history_elements;
-			shift_buffer(history);
+			shiftBuffer(history);
 		} else {
-			shift_buffer(buffers);
+			shiftBuffer(buffers);
 			print!("Unknown Command: %s")(command.ptr);
 		}
 			
@@ -159,27 +157,27 @@ struct Console {
 	} //run
 
 	/* go backwards in the command history */
-	void get_prev() {
+	void getPrev() {
 
 		if(!enabled) { return; }
 
 		if (history_index != 0)
 			buffers[0] = history[--history_index];
 
-	} //get_prev
+	} //getPrev
 
 	/* go forwards in the command history */
-	void get_next() {
+	void getNext() {
 		
 		if(!enabled) { return; }
 
 		if (history_index+1 < BUFFER_LINES && history_index+1 <= history_elements)
 			buffers[0] = history[++history_index];
 
-	} //get_next
+	} //getNext
 
 	/* shift lines out, making it circular */
-	void shift_buffer(ref ConsoleBuffer buf_to_shift) {
+	void shiftBuffer(ref ConsoleBuffer buf_to_shift) {
 
 		for (int i = buf_to_shift.length-1; i >= 0; --i) {
 			if (i == buf_to_shift.length -1) continue;
@@ -187,7 +185,7 @@ struct Console {
 			buf_to_shift[i].length = 0;
 		}
 
-	} //shift_buffer
+	} //shiftBuffer
 
 	void draw(Window* window) {
 
@@ -196,13 +194,13 @@ struct Console {
 		int x = window.width - (atlas.char_width * BUFFER_WIDTH) - atlas.char_width, y = 16;
 		int color = 0xFFFFFF;
 
-		atlas.render_text(window, ">", x, y + atlas.char_height, 1, 1, color);
-		atlas.render_text(window, buffers[0][], x + atlas.char_width*2, y + atlas.char_height, 1, 1, color);
+		atlas.renderText(window, ">", x, y + atlas.char_height, 1, 1, color);
+		atlas.renderText(window, buffers[0][], x + atlas.char_width*2, y + atlas.char_height, 1, 1, color);
 		y += 12;
 		foreach(ref buf; buffers[1..$]) {
 
 			if (buf.length != 0) {
-				atlas.render_text(window, buf[], x, y + atlas.char_height, 1, 1, color);
+				atlas.renderText(window, buf[], x, y + atlas.char_height, 1, 1, color);
 			}
 			y += 12;
 
@@ -210,7 +208,7 @@ struct Console {
 	
 	} //draw
 	
-	void handle_event(ref SDL_Event ev) {
+	void handleEvent(ref SDL_Event ev) {
 
 		if (!enabled) { return; }
 
@@ -222,6 +220,6 @@ struct Console {
 				
 		}
 
-	} //handle_event
+	} //handleEvent
 
 } //Console

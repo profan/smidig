@@ -2,7 +2,7 @@ module blindfire.game;
 
 import derelict.sdl2.sdl;
 
-import blindfire.engine.eventhandler : KeyState;
+import blindfire.engine.input : KeyState;
 import blindfire.engine.util : render_string;
 import blindfire.engine.resource;
 import blindfire.engine.event;
@@ -14,11 +14,16 @@ import blindfire.ui;
 
 struct NewGame {
 
+	import blindfire.engine.memory : make;
+	import blindfire.engine.profiler : Profiler;
 	import blindfire.engine.sound : SoundID;
 	import blindfire.engine.pool : construct;
 	import blindfire.engine.runtime;
+	import blindfire.engine.joy;
+	import blindfire.engine.ecs;
 
 	import blindfire.chat;
+	import blindfire.sys;
 
 	enum GameResource : ResourceID {
 		Click = Resource.max+1,
@@ -34,6 +39,16 @@ struct NewGame {
 		//resource cursor
 		Cursor cursor_ = void;
 
+		//profiler
+		Profiler profiler_ = void;
+
+		//visualizing joystick shit
+		JoyVisualizer visualizer_ = void;
+
+		//game test
+		EventManager event_manager_ = void;
+		EntityManager entity_manager_;
+
 	}
 
 	@disable this(this);
@@ -41,21 +56,38 @@ struct NewGame {
 	void initialize() {
 
 		//initialize engine systems
-		this.engine_.initialize("Project Blindfire", &update, &draw, &last_draw);
+		this.engine_.initialize("Project Blindfire", &update, &draw, &lastDraw);
 
 		//initialize self
 		initialize_systems();
 		load_resources();
-		bind_actions();
+		bindActions();
 
 	} //initialize
 
 	void initialize_systems() {
 
-		this.chat_.construct(engine_.allocator_, &engine_.network_evman_);
-		engine_.network_evman_.register!ConnectionEvent(&chat_.on_peer_connect);
-		engine_.network_evman_.register!DisconnectionEvent(&chat_.on_peer_disconnect);
+		auto ea = engine_.allocator_;
+
+		this.chat_.construct(ea, &engine_.network_evman_);
+		engine_.network_evman_.register!ConnectionEvent(&chat_.onPeerConnect);
+		engine_.network_evman_.register!DisconnectionEvent(&chat_.onPeerDisconnect);
 		engine_.network_evman_.register!UpdateEvent(&chat_.on_network_update);
+
+		this.profiler_.construct(ea);
+		this.visualizer_.construct(&engine_.input_handler_);
+
+		//game test
+		this.event_manager_.construct(EventMemory, EventType.max);
+		this.entity_manager_ = ea.make!EntityManager(engine_.allocator_);
+
+		//systems
+		auto t_man = this.entity_manager_.registerSystem!TransformManager();
+		this.entity_manager_.registerSystem!CollisionManager(Vec2i(640, 480));
+		this.entity_manager_.registerSystem!SpriteManager();
+
+		event_manager_.register!AnalogAxisEvent(&t_man.onAnalogMovement);
+		event_manager_.register!AnalogRotEvent(&t_man.onAnalogRotation);
 
 	} //initialize_systems
 
@@ -65,101 +97,96 @@ struct NewGame {
 		import blindfire.engine.memory : make;
 
 		auto rm = ResourceManager.get();
+		auto ea = engine_.allocator_;
 
 		//load click sound
-		auto click_file = engine_.sound_system_.load_sound_file(cast(char*)"resource/audio/radiy_click.wav".ptr);
-		rm.set_resource!(SoundID)(cast(SoundID*)click_file, GameResource.Click);
+		auto click_file = engine_.sound_system_.loadSoundFile(cast(char*)"resource/audio/radiy_click.wav".ptr);
+		rm.setResource!(SoundID)(cast(SoundID*)click_file, GameResource.Click);
 
 		//basic shader
 		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 		char[16][2] uniforms = ["transform", "perspective"];
-		auto shader = engine_.allocator_.make!Shader("shaders/basic", attributes[], uniforms[]);
-		rm.set_resource(shader, GameResource.BasicShader);
+		auto shader = ea.make!Shader("shaders/basic", attributes[], uniforms[]);
+		rm.setResource(shader, GameResource.BasicShader);
 
 		//mouse pointer texture
-		auto cursor_texture = engine_.allocator_.make!Texture("resource/img/other_cursor.png");
-		rm.set_resource(cursor_texture, GameResource.CursorTexture);
+		auto cursor_texture = ea.make!Texture("resource/img/other_cursor.png");
+		rm.setResource(cursor_texture, GameResource.CursorTexture);
 		this.cursor_.construct(cursor_texture, shader);
+
+		//create unit
+		import blindfire.ents : createUnit;
+		auto unit = createUnit(entity_manager_, Vec2f(320, 240), shader, cursor_texture);
+
+		//GC's GOTTA GC
+		void onAxis(int value) {
+			event_manager_.push!AnalogAxisEvent(AxisPayload(unit, value));
+		} //on_axis
+
+		void onRotAxis(int value) {
+			event_manager_.push!AnalogRotEvent(AxisPayload(unit, value));
+		} //on_rot_axis
+
+		engine_.input_handler_.bindControllerAxis
+			(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, &onAxis);
+
+		engine_.input_handler_.bindControllerAxis
+			(SDL_CONTROLLER_AXIS_LEFTX, &onRotAxis);
 
 	} //load_resources
 
-	void play_click_sound(int x, int y) {
+	void playClickSound(int x, int y) {
 
-		auto click_id = cast(SoundID)ResourceManager.get().get_resource!SoundID(GameResource.Click);
-		engine_.sound_system_.play_sound(click_id, 0.5f, false);
+		auto click_id = cast(SoundID)ResourceManager.get().getResource!SoundID(GameResource.Click);
+		engine_.sound_system_.playSound(click_id, 0.5f, false);
 
-	} //play_click_sound
+	} //playClickSound
 
-	void stop_all_sounds(int x, int y ) {
+	void playClickSound() {
 
-		engine_.sound_system_.stop_all_sounds();
+		auto click_id = cast(SoundID)ResourceManager.get().getResource!SoundID(GameResource.Click);
+		engine_.sound_system_.playSound(click_id, 0.5f, false);
 
-	} //stop_all_sounds
+	} //playClickSound
 
-	void toggle_fullscreen() {
+	void stopAllSounds(int x, int y ) {
 
-		engine_.window_.toggle_fullscreen();
+		engine_.sound_system_.stopAllSounds();
 
-	} //toggle_fullscreen
+	} //stopAllSounds
 
-	void bind_actions() {
+	void toggleFullscreen() {
+
+		engine_.window_.toggleFullscreen();
+
+	} //toggleFullscreen
+
+	void bindActions() {
 
 		engine_.input_handler_
-			.bind_mousebtn(1, &play_click_sound, KeyState.UP)
-			.bind_mousebtn(3, &stop_all_sounds, KeyState.UP)
-			.bind_keyevent(SDL_SCANCODE_LALT, &toggle_fullscreen);
+			.bindMouseBtn(1, &playClickSound, KeyState.UP)
+			.bindMouseBtn(3, &stopAllSounds, KeyState.UP);
 
-	} //bind_actions
+	} //bindActions
 
 	void update() {
 
-		import derelict.imgui.imgui;
+		mixin EventManager.doTick;
 
-		static bool is_active;
-		static bool show_another_window;
-		static int host_port = 12300;
+		bool is_active = (engine_.network_manager_.is_active);
 
-		is_active = (engine_.network_manager_.is_active);
+		tick!EventIdentifier(event_manager_);
+		entity_manager_.tick!UpdateSystem();
 
-		igSetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
-		igBegin("Network Manager", &show_another_window); 
+		engine_.network_manager_.draw();
+		profiler_.tick();
+		visualizer_.tick();
 
-		{
-
-			if (!is_active) {
-
-				auto do_server = igButton("Create Server.");
-				auto do_connect = igButton("Connect to Server.");
-				igInputInt("port: ", &host_port);
-				
-				if (do_server) {
-					engine_.network_manager_.create_server(cast(ushort)host_port, cast(ubyte)32);
-				}
-
-				if (do_connect) {
-					engine_.network_manager_.create_client(cast(char*)"localhost".ptr, cast(ushort)host_port);
-				}
-
-			} else if (!engine_.network_manager_.is_host) {
-
-				auto do_disconnect = igButton("Disconnect from Server.");
-
-				if (do_disconnect) {
-					engine_.network_manager_.disconnect();
-				}
-
-			}
-			
-			if (is_active) {
-				igValueBool("is host: ", engine_.network_manager_.is_host);
-				chat_.tick(); //draw chat window!
-			}
-
-			igText("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / igGetIO().Framerate, igGetIO().Framerate);
-
+		if (is_active) {
+			chat_.tick(); //draw chat window!
 		}
 
-		igEnd();
+		profiler_.sampleUpdate(engine_.update_time_);
 
 	} //update
 
@@ -176,18 +203,21 @@ struct NewGame {
 
 	void draw() {
 
+		entity_manager_.tick!DrawSystem(&engine_.window_);
+
 		draw_debug();
+		profiler_.sampleFrame(engine_.frame_time_);
 
 	} //draw
 
-	void last_draw() {
+	void lastDraw() {
 
 		import blindfire.engine.math : Vec2f;
 
 		cursor_.draw(engine_.window_.view_projection, 
 			Vec2f(engine_.input_handler_.mouse_x, engine_.input_handler_.mouse_y));
 
-	} //last_draw
+	} //lastDraw
 
 	void run() {
 

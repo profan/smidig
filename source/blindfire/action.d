@@ -5,11 +5,7 @@ import blindfire.engine.stream : InputStream, OutputStream;
 import blindfire.engine.math : Vec2f;
 import blindfire.engine.ecs;
 
-import blindfire.serialize : DoSerializable, MakeTypeSerializable, networked;
-import blindfire.ui : UIState, draw_rectangle;
-import blindfire.res : Resource;
-import blindfire.sys;
-
+import blindfire.ui : UIState, drawRectangle;
 
 alias TempBuf = OutputStream;
 alias ActionType = uint;
@@ -22,23 +18,13 @@ interface Action {
 
 } //Action
 
-enum : ActionType[string] {
-
-	ActionIdentifier = [
-		NoAction.stringof : 0,
-		MoveAction.stringof : 1,
-		CreateUnitAction.stringof : 2
-	]
-
-}
-
-string handle_action() {
+string handleAction(alias ActionId)() {
 
 	import std.string : format;
 
 	auto str = "";
 
-	foreach (type, id; ActionIdentifier) {
+	foreach (type, id; ActionId) {
 		str ~= format(
 				q{case %d:
 					auto action = new %s();
@@ -51,64 +37,6 @@ string handle_action() {
 	return str;
 
 } //handle_action
-
-class NoAction : Action {
-
-	mixin DoSerializable;
-
-	void execute(EntityManager em) {
-		//no-op
-	}
-
-} //NoAction
-
-class MoveAction : Action {
-
-	@networked EntityID entity;
-	@networked Vec2f position;
-
-	mixin DoSerializable;
-
-	this() {
-
-	}
-
-	this(EntityID entity, Vec2f pos) {
-		this.entity = entity;
-		this.position = pos;
-	}
-
-	void execute(EntityManager em) {
-		em.getComponent!(SelectionComponent)(entity).set_target(position);
-	}
-
-} //MoveAction
-
-class CreateUnitAction : Action {
-
-	import blindfire.engine.resource : ResourceManager;
-	import blindfire.ents : create_unit;
-
-	@networked Vec2f position;
-
-	mixin DoSerializable;
-
-	this() {
-
-	}
-
-	this(Vec2f position) {
-		this.position = position;
-	}
-
-	void execute(EntityManager em) {
-		auto rm = ResourceManager.get();
-		create_unit(em, position, 
-					rm.get_resource!Shader(Resource.BASIC_SHADER), 
-					rm.get_resource!Texture(Resource.UNIT_TEXTURE));
-	}
-
-} //CreateUnitAction
 
 struct SelectionBox {
 
@@ -144,7 +72,7 @@ struct SelectionBox {
 	void draw(Window* window, UIState* state) {
 
 		if (active) {
-			state.draw_rectangle(window, x, y, w, h, 0x842bca, 30);
+			state.drawRectangle(window, x, y, w, h, 0x842bca, 30);
 		}
 		
 		order_set = false;

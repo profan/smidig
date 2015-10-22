@@ -55,7 +55,7 @@ struct RPC {
 
 	} //register
 
-	void on_pull(in ubyte[] data) {
+	void onPull(in ubyte[] data) {
 
 		auto stream = InputStream(data);
 
@@ -66,12 +66,12 @@ struct RPC {
 
 		}
 
-	} //on_pull
+	} //onPull
 
 	/* push written byte data to where it is to be used, or something? */
-	void do_push(ref OutputStream stream) {
+	void doPush(ref OutputStream stream) {
 
-	} //do_push
+	} //doPush
 
 } //RPC
 
@@ -83,7 +83,7 @@ string generateWrapper(alias F)() {
 
 	import blindfire.engine.meta : Identifier;
 
-	string do_reads(ref string[] args) {
+	string doReads(ref string[] args) {
 
 		auto reads = appender!string();
 
@@ -96,7 +96,7 @@ string generateWrapper(alias F)() {
 
 	} //do_reads
 
-	string do_args(string[] args) {
+	string doArgs(string[] args) {
 
 		auto in_str = appender!string();
 
@@ -109,15 +109,15 @@ string generateWrapper(alias F)() {
 
 	} //do_args
 
-	string do_call(string[] args) {
+	string doCall(string[] args) {
 
-		return q{%s(%s);}.format(Identifier!F, do_args(args));
+		return q{%s(%s);}.format(Identifier!F, doArgs(args));
 
 	} //do_call
 
 	string[] func_args = [];
 	string str = q{void %s_wrapper(ref InputStream stream) { %s %s }}
-		.format(Identifier!F, do_reads(func_args), do_call(func_args));
+		.format(Identifier!F, doReads(func_args), doCall(func_args));
 
 	return str;
 
@@ -168,6 +168,6 @@ unittest {
 	rpc.call("goodbye", 324, false);
 
 	// reads from the stream, reads function name first which uses hashmap to call wrapper func.
-	rpc.on_pull(rpc.out_stream_[]);
+	rpc.onPull(rpc.out_stream_[]);
 
 }

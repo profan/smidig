@@ -1,14 +1,12 @@
 module blindfire.engine.gl;
 
 import core.stdc.stdio : printf;
-
-import std.string : toStringz;
 import std.stdio : writefln;
-import std.file : read;
 
 import derelict.opengl3.gl3;
 
 import blindfire.engine.math : Vec2i, Vec2f, Vec3f, Mat3f, Mat4f;
+import blindfire.engine.collections : StringBuffer;
 
 mixin template OpenGLError() {
 
@@ -222,7 +220,7 @@ struct FontAtlas {
 		glDeleteVertexArrays(1, &vao);
 	} //~this
 
-	void render_text(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
+	void renderText(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
 
 		struct Point {
 			GLfloat x;
@@ -295,7 +293,7 @@ struct FontAtlas {
 		shader.unbind();
 		atlas.unbind();
 
-	} //render_text
+	} //renderText
 
 	mixin OpenGLError;
 
@@ -627,11 +625,11 @@ struct Texture {
 		// int w, h (width/height)
 		// SDL_PixelFormat* format (actual image format)
 		// void* pixels (pointer to pixel data)
-		SDL_Surface* image = IMG_Load(toStringz(file_name));
+		SDL_Surface* image = IMG_Load(file_name.ptr);
 		scope(exit) SDL_FreeSurface(image);
 
 		if (image == null) {
-			printf("[OpenGL] Failed to load texture %s : %s", toStringz(file_name), IMG_GetError());
+			printf("[OpenGL] Failed to load texture %s : %s", file_name.ptr, IMG_GetError());
 		}
 
 		this(image.pixels, image.w, image.h, GL_RGBA, GL_RGBA);
@@ -783,12 +781,20 @@ struct Shader {
 
 	this(in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
 
+		import blindfire.engine.util : cformat;
+
 		assert(uniforms.length <= bound_uniforms.length);
 
-		const char* vs = load_shader(file_name ~ ".vs");
-		const char* fs = load_shader(file_name ~ ".fs");
-		GLuint vshader = compile_shader(&vs, GL_VERTEX_SHADER, file_name);
-		GLuint fshader = compile_shader(&fs, GL_FRAGMENT_SHADER, file_name);
+		char[256] fn_buff;
+
+		StringBuffer vs = load_shader(cformat(fn_buff, "%s.vs", file_name.ptr));
+		StringBuffer fs = load_shader(cformat(fn_buff, "%s.fs", file_name.ptr));
+
+		auto c_vs = vs.c_str();
+		auto c_fs = fs.c_str();
+
+		GLuint vshader = compile_shader(&c_vs, GL_VERTEX_SHADER, file_name);
+		GLuint fshader = compile_shader(&c_fs, GL_FRAGMENT_SHADER, file_name);
 
 		GLuint[2] shaders = [vshader, fshader];
 		program = create_shader_program(shaders, attribs);
@@ -851,12 +857,11 @@ struct Shader {
 } //Shader
 
 //C-ish code ahoy
+StringBuffer load_shader(in char[] file_name) {
 
-import blindfire.engine.util : load_file;
+	import blindfire.engine.file : readFile;
+	return readFile(file_name);
 
-const(char*) load_shader(in char[] file_name) {
-	import std.file : read;
-	return toStringz(cast(immutable char[])read(file_name));
 } //load_shader
 
 bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] shader_path) nothrow {
@@ -878,7 +883,7 @@ bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] sh
 			glGetShaderInfoLog(shader, log.sizeof, null, log.ptr);
 		}
 
-		printf("[OpenGL] Error in %s: %s\n", toStringz(shader_path), log.ptr);
+		printf("[OpenGL] Error in %s: %s\n", shader_path.ptr, log.ptr);
 		return false;
 
 	}

@@ -8,7 +8,7 @@ import blindfire.engine.math : rotate, squaredDistanceTo;
 import blindfire.engine.gl : Transform, Shader, Texture, Mesh;
 import blindfire.engine.math : Vec2i, Vec2f, Vec3f, Mat3f;
 import blindfire.engine.stream : InputStream;
-import blindfire.engine.math : point_in_rect;
+import blindfire.engine.math : pointInRect;
 import blindfire.engine.ecs;
 
 import blindfire.action;
@@ -27,13 +27,45 @@ interface DrawSystem : ComponentSystem!(1) {
 
 class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) {
 
+	import blindfire.defs;
+	import blindfire.engine.math;
+
+	void onAnalogMovement(ref AnalogAxisEvent ev) {
+
+		enum offset = deg2Rad(-135);
+
+		float value = cast(float)ev.value;
+		float normalized = normalize!float(value, 0.0f, 1.0f, 32768.0f);
+
+		auto cmp = ev.id in components;
+		cmp.velocity += (angleToVec2!float(cmp.transform.rotation.z + offset) * normalized);
+
+	} //onAnalogMovement
+
+	void onAnalogRotation(ref AnalogRotEvent ev) {
+
+		float value = cast(float)ev.value;
+		float normalized = normalize(value, -1.0f, 1.0f, 32768.0f);
+
+		auto cmp = ev.id in components;
+		cmp.transform.rotation.z += normalized/10;
+
+	} //onAnalogRotation
+
+	override void onInit(EntityID entity, TransformComponent* component) {
+
+	} //onInit
+
 	void update() {
+
+		import derelict.imgui.imgui;
 
 		foreach (id, ref comp; components) with (comp) {
 			transform.position += velocity;
+			velocity /= 1.05;
 		}
 
-	}
+	} //update
 
 } //TransformManager
 
@@ -57,7 +89,7 @@ class CollisionManager : ComponentManager!(UpdateSystem, CollisionComponent, 2) 
 		foreach (id, ref comp; components) {
 
 			with (comp.mc.transform) {
-				if (!point_in_rect(cast(int)position.x, cast(int)position.y, 0, 0, map_size.x, map_size.y)) {
+				if (!pointInRect(cast(int)position.x, cast(int)position.y, 0, 0, map_size.x, map_size.y)) {
 					comp.mc.velocity = Vec2f(-comp.mc.velocity.x, -comp.mc.velocity.y);
 					comp.mc.transform.rotation.z += 1*PI;
 				}
@@ -73,7 +105,7 @@ class CollisionManager : ComponentManager!(UpdateSystem, CollisionComponent, 2) 
 			}
 		}
 
-	}
+	} //update
 
 } //CollisionManager
 
@@ -84,24 +116,6 @@ struct CollisionComponent {
 	@dependency TransformComponent* mc;
 
 } //CollisionComponent
-
-class InputManager : ComponentManager!(UpdateSystem, InputComponent, 1) {
-
-	void update() {
-
-		foreach (id, ref comp; components) {
-			//DO ALL THE CALLBACKS
-		}
-
-	}
-
-} //InputManager
-
-struct InputComponent {
-
-	//.. callbacks?
-
-} //InputComponent
 
 class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 
@@ -116,7 +130,7 @@ class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 			shader.unbind();
 		}
 
-	}
+	} //update
 
 } //SpriteManager
 
@@ -128,88 +142,14 @@ struct SpriteComponent {
 	@dependency TransformComponent* tc;
 
 	this(ref Mesh in_mesh, Shader* shader, Texture* texture) {
+
 		import std.algorithm : move;
+
 		move(in_mesh, this.mesh);
 		this.shader = shader;
 		this.texture = texture;
-	}
+
+	} //this
 
 } //SpriteComponent
 
-class OrderManager : ComponentManager!(UpdateSystem, OrderComponent, 5) {
-
-	import blindfire.engine.math : point_in_rect;
-
-	SelectionBox* sbox;
-
-	this(SelectionBox* sb) {
-		this.sbox = sb;
-	}
-
-	//TODO make sure this only works for local units that the player is in control of later, probably easy to fix
-	void update() {
-
-		foreach (id, ref comp; components) with (comp) {
-
-			float x = tc.transform.position.x;
-			float y = tc.transform.position.y;
-			if (sbox.active && point_in_rect(cast(int)x, cast(int)y, sbox.x, sbox.y, sbox.w, sbox.h)) {
-				selected = true;
-			} else if (sbox.active) {
-				selected = false;
-			}
-
-			if (comp.selected && sbox.order_set) with (comp.tc) {
-
-				//emit order command
-				//tm.create_action!MoveAction(id, Vec2f(sbox.to_x, sbox.to_y));
-
-			}
-
-		}
-
-	}
-
-} //OrderManager
-
-//TODO order system without polymorphism? hello-switch?
-struct OrderComponent {
-
-	bool selected = false;
-	@dependency TransformComponent* tc;
-
-} //OrderComponent
-
-class SelectionManager : ComponentManager!(UpdateSystem, SelectionComponent, 6) {
-
-	import std.math : atan2;
-
-	void update() {
-
-		foreach (id, ref comp; components) with (comp) {
-			
-			auto pos = tc.transform.position;
-			if (order_set) {
-				tc.velocity = -(pos - target_position).normalized();
-				tc.transform.rotation.z = atan2(target_position.y - pos.y - 32/2, target_position.x - pos.x-32/2);
-				order_set = false;
-			}
-
-		}
-
-	}
-
-} //SelectionManager
-
-struct SelectionComponent {
-
-	bool order_set = false;
-	Vec2f target_position;
-	@dependency TransformComponent* tc;
-
-	void set_target(Vec2f new_pos) {
-		target_position = new_pos;
-		order_set = true;
-	}
-
-} //SelectionComponent

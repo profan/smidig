@@ -1,53 +1,19 @@
 module blindfire.defs;
 
-import std.socket : InternetAddress;
-import std.datetime : TickDuration;
-
 import blindfire.engine.event : Event, EventID, EventManager, expandEventsToMap;
 import blindfire.engine.state : StateID;
 
-// game states
-enum State : StateID {
-
-	Menu,
-	Joining,
-	Game,
-	Options,
-	Lobby,
-	Waiting
-
-} //State
-
-alias ClientConnectEvent = Event!(EventType.ClientConnect, InternetAddress);
-alias ClientDisconnectEvent = Event!(EventType.ClientDisconnect, bool);
-alias ClientSetConnectedEvent = Event!(EventType.ClientSetConnected, bool);
-alias StartGameEvent = Event!(EventType.StartGame, bool);
-alias GameCreatedEvent = Event!(EventType.GameCreated, bool);
-
-//console commands
-alias SetTickrateEvent = Event!(EventType.SetTickrate, TickDuration);
-alias PushGameStateEvent = Event!(EventType.PushGameState, State);
-
 enum EventType : EventID {
+	AnalogAxis,
+	AnalogRot
+}
 
-	//general
-	ClientConnect,
-	ClientDisconnect,
-	ClientSetConnected,
-	StartGame,
-	GameCreated,
+struct AxisPayload {
+	uint id;
+	int value;
+}
 
-	//console commands
-	SetTickrate,
-	PushGameState
+alias AnalogAxisEvent = Event!(EventType.AnalogAxis, AxisPayload);
+alias AnalogRotEvent = Event!(EventType.AnalogRot, AxisPayload);
 
-} //EventType
-
-mixin(expandEventsToMap!("EventIdentifier",
-						 ClientConnectEvent,
-						 ClientDisconnectEvent,
-						 ClientSetConnectedEvent,
-						 StartGameEvent,
-						 GameCreatedEvent,
-						 SetTickrateEvent,
-						 PushGameStateEvent));
+mixin(expandEventsToMap!("EventIdentifier", AnalogAxisEvent, AnalogRotEvent));

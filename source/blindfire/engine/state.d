@@ -13,29 +13,29 @@ class GameStateHandler {
 		//asd
 	} //this
 
-	void add_state(GameState state) nothrow {
+	void addState(GameState state) nothrow {
 		states[state.id] = state;
-	} //add_state
+	} //addState
 
-	void push_state(StateID state) {
+	void pushState(StateID state) {
 		GameState st = states[state];
 		st.enter(); //entering the state
 		stack ~= st;
-	} //push_state
+	} //pushState
 
-	GameState pop_state() {
+	GameState popState() {
 		GameState st = stack[$-1];
 		st.leave(); //leaving the state, do exit stuff
 		stack = stack[0..$-1];
 		stack[$-1].enter(); //entering the state now on top of stack
 		return st;
-	} //pop_state
+	} //popState
 
-	void switch_state(StateID state) {
+	void switchState(StateID state) {
 		stack[$-1].leave();
 		stack[$-1] = states[state];
 		stack[$-1].enter();
-	} //switch_state
+	} //switchState
 
 	void update(double dt) {
 		stack[$-1].update(dt);

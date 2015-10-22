@@ -8,11 +8,7 @@ import blindfire.engine.ecs;
 
 import blindfire.sys;
 
-auto create_wall(EntityManager em, Vec2f pos, Vec2f bottom_right, Shader* shader, Texture* texture) {
-
-}
-
-auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) {
+auto createUnit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) {
 
 	assert (em !is null);
 	auto unit = em.createEntity();
@@ -25,10 +21,6 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 	auto cc = em.getComponent!CollisionComponent(unit);
 	cc.radius = texture.width/2; //arbitrary number :D
 
-	em.register!InputComponent(unit);
-	em.register!SelectionComponent(unit);
-	em.register!OrderComponent(unit);
-
 	int w = texture.width;
 	int h = texture.height;
 	Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
@@ -36,4 +28,4 @@ auto create_unit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) 
 	
 	return unit;
 
-}
+} //createUnit

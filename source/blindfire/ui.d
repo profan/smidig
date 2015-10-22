@@ -119,7 +119,7 @@ struct UIState {
 		import blindfire.res : Resource;
 
 		auto rm = ResourceManager.get();
-		auto text_shader = rm.get_resource!(Shader)(Resource.TEXT_SHADER);
+		auto text_shader = rm.getResource!(Shader)(Resource.TEXT_SHADER);
 		font_atlas = allocator_.make!FontAtlas("fonts/OpenSans-Bold.ttf", 22, text_shader);
 
 	} //init
@@ -134,15 +134,15 @@ struct UIState {
 } //UIState
 
 
-void before_ui(ref UIState ui) {
+void beforeUi(ref UIState ui) {
 
 	ui.hot_item = 0;
 
-} //before_ui
+} //beforeUi
 
-void reset_ui(ref UIState ui) {
+void resetUi(ref UIState ui) {
 
-	if (!is_btn_down(&ui, 1)) {
+	if (!isBtnDown(&ui, 1)) {
 		ui.active_item = 0;
 	} else {
 		if (ui.active_item == 0) {
@@ -150,10 +150,10 @@ void reset_ui(ref UIState ui) {
 		}
 	}
 
-} //reset_ui
+} //resetUi
 
 //Immediate Mode GUI (IMGUI, see Muratori)
-void draw_rectangle(UIState* state, Window* window, float x, float y, float width, float height, int color, ubyte alpha = 255) {
+void drawRectangle(UIState* state, Window* window, float x, float y, float width, float height, int color, ubyte alpha = 255) {
 
 	auto transform = Mat4f.translation(Vec3f(x, y, 0.0f)) * Mat4f.scaling(Vec3f(width, height, 1.0f));
 	GLfloat[4] gl_color = int_to_glcolor(color, alpha);
@@ -168,38 +168,38 @@ void draw_rectangle(UIState* state, Window* window, float x, float y, float widt
 
 	state.box_shader.unbind();
 
-} //draw_rectangle
+} //drawRectangle
 
-void draw_label(UIState* ui, Window* window, in char[] label, int x, int y, int width, int height, int color) {
+void drawLabel(UIState* ui, Window* window, in char[] label, int x, int y, int width, int height, int color) {
 
 	int cw = ui.font_atlas.char_width;
 	float label_width = (label.length * cw);
-	ui.font_atlas.render_text(window, label, (x - label_width/2) - cw*2.05f, y + (cw-cw/5), 1, 1, color);
+	ui.font_atlas.renderText(window, label, (x - label_width/2) - cw*2.05f, y + (cw-cw/5), 1, 1, color);
 
-} //draw_label
+} //drawLabel
 
 struct TextSpec {
 	char[] label;
 	int text_color;
 } //TextSpec
 
-bool mouse_in_rect(UIState* ui, int x, int y, int width, int height) {
+bool mouseInRect(UIState* ui, int x, int y, int width, int height) {
 
-	import blindfire.engine.math : point_in_rect;
+	import blindfire.engine.math : pointInRect;
 
-	return point_in_rect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
+	return pointInRect(ui.mouse_x, ui.mouse_y, x - width/2, y - height/2, width, height);
 
-} //mouse_in_rect
+} //mouseInRect
 
-void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, int height, ref StaticArray!(char, 64) text_box, int color, int text_color) {
+void doTextBox(UIState* ui, uint id, Window* window, int x, int y, int width, int height, ref StaticArray!(char, 64) text_box, int color, int text_color) {
 
-	bool inside = ui.mouse_in_rect(x, y, width, height);
+	bool inside = ui.mouseInRect(x, y, width, height);
 	if (inside) ui.hot_item = id;
 	else ui.hot_item = 0;
 
-	if (ui.hot_item == id || (ui.kbd_item == id && !is_btn_down(ui, 1))) {
+	if (ui.hot_item == id || (ui.kbd_item == id && !isBtnDown(ui, 1))) {
 		
-		if (inside && ui.kbd_item == 0 && is_btn_down(ui, 1)) {
+		if (inside && ui.kbd_item == 0 && isBtnDown(ui, 1)) {
 			ui.kbd_item = id;
 			SDL_StartTextInput();
 		}
@@ -218,7 +218,7 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 			ui.entered_text.length = 0;
 		}
 
-	} else if (ui.hot_item == 0 && is_btn_down(ui, 1)) {
+	} else if (ui.hot_item == 0 && isBtnDown(ui, 1)) {
 
 		ui.kbd_item = 0;
 		SDL_StopTextInput();
@@ -226,21 +226,21 @@ void do_textbox(UIState* ui, uint id, Window* window, int x, int y, int width, i
 	}
 
 	int cw = ui.font_atlas.char_width;
-	ui.draw_rectangle(window, x - width/2, y - height/2, width, height, color);
-	ui.font_atlas.render_text(window, text_box[], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
+	ui.drawRectangle(window, x - width/2, y - height/2, width, height, color);
+	ui.font_atlas.renderText(window, text_box[], (x+cw) - width/2, (y-height/2) + (height*0.75), 1, 1, text_color);
 
-} //do_textbox
+} //doTextBox
 
-bool do_button(UIState* ui, uint id, Window* window, int x, int y, int width, int height, int color, ubyte alpha = 255, in char[] label = "", int text_color = 0xFFFFFF) {
+bool doButton(UIState* ui, uint id, Window* window, int x, int y, int width, int height, int color, ubyte alpha = 255, in char[] label = "", int text_color = 0xFFFFFF) {
 
 	bool result = false;
-	bool inside = ui.mouse_in_rect(x, y, width, height);
+	bool inside = ui.mouseInRect(x, y, width, height);
 
 	if (inside) ui.hot_item = id;
 
 	int m_x = x, m_y = y;
 	int main_color = color;
-	if (ui.active_item == id && !is_btn_down(ui, 1)) {
+	if (ui.active_item == id && !isBtnDown(ui, 1)) {
 
 		if (inside) {
 			result = true;
@@ -254,7 +254,7 @@ bool do_button(UIState* ui, uint id, Window* window, int x, int y, int width, in
 		
 		text_color = darken(text_color, 10);
 
-		if (ui.active_item == 0 && is_btn_down(ui, 1)) {
+		if (ui.active_item == 0 && isBtnDown(ui, 1)) {
 			ui.active_item = id;
 		} else if (ui.active_item == id) {
 			m_x += 1;
@@ -264,16 +264,16 @@ bool do_button(UIState* ui, uint id, Window* window, int x, int y, int width, in
 	}
 
 	//draw both layers of button
-	ui.draw_rectangle(window, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
-	ui.draw_rectangle(window, m_x - width/2, m_y - height/2, width, height, color, alpha);
-	if (label != "") ui.draw_label(window, label, m_x, m_y, width, height, text_color);
+	ui.drawRectangle(window, (x - width/2)+2, (y - height/2)+2, width, height, darken(color, 10), alpha);
+	ui.drawRectangle(window, m_x - width/2, m_y - height/2, width, height, color, alpha);
+	if (label != "") ui.drawLabel(window, label, m_x, m_y, width, height, text_color);
 
 	return result;
 
-} //do_button
+} //doButton
 
-bool is_btn_down(UIState* ui, uint button) {
+bool isBtnDown(UIState* ui, uint button) {
 
 	return (ui.mouse_buttons >> button-1) & 1;
 
-} //is_btn_down
+} //isBtnDown

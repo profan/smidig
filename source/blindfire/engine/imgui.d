@@ -25,7 +25,7 @@ struct ImguiContext {
 
 	import blindfire.engine.gl : AttribLocation, Shader, Texture;
 	import blindfire.engine.memory : theAllocator, IAllocator, make, dispose;
-	import blindfire.engine.eventhandler : AnyKey, EventHandler;
+	import blindfire.engine.input : AnyKey, InputHandler;
 	import blindfire.engine.window : Window;
 
 	//mammory
@@ -42,12 +42,12 @@ struct ImguiContext {
 
 	//external state
 	Window* window_;
-	EventHandler* input_handler_;
+	InputHandler* input_handler_;
 
 	@disable this();
 	@disable this(this);
 
-	this(IAllocator allocator, Window* window, EventHandler* input_handler) {
+	this(IAllocator allocator, Window* window, InputHandler* input_handler) {
 
 		this.allocator_ = allocator;
 		this.window_ = window;
@@ -93,9 +93,9 @@ struct ImguiContext {
 
 	} //initialize
 
-	void on_event(ref SDL_Event ev) {
+	void onEvent(ref SDL_Event ev) {
 
-		import std.stdio : writefln;
+		import core.stdc.stdio : printf;
 
 		auto io = igGetIO();
 
@@ -135,11 +135,11 @@ struct ImguiContext {
 				break;
 
 			default:
-				writefln("unhandled event type in imgui: %d", ev.type);
+				printf("unhandled event type in imgui: %d", ev.type);
 
 		}
 
-	} //on_event
+	} //onEvent
 
 	void create_device_objects() {
 

@@ -12,26 +12,26 @@ struct NetVar(T) {
 
 	this(T var) {
 		this.variable = var;
-	}
+	} //this
 
 	T opUnary(string op)() if (s == "++" || s == "--") {
 		changed = true;
 		mixin("return " ~ op ~ " variable;");
-	}
+	} //opUnary
 
 	void opAssign(T rhs) {
 		changed = true;
 		variable = rhs;
-	}
+	} //opAssign
 
 	void opOpAssign(string op)(T rhs) {
 		changed = true;
 		mixin("variable " ~ op ~ "= rhs;");
-	}
+	} //opOpAssign
 
 	T opBinary(string op)(T rhs) {
 		mixin("return variable " ~ op ~ " rhs;");
-	}
+	} //opBinary
 
 } //NetVar
 
@@ -98,7 +98,7 @@ struct NetworkManager {
 
 	} //initialize
 
-	bool create_server(ushort binding_port, ubyte max_connections) {
+	bool createServer(ushort binding_port, ubyte max_connections) {
 
 		assert(!host_, "host was not null on create server!");
 
@@ -118,7 +118,7 @@ struct NetworkManager {
 			printf("[Net] failed creating server! \n");
 			return false;
 		} else {
-			printf("[Net] created server at %s:%u \n", cast(char*)"localhost".ptr, binding_port);
+			printf("[Net] created server at %s:%u \n", cast(const(char*))"localhost".ptr, binding_port);
 		}
 
 		is_host_ = true;
@@ -126,9 +126,9 @@ struct NetworkManager {
 
 		return true;
 
-	} //create_server
+	} //createServer
 
-	bool create_client(char* to_address, ushort port) {
+	bool createClient(char* to_address, ushort port) {
 
 		if (!host_) {
 
@@ -160,9 +160,10 @@ struct NetworkManager {
 
 		ENetEvent event;
 		if (enet_host_service(host_, &event, 5000) > 0 &&
-			event.type == ENET_EVENT_TYPE_CONNECT) 
+			event.type == ENET_EVENT_TYPE_CONNECT)
 		{
 			printf("[Net] connection to %s:%u succeeded. \n", to_address, port);
+			ev_man_.push!ConnectionEvent(new_peer);
 		} else {
 			printf("[Net] connection to %s:%u failed. \n", to_address, port);
 			return false;
@@ -172,7 +173,7 @@ struct NetworkManager {
 
 		return true;
 
-	} //create_client
+	} //createClient
 
 	void disconnect() {
 
@@ -187,7 +188,7 @@ struct NetworkManager {
 
 	void on_data_push(ref PushEvent ev) {
 
-		printf("[Net] sending packet of size: %u \n", typeof(ev.payload).sizeof * ev.payload.length);
+		printf("[Net] sending packet of size: %u \n", typeof(ev.payload[0]).sizeof * ev.payload.length);
 		ENetPacket* packet = enet_packet_create(ev.payload.ptr, ev.payload.length, ENET_PACKET_FLAG_RELIABLE);
 
 		foreach (peer; peers_) {
@@ -216,9 +217,8 @@ struct NetworkManager {
 					break;
 
 				case ENET_EVENT_TYPE_RECEIVE:
-					printf("A packet of length %u containing %s was received from %s on channel %u.\n",
+					printf("A packet of length %u was received from %s on channel %u.\n",
 							event.packet.dataLength,
-							event.packet.data,
 							event.peer.data,
 							event.channelID);
 
@@ -245,6 +245,52 @@ struct NetworkManager {
 		}
 
 	} //poll
+
+	void draw() {
+
+		import derelict.imgui.imgui;
+
+		static bool show_another_window;
+		static int host_port = 12300;
+
+		igSetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
+		igBegin("Network Manager", &show_another_window);
+
+		{
+
+			if (!is_active) {
+
+				auto do_server = igButton("Create Server.");
+				auto do_connect = igButton("Connect to Server.");
+				igInputInt("port: ", &host_port);
+
+				if (do_server) {
+					createServer(cast(ushort)host_port, cast(ubyte)32);
+				}
+
+				if (do_connect) {
+					createClient(cast(char*)"localhost".ptr, cast(ushort)host_port);
+				}
+
+			} else if (!is_host) {
+
+				auto do_disconnect = igButton("Disconnect from Server.");
+
+				if (do_disconnect) {
+					disconnect();
+				}
+
+			}
+
+			if (is_active) {
+				igValueBool("is host: ", is_host);
+			}
+
+		}
+
+		igEnd();
+
+	} //draw
 
 } //NetworkManager
 

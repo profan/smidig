@@ -11,6 +11,8 @@ import derelict.alure.alure;
 import derelict.opengl3.gl;
 import derelict.freetype.ft;
 import derelict.imgui.imgui;
+import derelict.enet.enet;
+
 import derelict.util.loader;
 import derelict.util.exception;
 
@@ -37,22 +39,23 @@ ShouldThrow missingSymFunc( string symName ) {
 
     // Any other missing symbol should throw.
     return ShouldThrow.Yes;
-}
+} //missingSymFunc
 
-void initialize_systems() {
+void initializeSystems() {
 
 	alias libs = AliasSeq!(
 		DerelictSDL2, DerelictSDL2Image,
 		DerelictSDL2ttf, DerelictFT,
 		DerelictGL, DerelictAL,
-		DerelictALURE, DerelictImgui);
+		DerelictALURE, DerelictImgui,
+		DerelictENet);
 
 	foreach (T; libs) {
 		T.missingSymbolCallback = &missingSymFunc;
 		T.load();
 	}
 
-	if (SDL_Init(SDL_INIT_JOYSTICK) < 0) {
+	if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
 		printf("[GAME] SDL_Init, could not initialize: %s", SDL_GetError());
 		exit(2);
 	}
@@ -63,7 +66,7 @@ void initialize_systems() {
 		exit(2);
 	}
 
-}
+} //initializeSystems
 
 void main() {
 
@@ -82,9 +85,11 @@ void main() {
 	scope(exit) allocator.reportStatistics(stdout);
 
 	/* game part */
+	import trackallocs;
+	auto tracker = allocsTracker();
 	import blindfire.game : NewGame;
 
-	initialize_systems();
+	initializeSystems();
 
 	auto game = NewGame();
 	game.initialize();

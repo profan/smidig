@@ -22,7 +22,7 @@ struct Array(T) {
 	//@disable this();
 	@disable this(this);
 
-	this(IAllocator allocator, size_t initial_size) {
+	this(IAllocator allocator, size_t initial_size) @trusted {
 
 		this.allocator_ = allocator;
 		this.array_ = allocator_.makeArray!T(initial_size);
@@ -31,7 +31,7 @@ struct Array(T) {
 
 	} //this
 
-	~this() {
+	~this() @trusted {
 		if (allocator_ !is null) {
 			this.free();
 		}
@@ -41,19 +41,19 @@ struct Array(T) {
 		this.allocator_.dispose(array_);
 	} //free
 
-	void clear() nothrow @nogc { //note, does not run destructors!
+	void clear() @safe nothrow @nogc { //note, does not run destructors!
 		this.length_ = 0;
 	} //clear
 
-	@property size_t capacity() const nothrow @nogc {
+	@property size_t capacity() @safe const nothrow @nogc {
 		return capacity_;
 	} //capacity
 
-	@property size_t length() const nothrow @nogc {
+	@property size_t length() @safe const nothrow @nogc {
 		return length_;
 	} //length
 
-	@property size_t length(size_t new_length) nothrow @nogc { //no-op if length is too large
+	@property size_t length(size_t new_length) @safe nothrow @nogc { //no-op if length is too large
 		if (new_length <= capacity_) {
 			length_ = new_length;
 		}
@@ -103,11 +103,11 @@ struct Array(T) {
 		return length_;
 	} //opDollar
 
-	const(T[]) opSlice() const nothrow {
+	const(T[]) opSlice() @safe const nothrow {
 		return array_[0..length_];
 	} //opSlice
 
-	T[] opSlice() nothrow {
+	T[] opSlice() @safe nothrow {
 		return array_[0..length_];
 	} //opSlice
 
@@ -115,17 +115,17 @@ struct Array(T) {
 		return array_[h..t];
 	} //opSlice
 
-	void opOpAssign(string op: "~")(T item) {
+	void opOpAssign(string op: "~")(T item) @safe {
 		this.add(item);
 	} //opOpAssign
 
-	void opOpAssign(string op: "~")(in T[] items) {
+	void opOpAssign(string op: "~")(in T[] items) @safe {
 		foreach (ref item; items) {
 			this.add(item);
 		}
 	} //opOpAssign
 
-	void opIndexAssign(T value, size_t index) {
+	void opIndexAssign(T value, size_t index) @trusted {
 		array_[index] = move(value);
 	} //opIndexAssign
 
@@ -139,7 +139,7 @@ struct Array(T) {
 		return array_[index];
 	} //opIndex
 
-	void reserve(size_t requested_size) {
+	void reserve(size_t requested_size) @trusted {
 
 		if (capacity_ < requested_size) {
 			this.expand(requested_size - capacity_);
@@ -147,7 +147,7 @@ struct Array(T) {
 
 	} //reserve
 
-	void expand(size_t extra_size) {
+	void expand(size_t extra_size) @trusted {
 
 		bool success = allocator_.expandArray!T(array_, extra_size);
 		capacity_ += extra_size;
@@ -156,7 +156,7 @@ struct Array(T) {
 
 	} //expand
 
-	void add(T item) {
+	void add(T item) @trusted {
 
 		if (length_ == capacity_) {
 			this.expand(length_);
@@ -167,7 +167,7 @@ struct Array(T) {
 	} //add
 
 	static if (isCopyable!T) {
-		void add(ref T item) {
+		void add(ref T item) @safe {
 
 			if (length_ == capacity_) {
 				this.expand(length_);
@@ -197,7 +197,7 @@ struct Array(T) {
 
 	} //remove
 
-	void remove(ref T thing) {
+	void remove(ref T thing) @trusted {
 
 		foreach(ref i, ref e; this) {
 			if (e == thing) {
@@ -255,12 +255,17 @@ unittest {
 
 }
 
+/* non resizeable heap allocated array. */
 struct FixedArray(T) {
 
 } //FixedArray
 
+unittest {
+
+}
+
 /* array type which never moves its contents in memory */
-/* - composed of arrays in fixed sizes. */
+/* - composed of fixed size arrays. */
 struct SegmentedArray(T) {
 
 } //SegmentedArray
@@ -304,18 +309,18 @@ struct HashMap(K, V) {
 
 	private {
 
+		IAllocator allocator_;
+
 		Entry[] array_;
 		size_t capacity_;
 		size_t used_capacity_;
-
-		IAllocator allocator_;
 
 	}
 
 	@disable this(this);
 
 	static if (isCopyable!K) { /* define only if key type is copyable too */
-		@property Array!K keys() {
+		@property Array!K keys() @trusted {
 
 			auto arr = Array!K(allocator_, used_capacity_);
 
@@ -329,7 +334,7 @@ struct HashMap(K, V) {
 	}
 
 	static if (isCopyable!V) { /* it only makes sense to define this if value type is copyable */
-		@property Array!V values() {
+		@property Array!V values() @trusted {
 
 			auto arr = Array!V(allocator_, used_capacity_);
 
@@ -342,11 +347,11 @@ struct HashMap(K, V) {
 		} //values
 	}
 
-	@property size_t length() const {
+	@property size_t length() @safe const {
 		return capacity_;
 	} //length
 
-	this(IAllocator allocator, size_t initial_size) {
+	this(IAllocator allocator, size_t initial_size) @trusted {
 
 		this.allocator_ = allocator;
 		this.array_ = allocator.makeArray!Entry(initial_size);
@@ -354,7 +359,7 @@ struct HashMap(K, V) {
 
 	} //this
 
-	~this() {
+	~this() @trusted {
 		if (allocator_ !is null) {
 			this.free();
 		}
@@ -422,15 +427,15 @@ struct HashMap(K, V) {
 
 	} //opApply
 
-	void opIndexAssign(V value, K key) {
+	void opIndexAssign(V value, K key) @trusted {
 		put(key, move(value));
 	} //opIndexAssign
 
-	ref V opIndex(in K key) {
+	ref V opIndex(in K key) @safe {
 		return get(key);
 	} //opIndex
 
-	void rehash() {
+	void rehash() @trusted {
 
 		auto temp_map = HashMap!(K, V)(allocator_, capacity_ * 2);
 
@@ -442,11 +447,11 @@ struct HashMap(K, V) {
 
 	} //rehash
 
-	ref V get(in K key) nothrow {
+	ref V get(in K key) @safe nothrow {
 		return get_(key);
 	} //get
 
-	private size_t findIndex(in K key, out bool found) nothrow {
+	private size_t findIndex(in K key, out bool found) @safe nothrow {
 
 		auto index = key.toHash() % capacity_;
 		uint searched_elements = 0;
@@ -478,7 +483,7 @@ struct HashMap(K, V) {
 
 	} //findIndex
 
-	private ref V get_(in K key) nothrow {
+	private ref V get_(in K key) @safe nothrow {
 
 		bool found = false;
 		auto index = findIndex(key, found);
@@ -486,7 +491,7 @@ struct HashMap(K, V) {
 
 	} //get
 
-	void put(ref K key, V value) {
+	void put(ref K key, V value) @trusted {
 
 		import std.algorithm : move;
 
@@ -509,7 +514,7 @@ struct HashMap(K, V) {
 
 	} //put
 
-	bool remove(K key) {
+	bool remove(K key) @trusted {
 
 		auto index = key.toHash() % capacity_;
 		uint searched_elements = 0;
@@ -534,7 +539,7 @@ struct HashMap(K, V) {
 		
 	} //remove
 
-	void clear() {
+	void clear() @trusted {
 
 		foreach (i, ref e; array_[]) {
 			e = Entry.init;
@@ -658,9 +663,10 @@ struct LinkedList(T) {
 	
 	private {
 
-		Node* head_;
-
 		IAllocator allocator_;
+
+		Node* head_;
+		Node* tail_;
 
 	}
 
@@ -709,7 +715,11 @@ struct LinkedList(T) {
 
 	T* head() {
 		return &head_.data;
-	} //first
+	} //head
+
+	T* tail() {
+		return &tail_.data;
+	} //tail
 
 } //LinkedList
 
@@ -780,6 +790,75 @@ unittest {
 
 }
 
+struct AtomicQueue(T) {
+
+} //AtomicQueue
+
+unittest {
+
+}
+
+struct CircularBuffer(T) {
+
+	private {
+
+		Array!T array_;
+		size_t cur_index;
+
+	}
+
+	@disable this();
+	@disable this(this);
+
+	this(IAllocator allocator, size_t buffer_size) {
+		this.array_ = typeof(array_)(allocator, buffer_size);
+	} //this
+
+	ref T opIndex(size_t index) @safe @nogc nothrow {
+		return array_[index % array_.capacity];
+	} //opIndex
+
+	void opOpAssign(string op: "~")(T item) @safe @nogc nothrow {
+		array_[cur_index % array_.capacity] = item;
+		cur_index = (cur_index + 1) % array_.capacity;
+	} //opOpAssign
+
+	int opApply(int delegate(ref size_t i, ref T) dg) {
+		return array_.opApply(dg);
+	} //opApply
+
+	int opApply(int delegate(ref T) dg) {
+		return array_.opApply(dg);
+	} //opApply
+
+	@property size_t length() @safe {
+		return array_.capacity;
+	} //length
+
+	@property const(T*) ptr() {
+		return array_.ptr;
+	} //ptr
+
+	@property T last(int idx) {
+		auto i = (idx + cur_index) % array_.capacity;
+		return array_[i];
+	} //last
+
+} //CircularBuffer
+
+unittest {
+
+	auto c_buf = CircularBuffer!double(theAllocator, 32);
+
+	c_buf ~= 15;
+	c_buf ~= 25;
+
+	foreach (sample; c_buf) {
+
+	}
+
+}
+
 struct DHeap(int N, T) {
 
 	import std.algorithm : move;
@@ -787,7 +866,6 @@ struct DHeap(int N, T) {
 	private {
 
 		Array!T array_;
-		IAllocator allocator_;
 		size_t size_;
 
 	}
@@ -796,8 +874,7 @@ struct DHeap(int N, T) {
 	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size) {
-		this.allocator_ = allocator;
-		this.array_ = typeof(array_)(allocator_, initial_size);
+		this.array_ = typeof(array_)(allocator, initial_size);
 	} //this
 
 	uint nth_child(uint n, uint i) {
@@ -812,7 +889,7 @@ struct DHeap(int N, T) {
 
 	} //parent
 
-	void percolate_up(size_t cur) {
+	void percolateUp(size_t cur) {
 
 		if (cur == 0) return;
 
@@ -821,10 +898,10 @@ struct DHeap(int N, T) {
 			return;
 		} else {
 			swap(cur, p);
-			percolate_up(p);
+			percolateUp(p);
 		}
 
-	} //percolate_up
+	} //percolateUp
 
 	void swap(size_t source, size_t target) {
 
@@ -836,12 +913,12 @@ struct DHeap(int N, T) {
 	void insert(T thing) {
 
 		array_[size_] = thing;
-		percolate_up(size_);
+		percolateUp(size_);
 		size_++;
 
 	} //insert
 
-	void min_heapify(size_t cur) {
+	void minHeapify(size_t cur) {
 
 		size_t[N] children;
 		foreach (i, ref c; children) {
@@ -866,26 +943,34 @@ struct DHeap(int N, T) {
 				}
 
 				swap(cur, smallest_child);
-				min_heapify(smallest_child);
+				minHeapify(smallest_child);
 				return;
 
 			}
 		}
 
-	} //min_heapify
+	} //minHeapify
 
-	T delete_min() {
+	T deleteMin() {
 
 		size_--;
 		swap(0, size_); //swap root and last (we want root)
 		auto min = &array_[size_];
 		auto min_data = move(*min);
 		*min = T.max; //value should define a max, so it can be put out of the way in the heap
-		min_heapify(0);
+		minHeapify(0);
 
 		return min_data;
 
-	} //delete_min
+	} //deleteMin
+
+	void increaseKey(size_t i) {
+
+	} //increaseKey
+
+	void decreaseKey(size_t i) {
+
+	} //decreaseKey
 
 } //DHeap
 
@@ -934,7 +1019,7 @@ unittest {
 
 	foreach (c; checks) {
 
-		auto min_val = heap.delete_min();
+		auto min_val = heap.deleteMin();
 		auto expected = CompThing(c);
 		assert(min_val == expected, format("expected: %s, got: %s, \n tree was: %s", expected, min_val, heap.array_.array_));
 
@@ -947,12 +1032,10 @@ struct MatrixGraph(T) {
 
 struct HashSet(T) {
 
-	IAllocator allocator_;
 	HashMap!(T, bool) hashmap_;
 
 	this(IAllocator allocator, size_t initial_size) {
-		this.allocator_ = allocator;
-		this.hashmap_ = typeof(hashmap_)(allocator_, initial_size);
+		this.hashmap_ = typeof(hashmap_)(allocator, initial_size);
 	} //this
 
 	bool add(T item) {
@@ -1140,6 +1223,9 @@ struct StringBuffer {
 
 	}
 
+	@disable this();
+	@disable this(this);
+
 	this(size_t initial_size) {
 
 		this.array_ = typeof(array_)(theAllocator, initial_size);
@@ -1167,6 +1253,19 @@ struct StringBuffer {
 	const(char*) c_str() const nothrow @nogc {
 		return array_.ptr;
 	} //c_str
+
+	void scan_to_null() {
+
+		auto index = 0;
+		while (index < array_.capacity-1 && array_[index] != '\0') {
+			index++;
+		}
+
+		if (index < array_.capacity-1 && array_[index] == '\0') {
+			array_.length = index+1;
+		}
+
+	} //scan_to_null
 
 } //StringBuffer
 
@@ -1310,7 +1409,7 @@ struct StaticArray(T, size_t size) {
 	private T[size] array;
 
 	this(T[] items) {
-		foreach(e; items) {
+		foreach(ref e; items) {
 			array[elements++] = e;
 		}
 	} //this

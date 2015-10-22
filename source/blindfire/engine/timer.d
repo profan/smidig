@@ -39,11 +39,11 @@ struct StopWatch {
 
 	} //reset
 
-	static long ticks_per_second() {
+	static long ticksPerSecond() {
 
 		return Clock.ticksPerSecond();
 
-	} //ticks_per_second
+	} //ticksPerSecond
 
 	long peek() {
 
@@ -57,14 +57,55 @@ struct StopWatch {
 
 } //Timer
 
-ulong get_performance_counter() {
+struct WaitableTimer {
+
+	version(none) {
+
+		import core.stdc.stdio : printf;
+		import windows.windows;
+
+		HANDLE timer_ = null;
+
+		@disable this();
+		@disable this(this);
+
+		this(bool manual_reset) {
+			this.timer_ = CreateWaitableTimer(null, manual_reset, null);
+			if (!timer_) {
+				printf("CreateWaitableTimer failed (%d)\n", GetLastError());
+			}
+		} //this
+
+		int set_wait(LARGE_INTEGER time) {
+
+			return SetWaitableTimer(timer_, &time, 0, null, null, 0);
+
+		} //set_wait_time
+
+		void wait_for() {
+
+			WaitForSingleObject(timer_, INFINITE);
+
+		} //wait_for
+
+	}
+
+} //WaitableTimer
+
+ulong getPerformanceCounter() {
 
 	return SDL_GetPerformanceCounter();
 
 } //get_performance_counter
 
-ulong ticks_per_second() {
+ulong ticksPerSecond() {
 
 	return SDL_GetPerformanceFrequency();
 
-} //ticks_per_second
+} //ticksPerSecond
+
+void delayMs(uint ms) {
+
+	SDL_Delay(ms);
+
+} //delayMs

@@ -112,7 +112,7 @@ struct ObjectPool(T, uint ExpandSize = 10, Args...) {
 		reinitialize(obj, args);
 		obj.active = true;
 
-		return SmartPointer!(Item*, release)(obj);
+		return SmartPointer!(Item, release)(obj);
 
 	} //create
 
@@ -157,11 +157,18 @@ unittest {
 }
 
 struct Data(T) {
-	alias Type = T;
-	T object;
+
+	static if (is(T == class)) {
+		alias Type = T;
+	} else {
+		alias Type = T*;
+	}
+
+	Type object;
 	uint ref_count;
 	uint weak_count;
 	alias object this;
+
 } //Data
 
 mixin template AddForward(string data) {
@@ -173,28 +180,148 @@ mixin template AddForward(string data) {
 	}
 }
 
+struct SmartPointer(T) {
+
+	import blindfire.engine.memory : IAllocator, make, dispose;
+
+	static if (is(T == class)) {
+		alias Type = T;
+	} else {
+		alias Type = T*;
+	}
+
+	private {
+
+		IAllocator allocator_;
+
+		Data!(T)* data;
+
+	}
+
+	@property ref auto get() { return data.object; }
+	@disable this(); //no default construction
+	alias conv this;
+
+	this(Args...)(IAllocator allocator, Args args) {
+		allocator_ = allocator;
+		data = allocator_.make!(Data!T)();
+		data.object = allocator_.make!T(args);
+		data.ref_count = 1;
+		data.weak_count = 0;
+		//writefln("[SmartPointer] acquired object: %s", data.object);
+	} //this
+
+	this(Data!(T)* other_data) {
+		data = other_data;
+		data.ref_count += 1;
+	} //this(Data!T*)
+
+	this(ST)(Data!(ST)* other_data)
+		if (is(other_data.Type : Type))
+		{
+			data = cast(Data!(T)*)other_data;
+			data.ref_count += 1;
+			//writefln("[SmartPointer] copied object data explicitly: %s", data.object);
+	} //this(Data!ST*)
+
+	this(S)(SmartPointer!(S) s)
+		if (is(s.Type : Type))
+		{
+			data = s.data;
+			data.ref_count += 1;
+			//writefln("[SmartPointer] converted from object: %s", s.data.object);
+	} //this(S, F)
+
+	this(this) {
+		data = data;
+		data.ref_count += 1;
+		//writefln("[SmartPointer] copied object: %s", data.object);
+	} //this(this)
+
+	auto conv(S)() {
+		return SmartPointer!(S)(this.data);
+	} //conv
+
+	void opAssign(S, F)(SmartPointer!(S) s)
+		if (is(s.Type:Type)) 
+	{
+		if (data != s.data) {
+			doDestroy();
+		}
+		data = s.data;
+		data.ref_count += 1;
+		//writefln("[SmartPointer] converted from object: %s", s.data.object);
+	} //opAssign(S, F)
+
+	auto getWeak() {
+		return WeakPointer!(typeof(this))(this);
+	} //getWeak
+
+	@property auto opDispatch(string name)() {
+		return mixin("data." ~ name);
+	} //opDispatch
+
+	@property auto opDispatch(string name, Args...)(Args args) {
+		return mixin("data." ~ name)(args);
+	} //opDispatch(args)
+
+	//TODO assignment? do we actually want assignment?
+
+	void doDestroy() {
+		data.ref_count -= 1;
+		if (data.ref_count == 0) {
+			//writefln("[SmartPointer] destroyed object: %s", data.object);
+			allocator_.dispose(data.object);
+			if (data.weak_count == 0) {
+				allocator_.dispose(data);
+			}
+		}
+	} //doDestroy
+
+	~this() {
+		doDestroy();
+	} //~this
+
+} //SmartPointer
+
+version(unittest) {
+
+	import blindfire.engine.memory : theAllocator;
+
+	struct Test {
+
+	} //Test
+
+}
+
+unittest {
+
+	auto ptr_test = SmartPointer!Test(theAllocator);
+
+}
+
 struct SmartPointer(T, alias FreeFunc) {
 
 	import core.stdc.stdlib : malloc, free;
 
-	static if (is(T:Object)) {
+	static if (is(T == class)) {
 		alias Type = T;
 	} else {
-		alias Type = T;
+		alias Type = T*;
 	}
 
 	alias Func = FreeFunc;
 
 	private {
-		Data!T* data;
+		Data!(T)* data;
 	}
 
-	@property ref T get() { return data.object; }
+	@property ref auto get() { return data.object; }
 	@disable this(); //no default construction
 	alias conv this;
 
-	this(T thing) {
-		data = cast(Data!T*)malloc(Data!T.sizeof);
+	this(Type thing) {
+		data = cast(Data!(T)*)malloc(Data!T.sizeof);
 		data.object = thing;
 		data.ref_count = 1;
 		data.weak_count = 0;
@@ -202,9 +329,9 @@ struct SmartPointer(T, alias FreeFunc) {
 	} //this
 
 	this(ST)(Data!ST* other_data)
-		if (is(other_data.Type:Type))
+		if (is(other_data.Type : Type))
 		{
-			data = cast(Data!T*)other_data;
+			data = cast(Data!(T)*)other_data;
 			data.ref_count += 1;
 			//writefln("[SmartPointer] copied object data explicitly: %s", data.object);
 		} //this(Data!T*)
@@ -231,16 +358,16 @@ struct SmartPointer(T, alias FreeFunc) {
 		if (is(s.Type:Type)) 
 	{
 		if (data != s.data) {
-			do_destroy();
+			doDestroy();
 		}
 		data = s.data;
 		data.ref_count += 1;
 		//writefln("[SmartPointer] converted from object: %s", s.data.object);
 	} //opAssign(S, F)
 
-	auto get_weak() {
-		return WeakPointer!(typeof(this))(this);
-	} //get_weak
+	auto getWeak() {
+		return WeakPoolPointer!(typeof(this))(this);
+	} //getWeak
 
 	@property auto opDispatch(string name)() {
 		return mixin("data." ~ name);
@@ -252,7 +379,7 @@ struct SmartPointer(T, alias FreeFunc) {
 
 	//TODO assignment? do we actually want assignment?
 
-	void do_destroy() {
+	void doDestroy() {
 		data.ref_count -= 1;
 		if (data.ref_count == 0) {
 			//writefln("[SmartPointer] destroyed object: %s", data.object);
@@ -261,10 +388,10 @@ struct SmartPointer(T, alias FreeFunc) {
 				free(data);
 			}
 		}
-	} //do_destroy
+	} //doDestroy
 
 	~this() {
-		do_destroy();
+		doDestroy();
 	} //~this
 
 } //SmartPointer
@@ -278,6 +405,54 @@ unittest {
 }
 
 struct WeakPointer(SmartPtr) {
+
+	import blindfire.engine.memory : IAllocator, dispose;
+
+	private IAllocator allocator_;
+	private typeof(SmartPtr.data) data;
+	alias get this;
+
+	private this(ref SmartPtr ptr) {
+		writefln("[WeakPointer] created from: %s", ptr);
+		allocator_ = ptr.allocator_;
+		data = ptr.data;
+		data.weak_count += 1;
+	} //this
+
+	private this(this) {
+		data = data;
+		data.weak_count += 1;
+		writefln("[WeakPointer] copied: %s", data);
+	} //this(this)
+
+	bool isNull() {
+		return data.object !is null;
+	} //isNull
+
+	SmartPtr get() {
+		return SmartPtr(data);
+	} //get
+
+	void doDestroy() {
+		data.weak_count -= 1;
+		if (data.ref_count == 0 && data.weak_count == 0) {
+			writefln("[WeakPointer] destroyed container: %s", data);
+			allocator_.dispose(data);
+		}
+	} //doDestroy
+
+	~this() {
+		doDestroy();
+		writefln("[WeakPointer] destroyed.");
+	} //~this
+
+} //WeakPointer
+
+unittest {
+
+}
+
+struct WeakPoolPointer(SmartPtr) {
 
 	private typeof(SmartPtr.data) data;
 	alias get this;
@@ -302,7 +477,7 @@ struct WeakPointer(SmartPtr) {
 		return SmartPtr(data);
 	} //get
 
-	void do_destroy() {
+	void doDestroy() {
 		data.weak_count -= 1;
 		if (data.ref_count == 0 && data.weak_count == 0) {
 			writefln("[WeakPointer] destroyed container: %s", data);
@@ -311,7 +486,7 @@ struct WeakPointer(SmartPtr) {
 	} //doDestroy
 
 	~this() {
-		do_destroy();
+		doDestroy();
 		writefln("[WeakPointer] destroyed.");
 	} //~this
 
