@@ -35,7 +35,8 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 		float value = cast(float)ev.value;
 		float normalized = normalize!float(value, 0.0f, 1.0f, 32768.0f);
 
-		components[ev.id].velocity += normalized;
+		auto cmp = ev.id in components;
+		cmp.velocity += (angleToVec2!float(cmp.transform.rotation.z) * normalized);
 
 	} //onAnalogMovement
 
@@ -44,20 +45,22 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 		import blindfire.engine.math : rotate;
 
 		float value = cast(float)ev.value;
-		float normalized = normalize!float(value, -1.0f, 1.0f, 32768.0f);
+		float normalized = normalize(value, -1.0f, 1.0f, 32768.0f);
 
-		components[ev.id].transform.rotation.z += normalized;
-		components[ev.id].velocity = components[ev.id].velocity.rotate(cast(double)normalized);
+		auto cmp = ev.id in components;
+		cmp.transform.rotation.z += normalized;
 
 	} //onAnalogRotation
 
 	void update() {
 
+		import derelict.imgui.imgui;
+
 		foreach (id, ref comp; components) with (comp) {
 			transform.position += velocity;
 		}
 
-	}
+	} //update
 
 } //TransformManager
 

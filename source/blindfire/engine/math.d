@@ -11,6 +11,10 @@ alias Vec4f = Vector!(float, 4);
 alias Mat3f = Matrix!(float, 3, 3);
 alias Mat4f = Matrix!(float, 4, 4);
 
+T clamp(T)(T value, T min, T max) pure @nogc nothrow {
+	return (value > max) ? max : (value < min) ? min : value;
+} //clamp
+
 T normalize(T)(T val, T min, T max, T val_max) pure @nogc nothrow {
 	return (min + val) / (val_max / (max - min));
 } //normalize
@@ -43,6 +47,13 @@ T rotate(T)(ref T vec, double radians) nothrow @nogc pure {
 	return T(ca*vec.x - sa*vec.y, sa*vec.x + ca*vec.y);
 
 } //rotate
+
+auto angleToVec2(T)(float angle) {
+
+	auto vec = Vector!(T, 2)(cos(angle), sin(angle));
+	return vec;
+
+} //angleToVec2
 
 T._T squaredDistanceTo(T)(ref T vec, ref T other_vec) nothrow @nogc pure if (is(T : Vector) && T._N == 2) {
 
