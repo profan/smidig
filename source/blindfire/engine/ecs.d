@@ -131,7 +131,7 @@ class EntityManager {
 
 		static if (is(C == void)) {
 
-			foreach(sys; cms) {
+			foreach(ref sys; cms) {
 				sys.unregister(entity);
 			}
 
@@ -143,15 +143,15 @@ class EntityManager {
 
 		static if (is(S == void)) {
 
-			foreach(arr; systems) {
-				foreach(sys; arr) {
+			foreach(ref arr; systems) {
+				foreach(ref sys; arr) {
 					sys.unregister(entity);
 				}
 			}
 
 		} else {
 
-			foreach(sys; systems[identifier!(S)]) {
+			foreach(ref sys; systems[identifier!(S)]) {
 				sys.unregister(entity);
 			}
 
@@ -206,7 +206,7 @@ class EntityManager {
 
 	void tick(T, Args...)(Args args) {
 
-		foreach (sys; systems[T.identifier]) {
+		foreach (ref sys; systems[T.identifier]) {
 			T s = cast(T)sys; //this is slightly evil
 			s.update(args);
 		}
@@ -397,13 +397,13 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 version(unittest) {
 
-	interface UpdateSystem : ComponentSystem!(0) {
+	interface TestUpdateSystem : ComponentSystem!(0) {
 
 		void update();
 
 	}
 
-	interface DrawSystem : ComponentSystem!(1, int) {
+	interface TestDrawSystem : ComponentSystem!(1) {
 
 		void update(int value);
 
@@ -413,7 +413,7 @@ version(unittest) {
 		int value;
 	}
 
-	class SomeManager : ComponentManager!(UpdateSystem, SomeComponent, 1) {
+	class SomeManager : ComponentManager!(TestUpdateSystem, SomeComponent, 1) {
 
 		void update() {
 			foreach (ref comp; components) {
@@ -427,7 +427,7 @@ version(unittest) {
 		@dependency SomeComponent* sc;
 	}
 
-	class OtherManager : ComponentManager!(UpdateSystem, OtherComponent, 2) {
+	class OtherManager : ComponentManager!(TestUpdateSystem, OtherComponent, 2) {
 
 		void update() {
 			foreach (ref comp; components) {
@@ -443,7 +443,7 @@ version(unittest) {
 		int value;
 	}
 
-	class DrawManager : ComponentManager!(DrawSystem, DrawComponent, 1) {
+	class DrawManager : ComponentManager!(TestDrawSystem, DrawComponent, 1) {
 
 		void update(int value) {
 			foreach (ref comp; components) {
@@ -495,12 +495,12 @@ unittest {
 	em.getComponent!SomeComponent(entity).value = 0;
 
 	{
-		em.tick!(UpdateSystem)(); //one iteration, value should now be 2
+		em.tick!TestUpdateSystem(); //one iteration, value should now be 2
 		auto val = em.getComponent!SomeComponent(entity).value;
 		assert(val == 2, format("expected val of SomeComponent to be 2, order of updating is incorrect, was :%d", val));
 	}
 	{
-		em.tick!(DrawSystem)(10); //one iteration, value should now be 10
+		em.tick!TestDrawSystem(10); //one iteration, value should now be 10
 		auto val = em.getComponent!DrawComponent(entity).value;
 		assert(val == 10);
 	}

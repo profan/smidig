@@ -11,6 +11,8 @@ import derelict.alure.alure;
 import derelict.opengl3.gl;
 import derelict.freetype.ft;
 import derelict.imgui.imgui;
+import derelict.enet.enet;
+
 import derelict.util.loader;
 import derelict.util.exception;
 
@@ -45,14 +47,15 @@ void initialize_systems() {
 		DerelictSDL2, DerelictSDL2Image,
 		DerelictSDL2ttf, DerelictFT,
 		DerelictGL, DerelictAL,
-		DerelictALURE, DerelictImgui);
+		DerelictALURE, DerelictImgui,
+		DerelictENet);
 
 	foreach (T; libs) {
 		T.missingSymbolCallback = &missingSymFunc;
 		T.load();
 	}
 
-	if (SDL_Init(SDL_INIT_JOYSTICK) < 0) {
+	if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
 		printf("[GAME] SDL_Init, could not initialize: %s", SDL_GetError());
 		exit(2);
 	}
@@ -82,6 +85,8 @@ void main() {
 	scope(exit) allocator.reportStatistics(stdout);
 
 	/* game part */
+	import trackallocs;
+	auto tracker = allocsTracker();
 	import blindfire.game : NewGame;
 
 	initialize_systems();
