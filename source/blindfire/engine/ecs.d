@@ -44,10 +44,11 @@ class EntityManager {
 		}
 	} //~this
 
-	void registerSystem(S, Args...)(Args args) {
+	S registerSystem(S, Args...)(Args args) {
 
 		auto new_sys = allocator_.make!S(args);
 		this.addSystem(new_sys);
+		return new_sys;
 
 	} //registerSystem
 
