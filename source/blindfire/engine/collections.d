@@ -1409,7 +1409,7 @@ struct StaticArray(T, size_t size) {
 	private T[size] array;
 
 	this(T[] items) {
-		foreach(e; items) {
+		foreach(ref e; items) {
 			array[elements++] = e;
 		}
 	} //this

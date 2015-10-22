@@ -48,7 +48,7 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 		float normalized = normalize(value, -1.0f, 1.0f, 32768.0f);
 
 		auto cmp = ev.id in components;
-		cmp.transform.rotation.z += normalized;
+		cmp.transform.rotation.z += normalized/10;
 
 	} //onAnalogRotation
 

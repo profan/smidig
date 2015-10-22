@@ -27,15 +27,23 @@ class EntityManager {
 		IAllocator allocator_;
 
 		Array!IComponentManager cms;
-		StaticArray!(IComponentManager[], MAX_SYSTEMS) systems;
+		Array!(Array!IComponentManager) systems;
 
 		LocalEntityID current_id = 0;
 
 	}
 
 	this(IAllocator allocator) {
+
 		this.allocator_ = allocator;
 		this.cms = typeof(cms)(allocator_, INITIAL_SYSTEMS);
+		this.systems = typeof(systems)(allocator_, MAX_SYSTEMS);
+		this.systems.length = MAX_SYSTEMS;
+
+		foreach (ref a; systems) {
+			a = typeof(a)(allocator_, 8);
+		}
+
 	} //this
 
 	~this() {
@@ -59,7 +67,7 @@ class EntityManager {
 		cm.setManager(this);
 		uint id = S.identifier;
 		systems[id] ~= cm;
-		sort(systems[id]);
+		sort(systems[id][]);
 		cms ~= cm;
 		sort(cms[]); //todo replace
 
