@@ -44,8 +44,6 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 
 	void onAnalogRotation(ref AnalogRotEvent ev) {
 
-		import blindfire.engine.math : rotate;
-
 		float value = cast(float)ev.value;
 		float normalized = normalize(value, -1.0f, 1.0f, 32768.0f);
 

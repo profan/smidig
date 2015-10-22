@@ -39,6 +39,10 @@ bool point_in_rect(int x, int y, int r_x, int r_y, int w, int h) nothrow @nogc p
 	return (x < r_x + w && y < r_y + h && x > r_x && y > r_y);
 } //point_in_rect
 
+bool point_in_rect(T)(Vector!(T, 2) point, Vector!(T, 4) rect) nothrow @nogc pure {
+	return point_in_rect(point.x, point.y, rect.x, rect.y, rect.z, rect.w);
+} //point_in_rect
+
 /* vector related ufcs extensions */
 T rotate(T)(ref T vec, double radians) nothrow @nogc pure {
 
@@ -48,7 +52,7 @@ T rotate(T)(ref T vec, double radians) nothrow @nogc pure {
 
 } //rotate
 
-auto angleToVec2(T)(float angle) {
+auto angleToVec2(T)(float angle) nothrow @nogc pure{
 
 	auto vec = Vector!(T, 2)(cos(angle), sin(angle));
 	return vec;
@@ -61,3 +65,11 @@ T._T squaredDistanceTo(T)(ref T vec, ref T other_vec) nothrow @nogc pure if (is(
 		((vec.y - other_vec.y)*(vec.y - other_vec.y));
 
 } //squaredDistanceTo
+
+float deg2Rad(float degrees) {
+	return degrees * (PI/180);
+} //deg2Rad
+
+float rad2Deg(float radians) {
+	return radians * (180/PI);
+} //rad2Deg
