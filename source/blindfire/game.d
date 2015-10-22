@@ -87,6 +87,7 @@ struct NewGame {
 		auto s_man = ea.make!SpriteManager();
 
 		event_manager_.register!AnalogAxisEvent(&t_man.onAnalogMovement);
+		event_manager_.register!AnalogRotEvent(&t_man.onAnalogRotation);
 		entity_manager_.addSystems(t_man, c_man, s_man);
 
 	} //initialize_systems
@@ -122,8 +123,15 @@ struct NewGame {
 			event_manager_.push!AnalogAxisEvent(AxisPayload(unit, value));
 		} //on_axis
 
+		void on_rot_axis(int value) {
+			event_manager_.push!AnalogRotEvent(AxisPayload(unit, value));
+		} //on_rot_axis
+
 		engine_.input_handler_.bind_controlleraxis
 			(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, &on_axis);
+
+		engine_.input_handler_.bind_controlleraxis
+			(SDL_CONTROLLER_AXIS_LEFTX, &on_rot_axis);
 
 	} //load_resources
 

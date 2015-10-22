@@ -24,17 +24,18 @@ class EntityManager {
 
 	private {
 
+		IAllocator allocator_;
+
 		Array!IComponentManager cms;
 		StaticArray!(IComponentManager[], MAX_SYSTEMS) systems;
 
 		LocalEntityID current_id = 0;
-		IAllocator allocator_;
 
 	}
 
 	this(IAllocator allocator) {
 		this.allocator_ = allocator;
-		this.cms = typeof(cms)(allocator, INITIAL_SYSTEMS);
+		this.cms = typeof(cms)(allocator_, INITIAL_SYSTEMS);
 	} //this
 
 	void addSystem(S)(S cm) {

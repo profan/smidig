@@ -28,12 +28,26 @@ interface DrawSystem : ComponentSystem!(1) {
 class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) {
 
 	import blindfire.defs;
+	import blindfire.engine.math;
 
 	void onAnalogMovement(ref AnalogAxisEvent ev) {
-		components[ev.id].velocity += ev.value;
+
+		float value = cast(float)ev.value;
+		float normalized = normalize!float(value, 0.0f, 1.0f, 32768.0f);
+
+		components[ev.id].velocity += normalized;
+
 	} //onAnalogMovement
 
-	void onAnalogRotation(ref AnalogAxisEvent ev) {
+	void onAnalogRotation(ref AnalogRotEvent ev) {
+
+		import blindfire.engine.math : rotate;
+
+		float value = cast(float)ev.value;
+		float normalized = normalize!float(value, -1.0f, 1.0f, 32768.0f);
+
+		components[ev.id].transform.rotation.z += normalized;
+		components[ev.id].velocity = components[ev.id].velocity.rotate(cast(double)normalized);
 
 	} //onAnalogRotation
 
