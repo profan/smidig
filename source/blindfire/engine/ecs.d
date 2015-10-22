@@ -17,7 +17,7 @@ enum dependency = "dependency";
 class EntityManager {
 
 	import blindfire.engine.collections : Array, StaticArray;
-	import blindfire.engine.memory : IAllocator;
+	import blindfire.engine.memory : IAllocator, make, dispose;
 
 	enum INITIAL_SYSTEMS = 10;
 	enum MAX_SYSTEMS = 10;
@@ -37,6 +37,19 @@ class EntityManager {
 		this.allocator_ = allocator;
 		this.cms = typeof(cms)(allocator_, INITIAL_SYSTEMS);
 	} //this
+
+	~this() {
+		foreach (man; cms) {
+			allocator_.dispose(man);
+		}
+	} //~this
+
+	void registerSystem(S, Args...)(Args args) {
+
+		auto new_sys = allocator_.make!S(args);
+		this.addSystem(new_sys);
+
+	} //registerSystem
 
 	void addSystem(S)(S cm) {
 

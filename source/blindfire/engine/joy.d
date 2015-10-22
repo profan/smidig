@@ -8,12 +8,13 @@ struct JoyVisualizer {
 
 		import derelict.sdl2.types;
 
-		handler.bind_controlleraxis(SDL_CONTROLLER_AXIS_LEFTX, &left_x);
-		handler.bind_controlleraxis(SDL_CONTROLLER_AXIS_LEFTY, &left_y);
-		handler.bind_controlleraxis(SDL_CONTROLLER_AXIS_RIGHTX, &right_x);
-		handler.bind_controlleraxis(SDL_CONTROLLER_AXIS_RIGHTY, &right_y);
-		handler.bind_controlleraxis(SDL_CONTROLLER_AXIS_TRIGGERLEFT, &trigger_left);
-		handler.bind_controlleraxis(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, &trigger_right);
+		handler
+			.bind_controlleraxis(SDL_CONTROLLER_AXIS_LEFTX, &left_x)
+			.bind_controlleraxis(SDL_CONTROLLER_AXIS_LEFTY, &left_y)
+			.bind_controlleraxis(SDL_CONTROLLER_AXIS_RIGHTX, &right_x)
+			.bind_controlleraxis(SDL_CONTROLLER_AXIS_RIGHTY, &right_y)
+			.bind_controlleraxis(SDL_CONTROLLER_AXIS_TRIGGERLEFT, &trigger_left)
+			.bind_controlleraxis(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, &trigger_right);
 
 	} //this
 

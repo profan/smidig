@@ -82,13 +82,13 @@ struct NewGame {
 		this.entity_manager_ = ea.make!EntityManager(engine_.allocator_);
 
 		//systems
-		auto t_man = ea.make!TransformManager();
-		auto c_man = ea.make!CollisionManager(Vec2i(640, 480));
-		auto s_man = ea.make!SpriteManager();
+		this.entity_manager_.registerSystem!TransformManager();
+		this.entity_manager_.registerSystem!CollisionManager(Vec2i(640, 480));
+		this.entity_manager_.registerSystem!SpriteManager();
 
+		auto t_man = cast(TransformManager)entity_manager_.getManager!TransformComponent();
 		event_manager_.register!AnalogAxisEvent(&t_man.onAnalogMovement);
 		event_manager_.register!AnalogRotEvent(&t_man.onAnalogRotation);
-		entity_manager_.addSystems(t_man, c_man, s_man);
 
 	} //initialize_systems
 
