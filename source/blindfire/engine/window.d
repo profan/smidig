@@ -133,13 +133,13 @@ struct Window {
 
 	} //toggle_fullscreen
 
-	void toggle_wireframe() {
+	void toggleWireframe() {
 		
 		static GLenum current = GL_FILL;
 		current = (current == GL_FILL) ? GL_LINE : GL_FILL;
 		glPolygonMode(GL_FRONT_AND_BACK, current);
 
-	} //toggle_wireframe
+	} //toggleWireframe
 
 	void handleEvents(ref SDL_Event ev) {
 		if (ev.type == SDL_QUIT) {

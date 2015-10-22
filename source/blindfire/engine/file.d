@@ -14,10 +14,10 @@ StringBuffer readFile(in char[] file_path) {
 		printf("File error (does it exist?). \n");
 	}
 
-	size_t filesize = get_filesize(file);
+	size_t filesize = getFilesize(file);
 	auto string_buf = StringBuffer(filesize + 1);
 
-	result = fread_str(cast(char*)string_buf.c_str(), char.sizeof, filesize, file);
+	result = freadStr(cast(char*)string_buf.c_str(), char.sizeof, filesize, file);
 	if (result != filesize) {
 		printf("Error reading file: %s, filesize was: %zu, expected: %zu. \n", 
 			   file_path.ptr, result, filesize);
@@ -32,11 +32,11 @@ StringBuffer readFile(in char[] file_path) {
 
 } //readFile
 
-void save_file(in char[] path, String contents) {
+void saveFile(in char[] path, String contents) {
 
-} //save_file
+} //saveFile
 
-size_t get_filesize(FILE *file) nothrow @nogc {
+size_t getFilesize(FILE *file) nothrow @nogc {
 
 	fseek(file, 0, SEEK_END);
 	long size = ftell(file);
@@ -48,13 +48,13 @@ size_t get_filesize(FILE *file) nothrow @nogc {
 
 	return cast(size_t)size; //TODO consider the sanity of this
 
-} //get_filesize
+} //getFilesize
 
-size_t fread_str(char *buf, size_t buf_size, size_t filesize, FILE *file) nothrow @nogc {
+size_t freadStr(char *buf, size_t buf_size, size_t filesize, FILE *file) nothrow @nogc {
 
 	size_t result = fread(buf, buf_size, filesize, file);
 	buf[filesize] = '\0';
 
 	return result;
 
-} //fread_str
+} //freadStr

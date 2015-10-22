@@ -186,7 +186,7 @@ struct NewGame {
 			chat_.tick(); //draw chat window!
 		}
 
-		profiler_.sample_update(engine_.update_time_);
+		profiler_.sampleUpdate(engine_.update_time_);
 
 	} //update
 
@@ -206,7 +206,7 @@ struct NewGame {
 		entity_manager_.tick!DrawSystem(&engine_.window_);
 
 		draw_debug();
-		profiler_.sample_frame(engine_.frame_time_);
+		profiler_.sampleFrame(engine_.frame_time_);
 
 	} //draw
 

@@ -28,14 +28,14 @@ struct Profiler {
 
 	} //this
 
-	void sample_update(double updatetime) {
+	void sampleUpdate(double updatetime) {
 
 		//add sample to buffer
 		updatetimes_ ~= cast(float)updatetime;
 
-	} //sample_update
+	} //sampleUpdate
 
-	void sample_frame(double frametime) {
+	void sampleFrame(double frametime) {
 
 		//add sample to buffer
 		frametimes_ ~= cast(float)frametime;
