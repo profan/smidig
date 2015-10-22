@@ -32,11 +32,13 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 
 	void onAnalogMovement(ref AnalogAxisEvent ev) {
 
+		enum offset = deg2Rad(-135);
+
 		float value = cast(float)ev.value;
 		float normalized = normalize!float(value, 0.0f, 1.0f, 32768.0f);
 
 		auto cmp = ev.id in components;
-		cmp.velocity += (angleToVec2!float(cmp.transform.rotation.z) * normalized);
+		cmp.velocity += (angleToVec2!float(cmp.transform.rotation.z + offset) * normalized);
 
 	} //onAnalogMovement
 
@@ -51,6 +53,10 @@ class TransformManager : ComponentManager!(UpdateSystem, TransformComponent, 3) 
 		cmp.transform.rotation.z += normalized;
 
 	} //onAnalogRotation
+
+	override void onInit(EntityID entity, TransformComponent* component) {
+
+	} //onInit
 
 	void update() {
 
