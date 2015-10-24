@@ -115,8 +115,8 @@ struct Array(T) {
 		return array_[h..t];
 	} //opSlice
 
-	void opOpAssign(string op: "~")(T item) @safe {
-		this.add(item);
+	void opOpAssign(string op: "~")(T item) @trusted {
+		this.add(move(item));
 	} //opOpAssign
 
 	void opOpAssign(string op: "~")(in T[] items) @safe {
@@ -326,7 +326,7 @@ struct SegmentedArray(T) {
 		auto num_segments = arrays_.length;
 
 		if (arrays_[$-1].length == segment_size_) {
-			arrays_.add(typeof(arrays_[0])(allocator_, segment_size_));
+			arrays_ ~= typeof(arrays_[0])(allocator_, segment_size_); 
 		}
 
 		arrays_[$-1].add(item);
