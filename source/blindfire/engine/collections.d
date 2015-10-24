@@ -258,6 +258,37 @@ unittest {
 /* non resizeable heap allocated array. */
 struct FixedArray(T) {
 
+	private {
+
+		Array!T array_;
+
+	}
+
+	this(IAllocator allocator, size_t size) {
+
+		this.array_ = typeof(array_)(allocator, size);
+
+	} //this
+
+	bool add(ref T item) {
+
+		if (array_.length + 1 == array_.capacity) {
+			return false; //cant add more to fixed size array, is full
+		}
+
+		array_.add(item);
+		return true;
+
+	} //add
+
+	void remove(size_t index) {
+		array_.remove(index);
+	} //remove
+
+	ref T opIndex(size_t index) nothrow @nogc {
+		return array_[index];
+	} //opIndex
+
 } //FixedArray
 
 unittest {
@@ -268,9 +299,51 @@ unittest {
 /* - composed of fixed size arrays. */
 struct SegmentedArray(T) {
 
+	private {
+
+		IAllocator allocator_;
+
+		size_t segment_size_;
+		Array!(FixedArray!T) arrays_;
+
+	}
+
+	this(IAllocator allocator, size_t segment_size) {
+
+		this.allocator_ = allocator;
+		this.segment_size_ = segment_size;
+		this.arrays_ = typeof(arrays_)(allocator_, 1);
+		this.arrays_[0] = typeof(arrays_[0])(allocator_, segment_size_);
+
+	} //this
+
+	void add(T item) {
+
+		auto num_segments = arrays_.length;
+
+	} //add
+
+	void remove(size_t index) {
+
+		auto sz = segment_size_;
+		auto which_arr_idx = index / sz;
+		return arrays_[which_arr_idx].remove(index % sz);
+
+	} //remove
+
+	ref T opIndex(size_t index) nothrow @nogc {
+
+		auto sz = segment_size_;
+		auto which_arr_idx = index / sz;
+		return arrays_[which_arr_idx][index % sz];
+
+	} //opIndex
+
 } //SegmentedArray
 
 unittest {
+
+	auto integers = SegmentedArray!int(theAllocator, 32);
 
 }
 
