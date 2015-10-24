@@ -264,6 +264,10 @@ struct FixedArray(T) {
 
 	}
 
+	@property size_t length() {
+		return array_.length;
+	} //length
+
 	this(IAllocator allocator, size_t size) {
 
 		this.array_ = typeof(array_)(allocator, size);
@@ -320,6 +324,12 @@ struct SegmentedArray(T) {
 	void add(T item) {
 
 		auto num_segments = arrays_.length;
+
+		if (arrays_[$-1].length == segment_size_) {
+			arrays_.add(typeof(arrays_[0])(allocator_, segment_size_));
+		}
+
+		arrays_[$-1].add(item);
 
 	} //add
 
