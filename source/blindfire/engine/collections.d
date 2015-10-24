@@ -321,7 +321,7 @@ struct SegmentedArray(T) {
 		this.allocator_ = allocator;
 		this.segment_size_ = segment_size;
 		this.arrays_ = typeof(arrays_)(allocator_, 1);
-		this.arrays_[0] = typeof(arrays_[0])(allocator_, segment_size_);
+		this.arrays_ ~= typeof(arrays_[0])(allocator_, segment_size_);
 
 	} //this
 
@@ -358,6 +358,13 @@ struct SegmentedArray(T) {
 unittest {
 
 	auto integers = SegmentedArray!int(theAllocator, 32);
+
+	auto tests = [1, 5, 72, 432, 632, 532, 52];
+
+	foreach (i, t; tests) {
+		integers.add(t);
+		assert(integers[i] == t);
+	}
 
 }
 
