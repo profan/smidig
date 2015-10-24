@@ -16,6 +16,8 @@ enum dependency = "dependency";
 
 class EntityManager {
 
+	import core.stdc.stdio : printf;
+
 	import blindfire.engine.collections : Array, StaticArray;
 	import blindfire.engine.memory : IAllocator, make, dispose;
 
@@ -60,26 +62,30 @@ class EntityManager {
 
 	} //registerSystem
 
-	void addSystem(S)(S cm) {
+	private {
 
-		static assert(S.identifier >= 0 && S.identifier < MAX_SYSTEMS);
+		void addSystem(S)(S cm) {
 
-		cm.setManager(this);
-		uint id = S.identifier;
-		systems[id] ~= cm;
-		sort(systems[id][]);
-		cms ~= cm;
-		sort(cms[]); //todo replace
+			static assert(S.identifier >= 0 && S.identifier < MAX_SYSTEMS);
 
-	} //addSystem
+			cm.setManager(this);
+			uint id = S.identifier;
+			systems[id] ~= cm;
+			sort(systems[id][]);
+			cms ~= cm;
+			sort(cms[]); //todo replace
 
-	void addSystems(S...)(S systems) {
+		} //addSystem
 
-		foreach (sys; systems) {
-			addSystem(sys);
-		}
+		void addSystems(S...)(S systems) {
 
-	} //addSystems
+			foreach (sys; systems) {
+				addSystem(sys);
+			}
+
+		} //addSystems
+
+	}
 
 	EntityID createEntity(EntityID entity) nothrow @nogc const {
 
@@ -160,7 +166,6 @@ class EntityManager {
 
 	} //unregister
 
-	import core.stdc.stdio : printf;
 	bool register(C)(EntityID entity) {
 
 		IComponentManager em = getManager!C();
