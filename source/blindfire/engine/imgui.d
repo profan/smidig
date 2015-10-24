@@ -28,21 +28,25 @@ struct ImguiContext {
 	import blindfire.engine.input : AnyKey, InputHandler;
 	import blindfire.engine.window : Window;
 
-	//mammory
-	IAllocator allocator_;
+	private {
 
-	//opengl handles
-	Shader* shader_;
-	Texture* font_texture_;
-	GLuint vao, vbo, elements;
+		//mammory
+		IAllocator allocator_;
 
-	double time_;
-	bool[3] mouse_buttons_pressed_;
-	float scroll_wheel_;
+		//opengl handles
+		Shader* shader_;
+		Texture* font_texture_;
+		GLuint vao, vbo, elements;
 
-	//external state
-	Window* window_;
-	InputHandler* input_handler_;
+		double time_;
+		bool[3] mouse_buttons_pressed_;
+		float scroll_wheel_;
+
+		//external state
+		Window* window_;
+		InputHandler* input_handler_;
+
+	}
 
 	@disable this();
 	@disable this(this);
@@ -113,10 +117,11 @@ struct ImguiContext {
 
 			case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
 				auto btn = ev.button.button;
+
 				if (btn < 4) {
-					auto cur = mouse_buttons_pressed_[btn-1];
 					mouse_buttons_pressed_[btn-1] = (ev.type == SDL_MOUSEBUTTONDOWN);
 				}
+
 				break;
 
 			case SDL_MOUSEWHEEL:
