@@ -119,6 +119,10 @@ struct Array(T) {
 		this.add(move(item));
 	} //opOpAssign
 
+	void opOpAssign(string op: "~")(ref T item) @safe {
+		this.add(item);
+	} //opOpAssign
+
 	void opOpAssign(string op: "~")(in T[] items) @safe {
 		foreach (ref item; items) {
 			this.add(item);
