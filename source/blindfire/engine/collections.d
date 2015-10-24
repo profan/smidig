@@ -1254,7 +1254,7 @@ struct StringBuffer {
 		return array_.ptr;
 	} //c_str
 
-	void scan_to_null() {
+	void scanToNull() {
 
 		auto index = 0;
 		while (index < array_.capacity-1 && array_[index] != '\0') {
@@ -1265,7 +1265,7 @@ struct StringBuffer {
 			array_.length = index+1;
 		}
 
-	} //scan_to_null
+	} //scanToNull
 
 } //StringBuffer
 
@@ -1431,7 +1431,7 @@ struct StaticArray(T, size_t size) {
 	} //ptr
 
 	static if (is(T == char)) {
-		void scan_to_null() {
+		void scanToNull() {
 
 			auto index = 0;
 			while (index < array.length-1 && array[index] != '\0') {
@@ -1442,7 +1442,7 @@ struct StaticArray(T, size_t size) {
 				elements = index+1;
 			}
 
-		} //scan_to_null
+		} //scanToNull
 	}
 
 	size_t opDollar(int dim)() const {

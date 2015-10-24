@@ -26,7 +26,7 @@ StringBuffer readFile(in char[] file_path) {
 	fclose(file);
 
 	/* readjust length, since direct manip has occured */
-	string_buf.scan_to_null();
+	string_buf.scanToNull();
 
 	return string_buf;
 

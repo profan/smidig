@@ -111,18 +111,11 @@ struct ImguiContext {
 
 				break;
 
-			case SDL_MOUSEBUTTONDOWN:
-				auto btn = ev.button.button;
-				if (btn < 4) {
-					mouse_buttons_pressed_[btn-1] = true;
-				}
-				break;
-
-			case SDL_MOUSEBUTTONUP:
+			case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
 				auto btn = ev.button.button;
 				if (btn < 4) {
 					auto cur = mouse_buttons_pressed_[btn-1];
-					mouse_buttons_pressed_[btn-1] = !cur;
+					mouse_buttons_pressed_[btn-1] = (ev.type == SDL_MOUSEBUTTONDOWN);
 				}
 				break;
 

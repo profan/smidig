@@ -42,14 +42,12 @@ struct Profiler {
 
 	} //sample
 
-	struct Data {
-		float delegate(int idx) callback;
-	} //Data
+	alias Callback = float delegate(int idx);
 
 	static extern(C) float doCallback(void* ptr, int idx) {
 
-		auto d = *(cast(Data*) ptr);
-		return d.callback(idx);
+		auto callback = *(cast(Callback*) ptr);
+		return callback(idx);
 
 	} //doCallback;
 
@@ -64,8 +62,8 @@ struct Profiler {
 		igSetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_FirstUseEver);
 		igBegin("Profiler");
 
-		auto update_callback = Data(&updatetimes_.last);
-		auto frame_callback = Data(&frametimes_.last);
+		auto update_callback = &updatetimes_.last;
+		auto frame_callback = &frametimes_.last;
 
 		igPlotLines2("update times", &doCallback, cast(void*)&update_callback, updatetimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
 		igPlotLines2("frame times", &doCallback, cast(void*)&frame_callback, frametimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));

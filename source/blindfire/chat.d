@@ -94,7 +94,7 @@ struct Chat {
 
 		//user wants to send shit?
 		if (did_submit) {
-			input_buffer_.scan_to_null();
+			input_buffer_.scanToNull();
 			ev_man_.fire!PushEvent(input_buffer_[]);
 			input_buffer_ = input_buffer_.init;
 		}
