@@ -299,7 +299,6 @@ struct FixedArray(T) {
 
 	}
 
-	@disable this();
 	@disable this(this);
 
 	this(IAllocator allocator, size_t size) {
@@ -349,6 +348,8 @@ struct SegmentedArray(T) {
 		Array!(FixedArray!T) arrays_;
 
 	}
+
+	@disable this(this);
 
 	this(IAllocator allocator, size_t segment_size) {
 
