@@ -98,7 +98,7 @@ struct Engine {
 		//initialize networking subsystem
 		this.network_evman_.construct(EventMemory, NetEventType.max);
 		this.network_manager_.construct(allocator_, &network_evman_);
-		this.network_evman_.register!PushEvent(&network_manager_.on_data_push);
+		this.network_evman_.register!PushEvent(&network_manager_.onDataPush);
 		initialize_enet();
 
 		//initialize sound subsystem

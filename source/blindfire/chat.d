@@ -43,7 +43,19 @@ struct Chat {
 		this.buffer_ = typeof(buffer_)(256);
 		this.clients_ = typeof(clients_)(allocator_, 16);
 
+		ev_man_.register!ConnectionEvent(&onPeerConnect);
+		ev_man_.register!DisconnectionEvent(&onPeerDisconnect);
+		ev_man_.register!UpdateEvent(&onNetworkUpdate);
+
 	} //this
+
+	~this() {
+
+		ev_man_.unregister!ConnectionEvent(&onPeerConnect);
+		ev_man_.unregister!DisconnectionEvent(&onPeerDisconnect);
+		ev_man_.unregister!UpdateEvent(&onNetworkUpdate);
+
+	} //~this
 
 	void onPeerConnect(ref ConnectionEvent cev) {
 
@@ -64,7 +76,7 @@ struct Chat {
 
 	} //onPeerDisconnect
 
-	void on_network_update(ref UpdateEvent ev) {
+	void onNetworkUpdate(ref UpdateEvent ev) {
 
 		char[512] buff;
 		auto peer = ev.payload.peer;

@@ -344,7 +344,7 @@ struct SegmentedArray(T) {
 
 		IAllocator allocator_;
 
-		size_t segment_size_;
+		immutable size_t segment_size_;
 		Array!(FixedArray!T) arrays_;
 
 	}

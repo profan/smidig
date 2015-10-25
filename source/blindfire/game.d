@@ -70,9 +70,6 @@ struct NewGame {
 		auto ea = engine_.allocator_;
 
 		this.chat_.construct(ea, &engine_.network_evman_);
-		engine_.network_evman_.register!ConnectionEvent(&chat_.onPeerConnect);
-		engine_.network_evman_.register!DisconnectionEvent(&chat_.onPeerDisconnect);
-		engine_.network_evman_.register!UpdateEvent(&chat_.on_network_update);
 
 		this.profiler_.construct(ea);
 		this.visualizer_.construct(&engine_.input_handler_);

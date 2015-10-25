@@ -186,7 +186,7 @@ struct NetworkManager {
 
 	} //disconnect
 
-	void on_data_push(ref PushEvent ev) {
+	void onDataPush(ref PushEvent ev) {
 
 		printf("[Net] sending packet of size: %u \n", typeof(ev.payload[0]).sizeof * ev.payload.length);
 		ENetPacket* packet = enet_packet_create(ev.payload.ptr, ev.payload.length, ENET_PACKET_FLAG_RELIABLE);
@@ -195,7 +195,7 @@ struct NetworkManager {
 			enet_peer_send(peer, 0, packet);
 		}
 
-	} //on_data_push
+	} //onDataPush
 
 	void poll() {
 
