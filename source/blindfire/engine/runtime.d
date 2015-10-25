@@ -124,16 +124,16 @@ struct Engine {
 			SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL, SDL_TEXTINPUT);
 
 		//load engine-required resources
-		this.load_resources();
+		this.loadResources();
 
-		//set references
+		//set userspace references
 		this.update_function_ = update_func;
 		this.draw_function_ = draw_func;
 		this.after_draw_function_ = after_draw_func;
 
 	} //initialize
 
-	void load_resources() {
+	void loadResources() {
 
 		import blindfire.engine.gl : AttribLocation, Shader, Texture;
 		import blindfire.engine.pool : construct;
@@ -151,7 +151,7 @@ struct Engine {
 		this.debug_atlas_.construct("fonts/OpenSans-Regular.ttf", 12, text_shader);
 		this.debug_context_.construct(allocator_, &imgui_context_, &debug_atlas_, &window_, Vec2i(16, 32));
 
-	} //load_resources
+	} //loadResources
 
 	void draw(double delta_time) {
 

@@ -259,6 +259,37 @@ unittest {
 
 }
 
+/* structure to represent a n-dimensional array with uniform dimensions. */
+struct FixedArrayN(T) {
+
+	private {
+
+		IAllocator allocator_;
+
+		/* the backing array */
+		Array!T array_;
+
+	}
+
+	this(size_t size) {
+
+	} //this
+
+} //FixedArrayN
+
+unittest {
+
+}
+
+/* array which lazily loads it's contents through a user supplied delegate */
+struct LazyArray(T) {
+
+} //LazyArray
+
+unittest {
+
+}
+
 /* non resizeable heap allocated array. */
 struct FixedArray(T) {
 
@@ -268,9 +299,8 @@ struct FixedArray(T) {
 
 	}
 
-	@property size_t length() {
-		return array_.length;
-	} //length
+	@disable this();
+	@disable this(this);
 
 	this(IAllocator allocator, size_t size) {
 
@@ -278,7 +308,7 @@ struct FixedArray(T) {
 
 	} //this
 
-	bool add(ref T item) {
+	bool add(ref T item) @safe {
 
 		if (array_.length + 1 == array_.capacity) {
 			return false; //cant add more to fixed size array, is full
@@ -296,6 +326,10 @@ struct FixedArray(T) {
 	ref T opIndex(size_t index) nothrow @nogc {
 		return array_[index];
 	} //opIndex
+
+	@property size_t length() @safe @nogc const {
+		return array_.length;
+	} //length
 
 } //FixedArray
 

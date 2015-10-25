@@ -59,13 +59,13 @@ struct NewGame {
 		this.engine_.initialize("Project Blindfire", &update, &draw, &lastDraw);
 
 		//initialize self
-		initialize_systems();
-		load_resources();
+		initializeSystems();
+		loadResources();
 		bindActions();
 
 	} //initialize
 
-	void initialize_systems() {
+	void initializeSystems() {
 
 		auto ea = engine_.allocator_;
 
@@ -89,9 +89,9 @@ struct NewGame {
 		event_manager_.register!AnalogAxisEvent(&t_man.onAnalogMovement);
 		event_manager_.register!AnalogRotEvent(&t_man.onAnalogRotation);
 
-	} //initialize_systems
+	} //initializeSystems
 
-	void load_resources() {
+	void loadResources() {
 
 		import blindfire.engine.gl : AttribLocation, Shader, Texture;
 		import blindfire.engine.memory : make;
@@ -133,7 +133,7 @@ struct NewGame {
 		engine_.input_handler_.bindControllerAxis
 			(SDL_CONTROLLER_AXIS_LEFTX, &onRotAxis);
 
-	} //load_resources
+	} //loadResources
 
 	void playClickSound(int x, int y) {
 
@@ -190,7 +190,7 @@ struct NewGame {
 
 	} //update
 
-	void draw_debug() {
+	void drawDebug() {
 
 		import blindfire.engine.dbg : render_string;
 
@@ -199,13 +199,13 @@ struct NewGame {
 		auto offset = Vec2i(16, 48);
 		engine_.debug_context_.render_string!("free sound sources: %d")(free_sources);
 
-	} //draw_debug
+	} //drawDebug
 
 	void draw() {
 
 		entity_manager_.tick!DrawSystem(&engine_.window_);
 
-		draw_debug();
+		drawDebug();
 		profiler_.sampleFrame(engine_.frame_time_);
 
 	} //draw
