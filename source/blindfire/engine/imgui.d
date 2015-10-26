@@ -5,13 +5,12 @@ import core.stdc.stdio : printf;
 import std.traits : isDelegate, ReturnType, ParameterTypeTuple;
 auto bindDelegate(T, string file = __FILE__, size_t line = __LINE__)(T t) if(isDelegate!T) {
 
-    static T dg;
+	static T dg;
 	dg = t;
 
-    extern(C)
-		static ReturnType!T func(ParameterTypeTuple!T args) {
-			return dg(args);
-		}
+	extern(C) static ReturnType!T func(ParameterTypeTuple!T args) {
+		return dg(args);
+	}
 
 	return &func;
 
