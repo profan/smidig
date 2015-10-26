@@ -864,24 +864,18 @@ StringBuffer load_shader(in char[] file_name) {
 
 } //load_shader
 
-bool check_shader_error(GLuint shader, GLuint flag, bool isProgram, in char[] shader_path) nothrow {
+bool check_shader_error(GLuint shader, GLuint flag, bool is_program, in char[] shader_path) nothrow {
 
 	GLint result;
 
-	if (isProgram) {
-		glGetProgramiv(shader, flag, &result);
-	} else {
-		glGetShaderiv(shader, flag, &result);
-	}
+	(is_program) ? glGetProgramiv(shader, flag, &result)
+		: glGetShaderiv(shader, flag, &result);
 
 	if (result == GL_FALSE) {
 
 		GLchar[1024] log = void;
-		if (isProgram) {
-			glGetProgramInfoLog(shader, log.sizeof, null, log.ptr);
-		} else {
-			glGetShaderInfoLog(shader, log.sizeof, null, log.ptr);
-		}
+		(is_program) ? glGetProgramInfoLog(shader, log.sizeof, null, log.ptr)
+			: glGetShaderInfoLog(shader, log.sizeof, null, log.ptr);
 
 		printf("[OpenGL] Error in %s: %s\n", shader_path.ptr, log.ptr);
 		return false;

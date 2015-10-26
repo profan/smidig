@@ -40,7 +40,7 @@ struct Profiler {
 		//add sample to buffer
 		frametimes_ ~= cast(float)frametime;
 
-	} //sample
+	} //sampleFrame
 
 	alias Callback = float delegate(int idx);
 

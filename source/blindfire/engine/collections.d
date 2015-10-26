@@ -307,6 +307,10 @@ struct FixedArray(T) {
 
 	} //this
 
+	@property size_t length() @safe @nogc const {
+		return array_.length;
+	} //length
+
 	bool add(ref T item) @safe {
 
 		if (array_.length + 1 == array_.capacity) {
@@ -325,10 +329,6 @@ struct FixedArray(T) {
 	ref T opIndex(size_t index) nothrow @nogc {
 		return array_[index];
 	} //opIndex
-
-	@property size_t length() @safe @nogc const {
-		return array_.length;
-	} //length
 
 } //FixedArray
 
@@ -448,6 +448,24 @@ struct HashMap(K, V) {
 
 	@disable this(this);
 
+	this(IAllocator allocator, size_t initial_size) @trusted {
+
+		this.allocator_ = allocator;
+		this.array_ = allocator.makeArray!Entry(initial_size);
+		this.capacity_ = initial_size;
+
+	} //this
+
+	~this() @trusted {
+		if (allocator_ !is null) {
+			this.free();
+		}
+	} //~this
+
+	void free() {
+		this.allocator_.dispose(array_);
+	} //free
+
 	static if (isCopyable!K) { /* define only if key type is copyable too */
 		@property Array!K keys() @trusted {
 
@@ -480,26 +498,8 @@ struct HashMap(K, V) {
 		return capacity_;
 	} //length
 
-	this(IAllocator allocator, size_t initial_size) @trusted {
-
-		this.allocator_ = allocator;
-		this.array_ = allocator.makeArray!Entry(initial_size);
-		this.capacity_ = initial_size;
-
-	} //this
-
-	~this() @trusted {
-		if (allocator_ !is null) {
-			this.free();
-		}
-	} //~this
-
-	void free() {
-		this.allocator_.dispose(array_);
-	} //free
-
 	/* move other instance into self */
-	void move_from(ref typeof(this) other) {
+	void moveFrom(ref typeof(this) other) {
 
 		this.free();
 		this.array_ = move(other.array_);
@@ -510,7 +510,7 @@ struct HashMap(K, V) {
 		other.allocator_ = null;
 		assert(other.allocator_ is null);
 
-	} //move_from
+	} //moveFrom
 
 	V* opBinaryRight(string op = "in")(in K key) nothrow {
 
@@ -572,7 +572,7 @@ struct HashMap(K, V) {
 			temp_map[k] = move(v);
 		}
 
-		this.move_from(temp_map);
+		this.moveFrom(temp_map);
 
 	} //rehash
 
@@ -1239,10 +1239,6 @@ struct String {
 
 	}
 
-	@property size_t length() const nothrow @nogc {
-		return array_.length;
-	} //length
-
 	@disable this(this);
 
 	this(ref String str, in char[] input) {
@@ -1280,6 +1276,10 @@ struct String {
 		this.array_[$] = '\0'; //HELLA NULL TERMINATION SON
 
 	} //this
+
+	@property size_t length() const nothrow @nogc {
+		return array_.length;
+	} //length
 
 	size_t toHash() @safe const nothrow {
 		return d_str().toHash();

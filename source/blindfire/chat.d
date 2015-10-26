@@ -83,7 +83,7 @@ struct Chat {
 		auto data = ev.payload.data;
 		buffer_ ~= cformat(buff, "%x:%u > %s \n", peer.address.host, peer.address.port, cast(char*)data.ptr);
 
-	} //on_receive
+	} //onNetworkUpdate
 
 	void tick() {
 
