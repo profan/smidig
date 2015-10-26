@@ -12,7 +12,7 @@ import blindfire.graphics;
 import blindfire.defs;
 import blindfire.ui;
 
-struct NewGame {
+struct Game {
 
 	import blindfire.engine.memory : make;
 	import blindfire.engine.profiler : Profiler;
@@ -153,7 +153,7 @@ struct NewGame {
 
 	} //stopAllSounds
 
-	void toggleFullscreen() {
+	void toggleFullscreen(int x, int y) {
 
 		engine_.window_.toggleFullscreen();
 
@@ -223,4 +223,4 @@ struct NewGame {
 
 	} //run
 
-} //NewGame
+} //Game

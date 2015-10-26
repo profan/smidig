@@ -142,34 +142,57 @@ struct Window {
 	} //toggleWireframe
 
 	void handleEvents(ref SDL_Event ev) {
+
 		if (ev.type == SDL_QUIT) {
 			alive = false;
 		} else if (ev.type == SDL_WINDOWEVENT) {
+
 			switch (ev.window.event) {
+
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
 					window_width = ev.window.data1;
 					window_height = ev.window.data2;
 					glViewport(0, 0, window_width, window_height);
 					view_projection = Mat4f.orthographic(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 					break;
+
+				case SDL_WINDOWEVENT_RESIZED:
+					break;
+
+				case SDL_WINDOWEVENT_RESTORED:
+					break;
+
+				case SDL_WINDOWEVENT_MINIMIZED:
+					break;
+
+				case SDL_WINDOWEVENT_MAXIMIZED:
+					break;
+
 				case SDL_WINDOWEVENT_EXPOSED:
 					break;
+
 				case SDL_WINDOWEVENT_ENTER:
 					//mouse inside window
 					break;
+
 				case SDL_WINDOWEVENT_LEAVE:
 					//mouse outside window
 					break;
+
 				case SDL_WINDOWEVENT_FOCUS_GAINED:
-					//set some stuff
+					//got keyboard focus
 					break;
+
 				case SDL_WINDOWEVENT_FOCUS_LOST:
-					//unset some stuff
+					//lost keyboard focus
 					break;
+
 				default:
 					break;
+
 			}
 		}
+
 	} //handleEvents
 
 } //Window
