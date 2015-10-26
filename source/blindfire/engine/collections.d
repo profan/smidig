@@ -19,7 +19,7 @@ struct Array(T) {
 
 	}
 
-	//@disable this();
+	//@disable this(); //TODO: take a look at why this was done
 	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size) @trusted {

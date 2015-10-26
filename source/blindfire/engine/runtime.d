@@ -91,7 +91,7 @@ struct Engine {
 		//initialize window and input handler
 		this.window_.construct(title, 640, 480);
 		this.input_handler_.construct(allocator_);
-		this.input_handler_.addListener(&window_.handleEvents);
+		this.input_handler_.addListener(&window_.handleEvents, SDL_WINDOWEVENT, SDL_QUIT);
 
 		//initialize renderer and event manager for rendering events
 		this.renderer_evman_.construct(EventMemory, DrawEventType.max);
