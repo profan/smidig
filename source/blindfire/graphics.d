@@ -9,7 +9,7 @@ import derelict.opengl3.gl;
 import blindfire.engine.window : Window;
 import blindfire.engine.gl;
 
-Texture create_font_texture(Window* window, in char* font_path, in char* font_text, int font_size, int font_color) {
+Texture createFontTexture(Window* window, in char* font_path, in char* font_text, int font_size, int font_color) {
 	
 	SDL_Color color = {cast(ubyte)(font_color>>16), cast(ubyte)(font_color>>8), cast(ubyte)(font_color)};
 	TTF_Font* font = TTF_OpenFont(font_path, font_size);

@@ -165,7 +165,7 @@ struct Engine {
 		console_.draw(&window_);
 
 		draw_debug(update_dt);
-		imgui_context_.end_frame();
+		imgui_context_.endFrame();
 		after_draw_function_(update_dt);
 
 		window_.renderPresent();
@@ -210,7 +210,7 @@ struct Engine {
 		frame_timer.start();
 
 		//initial new frame
-		imgui_context_.new_frame((frame_time_) > 0 ? frame_time_ : 1.0);
+		imgui_context_.newFrame((frame_time_) > 0 ? frame_time_ : 1.0);
 
 		while (window_.is_alive) {
 
@@ -225,7 +225,7 @@ struct Engine {
 				mixin EventManager.doTick;
 
 				update_timer.start();
-				imgui_context_.new_frame((frame_time_) > 0 ? frame_time_ : 1.0);
+				imgui_context_.newFrame((frame_time_) > 0 ? frame_time_ : 1.0);
 
 				import derelict.imgui.imgui : igSliderInt;
 				igSliderInt("update rate", &update_rate, 1, 800);

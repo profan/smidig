@@ -87,11 +87,11 @@ void main() {
 	/* game part */
 	import trackallocs;
 	auto tracker = allocsTracker();
-	import blindfire.game : NewGame;
+	import blindfire.game : Game;
 
 	initializeSystems();
 
-	auto game = NewGame();
+	auto game = Game();
 	game.initialize();
 
 	game.run();

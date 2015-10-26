@@ -89,11 +89,11 @@ struct ImguiContext {
 		io.KeyMap[ImGuiKey_Y] = SDL_SCANCODE_Y;
 		io.KeyMap[ImGuiKey_Z] = SDL_SCANCODE_Z;
 
-		io.RenderDrawListsFn = bindDelegate(&render_draw_lists);
-		io.SetClipboardTextFn = bindDelegate(&set_clipboard_text);
-		io.GetClipboardTextFn = bindDelegate(&get_clipboard_text);
+		io.RenderDrawListsFn = bindDelegate(&renderDrawLists);
+		io.SetClipboardTextFn = bindDelegate(&setClipboardText);
+		io.GetClipboardTextFn = bindDelegate(&getClipboardText);
 
-		create_device_objects();
+		createDeviceObjects();
 
 	} //initialize
 
@@ -139,7 +139,7 @@ struct ImguiContext {
 
 	} //onEvent
 
-	void create_device_objects() {
+	void createDeviceObjects() {
 
 		AttribLocation[3] attrs = [
 			AttribLocation(0, "Position"),
@@ -167,11 +167,11 @@ struct ImguiContext {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		/*generate teh fonts*/
-		create_font_texture();
+		createFontTexture();
 
-	} //create_device_objects
+	} //createDeviceObjects
 
-	void create_font_texture() {
+	void createFontTexture() {
 
 		auto io = igGetIO();
 
@@ -182,9 +182,9 @@ struct ImguiContext {
 		font_texture_ = allocator_.make!Texture(pixels, width, height, GL_RGBA, GL_RGBA);
 		ImFontAtlas_SetTexID(io.Fonts, cast(void*)font_texture_.handle);
 
-	} //create_font_texture
+	} //createFontTexture
 
-	void render_draw_lists(ImDrawData* data) nothrow {
+	void renderDrawLists(ImDrawData* data) nothrow {
 
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
@@ -231,9 +231,9 @@ struct ImguiContext {
 
 		glDisable(GL_SCISSOR_TEST);
 
-	} //render_draw_lists
+	} //renderDrawLists
 
-	void new_frame(double dt) {
+	void newFrame(double dt) {
 
 		auto io = igGetIO();
 
@@ -254,23 +254,23 @@ struct ImguiContext {
 
 		igNewFrame();
 
-	} //new_frame
+	} //newFrame
 
-	void end_frame() {
+	void endFrame() {
 
 		igRender();
 
-	} //end_frame
+	} //endFrame
 
-	const(char*) get_clipboard_text() nothrow {
+	const(char*) getClipboardText() nothrow {
 
 		import derelict.sdl2.functions : SDL_GetClipboardText;
 		return SDL_GetClipboardText();
 
-	} //get_clipboard_text
+	} //getClipboardText
 
-	void set_clipboard_text(const(char)* text) nothrow {
+	void setClipboardText(const(char)* text) nothrow {
 
-	} //set_clipboard_text
+	} //setClipboardText
 
 } //ImguiContext
