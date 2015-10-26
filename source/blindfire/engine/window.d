@@ -112,7 +112,8 @@ struct Window {
 
 	void renderClear(int color) {
 
-		import blindfire.engine.gl : to, GLColor;
+		import blindfire.engine.gl : GLColor;
+		import blindfire.engine.conv : to;
 
 		auto col = to!GLColor(color, 255);
 		glClearColor(col[0], col[1], col[2], col[3]);
