@@ -69,6 +69,7 @@ struct NewGame {
 
 		auto ea = engine_.allocator_;
 
+		//create chat, registers events too
 		this.chat_.construct(ea, &engine_.network_evman_);
 
 		this.profiler_.construct(ea);
@@ -198,16 +199,16 @@ struct NewGame {
 
 	} //drawDebug
 
-	void draw() {
+	void draw(double update_dt) {
 
-		entity_manager_.tick!DrawSystem(&engine_.window_);
+		entity_manager_.tick!DrawSystem(&engine_.window_, update_dt);
 
 		drawDebug();
 		profiler_.sampleFrame(engine_.frame_time_);
 
 	} //draw
 
-	void lastDraw() {
+	void lastDraw(double update_dt) {
 
 		import blindfire.engine.math : Vec2f;
 

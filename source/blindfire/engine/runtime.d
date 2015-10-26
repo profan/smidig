@@ -34,7 +34,7 @@ struct Engine {
 	import blindfire.engine.imgui : ImguiContext;
 
 	alias UpdateFunc = void delegate();
-	alias DrawFunc = void delegate();
+	alias DrawFunc = void delegate(double deltatime);
 	alias RunFunc = void delegate();
 
 	//defaults
@@ -66,6 +66,8 @@ struct Engine {
 	double update_time_;
 	double frame_time_;
 	double draw_time_;
+
+	double time_since_last_update_;
 
 	//external references
 	UpdateFunc update_function_;
@@ -153,19 +155,19 @@ struct Engine {
 
 	} //loadResources
 
-	void draw(double delta_time) {
+	void draw(double delta_time, double update_dt) {
 
 		import blindfire.engine.math : Vec2f;
 
 		window_.renderClear(0x428bca);
 
-		draw_function_();
+		draw_function_(update_dt);
 		console_.draw(&window_);
 
-		draw_debug(delta_time);
-
+		draw_debug(update_dt);
 		imgui_context_.end_frame();
-		after_draw_function_();
+		after_draw_function_(update_dt);
+
 		window_.renderPresent();
 
 	} //draw
@@ -179,6 +181,7 @@ struct Engine {
 		input_handler_.mouse_pos(x, y);
 
 		debug_context_
+			.render_string!("last update deltatime: %f")(time_since_last_update_)
 			.render_string!("update deltatime: %f")(update_time_)
 			.render_string!("draw deltatime: %f")(delta_time)
 			.render_string!("framerate: %f")(1.0 / frame_time_)
@@ -247,8 +250,12 @@ struct Engine {
 
 			}
 
+			auto ticks_since_last_update = main_timer.peek() - last_update;
+			time_since_last_update_ = (cast(double)ticks_since_last_update / cast(double)clock_ticks_per_second)
+				/ (cast(double)update_iter / cast(double)clock_ticks_per_second);
+
 			draw_timer.start();
-			this.draw((draw_time_ > 0) ? draw_time_ : 1.0);
+			this.draw((draw_time_ > 0) ? draw_time_ : 1.0, time_since_last_update_);
 			draw_time_ = cast(double)draw_timer.peek() / cast(double)clock_ticks_per_second;
 			last_render = draw_timer.peek();
 			draw_timer.reset();

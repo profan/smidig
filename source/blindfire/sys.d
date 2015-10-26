@@ -21,7 +21,7 @@ interface UpdateSystem : ComponentSystem!(0) {
 
 interface DrawSystem : ComponentSystem!(1) {
 
-	void update(Window* window);
+	void update(Window* window, double deltatime);
 
 } //DrawSystem
 
@@ -119,15 +119,29 @@ struct CollisionComponent {
 
 class SpriteManager : ComponentManager!(DrawSystem, SpriteComponent, 4) {
 
-	void update(Window* window) {
+	void update(Window* window, double update_dt) {
+
+		import gfm.math : lerp;
 
 		foreach (id, ref comp; components) with (comp) {
+
 			shader.bind();
 			texture.bind(0);
-			shader.update(window.view_projection, tc.transform);
+
+			last_state.position.x = lerp(last_state.position.x, tc.transform.position.x, update_dt);
+			last_state.position.y = lerp(last_state.position.y, tc.transform.position.y, update_dt);
+			last_state.rotation.z = lerp(last_state.rotation.z, tc.transform.rotation.z, update_dt);
+			shader.update(window.view_projection, last_state);
+
 			mesh.draw();
 			texture.unbind();
 			shader.unbind();
+
+			if (last_ptr != &tc.transform) {
+				last_state = tc.transform; //copy
+				last_ptr = &tc.transform;
+			}
+
 		}
 
 	} //update
@@ -140,6 +154,8 @@ struct SpriteComponent {
 	Shader* shader;
    	Texture* texture;
 	@dependency TransformComponent* tc;
+	Transform last_state;
+	Transform* last_ptr;
 
 	this(ref Mesh in_mesh, Shader* shader, Texture* texture) {
 
