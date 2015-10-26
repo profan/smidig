@@ -8,6 +8,8 @@ import derelict.opengl3.gl3;
 import blindfire.engine.math : Vec2i, Vec2f, Vec3f, Mat3f, Mat4f;
 import blindfire.engine.collections : StringBuffer;
 
+alias GLColor = GLfloat[4];
+
 mixin template OpenGLError() {
 
 	invariant {
@@ -67,7 +69,7 @@ struct Cursor {
 		int w = texture.width, h = texture.height;
 
 		//cartesian coordinate system, inverted y component to not draw upside down.
-		Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
+		Vertex[6] vertices = createRectangleVec3f2f(w, h);
 		this.mesh = Mesh(vertices);
 		this.shader = cursor_shader;
 
@@ -268,8 +270,6 @@ struct FontAtlas {
 
 		}
 
-		import blindfire.engine.gl : int_to_glcolor;
-
 		glEnable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
@@ -281,7 +281,7 @@ struct FontAtlas {
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-		GLfloat[4] col = int_to_glcolor(color);
+		GLfloat[4] col = to!GLColor(color);
 		glUniform4fv(shader.bound_uniforms[0], 1, col.ptr);
 		shader.update(window.view_projection);
 
@@ -333,7 +333,7 @@ struct Text {
 		int w = texture.width, h = texture.height;
 
 		//cartesian coordinate system, inverted y component to not draw upside down.
-		Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
+		Vertex[6] vertices = createRectangleVec3f2f(w, h);
 		this.mesh = Mesh(vertices);
 		this.shader = text_shader;
 	
@@ -787,17 +787,17 @@ struct Shader {
 
 		char[256] fn_buff;
 
-		StringBuffer vs = load_shader(cformat(fn_buff, "%s.vs", file_name.ptr));
-		StringBuffer fs = load_shader(cformat(fn_buff, "%s.fs", file_name.ptr));
+		StringBuffer vs = loadShader(cformat(fn_buff, "%s.vs", file_name.ptr));
+		StringBuffer fs = loadShader(cformat(fn_buff, "%s.fs", file_name.ptr));
 
 		auto c_vs = vs.c_str();
 		auto c_fs = fs.c_str();
 
-		GLuint vshader = compile_shader(&c_vs, GL_VERTEX_SHADER, file_name);
-		GLuint fshader = compile_shader(&c_fs, GL_FRAGMENT_SHADER, file_name);
+		GLuint vshader = compileShader(&c_vs, GL_VERTEX_SHADER, file_name);
+		GLuint fshader = compileShader(&c_fs, GL_FRAGMENT_SHADER, file_name);
 
 		GLuint[2] shaders = [vshader, fshader];
-		program = create_shader_program(shaders, attribs);
+		program = createShaderProgram(shaders, attribs);
 
 		foreach (i, uniform; uniforms) {
 			bound_uniforms[i] = glGetUniformLocation(program, uniform.ptr);
@@ -857,14 +857,14 @@ struct Shader {
 } //Shader
 
 //C-ish code ahoy
-StringBuffer load_shader(in char[] file_name) {
+StringBuffer loadShader(in char[] file_name) {
 
 	import blindfire.engine.file : readFile;
 	return readFile(file_name);
 
-} //load_shader
+} //loadShader
 
-bool check_shader_error(GLuint shader, GLuint flag, bool is_program, in char[] shader_path) nothrow {
+bool checkShaderError(GLuint shader, GLuint flag, bool is_program, in char[] shader_path) nothrow {
 
 	GLint result;
 
@@ -884,9 +884,9 @@ bool check_shader_error(GLuint shader, GLuint flag, bool is_program, in char[] s
 
 	return true;
 
-} //check_shader_error
+} //checkShaderError
 
-GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type, in char[] shader_path) nothrow {
+GLuint compileShader(const(GLchar*)* shader_source, GLenum shader_type, in char[] shader_path) nothrow {
 
 	GLuint new_shader;
 	
@@ -894,16 +894,16 @@ GLuint compile_shader(const(GLchar*)* shader_source, GLenum shader_type, in char
 	glShaderSource(new_shader, 1, shader_source, null);
 	glCompileShader(new_shader);
 
-	if (!check_shader_error(new_shader, GL_COMPILE_STATUS, false, shader_path)) {
+	if (!checkShaderError(new_shader, GL_COMPILE_STATUS, false, shader_path)) {
 		glDeleteShader(new_shader);
 		return 0;
 	}
 
 	return new_shader;
 
-} //compile_shader
+} //compileShader
 
-GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) nothrow {
+GLuint createShaderProgram(in GLuint[] shaders, in AttribLocation[] attribs) nothrow {
 
 	GLuint program = glCreateProgram();
 
@@ -916,23 +916,23 @@ GLuint create_shader_program(in GLuint[] shaders, in AttribLocation[] attribs) n
 	}
 
 	glLinkProgram(program);
-	if (!check_shader_error(program, GL_LINK_STATUS, true, "")) {
+	if (!checkShaderError(program, GL_LINK_STATUS, true, "")) {
 		glDeleteShader(program);
 		return 0;
 	}
 
 	glValidateProgram(program);
-	if (!check_shader_error(program, GL_VALIDATE_STATUS, true, "")) {
+	if (!checkShaderError(program, GL_VALIDATE_STATUS, true, "")) {
 		glDeleteShader(program);
 		return 0;
 	}
 
 	return program;
 
-} //create_shader_program
+} //createShaderProgram
 
 /* OpenGL color related functions, darkening and stuff. */
-GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc pure {
+GLfloat[4] to(T : GLfloat[4])(int color, ubyte alpha = 255) nothrow @nogc pure {
 
 	GLfloat[4] gl_color = [ //mask out r, g, b components from int
 		cast(float)cast(ubyte)(color>>16)/255,
@@ -943,7 +943,7 @@ GLfloat[4] int_to_glcolor(int color, ubyte alpha = 255) nothrow @nogc pure {
 
 	return gl_color;
 
-} //int_to_gl_color
+} //to!GLfloat[4]
 
 int darken(int color, uint percentage) nothrow @nogc pure {
 
@@ -962,7 +962,7 @@ int darken(int color, uint percentage) nothrow @nogc pure {
 
 /* Primitives? */
 
-auto create_rectangle_vec3f(float w, float h) nothrow @nogc pure {
+auto createRectangleVec3f(float w, float h) nothrow @nogc pure {
 
 	Vec3f[6] vertices = [
 		Vec3f(0.0f, 0.0f, 0.0f), // top left
@@ -976,9 +976,9 @@ auto create_rectangle_vec3f(float w, float h) nothrow @nogc pure {
 
 	return vertices;
 
-} //create_rectangle_vec3f
+} //createRectangleVec3f
 
-auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc pure {
+auto createRectangleVec3f2f(float w, float h) nothrow @nogc pure {
 
 	Vertex[6] vertices = [
 		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
@@ -992,4 +992,4 @@ auto create_rectangle_vec3f2f(float w, float h) nothrow @nogc pure {
 
 	return vertices;
 
-} //create_rectangle_vec3f2f
+} //createRectangleVec3f2f

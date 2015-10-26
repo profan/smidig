@@ -2,7 +2,7 @@ module blindfire.ents;
 
 import std.stdio : writefln;
 
-import blindfire.engine.gl : Mesh, Shader, Texture, Transform, Vertex, create_rectangle_vec3f2f;
+import blindfire.engine.gl : Mesh, Shader, Texture, Transform, Vertex, createRectangleVec3f2f;
 import blindfire.engine.math : Vec2f, Vec3f;
 import blindfire.engine.ecs;
 
@@ -23,7 +23,7 @@ auto createUnit(EntityManager em, Vec2f pos, Shader* shader, Texture* texture) {
 
 	int w = texture.width;
 	int h = texture.height;
-	Vertex[6] vertices = create_rectangle_vec3f2f(w, h);
+	Vertex[6] vertices = createRectangleVec3f2f(w, h);
 	em.register!SpriteComponent(unit, Mesh(vertices), shader, texture);
 	
 	return unit;

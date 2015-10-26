@@ -91,7 +91,7 @@ struct UIState {
 
 		//upload the vertex data, transform it when actually drawing
 
-		Vec3f[6] vertices = create_rectangle_vec3f(1.0f, 1.0f);
+		Vec3f[6] vertices = createRectangleVec3f(1.0f, 1.0f);
 		this.box_num_vertices = vertices.length;
 
 		glGenVertexArrays(1, &box_vao);
@@ -156,7 +156,7 @@ void resetUi(ref UIState ui) {
 void drawRectangle(UIState* state, Window* window, float x, float y, float width, float height, int color, ubyte alpha = 255) {
 
 	auto transform = Mat4f.translation(Vec3f(x, y, 0.0f)) * Mat4f.scaling(Vec3f(width, height, 1.0f));
-	GLfloat[4] gl_color = int_to_glcolor(color, alpha);
+	GLfloat[4] gl_color = to!GLColor(color, alpha);
 
 	state.box_shader.bind();
 	state.box_shader.update(window.view_projection, transform);
