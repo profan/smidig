@@ -15,10 +15,12 @@ struct Window {
 
 	private {
 
-		bool alive;
+		SDL_Window* window_;
+		SDL_GLContext glcontext_;
+
+		//info
 		String title_;
-		SDL_Window* window;
-		SDL_GLContext glcontext;
+		bool alive_;
 
 		//window data
 		int window_width, window_height;
@@ -31,14 +33,14 @@ struct Window {
 	@property const(char*) title() const { return title_.c_str; }
 	@property void title(in char[] new_title) {
 		this.title_ = String(new_title);
-		SDL_SetWindowTitle(window, title_.c_str);
+		SDL_SetWindowTitle(window_, title_.c_str);
 	}
 
 	@property uint width() const nothrow @nogc { return window_width; }
 	@property uint height() const nothrow @nogc { return window_height; }
 
-	@property bool is_alive() const nothrow @nogc { return alive; }
-	@property void is_alive(bool status) nothrow @nogc { alive = status; }
+	@property bool is_alive() const nothrow @nogc { return alive_; }
+	@property void is_alive(bool status) nothrow @nogc { alive_ = status; }
 
 	@disable this();
 	@disable this(this);
@@ -71,9 +73,9 @@ struct Window {
 
 	this(SDL_Window* in_window) {
 
-		this.window = in_window;
-		assert(window != null);
-		SDL_GetWindowSize(window, &window_width, &window_height);
+		this.window_ = in_window;
+		assert(window_ != null);
+		SDL_GetWindowSize(window_, &window_width, &window_height);
 
 		// OpenGL related attributes
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -82,8 +84,8 @@ struct Window {
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
 
-		glcontext = SDL_GL_CreateContext(window);
-		if (glcontext == null) {
+		glcontext_ = SDL_GL_CreateContext(window_);
+		if (glcontext_ == null) {
 			GLenum glErr = glGetError();
 			printf("[OpenGL] Error: %s", glErr);
 		}
@@ -97,7 +99,7 @@ struct Window {
 		printf("[OpenGL] Loading GL Extensions. \n");
 
 		DerelictGL3.reload();
-		alive = true;
+		alive_ = true;
 
 		view_projection = Mat4f.orthographic(0.0f, width, height, 0.0f, 0.0f, 1.0f);
 
@@ -105,8 +107,8 @@ struct Window {
 
 	~this() {
 
-		SDL_GL_DeleteContext(glcontext);
-		SDL_DestroyWindow(window);
+		SDL_GL_DeleteContext(glcontext_);
+		SDL_DestroyWindow(window_);
 
 	} //~this
 
@@ -122,14 +124,14 @@ struct Window {
 	} //renderClear
 
 	void renderPresent() {
-		SDL_GL_SwapWindow(window);
+		SDL_GL_SwapWindow(window_);
 	} //renderPresent
 
 	void toggleFullscreen() {
 
 		static bool is_fullscreen = false;
 
-		SDL_SetWindowFullscreen(this.window, (is_fullscreen) ? 0 : SDL_WINDOW_FULLSCREEN);
+		SDL_SetWindowFullscreen(window_, (is_fullscreen) ? 0 : SDL_WINDOW_FULLSCREEN);
 		is_fullscreen = !is_fullscreen;
 
 	} //toggle_fullscreen
@@ -145,7 +147,7 @@ struct Window {
 	void handleEvents(ref SDL_Event ev) {
 
 		if (ev.type == SDL_QUIT) {
-			alive = false;
+			alive_ = false;
 		} else if (ev.type == SDL_WINDOWEVENT) {
 
 			switch (ev.window.event) {
