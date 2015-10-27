@@ -140,32 +140,32 @@ struct InputHandler {
 		IAllocator allocator_;
 
 		SDL_Event ev;
-		Array!EventSpec delegates;
-		Array!MouseBind mouse_events;
-		Array!MouseBind motion_events;
-		Array!KeyBind input_events;
-		Array!KeyBind key_events;
+		Array!EventSpec delegates_;
+		Array!MouseBind mouse_events_;
+		Array!MouseBind motion_events_;
+		Array!KeyBind input_events_;
+		Array!KeyBind key_events_;
 
-		Array!Controller controllers;
-		Array!ControllerBind controller_binds;
-		Array!ControllerAxis controller_axis_binds;
+		Array!Controller controllers_;
+		Array!ControllerBind controller_binds_;
+		Array!ControllerAxis controller_axis_binds_;
 
 		HashMap!(SDL_EventType, EventMask) event_mask_;
 
 		//mutated by SDL2
-		Uint8* pressed_keys;
+		Uint8* pressed_keys_;
 
 		//mouse pos, last first, current second
-		int[2] last_x, last_y;
+		int[2] last_x_, last_y_;
 
 	}
 
-	@property int mouse_x() const { return last_x[0]; }
-	@property int mouse_y() const { return last_y[0]; }
+	@property int mouse_x() const { return last_x_[0]; }
+	@property int mouse_y() const { return last_y_[0]; }
 
 	void mouse_pos(out int x, out int y) const {
-		x = last_x[0];
-		y = last_y[0];
+		x = last_x_[0];
+		y = last_y_[0];
 	} //mouse_pos
 
 	@disable this();
@@ -176,23 +176,23 @@ struct InputHandler {
 		this.allocator_ = allocator;
 
 		/* mouse and keyboard events */
-		this.delegates = typeof(delegates)(allocator_, INITIAL_SIZE);
-		this.mouse_events = typeof(mouse_events)(allocator_, INITIAL_SIZE);
-		this.motion_events = typeof(motion_events)(allocator_, INITIAL_SIZE);
-		this.input_events = typeof(input_events)(allocator_, INITIAL_SIZE);
-		this.key_events = typeof(key_events)(allocator_, INITIAL_SIZE);
+		this.delegates_ = typeof(delegates_)(allocator_, INITIAL_SIZE);
+		this.mouse_events_ = typeof(mouse_events_)(allocator_, INITIAL_SIZE);
+		this.motion_events_ = typeof(motion_events_)(allocator_, INITIAL_SIZE);
+		this.input_events_ = typeof(input_events_)(allocator_, INITIAL_SIZE);
+		this.key_events_ = typeof(key_events_)(allocator_, INITIAL_SIZE);
 
 		/* controller events */
-		this.controllers = typeof(controllers)(allocator_, INITIAL_SIZE);
-		this.controller_binds = typeof(controller_binds)(allocator_, INITIAL_SIZE);
-		this.controller_axis_binds = typeof(controller_axis_binds)(allocator_, INITIAL_SIZE);
+		this.controllers_ = typeof(controllers_)(allocator_, INITIAL_SIZE);
+		this.controller_binds_ = typeof(controller_binds_)(allocator_, INITIAL_SIZE);
+		this.controller_axis_binds_ = typeof(controller_axis_binds_)(allocator_, INITIAL_SIZE);
 
 		/* set up hashmap for holding event type to mask translation */
 		this.event_mask_ = typeof(event_mask_)(allocator_, sdl_events.length);
 		this.initializeMask();
 
 		/* initialize pressed keys */
-		this.pressed_keys = SDL_GetKeyboardState(null);
+		this.pressed_keys_ = SDL_GetKeyboardState(null);
 
 	} //this
 
@@ -207,7 +207,7 @@ struct InputHandler {
 
 	ref typeof(this) addListener(EventDelegate ed) {
 
-		delegates ~= EventSpec(ed, EventMask.max);
+		delegates_ ~= EventSpec(ed, EventMask.max);
 
 		return this;
 
@@ -221,7 +221,7 @@ struct InputHandler {
 			mask |= 1 << event_mask_[t];
 		}
 
-		delegates ~= EventSpec(ed, mask);
+		delegates_ ~= EventSpec(ed, mask);
 
 		return this;
 
@@ -230,7 +230,7 @@ struct InputHandler {
 	ref typeof(this) bindKeyEvent(SDL_Scancode key, KeyDelegate kd) {
 
 		KeyBind kb = {key: key, func: kd};
-		input_events ~= kb;
+		input_events_ ~= kb;
 
 		return this;
 
@@ -239,7 +239,7 @@ struct InputHandler {
 	ref typeof(this) bindControllerBtn(SDL_GameControllerButton btn, KeyDelegate fn, KeyState st) {
 
 		ControllerBind cb = {button: btn, func: fn, state: st};
-		controller_binds ~= cb;
+		controller_binds_ ~= cb;
 
 		return this;
 
@@ -248,7 +248,7 @@ struct InputHandler {
 	ref typeof(this) bindControllerAxis(SDL_GameControllerAxis ax, AxisDelegate fn) {
 
 		ControllerAxis axis_bind = {axis: ax, func: fn};
-		controller_axis_binds ~= axis_bind;
+		controller_axis_binds_ ~= axis_bind;
 
 		return this;
 
@@ -257,7 +257,7 @@ struct InputHandler {
 	ref typeof(this) bindMouseBtn(Uint8 button, MouseDelegate md, KeyState state) {
 
 		MouseBind mb = {mousebtn: button, func: md, state: to!MouseKeyState(state)};
-		mouse_events ~= mb;
+		mouse_events_ ~= mb;
 
 		return this;
 
@@ -266,7 +266,7 @@ struct InputHandler {
 	ref typeof(this) bindKey(SDL_Scancode key, KeyDelegate kd) {
 
 		KeyBind kb = {key: key, func: kd};
-		key_events ~= kb;
+		key_events_ ~= kb;
 
 		return this;
 
@@ -275,7 +275,7 @@ struct InputHandler {
 	ref typeof(this) bindMouseMov(MouseDelegate md) {
 
 		MouseBind mb = {mousebtn: 0, func: md};
-		motion_events ~= mb;
+		motion_events_ ~= mb;
 
 		return this;
 
@@ -288,7 +288,7 @@ struct InputHandler {
 			switch (ev.type) {
 
 				case SDL_KEYDOWN, SDL_KEYUP:
-					foreach (ref bind; input_events) {
+					foreach (ref bind; input_events_) {
 						if (ev.key.keysym.scancode == bind.key) {
 							if (bind.state == ev.key.state) {
 								bind.func();
@@ -298,7 +298,7 @@ struct InputHandler {
 					break;
 
 				case SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP:
-					foreach (ref bind; mouse_events) {
+					foreach (ref bind; mouse_events_) {
 						if (ev.button.button == bind.mousebtn) {
 							if (bind.state == ev.type) {
 								bind.func(ev.motion.x, ev.motion.y);
@@ -311,7 +311,7 @@ struct InputHandler {
 					break;
 
 				case SDL_CONTROLLERBUTTONDOWN, SDL_CONTROLLERBUTTONUP:
-					foreach (ref bind; controller_binds) {
+					foreach (ref bind; controller_binds_) {
 						if (ev.cbutton.button == bind.button) {
 							if (bind.state == ev.cbutton.state) {
 								bind.func();
@@ -325,20 +325,20 @@ struct InputHandler {
 
 					/* add controller to devices */
 					auto new_device = SDL_GameControllerOpen(ev.cdevice.which);
-					controllers ~= Controller(ev.cdevice.which, new_device);
+					controllers_ ~= Controller(ev.cdevice.which, new_device);
 
 					break;
 
 				case SDL_CONTROLLERDEVICEREMOVED:
 
 					/* remove controller unplugged */
-					foreach (ref c; controllers) {
+					foreach (ref c; controllers_) {
 						if (c.device_id == ev.cdevice.which) 
 							SDL_GameControllerClose(c.handle);
 					}
 
 					auto removed = Controller(ev.cdevice.which);
-					controllers.remove(removed);
+					controllers_.remove(removed);
 
 					break;
 
@@ -351,7 +351,7 @@ struct InputHandler {
 			}
 
 			/* forward events to listeners, filtered with a bitmask */
-			foreach(ref receiver; delegates) {
+			foreach(ref receiver; delegates_) {
 				if ((receiver.mask >> event_mask_[ev.type]) & 1) {
 					receiver.ed(ev);
 				}
@@ -360,27 +360,27 @@ struct InputHandler {
 		}
 
 		/* handle joystick axis input each frame */
-		foreach (ref bind; controller_axis_binds) {
-			auto axis_value = SDL_GameControllerGetAxis(controllers[0].handle, bind.axis);
+		foreach (ref bind; controller_axis_binds_) {
+			auto axis_value = SDL_GameControllerGetAxis(controllers_[0].handle, bind.axis);
 			bind.func(axis_value);
 		}
 
 		/* keys pressed each frame */
-		foreach (ref bind; key_events) {
-			if (pressed_keys[bind.key] || bind.key == AnyKey) {
+		foreach (ref bind; key_events_) {
+			if (pressed_keys_[bind.key] || bind.key == AnyKey) {
 				bind.func();
 			}
 		}
 
-		SDL_GetMouseState(&last_x[1], &last_y[1]);
-		if (last_x[0] != last_x[1] || last_y[0] != last_y[1]) {
+		SDL_GetMouseState(&last_x_[1], &last_y_[1]);
+		if (last_x_[0] != last_x_[1] || last_y_[0] != last_y_[1]) {
 
-			last_x[0] = last_x[1];
-			last_y[0] = last_y[1];
+			last_x_[0] = last_x_[1];
+			last_y_[0] = last_y_[1];
 
 			//call only if change occured
-			foreach (ref bind; motion_events) {
-				bind.func(last_x[1], last_y[1]);
+			foreach (ref bind; motion_events_) {
+				bind.func(last_x_[1], last_y_[1]);
 			}
 
 		}

@@ -23,12 +23,12 @@ class ResourceManager {
 
 	//allocator and instance
 	private static __gshared IAllocator allocator_;
-	private static __gshared ResourceManager instance;
+	private static __gshared ResourceManager instance_;
 
 	static this() {
 		this.allocator_ = theAllocator;
-		if (instance is null) {
-			this.instance = allocator_.make!ResourceManager();
+		if (instance_ is null) {
+			this.instance_ = allocator_.make!ResourceManager();
 		}
 	} //static this
 
@@ -37,7 +37,7 @@ class ResourceManager {
 	} //this
 		
 	static ResourceManager get() {
-		return instance;
+		return instance_;
 	} //get
 
 	__gshared void setResource(T)(T* resource, ResourceID identifier) {

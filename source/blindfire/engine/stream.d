@@ -5,40 +5,40 @@ private mixin template StreamImpl() {
 	import std.traits : isArray;
 
 	private {
-		size_t size;
-		size_t offset = 0;
-		ubyte* buffer;
+		size_t size_;
+		size_t offset_ = 0;
+		ubyte* buffer_;
 	}
 
 	this(ubyte* data, size_t length) nothrow @nogc {
-		this.buffer = data;
-		this.size = length;
+		this.buffer_ = data;
+		this.size_ = length;
 	} //this
 
 	this(in ubyte[] arr) nothrow @nogc {
-		this.buffer = cast(ubyte*)arr.ptr;
-		this.size = arr.length;
+		this.buffer_ = cast(ubyte*)arr.ptr;
+		this.size_ = arr.length;
 	} //this
 
 	@property const(ubyte*) pointer() nothrow @nogc const {
-		return buffer + offset;
+		return buffer_ + offset_;
 	} //pointer
 
 	@property size_t current() nothrow @nogc const {
-		return offset;
+		return offset_;
 	} //current
 
 	@property size_t length() nothrow @nogc const {
-		return size;
+		return size_;
 	} //length
 
 	@property bool eof() nothrow @nogc const {
-		assert(offset <= size, "offset was greater than size, ran past.");
-		return offset == size;
+		assert(offset_ <= size_, "offset_ was greater than size_, ran past.");
+		return offset_ == size_;
 	} //eof
 
 	const(ubyte[]) opSlice() nothrow @nogc const {
-		return buffer[0..offset];
+		return buffer_[0..offset_];
 	} //opSlice
 
 } //StreamImpl
@@ -54,10 +54,10 @@ struct InputStream {
 
 	T read(T, ReadMode mode = ReadMode.Read)() nothrow @nogc {
 
-		T obj = *(cast(T*)(buffer[offset..offset+T.sizeof].ptr));
+		T obj = *(cast(T*)(buffer_[offset_..offset_+T.sizeof].ptr));
 
 		static if (mode != ReadMode.Peek) {
-			offset += T.sizeof;
+			offset_ += T.sizeof;
 		}
 
 		return obj;
@@ -81,10 +81,10 @@ struct InputStream {
 	T[] read(T, ReadMode mode = ReadMode.Read)(uint length) nothrow @nogc {
 
 		auto bytes_len = T.sizeof * length;
-		T[] slice = (cast(T*)(buffer[offset..offset].ptr))[0..length];
+		T[] slice = (cast(T*)(buffer_[offset_..offset_].ptr))[0..length];
 
 		static if (mode != ReadMode.Peek) {
-			offset += bytes_len;
+			offset_ += bytes_len;
 		}
 
 		return slice;
@@ -99,13 +99,13 @@ struct OutputStream {
 
 	void write(T)(in T obj) nothrow @nogc {
 		static if (isArray!(T)) {
-			uint data_size = obj[0].sizeof * obj.length;
+			uint data_size_ = obj[0].sizeof * obj.length;
 			write(obj.length); //write array length to stream
-			buffer[offset..offset+data_size] = (cast(ubyte*)obj.ptr)[0..data_size];
-			offset += data_size;
+			buffer_[offset_..offset_+data_size_] = (cast(ubyte*)obj.ptr)[0..data_size_];
+			offset_ += data_size_;
 		} else {
-			buffer[offset..offset+obj.sizeof] = (cast(ubyte*)&obj)[0..obj.sizeof];
-			offset += obj.sizeof;
+			buffer_[offset_..offset_+obj.sizeof] = (cast(ubyte*)&obj)[0..obj.sizeof];
+			offset_ += obj.sizeof;
 		}
 	} //write
 

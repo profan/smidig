@@ -37,9 +37,8 @@ struct Console {
 		ConsoleBuffer history_;
 
 		bool enabled_ = false;
-		size_t history_index = 0;
-		size_t history_elements = 0;
-
+		size_t history_index_ = 0;
+		size_t history_elements_ = 0;
 
 	}
 
@@ -115,7 +114,7 @@ struct Console {
 	void toggle() {
 
 		enabled_ = !enabled_;
-		history_index = 0;
+		history_index_ = 0;
 		(enabled_) ? SDL_StartTextInput() : SDL_StopTextInput();
 
 	} //toggle
@@ -145,14 +144,14 @@ struct Console {
 			shiftBuffer(buffers_);
 			(*found_command)(&this, args);
 			history_[0] ~= slice;
-			++history_elements;
+			++history_elements_;
 			shiftBuffer(history_);
 		} else {
 			shiftBuffer(buffers_);
 			print!("Unknown Command: %s")(command.ptr);
 		}
 			
-		history_index = 0;
+		history_index_ = 0;
 
 	} //run
 
@@ -161,8 +160,8 @@ struct Console {
 
 		if(!enabled_) { return; }
 
-		if (history_index != 0)
-			buffers_[0] = history_[--history_index];
+		if (history_index_ != 0)
+			buffers_[0] = history_[--history_index_];
 
 	} //getPrev
 
@@ -171,8 +170,8 @@ struct Console {
 		
 		if(!enabled_) { return; }
 
-		if (history_index+1 < BUFFER_LINES && history_index+1 <= history_elements)
-			buffers_[0] = history_[++history_index];
+		if (history_index_+1 < BUFFER_LINES && history_index_+1 <= history_elements_)
+			buffers_[0] = history_[++history_index_];
 
 	} //getNext
 

@@ -27,7 +27,7 @@ struct EventManager {
 	IAllocator allocator_;
 	Region!Mallocator region_allocator_;
 
-	Array!(Array!EventDelegate*) delegates;
+	Array!(Array!EventDelegate*) delegates_;
 	Array!(Array!(EventCast*)*) events;
 
 	@disable this();
@@ -39,11 +39,11 @@ struct EventManager {
 
 		this.allocator_ = theAllocator;
 		this.region_allocator_ = Region!Mallocator(to_allocate);
-		this.delegates = typeof(delegates)(allocator_, num_to_alloc);
+		this.delegates_ = typeof(delegates_)(allocator_, num_to_alloc);
 		this.events = typeof(events)(allocator_, num_to_alloc);
 
 		foreach (i; 0..num_to_alloc) {
-			delegates.add(allocator_.make!(Array!EventDelegate)(allocator_, 8));
+			delegates_.add(allocator_.make!(Array!EventDelegate)(allocator_, 8));
 			events.add(allocator_.make!(Array!(EventCast*))(allocator_, 8));
 		}
 
@@ -51,7 +51,7 @@ struct EventManager {
 
 	~this() {
 
-		foreach (ref arr; delegates) {
+		foreach (ref arr; delegates_) {
 			this.allocator_.dispose(arr);
 		}
 
@@ -88,12 +88,12 @@ struct EventManager {
 
 	void register(E, ED)(ED dele) {
 		mixin checkValidity!(E, ED);
-		(*delegates[E.message_id]) ~= cast(EventDelegate)dele;
+		(*delegates_[E.message_id]) ~= cast(EventDelegate)dele;
 	} //register
 
 	void unregister(E, ED)(ED base_dele) { //CAUUTIIOON
 		auto dele = cast(EventDelegate) base_dele;
-		delegates[E.message_id].remove(dele);
+		delegates_[E.message_id].remove(dele);
 	} //unregister
 
 	void fire(E, Args...)(Args args) {
@@ -102,7 +102,7 @@ struct EventManager {
 		mixin checkValidity!(E, ED);
 
 		auto event = E(args);
-		auto cur_dels = (*delegates[E.message_id])[];
+		auto cur_dels = (*delegates_[E.message_id])[];
 
 		foreach (key, ref del_func; cur_dels) {
 			auto casted_func = cast(ED) del_func;
@@ -145,7 +145,7 @@ struct EventManager {
 			foreach (id, ref ev_list; ev_man.events) {
 
 				if (ev_list.length == 0) continue;
-				auto cur_dels = (*ev_man.delegates[id])[];
+				auto cur_dels = (*ev_man.delegates_[id])[];
 
 				if (cur_dels.length > 0) {
 					foreach (ref ev; *ev_list) {
