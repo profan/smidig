@@ -61,7 +61,7 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 
 	void transitionTo(FStateID new_state) {
 
-		assert(new_state >= 0 && new_state < states_.length, "state outside range of existing states_.");
+		assert(new_state >= 0 && new_state < states_.length, "state outside range of existing states.");
 		assert(new_state != current_state_, "tried to switch state to current.");
 
 		if (last_this_ != &this) readjustPointers();
@@ -85,7 +85,7 @@ version(unittest) {
 			Running
 		} //State
 
-		alias StateFun = void delegate(ref FSMTest fsm);
+		alias StateFun = void delegate(ref FSMTest fsm, void** ptr);
 
 		mixin FSM!([State.Walking, State.Running],
 				   [FStateTuple(State.Walking, State.Running), FStateTuple(State.Running, State.Walking)],
@@ -99,7 +99,6 @@ version(unittest) {
 		}
 
 		@disable this();
-		@disable this(this);
 
 		this (int v) {
 
@@ -120,10 +119,10 @@ version(unittest) {
 
 			} //enter
 
-			void execute(ref FSMTest fsm) {
+			void execute(ref FSMTest fsm, void** ptr) {
 
-				writefln("executing walking state.");
-
+				*ptr = &fsm;
+				writefln("executing walking state: %s", &fsm);
 				fsm.transitionTo(State.Running);
 
 			} //execute
@@ -146,9 +145,11 @@ version(unittest) {
 
 			} //enter
 
-			void execute(ref FSMTest fsm) {
+			void execute(ref FSMTest fsm, void** ptr) {
 
-				writefln("executing running state.");
+				*ptr = &fsm;
+				writefln("executing running state: %s", &fsm);
+				fsm.transitionTo(State.Walking);
 
 			} //execute
 
@@ -166,7 +167,18 @@ version(unittest) {
 
 unittest {
 
+	import std.string : format;
+	import std.algorithm : move;
+
+	void* last_this, current_this;
+
 	auto fsm = FSMTest(10);
-	fsm.tick();
+	fsm.tick(&last_this);
+
+	auto new_fsm = fsm;
+	new_fsm.tick(&current_this);
+
+	assert(last_this != current_this, 
+		format("last_this:%s was equal to current_this:%s, didn't move?", last_this, current_this));
 
 }
