@@ -1361,6 +1361,10 @@ struct StringBuffer {
 
 	} //this
 
+	@property size_t length() const @nogc {
+		return array_.length;
+	} //length
+
 	void opOpAssign(string op: "~")(in char[] str) {
 
 		array_ ~= str;
@@ -1401,11 +1405,12 @@ struct StringBuffer {
 unittest {
 
 	import core.stdc.stdio : printf;
+	import core.stdc.string : strlen;
 
 	auto strbuf = StringBuffer(32);
 	strbuf ~= "yes \n";
 
-	printf("strbuf: %s", strbuf.c_str());
+	assert(strlen(strbuf.c_str()) == strbuf.length);
 
 }
 

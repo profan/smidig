@@ -139,35 +139,40 @@ string generateWrappers(Funcs...)() {
 
 unittest {
 
+	bool equal(T)(T[] a1, T[] a2) {
+
+		foreach (i, ref e; a1) {
+			if (e != a2[i]) return false;
+		}
+
+		return true;
+
+	} //equal
+
 	import std.stdio : writefln;
 	import blindfire.engine.memory : theAllocator;
 	import blindfire.engine.stream : InputStream, OutputStream;
 
+	uint input_test;
+	int[] data_test;
+
 	void hello_world(uint input, int[] data) {
-		writefln("input: %d %s", input, data);
+		input_test = input;
+		data_test = data;
 	}
 
-	void goodbye(uint val, bool no) {
-		writefln("goodbye - val : %d, no : %s", val, no);
-	}
-
-	// generates wrapper functions which look like:
-	// void hello_world_wrapper(ref InputStream stream) {
-	//     auto arg0 = stream.read!uint();
-	//     hello_world(arg0);
-	// }
-
-	mixin(generateWrappers!(hello_world, goodbye));
+	mixin(generateWrapper!(hello_world));
 
 	auto rpc = RPC(theAllocator);
 	rpc.register("hello_world", &hello_world_wrapper);
-	rpc.register("goodbye", &goodbye_wrapper);
 
 	int[3] data = [1, 2, 3];
 	rpc.call("hello_world", 1234, data);
-	rpc.call("goodbye", 324, false);
 
 	// reads from the stream, reads function name first which uses hashmap to call wrapper func.
 	rpc.onPull(rpc.out_stream_[]);
+
+	assert(input_test == 1234);
+	assert(equal(data_test, data));
 
 }

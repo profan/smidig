@@ -17,7 +17,6 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 
 	FStateID current_state_ = -1;
 	TripleRunFunc[in_states.length] states_;
-	FStateTuple[in_transitions.length] transitions_ = in_transitions[];
 
 	ref typeof(this) setInitialState(FStateID state) {
 
@@ -115,21 +114,16 @@ version(unittest) {
 
 			void enter(FStateID from) {
 
-				writefln("entered walking state.");
-
 			} //enter
 
 			void execute(ref FSMTest fsm, void** ptr) {
 
 				*ptr = &fsm;
-				writefln("executing walking state: %s", &fsm);
 				fsm.transitionTo(State.Running);
 
 			} //execute
 
 			void leave(FStateID to) {
-
-				writefln("leaving walking state.");
 
 			} //leave
 
@@ -141,21 +135,16 @@ version(unittest) {
 
 			void enter(FStateID from) {
 
-				writefln("entering running state.");
-
 			} //enter
 
 			void execute(ref FSMTest fsm, void** ptr) {
 
 				*ptr = &fsm;
-				writefln("executing running state: %s", &fsm);
 				fsm.transitionTo(State.Walking);
 
 			} //execute
 
 			void leave(FStateID to) {
-
-				writefln("leaving running state.");
 
 			} //leave
 
