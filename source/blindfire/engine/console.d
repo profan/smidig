@@ -30,13 +30,13 @@ struct Console {
 		IAllocator allocator_;
 
 		alias StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] ConsoleBuffer;
-		HashMap!(ConsoleCommand, CommandDelegate) commands;
+		HashMap!(ConsoleCommand, CommandDelegate) commands_;
 
-		FontAtlas* atlas;
-		ConsoleBuffer buffers;
-		ConsoleBuffer history;
+		FontAtlas* atlas_;
+		ConsoleBuffer buffers_;
+		ConsoleBuffer history_;
 
-		bool enabled = false;
+		bool enabled_ = false;
 		size_t history_index = 0;
 		size_t history_elements = 0;
 
@@ -53,13 +53,13 @@ struct Console {
 		import std.traits : EnumMembers;
 
 		this.allocator_ = allocator;
-		this.commands = typeof(commands)(allocator_, 24);
-		this.atlas = font_atlas;
+		this.commands_ = typeof(commands_)(allocator_, 24);
+		this.atlas_ = font_atlas;
 
 		bind_command(ConsoleCommand.HELP,
 			(Console* console, in char[] args) {
 				foreach (i, field; EnumMembers!ConsoleCommand) console.print!(field);
-				console.print!("Listing all commands:");
+				console.print!("Listing all commands_:");
 		});
 
 		this.evman = eventman;
@@ -68,7 +68,7 @@ struct Console {
 
 	void bind_command(ConsoleCommand cmd, CommandDelegate cd) {
 
-		commands[cmd] = cd;
+		commands_[cmd] = cd;
 
 	} //bind_command
 
@@ -79,24 +79,24 @@ struct Console {
 		char[128] fmt_str;
 		const char[] c = cformat(fmt_str, format, args);
 		write(c);
-		shiftBuffer(buffers);
+		shiftBuffer(buffers_);
 
 	} //print
 
 	void write(in char[] text) {
 
 		import std.algorithm : min; //TODO remove
-		size_t elements = buffers[0].length;
+		size_t elements = buffers_[0].length;
 
 		if (elements + text.length < BUFFER_WIDTH) {
-			buffers[0] ~= text;
+			buffers_[0] ~= text;
 		} else {
 			size_t written = 0;
 			while (written < text.length) {
-				auto s = text[written .. min($, BUFFER_WIDTH-buffers[0].length)];
-				buffers[0] ~= s;
+				auto s = text[written .. min($, BUFFER_WIDTH-buffers_[0].length)];
+				buffers_[0] ~= s;
 				written += s.length;
-				shiftBuffer(buffers);
+				shiftBuffer(buffers_);
 			}
 		}
 
@@ -105,8 +105,8 @@ struct Console {
 	/* deletes last written character from input buffer */
 	void del() {
 
-		if (enabled && buffers[0].length != 0) {
-			 buffers[0].length = buffers[0].length - 1;
+		if (enabled_ && buffers_[0].length != 0) {
+			 buffers_[0].length = buffers_[0].length - 1;
 		}
 
 	} //del
@@ -114,41 +114,41 @@ struct Console {
 	/* toggles console */
 	void toggle() {
 
-		enabled = !enabled;
+		enabled_ = !enabled_;
 		history_index = 0;
-		(enabled) ? SDL_StartTextInput() : SDL_StopTextInput();
+		(enabled_) ? SDL_StartTextInput() : SDL_StopTextInput();
 
 	} //toggle
 
 	/* interprets input in input buffer and tries to execute command */
 	void run() {
 
-		if (!enabled) { return; }
+		if (!enabled_) { return; }
 
-		if (buffers[0].length == 0) { return; }
-		const char[] slice = buffers[0][];
+		if (buffers_[0].length == 0) { return; }
+		const char[] slice = buffers_[0][];
 
 		uint i = 0;
-		while (i != buffers[0].length && slice[i] != ' ') {
+		while (i != buffers_[0].length && slice[i] != ' ') {
 			i++;
 		}
 
 		const char[] command = slice[0..i];
 
 		size_t begin, end;
-		if (i < buffers[0].length) { begin = i+1; end = slice.length; }
+		if (i < buffers_[0].length) { begin = i+1; end = slice.length; }
 		else { begin = i; end = i; }
 		const char[] args = slice[begin .. end];
 
-		auto found_command = cast(ConsoleCommand)command in commands;
+		auto found_command = cast(ConsoleCommand)command in commands_;
 		if (found_command) {
-			shiftBuffer(buffers);
+			shiftBuffer(buffers_);
 			(*found_command)(&this, args);
-			history[0] ~= slice;
+			history_[0] ~= slice;
 			++history_elements;
-			shiftBuffer(history);
+			shiftBuffer(history_);
 		} else {
-			shiftBuffer(buffers);
+			shiftBuffer(buffers_);
 			print!("Unknown Command: %s")(command.ptr);
 		}
 			
@@ -156,23 +156,23 @@ struct Console {
 
 	} //run
 
-	/* go backwards in the command history */
+	/* go backwards in the command history_ */
 	void getPrev() {
 
-		if(!enabled) { return; }
+		if(!enabled_) { return; }
 
 		if (history_index != 0)
-			buffers[0] = history[--history_index];
+			buffers_[0] = history_[--history_index];
 
 	} //getPrev
 
-	/* go forwards in the command history */
+	/* go forwards in the command history_ */
 	void getNext() {
 		
-		if(!enabled) { return; }
+		if(!enabled_) { return; }
 
 		if (history_index+1 < BUFFER_LINES && history_index+1 <= history_elements)
-			buffers[0] = history[++history_index];
+			buffers_[0] = history_[++history_index];
 
 	} //getNext
 
@@ -189,18 +189,18 @@ struct Console {
 
 	void draw(Window* window) {
 
-		if (!enabled) { return; }
+		if (!enabled_) { return; }
 
-		int x = window.width - (atlas.char_width * BUFFER_WIDTH) - atlas.char_width, y = 16;
+		int x = window.width - (atlas_.char_width * BUFFER_WIDTH) - atlas_.char_width, y = 16;
 		int color = 0xFFFFFF;
 
-		atlas.renderText(window, ">", x, y + atlas.char_height, 1, 1, color);
-		atlas.renderText(window, buffers[0][], x + atlas.char_width*2, y + atlas.char_height, 1, 1, color);
+		atlas_.renderText(window, ">", x, y + atlas_.char_height, 1, 1, color);
+		atlas_.renderText(window, buffers_[0][], x + atlas_.char_width*2, y + atlas_.char_height, 1, 1, color);
 		y += 12;
-		foreach(ref buf; buffers[1..$]) {
+		foreach(ref buf; buffers_[1..$]) {
 
 			if (buf.length != 0) {
-				atlas.renderText(window, buf[], x, y + atlas.char_height, 1, 1, color);
+				atlas_.renderText(window, buf[], x, y + atlas_.char_height, 1, 1, color);
 			}
 			y += 12;
 
@@ -210,7 +210,7 @@ struct Console {
 	
 	void handleEvent(ref SDL_Event ev) {
 
-		if (!enabled) { return; }
+		if (!enabled_) { return; }
 
 		switch (ev.type) {
 			case SDL_TEXTINPUT:
