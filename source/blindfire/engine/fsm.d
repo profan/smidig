@@ -109,7 +109,6 @@ version(unittest) {
 
 		} //this
 
-
 		static struct Walking {
 
 			enum id = State.Walking;
