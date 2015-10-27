@@ -89,7 +89,7 @@ string generateWrapper(alias F)() {
 
 		foreach (i, param; ParameterTypeTuple!F) {
 			reads ~= q{auto arg%d = stream.read!(%s)();}.format(i, param.stringof);
-			args ~= format("arg%d", i);
+			args ~= q{arg%d}.format(i);
 		}
 
 		return reads.data;

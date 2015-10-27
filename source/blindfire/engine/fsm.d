@@ -18,6 +18,10 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 	FStateID current_state_ = -1;
 	TripleRunFunc[in_states.length] states_;
 
+	this(this) {
+		readjustPointers();
+	} //this(this)
+
 	ref typeof(this) setInitialState(FStateID state) {
 
 		last_this_ = &this;
@@ -43,7 +47,6 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 
 	void tick(Args...)(Args args) {
 
-		if (last_this_ != &this) readjustPointers();
 		states_[current_state_].execute(this, args);
 
 	} //tick
@@ -62,8 +65,6 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 
 		assert(new_state >= 0 && new_state < states_.length, "state outside range of existing states.");
 		assert(new_state != current_state_, "tried to switch state to current.");
-
-		if (last_this_ != &this) readjustPointers();
 
 		if (current_state_ != -1) states_[current_state_].leave(new_state);
 		states_[new_state].enter(current_state_);
@@ -107,6 +108,7 @@ version(unittest) {
 			setInitialState(State.Walking);
 
 		} //this
+
 
 		static struct Walking {
 
