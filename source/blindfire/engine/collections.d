@@ -1424,7 +1424,7 @@ struct BKTree {
 		String word;
 		Array!Node children;
 
-		this(ref BKTree tree, ref String str) {
+		this(ref BKTree tree, String str) {
 			this.children = typeof(children)(tree.allocator_, prealloc_size);
 			this.word = move(str);
 		}

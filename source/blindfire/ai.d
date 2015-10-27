@@ -7,7 +7,7 @@ import blindfire.engine.fsm : FSM, FStateID, FStateTuple;
 
 struct MovingFSM {
 
-	alias MovingFunc = void delegate(int new_speed);
+	alias MovingFunc = void delegate(ref MovingFSM fsm, int new_speed);
 
 	enum State : FStateID {
 		Moving,
@@ -22,37 +22,56 @@ struct MovingFSM {
 			FStateTuple(State.Stationary, State.Moving)],
 			MovingFunc);
 
+	private {
+
+		Stationary stationary_;
+		Moving moving_;
+
+	}
+
 	this(int initial_velocity) {
 
 		setInitialState(State.Moving)
-			.attachFunction(State.Moving, &onMovEnter, &onMovExecute, &onMovLeave)
-			.attachFunction(State.Stationary, &onStatEnter, &onStatExecute, &onStatLeave);
+			.attachState(stationary_)
+			.attachState(moving_);
 
 	} //this
 
-	void onStatEnter(FStateID from) {
+	static struct Stationary {
 
-	} //onStatEnter
+		enum id = State.Stationary;
 
-	void onStatExecute(int new_speed) {
-		transitionTo(State.Moving);
-	} //onStatExecute
+		void enter(FStateID from) {
 
-	void onStatLeave(FStateID target) {
+		} //enter
 
-	} //onStatLeave
+		void execute(ref MovingFSM fsm, int new_speed) {
 
-	void onMovEnter(FStateID from) {
+		} //execute
 
-	} //onMovEnter
+		void leave(FStateID to) {
 
-	void onMovExecute(int new_speed) {
+		} //leave
 
-	} //onMovExecute
+	} //Stationary
 
-	void onMovLeave(FStateID target) {
+	static struct Moving {
 
-	} //onMovLeave
+		enum id = State.Moving;
+
+		void enter(FStateID from) {
+
+		} //enter
+
+		void execute(ref MovingFSM fsm, int new_speed) {
+
+		} //execute
+
+		void leave(FStateID to) {
+
+		} //leave
+
+	} //Moving
 
 } //WalkingFSM
 
