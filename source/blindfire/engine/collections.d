@@ -785,6 +785,8 @@ struct MultiHashMap(K, V) {
 
 	}
 
+	@disable this(this);
+
 	this(IAllocator allocator, size_t initial_size, size_t bucket_size = 8) {
 
 		this.map_ = typeof(map_)(allocator, initial_size);
@@ -800,7 +802,7 @@ struct MultiHashMap(K, V) {
 		return map_.get(key);
 	} //opIndex
 
-	void put(K key, V value) {
+	void put(K key, V value) @safe {
 
 		auto ptr = key in map_;
 
@@ -816,7 +818,7 @@ struct MultiHashMap(K, V) {
 
 	} //add
 
-	ref Array!V get(in K key) {
+	ref Array!V get(in K key) @safe {
 		return map_.get(key);
 	} //get
 
@@ -825,6 +827,13 @@ struct MultiHashMap(K, V) {
 unittest {
 
 	auto map = MultiHashMap!(int, bool)(theAllocator, 16);
+
+	enum key = 32;
+	map.put(key, true);
+	map.put(key, false);
+
+	assert(map[key][0] == true);
+	assert(map[key][1] == false);
 
 }
 
