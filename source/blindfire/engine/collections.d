@@ -776,6 +776,30 @@ unittest { //test expansion
 
 }
 
+struct MultiHashMap(K, V) {
+
+	private {
+
+		HashMap!(K, Array!V) map_;
+
+	}
+
+	this(IAllocator allocator, size_t initial_size, size_t bucket_size = 8) {
+
+		this.map_ = typeof(map_)(allocator, initial_size);
+
+		foreach(i; 0..initial_size) {
+			map_.array_[i].value = Array!V(allocator, bucket_size);
+		}
+
+	} //this
+
+} //MultiHashMap
+
+unittest {
+
+}
+
 struct SparseArray(T) {
 
 	struct Entry {

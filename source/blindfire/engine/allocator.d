@@ -10,12 +10,12 @@ for memory safety in the face of reallocations, and possibly defragmentation of 
 */
 struct TrackingAllocator(ParentAllocator) {
 
-	import blindfire.engine.collections : Array, HashMap;
+	import blindfire.engine.collections : Array, MultiHashMap;
 
 	private {
 
 		ParentAllocator parent_;
-		HashMap!(void*, Array!(void*)) ptr_registry_;
+		MultiHashMap!(void*, void*) ptr_registry_;
 
 	}
 
