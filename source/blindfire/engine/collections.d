@@ -778,6 +778,8 @@ unittest { //test expansion
 
 struct MultiHashMap(K, V) {
 
+	import std.algorithm : move;
+
 	private {
 
 		HashMap!(K, Array!V) map_;
@@ -802,7 +804,7 @@ struct MultiHashMap(K, V) {
 		return map_.get(key);
 	} //opIndex
 
-	void put(K key, V value) @safe {
+	void put(K key, V value) @trusted {
 
 		auto ptr = key in map_;
 
@@ -812,11 +814,12 @@ struct MultiHashMap(K, V) {
 			}
 			ptr.add(value);
 		} else {
-			map_[key] = typeof(*ptr)(map_.allocator_, start_bucket_size_);
-			map_[key].add(value);
+			auto new_bucket = typeof(*ptr)(map_.allocator_, start_bucket_size_);
+			new_bucket.add(value);
+			map_[key] = move(new_bucket);
 		}
 
-	} //add
+	} //put
 
 	ref Array!V get(in K key) @safe {
 		return map_.get(key);
