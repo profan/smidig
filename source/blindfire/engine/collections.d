@@ -794,9 +794,23 @@ struct MultiHashMap(K, V) {
 
 	} //this
 
+	ref Array!V opIndex(in K key) @safe {
+		return map_.get(key);
+	} //opIndex
+
+	void put(in K key, V value) {
+		map_.get(key).add(value);
+	} //add
+
+	ref Array!V get(in K key) {
+		return map_.get(key);
+	} //get
+
 } //MultiHashMap
 
 unittest {
+
+	auto map = MultiHashMap!(int, bool)(theAllocator, 16);
 
 }
 
