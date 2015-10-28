@@ -189,7 +189,6 @@ struct Array(T) {
 	void remove(size_t index) {
 
 		import std.string : format;
-		import std.algorithm : copy, moveAll;
 		import blindfire.engine.memory : memmove;
 
 		assert(index < length_,
@@ -201,14 +200,16 @@ struct Array(T) {
 
 	} //remove
 
-	void remove(ref T thing) @trusted {
+	bool remove(ref T thing) @trusted {
 
 		foreach(ref i, ref e; this) {
 			if (e == thing) {
 				this.remove(i);
-				return;
+				return true;
 			}
 		}
+
+		return false;
 
 	} //remove
 
@@ -806,20 +807,32 @@ struct MultiHashMap(K, V) {
 
 	void put(K key, V value) @trusted {
 
-		auto ptr = key in map_;
+		auto bkt = key in map_;
 
-		if (ptr) {
-			if (ptr.allocator_ is null) {
-				*ptr = typeof(*ptr)(map_.allocator_, start_bucket_size_);
+		if (bkt) {
+			if (bkt.allocator_ is null) {
+				*bkt = typeof(*bkt)(map_.allocator_, start_bucket_size_);
 			}
-			ptr.add(value);
+			bkt.add(value);
 		} else {
-			auto new_bucket = typeof(*ptr)(map_.allocator_, start_bucket_size_);
+			auto new_bucket = typeof(*bkt)(map_.allocator_, start_bucket_size_);
 			new_bucket.add(value);
 			map_[key] = move(new_bucket);
 		}
 
 	} //put
+
+	bool remove(K key, V value) {
+
+		auto bkt = key in map_;
+
+		if (bkt) {
+			return bkt.remove(value);
+		}
+
+		return false;
+
+	} //remove
 
 	ref Array!V get(in K key) @safe {
 		return map_.get(key);

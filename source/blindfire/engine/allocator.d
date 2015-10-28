@@ -15,24 +15,20 @@ struct TrackingAllocator(ParentAllocator) {
 	private {
 
 		ParentAllocator parent_;
-		MultiHashMap!(void*, void*) ptr_registry_;
+		MultiHashMap!(void*, void*) registry_;
 
 	}
 
 	this(ParentAllocator)(ParentAllocator parent) {
 
 		this.parent_ = parent;
-		this.ptr_registry_ = typeof(ptr_registry_)(allocatorObject(parent_), 16);
+		this.registry_ = typeof(registry_)(allocatorObject(parent_), 16);
 
 	} //this
 
 	void[] allocate(size_t bytes) {
 		return null;
 	} //allocate
-
-	void[] allocateWithIndirections(size_t bytes) {
-		return null;
-	} //allocateWithIndirections
 
 	void[] alignedAllocate(size_t bytes, uint alignment) {
 		return null;
@@ -73,6 +69,19 @@ struct TrackingAllocator(ParentAllocator) {
 	Ternary empty() const {
 		return Ternary.yes;
 	} //empty
+
+	/* functions specific to TrackingAllocator */
+	void registerPointer(void[] blk, void* ptr) {
+
+		registry_.put(blk.ptr, ptr); /* REGISTAR! */
+
+	} //registerPointer
+
+	void deregisterPointer(void[] blk, void* ptr) {
+
+		registry_.remove(blk.ptr, ptr); /* DEREGISTAR! */
+
+	} //deregisterPointer
 
 } //TrackingAllocator
 
