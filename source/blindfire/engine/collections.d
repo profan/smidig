@@ -781,12 +781,14 @@ struct MultiHashMap(K, V) {
 	private {
 
 		HashMap!(K, Array!V) map_;
+		size_t start_bucket_size_;
 
 	}
 
 	this(IAllocator allocator, size_t initial_size, size_t bucket_size = 8) {
 
 		this.map_ = typeof(map_)(allocator, initial_size);
+		this.start_bucket_size_ = bucket_size;
 
 		foreach(i; 0..initial_size) {
 			map_.array_[i].value = Array!V(allocator, bucket_size);
@@ -798,8 +800,20 @@ struct MultiHashMap(K, V) {
 		return map_.get(key);
 	} //opIndex
 
-	void put(in K key, V value) {
-		map_.get(key).add(value);
+	void put(K key, V value) {
+
+		auto ptr = key in map_;
+
+		if (ptr) {
+			if (ptr.allocator_ is null) {
+				*ptr = typeof(*ptr)(map_.allocator_, start_bucket_size_);
+			}
+			ptr.add(value);
+		} else {
+			map_[key] = typeof(*ptr)(map_.allocator_, start_bucket_size_);
+			map_[key].add(value);
+		}
+
 	} //add
 
 	ref Array!V get(in K key) {
