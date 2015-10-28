@@ -411,6 +411,10 @@ size_t toHash(int k) @nogc @safe pure nothrow {
 	return k % 31;
 } //toHash
 
+size_t toHash(in void* p) @nogc @safe pure nothrow {
+	return cast(size_t)p % 31UL;
+} //toHash
+
 template isCopyable(T) {
 	enum isCopyable = __traits(compiles, function T(T t) { return t; });
 } //isCopyable
