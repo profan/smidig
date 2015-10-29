@@ -193,5 +193,6 @@ unittest {
 	test_array.add(112);
 
 	writefln("ptr: %s, value: %d", reference.get(), *reference.get());
+	assert(*reference.get() == 24);
 
 }

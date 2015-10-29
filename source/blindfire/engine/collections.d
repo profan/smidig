@@ -1562,10 +1562,9 @@ unittest {
 
 struct ScopedBuffer(T) {
 
-	private IAllocator allocator_;
-
 	private {
 
+		IAllocator allocator_;
 		T[] buffer_;
 
 	}
