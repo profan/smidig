@@ -72,7 +72,7 @@ struct Array(T) {
 		return array_.ptr;
 	} //ptr
 
-	int opApply(int delegate(ref size_t i, ref T) dg) {
+	int opApply(scope int delegate(ref size_t i, ref T) dg) {
 
 		int result = 0;
 
@@ -85,7 +85,7 @@ struct Array(T) {
 
 	} //opApply
 
-	int opApply(int delegate(ref T) dg) {
+	int opApply(scope int delegate(ref T) dg) {
 
 		int result = 0;
 
@@ -531,7 +531,7 @@ struct HashMap(K, V) {
 
 	} //opBinaryRight
 
-	int opApply(int delegate(ref K, ref V) dg) {
+	int opApply(scope int delegate(ref K, ref V) dg) {
 
 		int result = 0;
 
@@ -546,7 +546,7 @@ struct HashMap(K, V) {
 
 	} //opApply
 
-	int opApply(int delegate(ref V) dg) {
+	int opApply(scope int delegate(ref V) dg) {
 
 		int result = 0;
 
@@ -807,11 +807,11 @@ struct MultiHashMap(K, V) {
 
 	} //opBinaryRight
 
-	int opApply(int delegate(ref K, ref Array!V) dg) {
+	int opApply(scope int delegate(ref K, ref Array!V) dg) {
 		return map_.opApply(dg);
 	} //opApply
 
-	int opApply(int delegate(ref Array!V) dg) {
+	int opApply(scope int delegate(ref Array!V) dg) {
 		return map_.opApply(dg);
 	} //opApply
 
@@ -1051,11 +1051,11 @@ struct CircularBuffer(T) {
 		cur_index = (cur_index + 1) % array_.capacity;
 	} //opOpAssign
 
-	int opApply(int delegate(ref size_t i, ref T) dg) {
+	int opApply(scope int delegate(ref size_t i, ref T) dg) {
 		return array_.opApply(dg);
 	} //opApply
 
-	int opApply(int delegate(ref T) dg) {
+	int opApply(scope int delegate(ref T) dg) {
 		return array_.opApply(dg);
 	} //opApply
 

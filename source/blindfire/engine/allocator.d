@@ -72,7 +72,12 @@ struct TrackingAllocator(ParentAllocator) {
 		import std.algorithm : filter;
 
 		auto old_ptr = b.ptr, old_size = b.length;
-		auto ptr_list = filter!((p) => p >= old_ptr && p <= old_ptr + old_size || *p >= old_ptr && *p <= old_ptr + old_size)(registry_[]);
+
+		scope bool filter_ptrs(void** p) {
+			return p >= old_ptr && p <= old_ptr + old_size || *p >= old_ptr && *p <= old_ptr + old_size;
+		}
+
+		auto ptr_list = filter!filter_ptrs(registry_[]);
 
 		bool result = (cast(shared)parent_).reallocate(b, new_size);
 		auto new_ptr = b.ptr; //new offset in memory for block
