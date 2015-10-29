@@ -181,9 +181,9 @@ unittest {
 
 	auto allocator = TrackingAllocator!Mallocator(Mallocator.instance);
 	auto test_array = Array!int(allocatorObject(&allocator), 1);
-	test_array[0] = 24;
+	test_array.add(24);
 
-	auto reference = Reference!(typeof(allocator), int)(&allocator, cast(void*)test_array.ptr, &test_array[0]);
+	auto reference = Reference!(typeof(allocator), int)(&allocator, cast(void*)test_array.ptr, test_array.ptr);
 	writefln("ptr: %s, value: %d", reference.get(), *reference.get());
 
 	test_array.add(72);
