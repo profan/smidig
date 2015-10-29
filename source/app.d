@@ -74,10 +74,10 @@ void main() {
 	import std.experimental.allocator.gc_allocator : GCAllocator;
 	import std.experimental.allocator.building_blocks.stats_collector : StatsCollector, Options;
 	import blindfire.engine.memory : theAllocator, processAllocator, allocatorObject, Mallocator;
+	import blindfire.engine.allocator : TrackingAllocator;
 
-	alias Allocator = StatsCollector!(Mallocator, Options.all, Options.all);
-
-	Allocator allocator;
+	alias TrackingAlloc = TrackingAllocator!Mallocator;
+	auto allocator = StatsCollector!(TrackingAlloc, Options.all, Options.all)();
 	processAllocator = allocatorObject(&allocator);
 	theAllocator = processAllocator;
 

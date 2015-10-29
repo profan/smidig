@@ -8,6 +8,10 @@ template hasAttribute(T, alias Member, alias Attribute) {
 	enum hasAttribute = hasAttribute_!(Member, Attribute, getAttributes!(T, Member));
 } //hasAttribute
 
+template hasFunctionAttribute(T, alias Member, alias Attribute) {
+	enum hasAttribute = hasAttribute_!(Member, Attribute, getFunctionAttributes!(T, Member));
+} //hasAttribute
+
 template hasAttribute_(alias Member, alias Attribute, Attributes...) {
 
 	static if (Attributes.length > 0 && isAttribute!(Attribute, Attributes[0])) {
@@ -29,6 +33,10 @@ template hasAttribute_(alias Member, alias Attribute, Attributes...) {
 template getAttributes(T, alias Member) {
 	enum getAttributes = __traits(getAttributes, __traits(getMember, T, Member));
 } //getAttributes
+
+template getFunctionAttributes(T, alias Member) {
+	enum getAttributes = __traits(getFunctionAttributes, __traits(getMember, T, Member));
+} //getFunctionAttributes
 
 template Identifier(alias Sym) {
 	enum Identifier = __traits(identifier, Sym);

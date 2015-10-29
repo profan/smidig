@@ -66,7 +66,6 @@ struct TrackingAllocator(ParentAllocator) {
 		} //expand
 	}
 
-	import std.stdio : writefln;
 	bool reallocate(ref void[] b, size_t new_size) {
 
 		import std.algorithm : filter;
@@ -173,8 +172,6 @@ struct TrackingAllocator(ParentAllocator) {
 		return Ternary.yes;
 
 	} //deregisterPointer
-
-	static TrackingAllocator allocator;
 
 } //TrackingAllocator
 

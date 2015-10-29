@@ -4,6 +4,7 @@ import std.algorithm : sort;
 import std.traits : PointerTarget;
 import std.typecons : Tuple;
 
+import blindfire.engine.memory : IAllocator, make, dispose;
 //FIXME defines in one place, consider if they should actually be there?
 import blindfire.engine.defs : ClientID, LocalEntityID;
 alias EntityID = LocalEntityID;
@@ -17,9 +18,7 @@ enum dependency = "dependency";
 class EntityManager {
 
 	import core.stdc.stdio : printf;
-
 	import blindfire.engine.collections : Array, StaticArray;
-	import blindfire.engine.memory : IAllocator, make, dispose;
 
 	enum INITIAL_SYSTEMS = 10;
 	enum MAX_SYSTEMS = 10;
@@ -53,6 +52,10 @@ class EntityManager {
 			allocator_.dispose(man);
 		}
 	} //~this
+
+	@property IAllocator allocator() {
+		return allocator_;
+	} //allocator
 
 	S registerSystem(S, Args...)(Args args) {
 
@@ -226,6 +229,7 @@ interface IComponentManager {
 	int opCmp(ref const IComponentManager other) nothrow const @nogc;
 	void setManager(EntityManager em);
 
+	@property IAllocator allocator();
 	@property int priority() nothrow const @nogc;
 	@property ComponentName name() nothrow const @nogc;
 	bool register(EntityID entity);
@@ -260,6 +264,7 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 		enum cname = typeid(T).stringof;
 	}
 
+	@property IAllocator allocator() { return em.allocator; }
 	@property int priority() nothrow const @nogc { return prio; }
 	@property ComponentName name() nothrow const @nogc { return cname; }
 
