@@ -1,11 +1,11 @@
-#version 330
+#version 300 es
 
 uniform sampler2D Texture;
 
-in vec2 Frag_UV;
-in vec4 Frag_Color;
+in highp vec2 Frag_UV;
+in highp vec4 Frag_Color;
 
-out vec4 Out_Color;
+out highp vec4 Out_Color;
 
 void main()
 {

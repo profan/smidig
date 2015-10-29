@@ -120,7 +120,7 @@ struct SoundSystem {
 
 		foreach (src_index, state; source_states_) {
 			if (state == State.Free) {
-				return src_index;
+				return cast(ALint)src_index;
 			}
 		}
 

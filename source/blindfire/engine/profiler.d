@@ -65,8 +65,8 @@ struct Profiler {
 		auto update_callback = &updatetimes_.last;
 		auto frame_callback = &frametimes_.last;
 
-		igPlotLines2("update times", &doCallback, cast(void*)&update_callback, updatetimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
-		igPlotLines2("frame times", &doCallback, cast(void*)&frame_callback, frametimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
+		igPlotLines2("update times", &doCallback, cast(void*)&update_callback, cast(int)updatetimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
+		igPlotLines2("frame times", &doCallback, cast(void*)&frame_callback, cast(int)frametimes_.length, 0, null, float.max, float.max, ImVec2(256, 64));
 
 		igEnd();
 
