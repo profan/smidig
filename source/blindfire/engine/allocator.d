@@ -16,7 +16,7 @@ struct TrackingAllocator(ParentAllocator) {
 	private {
 
 		ParentAllocator parent_;
-		MultiHashMap!(void*, void**) registry_;
+		Array!(void**) registry_;
 
 	}
 
@@ -69,41 +69,41 @@ struct TrackingAllocator(ParentAllocator) {
 	import std.stdio : writefln;
 	bool reallocate(ref void[] b, size_t new_size) {
 
+		import std.algorithm : filter;
+
 		auto old_ptr = b.ptr, old_size = b.length;
-		auto blk_list = old_ptr in registry_; //check if it exists in the registry
+		auto ptr_list = filter!(p => *p >= old_ptr && *p <= old_ptr + old_size)(registry_[]);
 
 		bool result = (cast(shared)parent_).reallocate(b, new_size);
 		auto new_ptr = b.ptr; //new offset in memory for block
 
-		if (result && blk_list && new_ptr != old_ptr) {
+		if (result && !ptr_list.empty && new_ptr != old_ptr) {
 
 			// calculate diff
 			ptrdiff_t offset_diff = new_ptr - old_ptr;
 
 			// set all pointers pointing into block to new location
-			foreach (p; *blk_list) {
+			foreach (ref p; ptr_list) {
 
 				// if pointer resides within block being moved
 				if (p >= old_ptr && p <= old_ptr + old_size) {
 
 					// since it moved, change where pointee resides as well
 					void** moved_ptr = p + offset_diff;
-					registry_.put(new_ptr, moved_ptr);
+					p = moved_ptr; //set by reference ;D
 					*moved_ptr += offset_diff;
 
 				} else { //pointer resides outside block, points into it
 
-					// add back pointer since it's location didn't move,
-					//  dereference and set new pointing location.
-					registry_.put(new_ptr, p);
+					//  dereference pointer and set new pointing location.
 					*p += offset_diff;
 
 				}
 
 			}
 
-			// get rid of old registry entry
-			registry_.remove(old_ptr);
+			import std.algorithm : sort;
+			sort!((p1, p2) => *p1 > *p2)(registry_[]);
 
 		}
 
@@ -154,17 +154,17 @@ struct TrackingAllocator(ParentAllocator) {
 	}
 
 	/* functions specific to TrackingAllocator */
-	Ternary registerPointer(void* blk, void** ptr) {
+	Ternary registerPointer(void** ptr) {
 
-		registry_.put(blk, ptr); /* REGISTAR! */
+		registry_.add(ptr); /* REGISTAR! */
 
 		return Ternary.yes;
 
 	} //registerPointer
 
-	Ternary deregisterPointer(void* blk, void** ptr) {
+	Ternary deregisterPointer(void** ptr) {
 
-		registry_.remove(blk, ptr); /* DEREGISTAR! */
+		registry_.remove(ptr); /* DEREGISTAR! */
 
 		return Ternary.yes;
 
@@ -183,10 +183,12 @@ unittest {
 	import blindfire.engine.pointer : Reference;
 
 	auto allocator = TrackingAllocator!Mallocator(Mallocator.instance);
-	auto test_array = Array!int(allocatorObject(&allocator), 1);
+	auto all_obj = allocatorObject(&allocator);
+
+	auto test_array = Array!int(all_obj, 1);
 	test_array.add(24);
 
-	auto reference = Reference!(typeof(allocator), int)(&allocator, cast(void*)test_array.ptr, test_array.ptr);
+	auto reference = Reference!int(all_obj, test_array.ptr);
 	writefln("ptr: %s, value: %d", reference.get(), *reference.get());
 
 	test_array.add(72);

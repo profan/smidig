@@ -1,6 +1,9 @@
 module blindfire.engine.pointer;
 
+import std.experimental.allocator.common : Ternary;
+
 import blindfire.engine.allocator : TrackingAllocator;
+import blindfire.engine.memory : IAllocator;
 
 /* will hold moving allocator aware pointers, and a registry for them. */
 
@@ -8,13 +11,21 @@ struct Delegate(T) {
 
 	private {
 
+		IAllocator allocator_;
 		T delegate_;
 
 	}
 
-	this(T dele) {
+	this(IAllocator allocator, T dele) {
+
+		this.allocator_ = allocator;
 		this.delegate_ = dele;
+
 	} //this
+
+	~this() {
+
+	} //~this
 
 	alias delegate_ this;
 
@@ -24,7 +35,7 @@ unittest {
 
 }
 
-struct Reference(Allocator, T) {
+struct Reference(T) {
 
 	static if (is(T == class)) {
 		alias Type = T;
@@ -34,28 +45,32 @@ struct Reference(Allocator, T) {
 
 	private {
 
-		Allocator* allocator_;
-		void* parent_block_;
+		IAllocator allocator_;
 		Type pointer_;
 
 	}
 
-	this(Allocator* allocator, void* parent_block, Type pointer) {
+	this(IAllocator allocator, Type pointer) {
+
 		this.pointer_ = pointer;
 		this.allocator_ = allocator;
-		this.parent_block_ = parent_block;
-		this.allocator_.registerPointer(parent_block_, cast(void**)&pointer_);
-		this.allocator_.registerPointer(parent_block_, &parent_block_);
+		auto success = this.allocator_.registerPointer(cast(void**)&pointer_);
+
+		assert(success == Ternary.yes, "allocator doesn't support registerPointer?");
+
 	} //this
 
 	~this() {
-		this.allocator_.deregisterPointer(parent_block_, &parent_block_);
-		this.allocator_.deregisterPointer(parent_block_, cast(void**)&pointer_);
+
+		auto success = this.allocator_.deregisterPointer(cast(void**)&pointer_);
+
+		assert(success == Ternary.yes, "allocator doesn't support deregisterPointer?");
+
 	} //~this
 
 	Type get() {
 		return pointer_;
-	}
+	} //get
 
 } //Reference
 
