@@ -1,5 +1,7 @@
 module blindfire.engine.pointer;
 
+import blindfire.engine.allocator : TrackingAllocator;
+
 /* will hold moving allocator aware pointers, and a registry for them. */
 
 struct Delegate(T) {
@@ -18,7 +20,11 @@ struct Delegate(T) {
 
 } //Delegate
 
-struct Pointer(T) {
+unittest {
+
+}
+
+struct Reference(Allocator, T) {
 
 	static if (is(T == class)) {
 		alias Type = T;
@@ -28,12 +34,31 @@ struct Pointer(T) {
 
 	private {
 
+		Allocator* allocator_;
+		void* parent_block_;
 		Type pointer_;
 
 	}
 
-	this(Type pointer) {
+	this(Allocator* allocator, void* parent_block, Type pointer) {
 		this.pointer_ = pointer;
+		this.allocator_ = allocator;
+		this.parent_block_ = parent_block;
+		this.allocator_.registerPointer(parent_block_, cast(void**)&pointer_);
+		this.allocator_.registerPointer(parent_block_, &parent_block_);
 	} //this
 
-} //Pointer
+	~this() {
+		this.allocator_.deregisterPointer(parent_block_, &parent_block_);
+		this.allocator_.deregisterPointer(parent_block_, cast(void**)&pointer_);
+	} //~this
+
+	Type get() {
+		return pointer_;
+	}
+
+} //Reference
+
+unittest {
+
+}

@@ -20,6 +20,8 @@ struct TrackingAllocator(ParentAllocator) {
 
 	}
 
+	enum alignment = ParentAllocator.alignment;
+
 	this(ParentAllocator)(ParentAllocator parent) {
 
 		this.parent_ = parent;
@@ -27,9 +29,16 @@ struct TrackingAllocator(ParentAllocator) {
 
 	} //this
 
-	void[] allocate(size_t bytes) shared {
+	this(ParentAllocator)() {
 
-		return parent_.allocate(bytes);
+		this.parent_ = ParentAllocator.instance;
+		this.registry_ = typeof(registry_)(allocatorObject(parent_), 16);
+
+	} //this
+
+	void[] allocate(size_t bytes) {
+
+		return (cast(shared)parent_).allocate(bytes);
 
 	} //allocate
 
@@ -57,7 +66,8 @@ struct TrackingAllocator(ParentAllocator) {
 		} //expand
 	}
 
-	__gshared bool reallocate(ref void[] b, size_t new_size) {
+	import std.stdio : writefln;
+	bool reallocate(ref void[] b, size_t new_size) {
 
 		auto old_ptr = b.ptr, old_size = b.length;
 		auto blk_list = old_ptr in registry_; //check if it exists in the registry
@@ -65,25 +75,27 @@ struct TrackingAllocator(ParentAllocator) {
 		bool result = (cast(shared)parent_).reallocate(b, new_size);
 		auto new_ptr = b.ptr; //new offset in memory for block
 
-		if (result) {
+		if (result && blk_list && new_ptr != old_ptr) {
 
 			// calculate diff
 			ptrdiff_t offset_diff = new_ptr - old_ptr;
+			writefln("old: %s, new: %s, offset: %d", old_ptr, new_ptr, offset_diff);
 
 			// set all pointers pointing into block to new location
 			foreach (p; *blk_list) {
 
 				// if pointer resides within block being moved
-				if (p >= old_ptr || p <= old_ptr + old_size) {
+				if (p >= old_ptr && p <= old_ptr + old_size) {
 
+					// since it moved, change where pointee resides as well
 					void** moved_ptr = p + offset_diff;
-					registry_.put(new_ptr, cast(void**)moved_ptr);
+					registry_.put(new_ptr, moved_ptr);
 					*moved_ptr += offset_diff;
 
 				} else { //pointer resides outside block, points into it
 
-					// add back pointer since it's location didn't move
-					//  dereferenc and set new pointing location.
+					// add back pointer since it's location didn't move,
+					//  dereference and set new pointing location.
 					registry_.put(new_ptr, p);
 					*p += offset_diff;
 
@@ -120,9 +132,9 @@ struct TrackingAllocator(ParentAllocator) {
 		return null;
 	} //resolveInternalPointer
 
-	bool deallocate(void[] bytes) shared {
+	bool deallocate(void[] bytes) {
 
-		return parent_.deallocate(bytes);
+		return (cast(shared)parent_).deallocate(bytes);
 
 	} //deallocate
 
@@ -143,15 +155,15 @@ struct TrackingAllocator(ParentAllocator) {
 	}
 
 	/* functions specific to TrackingAllocator */
-	void registerPointer(void[] blk, void** ptr) {
+	void registerPointer(void* blk, void** ptr) {
 
-		registry_.put(blk.ptr, ptr); /* REGISTAR! */
+		registry_.put(blk, ptr); /* REGISTAR! */
 
 	} //registerPointer
 
-	void deregisterPointer(void[] blk, void** ptr) {
+	void deregisterPointer(void* blk, void** ptr) {
 
-		registry_.remove(blk.ptr, ptr); /* DEREGISTAR! */
+		registry_.remove(blk, ptr); /* DEREGISTAR! */
 
 	} //deregisterPointer
 
@@ -161,8 +173,25 @@ struct TrackingAllocator(ParentAllocator) {
 
 unittest {
 
+	import std.stdio : writefln;
+
 	import std.experimental.allocator.mallocator;
+	import blindfire.engine.collections : Array;
+	import blindfire.engine.pointer : Reference;
 
 	auto allocator = TrackingAllocator!Mallocator(Mallocator.instance);
+	auto test_array = Array!int(allocatorObject(&allocator), 1);
+	test_array[0] = 24;
+
+	auto reference = Reference!(typeof(allocator), int)(&allocator, cast(void*)test_array.ptr, &test_array[0]);
+	writefln("ptr: %s, value: %d", reference.get(), *reference.get());
+
+	test_array.add(72);
+	test_array.add(45);
+	test_array.add(65);
+	test_array.add(92);
+	test_array.add(112);
+
+	writefln("ptr: %s, value: %d", reference.get(), *reference.get());
 
 }
