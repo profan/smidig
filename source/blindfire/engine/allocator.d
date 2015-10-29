@@ -10,7 +10,7 @@ for memory safety in the face of reallocations, and possibly defragmentation of 
 */
 struct TrackingAllocator(ParentAllocator) {
 
-	import blindfire.engine.collections : Array, MultiHashMap;
+	import blindfire.engine.collections : Array;
 	import blindfire.engine.meta : hasMember;
 
 	private {

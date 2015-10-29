@@ -9,6 +9,10 @@ import blindfire.engine.memory : IAllocator;
 
 struct Delegate(T) {
 
+	import std.traits : isDelegate;
+
+	static assert(isDelegate!T);
+
 	private {
 
 		IAllocator allocator_;
@@ -21,9 +25,15 @@ struct Delegate(T) {
 		this.allocator_ = allocator;
 		this.delegate_ = dele;
 
+		auto success = this.allocator_.registerPointer(&delegate_.ptr);
+		assert(success == Ternary.yes, "allocator doesn't support registerPointer?");
+
 	} //this
 
 	~this() {
+
+		auto success = this.allocator_.deregisterPointer(&delegate_.ptr);
+		assert(success == Ternary.yes, "allocator doesn't support deregisterPointer?");
 
 	} //~this
 
@@ -55,7 +65,6 @@ struct Reference(T) {
 		this.pointer_ = pointer;
 		this.allocator_ = allocator;
 		auto success = this.allocator_.registerPointer(cast(void**)&pointer_);
-
 		assert(success == Ternary.yes, "allocator doesn't support registerPointer?");
 
 	} //this
@@ -63,7 +72,6 @@ struct Reference(T) {
 	~this() {
 
 		auto success = this.allocator_.deregisterPointer(cast(void**)&pointer_);
-
 		assert(success == Ternary.yes, "allocator doesn't support deregisterPointer?");
 
 	} //~this
