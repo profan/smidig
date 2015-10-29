@@ -801,6 +801,20 @@ struct MultiHashMap(K, V) {
 
 	} //this
 
+	Array!(V)* opBinaryRight(string op = "in")(in K key) nothrow {
+
+		return key in map_;
+
+	} //opBinaryRight
+
+	int opApply(int delegate(ref K, ref Array!V) dg) {
+		return map_.opApply(dg);
+	} //opApply
+
+	int opApply(int delegate(ref Array!V) dg) {
+		return map_.opApply(dg);
+	} //opApply
+
 	ref Array!V opIndex(in K key) @safe {
 		return map_.get(key);
 	} //opIndex
@@ -832,6 +846,10 @@ struct MultiHashMap(K, V) {
 
 		return false;
 
+	} //remove
+
+	bool remove(K key) {
+		return map_.remove(key);
 	} //remove
 
 	ref Array!V get(in K key) @safe {
@@ -1238,7 +1256,7 @@ unittest {
 
 struct MatrixGraph(T) {
 
-} //Graph
+} //MatrixGraph
 
 struct HashSet(T) {
 
@@ -1546,8 +1564,11 @@ struct ScopedBuffer(T) {
 
 	private IAllocator allocator_;
 
-	T[] buffer_;
-	alias buffer_ this; //careful!
+	private {
+
+		T[] buffer_;
+
+	}
 
 	@disable this(this);
 
@@ -1561,6 +1582,8 @@ struct ScopedBuffer(T) {
 			this.allocator_.dispose(buffer_);
 		}
 	} //~this
+
+	alias buffer_ this; //careful!
 
 } //ScopedBuffer
 

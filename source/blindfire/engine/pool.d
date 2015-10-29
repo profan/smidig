@@ -1,10 +1,8 @@
 module blindfire.engine.pool;
 
-import std.stdio : writefln;
+import blindfire.engine.meta : hasMember;
 
-template hasMember(alias obj, string Member) {
-	enum hasMember = __traits(hasMember, typeof(obj), Member);
-} //hasMember
+import std.stdio : writefln;
 
 /* in-place construction, it's a bit ergh. */
 void construct(T, Args...)(ref T thing, Args args)

@@ -50,3 +50,10 @@ template isPOD(T) {
 	enum isPOD = __traits(isPOD, T);
 } //isPOD
 
+template hasMember(alias obj, string Member) {
+	enum hasMember = __traits(hasMember, typeof(obj), Member);
+} //hasMember
+
+template hasMember(T, string Member) {
+	enum hasMember = __traits(hasMember, T, Member);
+} //hasMember
