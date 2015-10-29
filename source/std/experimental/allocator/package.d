@@ -346,6 +346,20 @@ interface IAllocator
     $(D Ternary.unknown) if not supported.
     */
     Ternary empty();
+
+	/**
+	Registers a pointer with the allocators registry to keep track of these when memory
+	moves, returns $(D Ternary.unknown) if unsupported.
+	*/
+	Ternary registerPointer(void* blk, void** ptr);
+
+	/**
+	Deregisters a previously registered pointer in the allocators registry, returns
+	$(D Ternary.unknown) if unsupported, $(Ternary.yes) if unregistered successfully,
+	or didn't exist in registry.
+	*/
+	Ternary deregisterPointer(void* blk, void** ptr);
+
 }
 
 __gshared IAllocator _processAllocator;
@@ -1400,6 +1414,37 @@ class CAllocatorImpl(Allocator, Flag!"indirect" indirect = No.indirect)
             return null;
         }
     }
+
+	/**
+	Returns $(D impl.registerPointer()) if present, $(D Ternary.unknown) otherwise.
+	*/
+	override Ternary registerPointer(void* blk, void** ptr)
+	{
+		static if (hasMember!(Allocator, "registerPointer"))
+		{
+			return impl.registerPointer(blk, ptr);
+		}
+		else
+		{
+			return Ternary.unknown;
+		}
+	}
+
+	/**
+	Returns $(D impl.deregisterPointer()) if present, $(D Ternary.unknown) otherwise.
+	*/
+	override Ternary deregisterPointer(void* blk, void** ptr)
+	{
+		static if (hasMember!(Allocator, "deregisterPointer"))
+		{
+			return impl.deregisterPointer(blk, ptr);
+		}
+		else
+		{
+			return Ternary.unknown;
+		}
+	}
+
 }
 
 // Example in intro above

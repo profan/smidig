@@ -33,7 +33,10 @@ struct Game {
 
 	private {
 
+		//engine parts
 		Engine engine_;
+
+		//test game systems
 		Chat chat_ = void;
 	
 		//resource cursor

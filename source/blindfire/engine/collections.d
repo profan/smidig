@@ -1331,6 +1331,8 @@ unittest {
 /* - null terminator to make interop with c stuff easier. */
 struct String {
 
+	import std.algorithm : move;
+
 	private {
 
 		IAllocator allocator_;
@@ -1375,6 +1377,10 @@ struct String {
 		this.array_[$] = '\0'; //HELLA NULL TERMINATION SON
 
 	} //this
+
+	void opAssign(String other) {
+		this.array_ = move(other.array_);
+	} //opAssign
 
 	@property size_t length() const nothrow @nogc {
 		return array_.length;

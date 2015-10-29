@@ -79,7 +79,6 @@ struct TrackingAllocator(ParentAllocator) {
 
 			// calculate diff
 			ptrdiff_t offset_diff = new_ptr - old_ptr;
-			writefln("old: %s, new: %s, offset: %d", old_ptr, new_ptr, offset_diff);
 
 			// set all pointers pointing into block to new location
 			foreach (p; *blk_list) {
@@ -155,15 +154,19 @@ struct TrackingAllocator(ParentAllocator) {
 	}
 
 	/* functions specific to TrackingAllocator */
-	void registerPointer(void* blk, void** ptr) {
+	Ternary registerPointer(void* blk, void** ptr) {
 
 		registry_.put(blk, ptr); /* REGISTAR! */
 
+		return Ternary.yes;
+
 	} //registerPointer
 
-	void deregisterPointer(void* blk, void** ptr) {
+	Ternary deregisterPointer(void* blk, void** ptr) {
 
 		registry_.remove(blk, ptr); /* DEREGISTAR! */
+
+		return Ternary.yes;
 
 	} //deregisterPointer
 
