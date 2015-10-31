@@ -66,12 +66,12 @@ struct TrackingAllocator(ParentAllocator) {
 		} //expand
 	}
 
-	void notifyMove(ref void[] b, void* old_ptr, size_t old_size) {
+	void notifyMove(ref void[] b, void* old_ptr, size_t size) {
 
 		import std.algorithm : filter;
 
 		auto scope filter_ptrs = (void** p) {
-			return p >= old_ptr && p <= old_ptr + old_size || *p >= old_ptr && *p <= old_ptr + old_size;
+			return p >= old_ptr && p <= old_ptr + size || *p >= old_ptr && *p <= old_ptr + size;
 		};
 
 		auto ptr_list = filter!filter_ptrs(registry_[]);
@@ -86,7 +86,7 @@ struct TrackingAllocator(ParentAllocator) {
 			foreach (ref p; ptr_list) {
 
 				// if pointer resides within block being moved
-				if (p >= old_ptr && p <= old_ptr + old_size) {
+				if (p >= old_ptr && p <= old_ptr + size) {
 
 					// since it moved, change where pointee resides as well
 					void** moved_ptr = p + offset_diff;
