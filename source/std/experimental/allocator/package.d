@@ -355,10 +355,18 @@ interface IAllocator
 
 	/**
 	Deregisters a previously registered pointer in the allocators registry, returns
-	$(D Ternary.unknown) if unsupported, $(Ternary.yes) if unregistered successfully,
+	$(D Ternary.unknown) if unsupported, $(D Ternary.yes) if unregistered successfully,
 	or didn't exist in registry.
 	*/
 	Ternary deregisterPointer(void** ptr);
+
+	/**
+	Notifies the allocator that a block of memory has moved, relocating pointers in the
+	relevant memory block, assuring no dangling pointers occur when memory moves around.
+	Returns $(D Ternary.unknown) if unsupported, $(D Ternary.yes) if unregistered successfully,
+	or didn't exist in registry.
+	*/
+	Ternary notifyMove(void[] b, void* old_ptr, size_t size);
 
 }
 
@@ -1438,6 +1446,22 @@ class CAllocatorImpl(Allocator, Flag!"indirect" indirect = No.indirect)
 		static if (hasMember!(Allocator, "deregisterPointer"))
 		{
 			return impl.deregisterPointer(ptr);
+		}
+		else
+		{
+			return Ternary.unknown;
+		}
+	}
+
+	/**
+	 Returns $(D Ternary.yes) if present, $(D Ternary.unknown) otherwise.
+	*/
+	override Ternary notifyMove(void[] b, void* old_ptr, size_t size)
+	{
+		static if (hasMember!(Allocator, "notifyMove"))
+		{
+			impl.notifyMove(b, old_ptr, size);
+			return Ternary.yes;
 		}
 		else
 		{

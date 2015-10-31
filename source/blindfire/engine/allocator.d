@@ -66,7 +66,7 @@ struct TrackingAllocator(ParentAllocator) {
 		} //expand
 	}
 
-	void notifyMove(void[] b, void* old_ptr, size_t old_size) {
+	void notifyMove(ref void[] b, void* old_ptr, size_t old_size) {
 
 		import std.algorithm : filter;
 

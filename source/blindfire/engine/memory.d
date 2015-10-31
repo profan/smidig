@@ -35,13 +35,26 @@ unittest {
 void memmove(T)(IAllocator allocator, T[] src, T[] target) {
 
 	/* notify allocator that memory has moved */
-	auto ptr_diff = target.ptr - src.ptr;
-	allocator.notifyMove(src, ptr_diff, T.sizeof * src.length);
+	allocator.notifyMove(src, target.ptr, T.sizeof * src.length);
 	memmove(src, target);
 
 } //memmove
 
 unittest {
+
+	import blindfire.engine.pointer : Reference;
+	import blindfire.engine.allocator : TrackingAllocator;
+
+	auto alloc = TrackingAllocator!Mallocator();
+	auto alloc_obj = allocatorObject(&alloc);
+
+	int item1 = 10;
+	int item2;
+
+	auto reference = Reference!int(alloc_obj, &item1);
+	memmove(alloc_obj,
+			(cast(int*)item1)[0..int.sizeof],
+			(cast(int*)item2)[0..int.sizeof]);
 
 }
 
