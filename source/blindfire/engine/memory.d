@@ -4,12 +4,22 @@ public import std.experimental.allocator : allocatorObject, IAllocator, processA
 public import std.experimental.allocator.building_blocks.region : Region;
 public import std.experimental.allocator.mallocator : Mallocator;
 
-void memmove(T)(T[] src, T[] target) {
+void memmove(T)(auto ref T[] src, auto ref T[] target) {
 
 	import core.stdc.string : memmove;
 	memmove(target.ptr, src.ptr, src.length * T.sizeof);
+	src = src.init;
 	
 } //memmove
+
+unittest {
+
+	int[4] mem_src = [124, 3624, 6234, 52324];
+	int[4] mem_trg;
+
+	memmove(mem_src[], mem_trg[]);
+
+}
 
 void memmove(T)(T* src, T* target) {
 
@@ -18,12 +28,22 @@ void memmove(T)(T* src, T* target) {
 
 } //memmove
 
+unittest {
+
+}
+
 void memmove(T)(IAllocator allocator, T[] src, T[] target) {
 
 	/* notify allocator that memory has moved */
+	auto ptr_diff = target.ptr - src.ptr;
+	allocator.notifyMove(src, ptr_diff, T.sizeof * src.length);
 	memmove(src, target);
 
 } //memmove
+
+unittest {
+
+}
 
 void memswap(T)(T* src, T* target) {
 
