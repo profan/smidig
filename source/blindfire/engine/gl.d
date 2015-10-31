@@ -604,6 +604,48 @@ unittest {
 
 }
 
+struct TestParticleSystem {
+
+	import blindfire.engine.collections : Array;
+	import blindfire.engine.memory : IAllocator;
+	import blindfire.engine.math : Vec2f;
+
+	GLuint vao_;
+	GLuint vbo_;
+
+	Array!Vec2f positions_;
+
+	@disable this();
+	@disable this(this);
+
+	this(IAllocator allocator, size_t initial_size = 32) {
+
+		this.positions_ = typeof(positions_)(allocator, initial_size); 
+
+		glGenVertexArrays(1, &vao_);
+		glBindVertexArray(vao_);
+
+		glGenBuffers(1, &vbo_);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+	void tick() {
+
+	} //tick
+
+	void draw() {
+
+	} //draw
+
+	mixin OpenGLError;
+
+} //TestParticleSystem
+
 //use SDL2 for loading textures, since we're already using it for windowing.
 struct Texture {
 
