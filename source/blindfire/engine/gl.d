@@ -610,35 +610,142 @@ struct TestParticleSystem {
 	import blindfire.engine.memory : IAllocator;
 	import blindfire.engine.math : Vec2f;
 
-	GLuint vao_;
 	GLuint vbo_;
-
+	Array!float lifetimes_;
+	Array!Vec2f velocities_;
 	Array!Vec2f positions_;
+	Texture* texture_;
+	Shader shader_;
+	Mesh mesh_;
+
+	Vec2f origin_;
 
 	@disable this();
 	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size = 32) {
 
-		this.positions_ = typeof(positions_)(allocator, initial_size); 
+		lifetimes_ = typeof(lifetimes_)(allocator, initial_size);
+		velocities_ = typeof(velocities_)(allocator, initial_size);
+		positions_ = typeof(positions_)(allocator, initial_size);
 
-		glGenVertexArrays(1, &vao_);
-		glBindVertexArray(vao_);
+		AttribLocation[3] attributes = [
+			AttribLocation(0, "position"),
+			AttribLocation(1, "tex_coord"),
+			AttribLocation(2, "offset")
+		];
+		char[16][1] uniforms = ["view_projection"];
+		shader_ = Shader("shaders/particle", attributes, uniforms);
+
+		mesh_ = Mesh(createRectangleVec3f2f(32, 32));
+
+		glBindVertexArray(mesh_.vao);
 
 		glGenBuffers(1, &vbo_);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+		glBufferData(GL_ARRAY_BUFFER, positions_.length * positions_[0].sizeof, positions_.ptr, GL_DYNAMIC_DRAW);
+
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, cast(GLvoid*)0);
+		glVertexAttribDivisor(2, 1); //set first vertex attrib to change every time
+
+		glBindVertexArray(0);
 
 	} //this
 
 	~this() {
 
+		glDeleteBuffers(1, &vbo_);
+
 	} //~this
 
-	void tick() {
+	void config(Vec2f origin, float lifetime, size_t num_particles) {
+
+		origin_ = origin;
+
+		if (positions_.length != num_particles) {
+
+			velocities_.reserve(num_particles);
+			velocities_.length = num_particles;
+
+			lifetimes_.reserve(num_particles);
+			lifetimes_.length = num_particles;
+
+			positions_.reserve(num_particles);
+			positions_.length = num_particles;
+
+		}
+
+		foreach (ref p; lifetimes_) {
+			p = lifetime;
+		}
+
+		foreach (ref p; velocities_) {
+			p = Vec2f(0, 0);
+		}
+
+		foreach (ref p; positions_) {
+			p = origin_;
+		}
+
+		glBindVertexArray(mesh_.vao);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+		glBufferData(GL_ARRAY_BUFFER, positions_.length * positions_[0].sizeof, positions_.ptr, GL_DYNAMIC_DRAW);
+
+	} //config
+
+	void tick(float dt, float drag) {
+
+		import std.random;
+		static Mt19937 gen;
+
+		foreach (i, ref p; lifetimes_) {
+
+			if (p <= 0.0f) {
+				positions_[i] = origin_;
+				velocities_[i] = Vec2f(1.0f, 1.0f);
+				p = 1.0f;
+			}
+
+			p = p - 0.15;
+
+		}
+
+		foreach (i, ref p; velocities_) {
+
+			import blindfire.engine.math : normalize;
+
+			p.x += normalize(cast(float)gen.front, cast(float)int.min, cast(float)int.max, 1.0f);
+			p.y += normalize(cast(float)gen.front, cast(float)int.min, cast(float)int.max, 1.0f);
+			p = p + drag;
+
+		}
+
+		foreach (i, ref p; positions_) {
+
+			p = p + velocities_[i];
+
+		}
+
+		glBindVertexArray(mesh_.vao);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+		glBufferSubData(GL_ARRAY_BUFFER, cast(int*)0, positions_.length * positions_[0].sizeof, positions_.ptr);
 
 	} //tick
 
-	void draw() {
+	void draw(ref Mat4f view_projection) {
+
+		shader_.bind();
+		texture_.bind(0);
+
+		glUniformMatrix4fv(shader_.bound_uniforms[0], 1, GL_TRUE, view_projection.ptr);
+		glBindVertexArray(mesh_.vao);
+
+		glDrawArraysInstanced(
+			GL_TRIANGLES, 0, mesh_.draw_count, cast(int)positions_.length
+		);
+
+		glBindVertexArray(0);
 
 	} //draw
 

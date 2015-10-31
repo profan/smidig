@@ -21,6 +21,7 @@ struct Game {
 	import blindfire.engine.runtime;
 	import blindfire.engine.joy;
 	import blindfire.engine.ecs;
+	import blindfire.engine.gl;
 
 	import blindfire.chat;
 	import blindfire.sys;
@@ -51,6 +52,9 @@ struct Game {
 		//game test
 		EventManager event_manager_ = void;
 		EntityManager entity_manager_;
+
+		//temporary junk TODO remove
+		TestParticleSystem particle_system_ = void;
 
 	}
 
@@ -89,6 +93,10 @@ struct Game {
 
 		event_manager_.register!AnalogAxisEvent(&t_man.onAnalogMovement);
 		event_manager_.register!AnalogRotEvent(&t_man.onAnalogRotation);
+
+		//tmp
+		this.particle_system_.construct(ea, 0);
+		particle_system_.config(Vec2f(0, 0), 16.0f, 512);
 
 	} //initializeSystems
 
@@ -133,6 +141,9 @@ struct Game {
 
 		engine_.input_handler_.bindControllerAxis
 			(SDL_CONTROLLER_AXIS_LEFTX, &onRotAxis);
+
+		//tmp
+		particle_system_.texture_ = cursor_texture;
 
 	} //loadResources
 
@@ -191,6 +202,9 @@ struct Game {
 
 		profiler_.sampleUpdate(engine_.update_time_);
 
+		//tmp
+		particle_system_.tick(engine_.update_time_, 1.05);
+
 	} //update
 
 	void drawDebug() {
@@ -210,6 +224,8 @@ struct Game {
 
 		drawDebug();
 		profiler_.sampleFrame(engine_.frame_time_);
+
+		particle_system_.draw(engine_.window_.view_projection);
 
 	} //draw
 
