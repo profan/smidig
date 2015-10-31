@@ -14,10 +14,15 @@ void memmove(T)(auto ref T[] src, auto ref T[] target) {
 
 unittest {
 
-	int[4] mem_src = [124, 3624, 6234, 52324];
+	import std.algorithm : equal;
+	int[4] expected = [124, 3624, 6234, 52324];
+
+	int[4] mem_src = expected;
 	int[4] mem_trg;
 
 	memmove(mem_src[], mem_trg[]);
+
+	assert(equal(mem_trg[], expected[]));
 
 }
 
