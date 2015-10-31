@@ -57,46 +57,11 @@ struct StopWatch {
 
 } //Timer
 
-struct WaitableTimer {
-
-	version(none) {
-
-		import core.stdc.stdio : printf;
-		import windows.windows;
-
-		HANDLE timer_ = null;
-
-		@disable this();
-		@disable this(this);
-
-		this(bool manual_reset) {
-			this.timer_ = CreateWaitableTimer(null, manual_reset, null);
-			if (!timer_) {
-				printf("CreateWaitableTimer failed (%d)\n", GetLastError());
-			}
-		} //this
-
-		int set_wait(LARGE_INTEGER time) {
-
-			return SetWaitableTimer(timer_, &time, 0, null, null, 0);
-
-		} //set_wait_time
-
-		void wait_for() {
-
-			WaitForSingleObject(timer_, INFINITE);
-
-		} //wait_for
-
-	}
-
-} //WaitableTimer
-
 ulong getPerformanceCounter() {
 
 	return SDL_GetPerformanceCounter();
 
-} //get_performance_counter
+} //getPerformanceCounter
 
 ulong ticksPerSecond() {
 

@@ -66,21 +66,18 @@ struct TrackingAllocator(ParentAllocator) {
 		} //expand
 	}
 
-	bool reallocate(ref void[] b, size_t new_size) {
+	void notifyMove(void[] b, void* old_ptr, size_t old_size) {
 
 		import std.algorithm : filter;
-
-		auto old_ptr = b.ptr, old_size = b.length;
 
 		auto scope filter_ptrs = (void** p) {
 			return p >= old_ptr && p <= old_ptr + old_size || *p >= old_ptr && *p <= old_ptr + old_size;
 		};
 
 		auto ptr_list = filter!filter_ptrs(registry_[]);
-		bool result = (cast(shared)parent_).reallocate(b, new_size);
 		auto new_ptr = b.ptr; //new offset in memory for block
 
-		if (result && !ptr_list.empty && new_ptr != old_ptr) {
+		if (!ptr_list.empty && new_ptr != old_ptr) {
 
 			// calculate diff
 			ptrdiff_t offset_diff = new_ptr - old_ptr;
@@ -107,7 +104,17 @@ struct TrackingAllocator(ParentAllocator) {
 
 			import std.algorithm : sort;
 			sort!((p1, p2) => *p1 > *p2)(registry_[]);
+		}
 
+	} //notifyMove
+
+	bool reallocate(ref void[] b, size_t new_size) {
+
+		auto old_ptr = b.ptr, old_size = b.length;
+		bool result = (cast(shared)parent_).reallocate(b, new_size);
+
+		if (result) {
+			notifyMove(b, old_ptr, old_size);
 		}
 
 		return true;

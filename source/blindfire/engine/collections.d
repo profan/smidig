@@ -1105,11 +1105,11 @@ struct DHeap(int N, T) {
 		this.array_ = typeof(array_)(allocator, initial_size);
 	} //this
 
-	uint nth_child(uint n, uint i) {
+	size_t nthChild(size_t n, size_t i) {
 
 		return (N * i) + n;
 
-	} //nth_child
+	} //nthChild
 
 	size_t parent(size_t i) {
 
@@ -1150,7 +1150,7 @@ struct DHeap(int N, T) {
 
 		size_t[N] children;
 		foreach (i, ref c; children) {
-			c = nth_child(i+1, cur);
+			c = nthChild(i+1, cur);
 		}
 
 		auto capacity = size_;

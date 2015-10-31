@@ -18,6 +18,13 @@ void memmove(T)(T* src, T* target) {
 
 } //memmove
 
+void memmove(T)(IAllocator allocator, T[] src, T[] target) {
+
+	/* notify allocator that memory has moved */
+	memmove(src, target);
+
+} //memmove
+
 void memswap(T)(T* src, T* target) {
 
 	import core.stdc.string : memcpy;

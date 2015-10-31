@@ -34,7 +34,7 @@ struct Engine {
 	import blindfire.engine.imgui : ImguiContext;
 
 	alias UpdateFunc = void delegate();
-	alias DrawFunc = void delegate(double deltatime);
+	alias DrawFunc = void delegate(double);
 	alias RunFunc = void delegate();
 
 	//defaults
@@ -183,7 +183,7 @@ struct Engine {
 		debug_context_
 			.render_string!("last update deltatime: %f")(time_since_last_update_)
 			.render_string!("update deltatime: %f")(update_time_)
-			.render_string!("draw deltatime: %f")(delta_time)
+			.render_string!("draw deltatime: %f")(draw_time_)
 			.render_string!("framerate: %f")(1.0 / frame_time_)
 			.render_string!("mouse x: %d, y: %d")(x, y);
 

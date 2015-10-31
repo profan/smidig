@@ -144,6 +144,10 @@ struct Window {
 
 	} //toggleWireframe
 
+	void quit() {
+		alive_ = false;
+	} //quit
+
 	void handleEvents(ref SDL_Event ev) {
 
 		if (ev.type == SDL_QUIT) {

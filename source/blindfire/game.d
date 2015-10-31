@@ -168,6 +168,8 @@ struct Game {
 			.bindMouseBtn(1, &playClickSound, KeyState.UP)
 			.bindMouseBtn(3, &stopAllSounds, KeyState.UP);
 
+		engine_.input_handler_.bindKeyEvent(SDL_SCANCODE_ESCAPE, &engine_.window_.quit);
+
 	} //bindActions
 
 	void update() {

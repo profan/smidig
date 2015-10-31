@@ -99,7 +99,7 @@ struct OutputStream {
 
 	void write(T)(in T obj) nothrow @nogc {
 		static if (isArray!(T)) {
-			uint data_size_ = obj[0].sizeof * obj.length;
+			size_t data_size_ = obj[0].sizeof * obj.length;
 			write(obj.length); //write array length to stream
 			buffer_[offset_..offset_+data_size_] = (cast(ubyte*)obj.ptr)[0..data_size_];
 			offset_ += data_size_;
