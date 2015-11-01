@@ -1,4 +1,4 @@
-module blindfire.engine.allocator;
+module blindfire.engine.memory.allocator;
 
 import std.experimental.allocator;
 import std.traits : hasIndirections;

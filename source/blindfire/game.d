@@ -14,9 +14,8 @@ import blindfire.ui;
 
 struct Game {
 
-	import blindfire.engine.memory : make;
+	import blindfire.engine.memory : make, construct;
 	import blindfire.engine.sound : SoundID;
-	import blindfire.engine.pool : construct;
 	import blindfire.engine.runtime;
 	import blindfire.engine.ecs;
 	import blindfire.engine.gl;

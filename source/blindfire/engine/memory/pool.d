@@ -1,4 +1,4 @@
-module blindfire.engine.pool;
+module blindfire.engine.memory.pool;
 
 import blindfire.engine.meta : hasMember;
 

@@ -11,20 +11,11 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 	alias TransitionFunc = void delegate(FStateID target_state);
 	alias TripleRunFunc = Tuple!(TransitionFunc, "enter", RunFunc, "execute", TransitionFunc, "leave");
 
-	//memory related madness
-	void* last_this_;
-	ptrdiff_t[3][in_states.length] state_offsets_; //used to make sure shit doesn't break
-
 	FStateID current_state_ = -1;
 	TripleRunFunc[in_states.length] states_;
 
-	this(this) {
-		readjustPointers();
-	} //this(this)
-
 	ref typeof(this) setInitialState(FStateID state) {
 
-		last_this_ = &this;
 		transitionTo(state);
 
 		return this;
@@ -32,12 +23,6 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 	} //setInitialState
 
 	ref typeof(this) attachState(S)(S state) {
-
-		state_offsets_[state.id] = [
-			(&state.enter).ptr - &this,
-			(&state.execute).ptr - &this,
-			(&state.leave).ptr - &this
-		];
 
 		states_[state.id] = TripleRunFunc(&state.enter, &state.execute, &state.leave);
 
@@ -50,16 +35,6 @@ mixin template FSM(FStateID[] in_states, FStateTuple[] in_transitions, StateFunc
 		states_[current_state_].execute(this, args);
 
 	} //tick
-
-	void readjustPointers() {
-
-		foreach (id, ref triple; states_) {
-			triple.enter.ptr = state_offsets_[id][0] + cast(void*)&this;
-			triple.execute.ptr = state_offsets_[id][1] + cast(void*)&this;
-			triple.leave.ptr = state_offsets_[id][2] + cast(void*)&this;
-		}
-
-	} //readjustPointers
 
 	void transitionTo(FStateID new_state) {
 
@@ -85,7 +60,7 @@ version(unittest) {
 			Running
 		} //State
 
-		alias StateFun = void delegate(ref FSMTest fsm, void** ptr);
+		alias StateFun = void delegate(ref FSMTest fsm);
 
 		mixin FSM!([State.Walking, State.Running],
 				   [FStateTuple(State.Walking, State.Running), FStateTuple(State.Running, State.Walking)],
@@ -117,9 +92,8 @@ version(unittest) {
 
 			} //enter
 
-			void execute(ref FSMTest fsm, void** ptr) {
+			void execute(ref FSMTest fsm) {
 
-				*ptr = &fsm;
 				fsm.transitionTo(State.Running);
 
 			} //execute
@@ -138,9 +112,8 @@ version(unittest) {
 
 			} //enter
 
-			void execute(ref FSMTest fsm, void** ptr) {
+			void execute(ref FSMTest fsm) {
 
-				*ptr = &fsm;
 				fsm.transitionTo(State.Walking);
 
 			} //execute
@@ -158,17 +131,8 @@ version(unittest) {
 unittest {
 
 	import std.string : format;
-	import std.algorithm : move;
-
-	void* last_this, current_this;
 
 	auto fsm = FSMTest(10);
-	fsm.tick(&last_this);
-
-	auto new_fsm = fsm;
-	new_fsm.tick(&current_this);
-
-	assert(last_this != current_this, 
-		format("last_this:%s was equal to current_this:%s, didn't move?", last_this, current_this));
+	fsm.tick();
 
 }

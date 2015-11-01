@@ -1,4 +1,4 @@
-module blindfire.engine.memory;
+module blindfire.engine.memory.common;
 
 public import std.experimental.allocator : allocatorObject, IAllocator, processAllocator, theAllocator, make, makeArray, dispose;
 public import std.experimental.allocator.building_blocks.region : Region;
@@ -9,7 +9,7 @@ void memmove(T)(auto ref T[] src, auto ref T[] target) {
 	import core.stdc.string : memmove;
 	memmove(target.ptr, src.ptr, src.length * T.sizeof);
 	src = src.init;
-	
+
 } //memmove
 
 unittest {

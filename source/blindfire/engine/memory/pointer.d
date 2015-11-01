@@ -1,9 +1,8 @@
-module blindfire.engine.pointer;
+module blindfire.engine.memory.pointer;
 
 import std.experimental.allocator.common : Ternary;
 
-import blindfire.engine.allocator : TrackingAllocator;
-import blindfire.engine.memory : IAllocator;
+import blindfire.engine.memory;
 
 /* will hold moving allocator aware pointers, and a registry for them. */
 

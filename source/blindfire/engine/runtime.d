@@ -80,7 +80,7 @@ struct Engine {
 	void initialize(in char[] title, UpdateFunc update_func, DrawFunc draw_func, DrawFunc after_draw_func) {
 
 		import derelict.sdl2.types;
-		import blindfire.engine.pool : construct;
+		import blindfire.engine.memory : construct;
 		import blindfire.engine.defs : PushEvent;
 
 		//allocator for shit
@@ -139,7 +139,7 @@ struct Engine {
 	void loadResources() {
 
 		import blindfire.engine.gl : AttribLocation, Shader, Texture;
-		import blindfire.engine.pool : construct;
+		import blindfire.engine.memory : construct;
 		import blindfire.engine.defs : Vec2i;
 
 		auto rm = ResourceManager.get();
