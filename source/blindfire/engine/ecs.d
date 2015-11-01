@@ -24,8 +24,8 @@ class EntityManager {
 
 		IAllocator allocator_;
 
-		Array!IComponentManager cms;
-		Array!(Array!IComponentManager) systems;
+		Array!IComponentManager cms_;
+		Array!(Array!IComponentManager) systems_;
 
 		EntityID current_id = 0;
 
@@ -34,11 +34,11 @@ class EntityManager {
 	this(IAllocator allocator) {
 
 		this.allocator_ = allocator;
-		this.cms = typeof(cms)(allocator_, INITIAL_SYSTEMS);
-		this.systems = typeof(systems)(allocator_, MAX_SYSTEMS);
-		this.systems.length = MAX_SYSTEMS;
+		this.cms_ = typeof(cms_)(allocator_, INITIAL_SYSTEMS);
+		this.systems_ = typeof(systems_)(allocator_, MAX_SYSTEMS);
+		this.systems_.length = MAX_SYSTEMS;
 
-		foreach (ref a; systems) {
+		foreach (ref a; systems_) {
 			a = typeof(a)(allocator_, 8);
 		}
 
@@ -46,7 +46,7 @@ class EntityManager {
 
 	~this() {
 
-		foreach (man; cms) {
+		foreach (man; cms_) {
 			allocator_.dispose(man);
 		}
 
@@ -73,16 +73,16 @@ class EntityManager {
 
 			cm.setManager(this);
 			uint id = S.identifier;
-			systems[id] ~= cm;
-			sort(systems[id][]);
-			cms ~= cm;
-			sort(cms[]); //todo replace
+			systems_[id] ~= cm;
+			sort(systems_[id][]);
+			cms_ ~= cm;
+			sort(cms_[]); //todo replace
 
 		} //addSystem
 
-		void addSystems(S...)(S systems) {
+		void addSystems(S...)(S systems_) {
 
-			foreach (sys; systems) {
+			foreach (sys; systems_) {
 				addSystem(sys);
 			}
 
@@ -104,7 +104,7 @@ class EntityManager {
 
 	IComponentManager getManager(C = void)(ComponentName system = typeid(C).stringof) {
 
-		foreach (id, man; cms) {
+		foreach (id, man; cms_) {
 			if (man.name == system) return man;
 		}
 
@@ -126,7 +126,7 @@ class EntityManager {
 
 	void clearSystems() {
 
-		foreach (ref system; cms) {
+		foreach (ref system; cms_) {
 			system.clear();
 		}
 
@@ -140,7 +140,7 @@ class EntityManager {
 
 		static if (is(C == void)) {
 
-			foreach(ref sys; cms) {
+			foreach(ref sys; cms_) {
 				sys.deregister(entity);
 			}
 
@@ -152,7 +152,7 @@ class EntityManager {
 
 		static if (is(S == void)) {
 
-			foreach(ref arr; systems) {
+			foreach(ref arr; systems_) {
 				foreach(ref sys; arr) {
 					sys.deregister(entity);
 				}
@@ -160,7 +160,7 @@ class EntityManager {
 
 		} else {
 
-			foreach(ref sys; systems[identifier!(S)]) {
+			foreach(ref sys; systems_[identifier!(S)]) {
 				sys.deregister(entity);
 			}
 
@@ -214,7 +214,7 @@ class EntityManager {
 
 	void tick(T, Args...)(Args args) {
 
-		foreach (ref sys; systems[T.identifier]) {
+		foreach (ref sys; systems_[T.identifier]) {
 			T s = cast(T)sys; //this is slightly evil
 			s.update(args);
 		}
@@ -252,9 +252,9 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	import blindfire.engine.collections : HashMap;
 
-	enum component_name_ = typeid(T).stringof;
-	enum initial_size_ = 32;
-	enum priority_ = P;
+	enum COMPONENT_NAME = typeid(T).stringof;
+	enum INITIAL_SIZE = 32;
+	enum PRIORITY = P;
 
 	protected {
 
@@ -264,8 +264,8 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 	}
 
 	@property IAllocator allocator() { return em.allocator; }
-	@property int priority() nothrow const @nogc { return priority_; }
-	@property ComponentName name() nothrow const @nogc { return component_name_; }
+	@property int priority() nothrow const @nogc { return PRIORITY; }
+	@property ComponentName name() nothrow const @nogc { return COMPONENT_NAME; }
 
 	bool opEquals(ref const IComponentManager other) nothrow const @nogc {
 
@@ -283,7 +283,7 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	void setManager(EntityManager em) {
 
-		this.components = typeof(components)(em.allocator_, initial_size_);
+		this.components = typeof(components)(em.allocator_, INITIAL_SIZE);
 		this.em = em;
 
 	} //setManager
