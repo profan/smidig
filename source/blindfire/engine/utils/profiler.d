@@ -1,5 +1,4 @@
-module blindfire.engine.profiler;
-
+module blindfire.engine.utils.profiler;
 
 struct Profiler {
 

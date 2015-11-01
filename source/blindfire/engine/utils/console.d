@@ -1,4 +1,4 @@
-module blindfire.engine.console;
+module blindfire.engine.utils.console;
 
 import derelict.sdl2.types : SDL_Event, SDL_TEXTINPUT;
 import derelict.sdl2.functions : SDL_StartTextInput, SDL_StopTextInput;
@@ -150,7 +150,7 @@ struct Console {
 			shiftBuffer(buffers_);
 			print!("Unknown Command: %s")(command.ptr);
 		}
-			
+
 		history_index_ = 0;
 
 	} //run
@@ -167,7 +167,7 @@ struct Console {
 
 	/* go forwards in the command history_ */
 	void getNext() {
-		
+
 		if(!enabled_) { return; }
 
 		if (history_index_+1 < BUFFER_LINES && history_index_+1 <= history_elements_)
@@ -204,9 +204,9 @@ struct Console {
 			y += 12;
 
 		}
-	
+
 	} //draw
-	
+
 	void handleEvent(ref SDL_Event ev) {
 
 		if (!enabled_) { return; }
@@ -216,7 +216,7 @@ struct Console {
 				write(ev.text.text[0..1]);
 				break;
 			default:
-				
+
 		}
 
 	} //handleEvent

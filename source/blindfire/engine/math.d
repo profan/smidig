@@ -52,7 +52,7 @@ T rotate(T)(ref T vec, double radians) nothrow @nogc pure {
 
 } //rotate
 
-auto angleToVec2(T)(float angle) nothrow @nogc pure{
+auto angleToVec2(T)(float angle) nothrow @nogc pure {
 
 	auto vec = Vector!(T, 2)(cos(angle), sin(angle));
 	return vec;

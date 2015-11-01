@@ -15,13 +15,14 @@ import blindfire.ui;
 struct Game {
 
 	import blindfire.engine.memory : make;
-	import blindfire.engine.profiler : Profiler;
 	import blindfire.engine.sound : SoundID;
 	import blindfire.engine.pool : construct;
 	import blindfire.engine.runtime;
-	import blindfire.engine.joy;
 	import blindfire.engine.ecs;
 	import blindfire.engine.gl;
+
+	import blindfire.engine.utils.joy;
+	import blindfire.engine.utils.profiler : Profiler;
 
 	import blindfire.chat;
 	import blindfire.sys;

@@ -7,7 +7,8 @@ import blindfire.engine.net : initialize_enet, NetworkManager;
 import blindfire.engine.event : EventManager, EventMemory;
 import blindfire.engine.resource : ResourceManager;
 import blindfire.engine.sound : SoundSystem;
-import blindfire.engine.console : Console;
+
+import blindfire.engine.utils.console : Console;
 
 //probably belongs in the renderer itself later?
 import blindfire.engine.gl : Cursor, FontAtlas;

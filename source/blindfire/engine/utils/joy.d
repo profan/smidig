@@ -1,4 +1,4 @@
-module blindfire.engine.joy;
+module blindfire.engine.utils.joy;
 
 struct JoyVisualizer {
 

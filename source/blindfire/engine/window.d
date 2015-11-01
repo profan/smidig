@@ -30,11 +30,14 @@ struct Window {
 	//gl related data
 	Mat4f view_projection;
 
-	@property const(char*) title() const { return title_.c_str; }
+	@property const(char*) title() const {
+		return title_.c_str;
+	} //title
+
 	@property void title(in char[] new_title) {
 		this.title_ = String(new_title);
 		SDL_SetWindowTitle(window_, title_.c_str);
-	}
+	} //title
 
 	@property uint width() const nothrow @nogc { return window_width; }
 	@property uint height() const nothrow @nogc { return window_height; }
