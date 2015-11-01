@@ -26,9 +26,6 @@ struct Console {
 		enum BUFFER_WIDTH = 80;
 		enum BUFFER_LINES = 30;
 
-		/* reference to allocator used */
-		IAllocator allocator_;
-
 		alias StaticArray!(char, BUFFER_WIDTH)[BUFFER_LINES] ConsoleBuffer;
 		HashMap!(ConsoleCommand, CommandDelegate) commands_;
 
@@ -51,8 +48,7 @@ struct Console {
 
 		import std.traits : EnumMembers;
 
-		this.allocator_ = allocator;
-		this.commands_ = typeof(commands_)(allocator_, 24);
+		this.commands_ = typeof(commands_)(allocator, 24);
 		this.atlas_ = font_atlas;
 
 		bind_command(ConsoleCommand.HELP,
