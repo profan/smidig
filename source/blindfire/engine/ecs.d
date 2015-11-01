@@ -5,10 +5,8 @@ import std.traits : PointerTarget;
 import std.typecons : Tuple;
 
 import blindfire.engine.memory : IAllocator, make, dispose;
-import blindfire.engine.defs : ClientID, LocalEntityID; //FIXME defines in one place, consider if they should actually be there?
-alias EntityID = LocalEntityID;
 
-//things local to the module
+alias EntityID = uint;
 alias ComponentName = string;
 alias SystemType = int;
 
@@ -29,7 +27,7 @@ class EntityManager {
 		Array!IComponentManager cms;
 		Array!(Array!IComponentManager) systems;
 
-		LocalEntityID current_id = 0;
+		EntityID current_id = 0;
 
 	}
 
