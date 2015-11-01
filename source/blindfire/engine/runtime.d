@@ -265,8 +265,4 @@ struct Engine {
 
 	} //run
 
-	void step() {
-
-	} //step
-
 } //Engine
