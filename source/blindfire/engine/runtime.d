@@ -8,24 +8,14 @@ import blindfire.engine.event : EventManager, EventMemory;
 import blindfire.engine.resource : ResourceManager;
 import blindfire.engine.sound : SoundSystem;
 
-import blindfire.engine.utils.console : Console;
-
 //probably belongs in the renderer itself later?
 import blindfire.engine.gl : Cursor, FontAtlas;
 import blindfire.engine.defs : DrawEventType, NetEventType;
+import blindfire.engine.utils.console : Console;
 
 enum Resource {
 	TextShader
 } //Resource
-
-enum SubSystems {
-
-	Audio,
-	Rendering,
-	Networking,
-	DebugUi
-
-} //SubSystems
 
 struct Engine {
 

@@ -5,8 +5,7 @@ import std.traits : PointerTarget;
 import std.typecons : Tuple;
 
 import blindfire.engine.memory : IAllocator, make, dispose;
-//FIXME defines in one place, consider if they should actually be there?
-import blindfire.engine.defs : ClientID, LocalEntityID;
+import blindfire.engine.defs : ClientID, LocalEntityID; //FIXME defines in one place, consider if they should actually be there?
 alias EntityID = LocalEntityID;
 
 //things local to the module
@@ -48,9 +47,11 @@ class EntityManager {
 	} //this
 
 	~this() {
+
 		foreach (man; cms) {
 			allocator_.dispose(man);
 		}
+
 	} //~this
 
 	@property IAllocator allocator() {
@@ -61,6 +62,7 @@ class EntityManager {
 
 		auto new_sys = allocator_.make!S(args);
 		this.addSystem(new_sys);
+
 		return new_sys;
 
 	} //registerSystem
@@ -132,7 +134,7 @@ class EntityManager {
 
 	} //clearSystems
 
-	void unregister(S = void, C = void)(EntityID entity) {
+	void deregister(S = void, C = void)(EntityID entity) {
 
 		static if (!is(S == void)) {
 			mixin("import " ~ moduleName!S ~ ";");
@@ -141,12 +143,12 @@ class EntityManager {
 		static if (is(C == void)) {
 
 			foreach(ref sys; cms) {
-				sys.unregister(entity);
+				sys.deregister(entity);
 			}
 
 		} else {
 
-			getManager!(C).unregister(entity);
+			getManager!(C).deregister(entity);
 
 		}
 
@@ -154,20 +156,20 @@ class EntityManager {
 
 			foreach(ref arr; systems) {
 				foreach(ref sys; arr) {
-					sys.unregister(entity);
+					sys.deregister(entity);
 				}
 			}
 
 		} else {
 
 			foreach(ref sys; systems[identifier!(S)]) {
-				sys.unregister(entity);
+				sys.deregister(entity);
 			}
 
 		}
 
 
-	} //unregister
+	} //deregister
 
 	bool register(C)(EntityID entity) {
 
@@ -234,7 +236,7 @@ interface IComponentManager {
 	@property ComponentName name() nothrow const @nogc;
 	bool register(EntityID entity);
 	bool register(EntityID entity, void[] component); //TODO make nothrow?
-	void unregister(EntityID entity);
+	void deregister(EntityID entity);
 	void* component(EntityID entity);
 	void* allComponents() nothrow @nogc;
 	void clear();
@@ -250,23 +252,22 @@ interface ComponentSystem(uint Identifier, Args...) : IComponentManager {
 
 abstract class ComponentManager(System, T, int P = int.max) : System {
 
-	enum INITIAL_SIZE = 32;
-
 	import blindfire.engine.collections : HashMap;
 
+	enum component_name_ = typeid(T).stringof;
+	enum initial_size_ = 32;
+	enum priority_ = P;
+
 	protected {
+
 		EntityManager em;
 		HashMap!(EntityID, T) components;
-	}
 
-	public {
-		enum prio = P;
-		enum cname = typeid(T).stringof;
 	}
 
 	@property IAllocator allocator() { return em.allocator; }
-	@property int priority() nothrow const @nogc { return prio; }
-	@property ComponentName name() nothrow const @nogc { return cname; }
+	@property int priority() nothrow const @nogc { return priority_; }
+	@property ComponentName name() nothrow const @nogc { return component_name_; }
 
 	bool opEquals(ref const IComponentManager other) nothrow const @nogc {
 
@@ -284,7 +285,7 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	void setManager(EntityManager em) {
 
-		this.components = typeof(components)(em.allocator_, INITIAL_SIZE);
+		this.components = typeof(components)(em.allocator_, initial_size_);
 		this.em = em;
 
 	} //setManager
@@ -292,11 +293,13 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 	bool register(EntityID entity) {
 
 		import std.string : format;
+
 		enum premade = format("%s component already exists for entity!", T.stringof);
 		assert(entity !in components, premade);
 
 		components[entity] = constructComponent(entity);
 		onInit(entity, entity in components);
+
 		return true;
 
 	} //register(e)
@@ -304,24 +307,25 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 	bool register(EntityID entity, void[] component) {
 
 		import std.algorithm : move;
-		components[entity] = T();
 
+		components[entity] = T();
 		T* c = cast(T*)component.ptr;
 		mixin setUpDependencies!(T, c, entity);
 		linkUpDependencies();
 
 		move(*c, components[entity]);
 		onInit(entity, entity in components);
+
 		return true;
 
 	} //register(e, component)
 
-	void unregister(EntityID entity) {
+	void deregister(EntityID entity) {
 
 		onDestroy(entity, entity in components);
 		components.remove(entity);
 
-	} //unregister
+	} //deregister
 
 	void* component(EntityID entity) nothrow {
 
@@ -372,9 +376,11 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	/* called when you simply specify the type to build, no actual struct passed. */
 	T constructComponent(EntityID entity) {
-		T c = T(); //this is positively horrifying, do something about this later.
+
+		T c = T(); //FIXME this is positively horrifying, do something about this later.
 		mixin setUpDependencies!(T, c, entity);
 		linkUpDependencies();
+
 		return c;
 
 	} //constructComponent
@@ -385,7 +391,7 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 		void linkUpDependencies() {
 			mixin fetchDependencies!(T, c, entity);
-			mixin("import " ~ moduleName!T ~ ";");
+			mixin("import " ~ moduleName!T ~ ";"); //FIXME discard this later maybe, this system is kinda ew.
 			mixin(fetchDependencies);
 		}
 
@@ -393,13 +399,13 @@ abstract class ComponentManager(System, T, int P = int.max) : System {
 
 	void onInit(EntityID entity, T* component) {
 
-		//when component created, do some stuff
+		//is overriden in implementation, perform something on creation
 
 	} //onInit
 
 	void onDestroy(EntityID entity, T* component) {
 
-		//do some finalization?
+		//is overriden in implementation, "destructor" for component essentially
 
 	} //onDestroy
 
@@ -523,6 +529,6 @@ unittest {
 
 	mixin PreReq;
 	create_prerequisites(em, entity);
-	assertNotThrown!Exception(em.unregister(entity), "unregister should not throw an exception, likely out of bounds.");
+	assertNotThrown!Exception(em.deregister(entity), "deregister should not throw an exception, likely out of bounds.");
 
 }
