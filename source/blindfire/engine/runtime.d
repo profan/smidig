@@ -210,9 +210,8 @@ struct Engine {
 
 			if (main_timer.peek() - last_update > update_iter) {
 
-				import derelict.enet.enet;
-				import blindfire.engine.defs : NetEventIdentifier, Update;
 				import blindfire.engine.event : Event;
+				import blindfire.engine.defs;
 				mixin EventManager.doTick;
 
 				update_timer.start();

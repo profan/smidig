@@ -55,7 +55,7 @@ struct Update {
 
 } //Update
 
-import derelict.enet.enet;
+public import derelict.enet.enet : ENetPeer;
 alias ConnectionEvent = Event!(NetEventType.Connection, ENetPeer*);
 alias DisconnectionEvent = Event!(NetEventType.Disconnection, ENetPeer*);
 alias UpdateEvent = Event!(NetEventType.Update, Update);
