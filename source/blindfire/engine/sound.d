@@ -26,7 +26,7 @@ struct SoundSystem {
 		Free
 	} //State
 
-	struct SourceState {
+	static struct SourceState {
 		State current;
 		State last;
 	} //SourceState
@@ -46,7 +46,7 @@ struct SoundSystem {
 	Array!SoundSource sources_;
 
 	//counter for resource ids for loaded sounds
-	SoundID current_sound_id;
+	SoundID current_sound_id_;
 
 	@disable this();
 	@disable this(this);
@@ -69,11 +69,6 @@ struct SoundSystem {
 		source_states_.length = source_states_.capacity;
 
 	} //initialize
-
-	import blindfire.engine.imgui : ImguiContext;
-	void register_info(ImguiContext* context) {
-
-	} //register_info
 
 	~this() {
 
@@ -101,9 +96,9 @@ struct SoundSystem {
 		assert(created_buffer != AL_NONE, 
 			   format("[SoundSystem] failed creating buffer: %s", fromStringz(alureGetErrorString())));
 
-		buffers_[current_sound_id] = created_buffer;
+		buffers_[current_sound_id_] = created_buffer;
 
-		return current_sound_id++;
+		return current_sound_id_++;
 
 	} //loadSoundFile
 
