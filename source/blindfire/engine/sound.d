@@ -5,7 +5,7 @@ import core.stdc.stdio : printf;
 import derelict.openal.al;
 import derelict.alure.alure;
 
-import blindfire.engine.memory : IAllocator, theAllocator;
+import blindfire.engine.memory : IAllocator;
 import blindfire.engine.collections : Array, HashMap;
 
 alias SoundID = int;
@@ -50,13 +50,6 @@ struct SoundSystem {
 
 	@disable this();
 	@disable this(this);
-
-	this(size_t num_sources) {
-		this.allocator_ = theAllocator;
-		this.buffers_ = typeof(buffers_)(allocator_, INITIAL_BUFFERS);
-		this.source_states_ = typeof(source_states_)(allocator_, num_sources);
-		this.sources_ = typeof(sources_)(allocator_, num_sources);
-	} //this
 
 	this(IAllocator allocator, size_t num_sources) {
 		this.allocator_ = allocator;
