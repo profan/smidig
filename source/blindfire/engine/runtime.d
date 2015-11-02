@@ -3,7 +3,7 @@ module blindfire.engine.runtime;
 import blindfire.engine.window : Window;
 import blindfire.engine.input : InputHandler;
 import blindfire.engine.render : IRenderer, OpenGLRenderer;
-import blindfire.engine.net : initialize_enet, NetworkManager;
+import blindfire.engine.net : initializeEnet, NetworkManager;
 import blindfire.engine.event : EventManager, EventMemory;
 import blindfire.engine.resource : ResourceManager;
 import blindfire.engine.sound : SoundSystem;
@@ -92,7 +92,7 @@ struct Engine {
 		this.network_evman_.construct(EventMemory, NetEventType.max);
 		this.network_manager_.construct(allocator_, &network_evman_);
 		this.network_evman_.register!PushEvent(&network_manager_.onDataPush);
-		initialize_enet();
+		initializeEnet();
 
 		//initialize sound subsystem
 		this.sound_system_.construct(allocator_, MAX_SOUND_SOURCES);

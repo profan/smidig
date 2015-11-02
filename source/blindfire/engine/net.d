@@ -35,7 +35,7 @@ struct NetVar(T) {
 
 } //NetVar
 
-void initialize_enet() {
+void initializeEnet() {
 
 	import core.stdc.stdio : printf;
 	import derelict.enet.enet;
@@ -46,7 +46,7 @@ void initialize_enet() {
 
 	}
 
-} //initialize_enet
+} //initializeEnet
 
 struct NetworkManager {
 
@@ -72,8 +72,8 @@ struct NetworkManager {
 
 	}
 
-	@property bool is_active() { return connected_; }
-	@property bool is_host() { return is_host_; }
+	@property bool is_active() const { return connected_; }
+	@property bool is_host() const { return is_host_; }
 
 	@disable this();
 	@disable this(this);
@@ -212,7 +212,7 @@ struct NetworkManager {
 						   event.peer.address.port);
 
 					peers_ ~= event.peer;
-					ev_man_.push!ConnectionEvent(event.peer);
+					ev_man_.fire!ConnectionEvent(event.peer);
 
 					break;
 
@@ -222,6 +222,7 @@ struct NetworkManager {
 							event.peer.data,
 							event.channelID);
 
+					//TODO take a look at this, should this be handled differently?
 					ev_man_.fire!UpdateEvent(Update(event.peer, event.packet.data[0..event.packet.dataLength]));
 
 					/* Clean up the packet now that we're done using it. */
@@ -235,7 +236,7 @@ struct NetworkManager {
 						   event.peer.address.port);
 
 					peers_.remove(event.peer);
-					ev_man_.push!DisconnectionEvent(event.peer);
+					ev_man_.fire!DisconnectionEvent(event.peer);
 
 					event.peer.data = null;
 					break;

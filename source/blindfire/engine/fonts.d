@@ -14,12 +14,12 @@ Texture createFontTexture(in char* font_path, in char* font_text, int font_size,
 
 	TTF_Font* font = TTF_OpenFont(font_path, font_size);
 	if (font == null) {
-		printf("Error loading font, error : %s", TTF_GetError());
+		printf("Error loading font, error : %s \n", TTF_GetError());
 	}
 
 	SDL_Surface* surf = TTF_RenderUTF8_Blended(font, font_text, color);
 	if (surf == null) {
-		printf("Error rendering font, error : %s", TTF_GetError());
+		printf("Error rendering font, error : %s \n", TTF_GetError());
 	}
 
 	Texture texture = Texture(surf.pixels, surf.w, surf.h, GL_RGBA, GL_RGBA);

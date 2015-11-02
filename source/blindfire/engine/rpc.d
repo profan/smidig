@@ -25,6 +25,7 @@ struct RPC {
 
 	}
 
+	@disable this();
 	@disable this(this);
 
 	this(IAllocator allocator) {
