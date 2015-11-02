@@ -8,7 +8,6 @@ import blindfire.engine.resource;
 import blindfire.engine.event;
 import blindfire.engine.defs;
 
-import blindfire.graphics;
 import blindfire.defs;
 import blindfire.ui;
 
