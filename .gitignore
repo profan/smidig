@@ -10,3 +10,16 @@ fonts/
 docs/
 core
 game.cfg
+*.sln
+*.pdb
+*.a
+*.exe
+*.lib
+*.def
+*.log
+__test__library__
+*.exp
+*.exe_cv
+*.rsp
+*.userprefs
+imgui.ini

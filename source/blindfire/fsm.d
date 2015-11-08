@@ -1,1 +1,0 @@
-module blindfire.fsm;

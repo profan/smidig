@@ -1,4 +1,4 @@
-Stupid Game Engine
+Smidig - Game Engine
 =================================
 ... it's something.
 
