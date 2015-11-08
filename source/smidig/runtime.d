@@ -73,6 +73,10 @@ struct Engine {
 		import smidig.memory : construct;
 		import smidig.defs : PushEvent;
 
+		//initialize dynamic dependencies
+		import smidig.deps : initializeSystems;
+		initializeSystems();
+
 		//allocator for shit
 		this.allocator_ = theAllocator;
 
