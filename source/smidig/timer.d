@@ -4,8 +4,18 @@ import derelict.sdl2.sdl;
 
 struct StopWatch {
 
-	import core.time : MonoTimeImpl, ClockType;
-	alias Clock = MonoTimeImpl!(ClockType.precise);
+	version(DigitalMars) {
+
+		import core.time : MonoTimeImpl, ClockType;
+		alias Clock = MonoTimeImpl!(ClockType.precise);
+		alias TicksPerSecond = Clock.ticksPerSecond;
+
+	} else version(GNU) {
+
+		import core.time : TickDuration;
+		alias TicksPerSecond = TickDuration.ticksPerSec;
+
+	}
 
 	private {
 
@@ -15,16 +25,26 @@ struct StopWatch {
 
 	}
 
+	@property auto currTicks() {
+
+		version(DigitalMars) {
+			return Clock.currTime.ticks;
+		} else version(GNU) {
+			return TickDuration.currSystemTick.length;
+		}
+
+	}
+
 	void start() {
 
-		initial_ticks_ = Clock.currTime.ticks;
+		initial_ticks_ = currTicks;
 		started_ = true;
 
 	} //start
 
 	void stop() {
 
-		passed_ticks_ += Clock.currTime.ticks - initial_ticks_;
+		passed_ticks_ += currTicks - initial_ticks_;
 		started_ = false;
 
 	} //stop
@@ -32,7 +52,7 @@ struct StopWatch {
 	void reset() {
 
 		if (started_) {
-			initial_ticks_ = Clock.currTime.ticks;
+			initial_ticks_ = currTicks;
 		} else {
 			initial_ticks_ = 0;
 		}
@@ -41,14 +61,14 @@ struct StopWatch {
 
 	static long ticksPerSecond() {
 
-		return Clock.ticksPerSecond();
+		return TicksPerSecond;
 
 	} //ticksPerSecond
 
 	long peek() {
 
 		if (started_) {
-			return Clock.currTime.ticks - initial_ticks_ + passed_ticks_;
+			return currTicks - initial_ticks_ + passed_ticks_;
 		}
 
 		return passed_ticks_;

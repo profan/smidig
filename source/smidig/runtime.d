@@ -73,6 +73,16 @@ struct Engine {
 		import smidig.memory : construct;
 		import smidig.defs : PushEvent;
 
+		//initialize memory handler, only on dmd for now
+		version(DigitalMars) {
+
+			import etc.linux.memoryerror;
+			static if (is(typeof(registerMemoryErrorHandler))) {
+				registerMemoryErrorHandler();
+			}
+
+		}
+
 		//initialize dynamic dependencies
 		import smidig.deps : initializeSystems;
 		initializeSystems();

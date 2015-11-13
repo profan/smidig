@@ -1595,10 +1595,12 @@ unittest {
 
 }
 
+version(DigitalMars) {
+
 struct BKTree {
 
 	/* hey look, we don't need to write it ourselves :U~ */
-	import std.algorithm.comparison : levenshteinDistance;
+	import std.algorithm : levenshteinDistance;
 	import std.typecons : Nullable;
 	import std.algorithm : move;
 
@@ -1636,6 +1638,8 @@ struct BKTree {
 	} //query
 
 } //BKTree
+
+}
 
 unittest {
 
