@@ -33,7 +33,7 @@ struct StopWatch {
 			return TickDuration.currSystemTick.length;
 		}
 
-	}
+	} //currTicks
 
 	void start() {
 

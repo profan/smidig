@@ -423,9 +423,7 @@ struct ArraySOA(T) {
 
 	static assert(is(T == struct), "can only create SOA array from a struct definition.");
 
-	IAllocator allocator_;
-
-	this(size_t initial_size) {
+	this(IAllocator allocator, size_t initial_size) {
 
 	} //this
 

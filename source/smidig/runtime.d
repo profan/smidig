@@ -20,7 +20,7 @@ enum Resource {
 struct Engine {
 
 	import smidig.cpu : CPU;
-	import smidig.memory : allocatorObject, IAllocator, Mallocator, theAllocator, make;
+	import smidig.memory : IAllocator, Mallocator, theAllocator, make;
 	import smidig.dbg : DebugContext, render_string;
 	import smidig.imgui : ImguiContext;
 

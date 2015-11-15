@@ -23,27 +23,31 @@ struct Window {
 		bool alive_;
 
 		//window data
-		int window_width, window_height;
+		int window_width_, window_height_;
 
 	}
 
 	//gl related data
 	Mat4f view_projection;
 
-	@property const(char*) title() const {
-		return title_.c_str;
-	} //title
+	@property {
 
-	@property void title(in char[] new_title) {
-		this.title_ = String(new_title);
-		SDL_SetWindowTitle(window_, title_.c_str);
-	} //title
+		const(char*) title() const {
+			return title_.c_str;
+		} //title
 
-	@property uint width() const nothrow @nogc { return window_width; }
-	@property uint height() const nothrow @nogc { return window_height; }
+		void title(in char[] new_title) {
+			this.title_ = String(new_title);
+			SDL_SetWindowTitle(window_, title_.c_str);
+		} //title
 
-	@property bool is_alive() const nothrow @nogc { return alive_; }
-	@property void is_alive(bool status) nothrow @nogc { alive_ = status; }
+		uint width() const nothrow @nogc { return window_width_; }
+		uint height() const nothrow @nogc { return window_height_; }
+
+		bool is_alive() const nothrow @nogc { return alive_; }
+		void is_alive(bool status) nothrow @nogc { alive_ = status; }
+
+	}
 
 	@disable this();
 	@disable this(this);
@@ -78,7 +82,7 @@ struct Window {
 
 		this.window_ = in_window;
 		assert(window_ != null);
-		SDL_GetWindowSize(window_, &window_width, &window_height);
+		SDL_GetWindowSize(window_, &window_width_, &window_height_);
 
 		// OpenGL related attributes
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -90,7 +94,7 @@ struct Window {
 		glcontext_ = SDL_GL_CreateContext(window_);
 		if (glcontext_ == null) {
 			GLenum glErr = glGetError();
-			printf("[OpenGL] Error: %s", glErr);
+			printf("[OpenGL] Error: %d", glErr);
 		}
 
 		const GLchar* sGLVersion_ren = glGetString(GL_RENDERER);
@@ -147,10 +151,6 @@ struct Window {
 
 	} //toggleWireframe
 
-	void quit() {
-		alive_ = false;
-	} //quit
-
 	void handleEvents(ref SDL_Event ev) {
 
 		if (ev.type == SDL_QUIT) {
@@ -160,10 +160,10 @@ struct Window {
 			switch (ev.window.event) {
 
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
-					window_width = ev.window.data1;
-					window_height = ev.window.data2;
-					glViewport(0, 0, window_width, window_height);
-					view_projection = Mat4f.orthographic(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
+					window_width_ = ev.window.data1;
+					window_height_ = ev.window.data2;
+					glViewport(0, 0, window_width_, window_height_);
+					view_projection = Mat4f.orthographic(0.0f, window_width_, window_height_, 0.0f, 0.0f, 1.0f);
 					break;
 
 				case SDL_WINDOWEVENT_RESIZED:
