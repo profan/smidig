@@ -439,7 +439,7 @@ private mixin template SOAImpl() {
 	//  the user's T definition
 	private static enum T initValues = T.init;
 
-}
+} //https://github.com/economicmodeling/soa MIT License
 
 /**
  * Array type which stores data internally as separate arrays for each given member of
@@ -494,6 +494,16 @@ struct ArraySOA(T) {
 		}
 
 	} //add
+
+	void remove(size_t index) {
+
+		import std.string : format;
+
+		foreach (field; Fields) {
+			mixin(q{%s.remove(%s);}.format(field, index.stringof));
+		}
+
+	} //remove
 
 } //ArraySOA
 
