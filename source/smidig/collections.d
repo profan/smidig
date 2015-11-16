@@ -479,6 +479,40 @@ struct ArraySOA(T) {
 
 	mixin(makeMemberArrays());
 
+	@property {
+
+		import std.string : format;
+
+		void reserve(size_t new_size) {
+
+			foreach(field; Fields) {
+				mixin(q{%s.reserve(new_size);}.format(field));
+			}
+
+		}
+
+		size_t capacity() const {
+			mixin(q{return %s.capacity;}.format(Fields[0]));
+		}
+
+		size_t length() const {
+			mixin(q{return %s.length;}.format(Fields[0]));
+		}
+
+		size_t length(size_t new_length) {
+
+			size_t last_return;
+
+			foreach (field; Fields) {
+				mixin(q{last_return = %s.length = new_length;}.format(field));
+			}
+
+			return last_return;
+
+		}
+
+	}
+
 	this(IAllocator allocator, size_t initial_size) {
 
 		initMemberArrays(allocator, initial_size);

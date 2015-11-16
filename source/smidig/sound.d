@@ -6,7 +6,7 @@ import derelict.openal.al;
 import derelict.alure.alure;
 
 import smidig.memory : IAllocator;
-import smidig.collections : Array, HashMap;
+import smidig.collections : Array, ArraySOA, HashMap;
 
 alias SoundID = int;
 alias SoundVolume = float;
@@ -26,10 +26,10 @@ struct SoundSystem {
 		Free
 	} //State
 
-	static struct SourceState {
-		State current;
-		State last;
-	} //SourceState
+	static struct Source {
+		SoundSource source;
+		State state;
+	} //Source
 
 	enum INITIAL_BUFFERS = 16;
 
@@ -42,8 +42,7 @@ struct SoundSystem {
 
 	//containers for references to buffers and sources
 	HashMap!(SoundID, SoundBuffer) buffers_;
-	Array!State source_states_;
-	Array!SoundSource sources_;
+	ArraySOA!Source sources_;
 
 	//counter for resource ids for loaded sounds
 	SoundID current_sound_id_;
@@ -54,7 +53,6 @@ struct SoundSystem {
 	this(IAllocator allocator, size_t num_sources) {
 		this.allocator_ = allocator;
 		this.buffers_ = typeof(buffers_)(allocator_, INITIAL_BUFFERS);
-		this.source_states_ = typeof(source_states_)(allocator_, num_sources);
 		this.sources_ = typeof(sources_)(allocator_, num_sources);
 	} //this
 
@@ -64,15 +62,14 @@ struct SoundSystem {
 		this.context_ = alcCreateContext(device_, null);
 		alcMakeContextCurrent(context_);
 
-		alGenSources(cast(int)sources_.capacity, sources_.ptr);
+		alGenSources(cast(int)sources_.capacity, sources_.source.ptr);
 		sources_.length = sources_.capacity;
-		source_states_.length = source_states_.capacity;
 
 	} //initialize
 
 	~this() {
 
-		alDeleteSources(cast(int)sources_.length, sources_.ptr);
+		alDeleteSources(cast(int)sources_.length, sources_.source.ptr);
 		alDeleteBuffers(cast(int)buffers_.length, buffers_.values.ptr);
 		alcMakeContextCurrent(null);
 		alcDestroyContext(context_);
@@ -84,7 +81,7 @@ struct SoundSystem {
 
 		sources_.reserve(sources_.length + 16); //add 16 to sources capacity
 		sources_.length = sources_.capacity;
-		alGenSources(cast(int)sources_.capacity, sources_.ptr);
+		alGenSources(cast(int)sources_.capacity, sources_.source.ptr);
 
 	} //expandSources
 
@@ -106,7 +103,7 @@ struct SoundSystem {
 
 		enum error = -1;
 
-		foreach (src_index, state; source_states_) {
+		foreach (src_index, state; sources_.state) {
 			if (state == State.Free) {
 				return cast(ALint)src_index;
 			}
@@ -119,8 +116,8 @@ struct SoundSystem {
 	void playSound(SoundID sound_id, ALint source_id, SoundVolume volume, bool loop) {
 
 		auto sound_buffer = buffers_[sound_id];
-		auto sound_source = sources_[source_id];
-		source_states_[source_id] = (loop) ? State.Looping : State.Playing;
+		auto sound_source = sources_.source[source_id];
+		sources_.state[source_id] = (loop) ? State.Looping : State.Playing;
 
 		alSourcei(sound_source, AL_LOOPING, to!ALboolean(loop));
 		alSourcei(sound_source, AL_BUFFER, sound_buffer); //associate source with buffer
@@ -141,7 +138,7 @@ struct SoundSystem {
 
 	void pauseAllSounds() {
 
-		foreach (src_id, source; sources_) {
+		foreach (src_id, source; sources_.source) {
 			alSourcePause(source);
 		}
 
@@ -149,8 +146,8 @@ struct SoundSystem {
 
 	void stopAllSounds() {
 
-		foreach (src_id, source; sources_) {
-			source_states_[src_id] = State.Free;
+		foreach (src_id, source; sources_.source) {
+			sources_.state[src_id] = State.Free;
 			alSourceStop(source);
 		}
 
@@ -159,10 +156,10 @@ struct SoundSystem {
 	void tick() {
 
 		ALint state;
-		foreach (i, src_id; sources_) {
+		foreach (i, src_id; sources_.source) {
 			alGetSourcei(src_id, AL_SOURCE_STATE, &state);
-			if (state != AL_PLAYING && source_states_[i] == State.Playing) {
-				source_states_[i] = State.Free;
+			if (state != AL_PLAYING && sources_.state[i] == State.Playing) {
+				sources_.state[i] = State.Free;
 			}
 		}
 
@@ -172,7 +169,7 @@ struct SoundSystem {
 
 		auto free = 0;
 
-		foreach (i, ref state; source_states_) {
+		foreach (i, ref state; sources_.state) {
 			free += (state == State.Free) ? 1 : 0;
 		}
 
