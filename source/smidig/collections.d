@@ -414,6 +414,33 @@ unittest {
 
 }
 
+private mixin template SOAImpl() {
+
+	import std.traits : Erase, Unqual, staticMap;
+	import std.typetuple : TypeTuple;
+
+	alias U = Unqual!T;
+
+	// T may have methods and non-field members, preventing the use of the
+	//  allMembers trait.  We work around this by getting the names of the fields
+	//  by using tupleof.
+	template Iota(size_t I, size_t Len) {
+		static if (I < Len)
+			alias Iota = TypeTuple!(I, Iota!(I + 1, Len));
+		else
+			alias Iota = TypeTuple!();
+	}
+	static enum GetFieldName(size_t I) = T.tupleof[I].stringof;
+
+	// The names of the fields in order
+	static enum Fields = Erase!("this", staticMap!(GetFieldName, Iota!(0, T.tupleof.length)));
+
+	// This is required to initialize the arrays to corresponding init values from
+	//  the user's T definition
+	private static enum T initValues = T.init;
+
+}
+
 /**
  * Array type which stores data internally as separate arrays for each given member of
  * the struct it is templated on, useful for when operating on data is done in a member-wise
@@ -423,17 +450,56 @@ struct ArraySOA(T) {
 
 	static assert(is(T == struct), "can only create SOA array from a struct definition.");
 
+	mixin SOAImpl;
+
+	static private string makeMemberArrays() pure {
+
+		import std.array : appender;
+		import std.format : format;
+
+		auto app = appender!string();
+
+		foreach (field; Fields) {
+			app ~= q{Array!(typeof(U.%s)) %s;}.format(field, field);
+		}
+
+		return app.data;
+
+	} //makeMemberArrays
+
+	private void initMemberArrays(Args...)(Args args) {
+
+		import std.format : format;
+
+		foreach (field; Fields) {
+			mixin(q{%s = typeof(%s)(%s);}.format(field, field, "args"));
+		}
+
+	} //initMemberArrays
+
+	mixin(makeMemberArrays());
+
 	this(IAllocator allocator, size_t initial_size) {
+
+		initMemberArrays(allocator, initial_size);
 
 	} //this
 
-	~this() {
+	void add(in T thing) {
 
-	} //~this
+		import std.string : format;
+
+		foreach (field; Fields) {
+			mixin(q{%s.add(%s.%s);}.format(field, thing.stringof, field));
+		}
+
+	} //add
 
 } //ArraySOA
 
 version(unittest) {
+
+	import std.stdio : writefln;
 
 	struct Floats {
 		float x, y, z;
@@ -443,7 +509,13 @@ version(unittest) {
 
 unittest {
 
-	auto array = ArraySOA!Floats(32);
+	auto array = ArraySOA!Floats(theAllocator, 32);
+	auto added_thing = Floats(1.0, 2.0, 3.0);
+
+	array.add(added_thing);
+	assert(array.x[0] == 1.0);
+	assert(array.y[0] == 2.0);
+	assert(array.z[0] == 3.0);
 
 }
 
