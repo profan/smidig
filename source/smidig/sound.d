@@ -58,6 +58,8 @@ struct SoundSystem {
 
 	void initialize() {
 
+		//TODO handle and check errors upon initialization
+
 		this.device_ = alcOpenDevice(null); //preferred device
 		this.context_ = alcCreateContext(device_, null);
 		alcMakeContextCurrent(context_);
