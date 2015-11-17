@@ -29,7 +29,8 @@ struct Engine {
 	alias RunFunc = void delegate();
 
 	//defaults
-	enum DEFAULT_WINDOW_WIDTH = 640, DEFAULT_WINDOW_HEIGHT = 480;
+	enum DEFAULT_WINDOW_WIDTH = 640;
+	enum DEFAULT_WINDOW_HEIGHT = 480;
 	enum MAX_SOUND_SOURCES = 32;
 
 	//default allocator

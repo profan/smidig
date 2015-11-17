@@ -167,7 +167,7 @@ struct SoundSystem {
 
 	} //tick
 
-	@property uint free_sources() {
+	@property uint numFreeSources() {
 
 		auto free = 0;
 
@@ -177,6 +177,6 @@ struct SoundSystem {
 
 		return free;
 
-	} //free_sources
+	} //numFreeSources
 
 } //SoundSystem
