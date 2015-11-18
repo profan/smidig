@@ -290,7 +290,7 @@ struct InputHandler {
 
 				case SDL_KEYDOWN, SDL_KEYUP:
 					foreach (ref bind; input_events_) {
-						if (ev.key.keysym.scancode == bind.key && (ev.key.keysym.mod & bind.mods) != 0) {
+						if (ev.key.keysym.scancode == bind.key && (!bind.mods || (ev.key.keysym.mod & bind.mods) != 0)) {
 							if (bind.state == ev.key.state) {
 								bind.func();
 							}
