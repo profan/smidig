@@ -31,6 +31,7 @@ struct KeyBind {
 	SDL_Scancode key;
 	KeyDelegate func;
 	KeyState state;
+	int mods;
 
 } //KeyBind
 
@@ -227,9 +228,9 @@ struct InputHandler {
 
 	} //addListener
 
-	ref typeof(this) bindKeyEvent(SDL_Scancode key, KeyDelegate kd) {
+	ref typeof(this) bindKeyEvent(SDL_Scancode key, KeyDelegate kd, int modifiers = 0) {
 
-		KeyBind kb = {key: key, func: kd};
+		KeyBind kb = {key: key, func: kd, mods: modifiers};
 		input_events_ ~= kb;
 
 		return this;
@@ -289,7 +290,7 @@ struct InputHandler {
 
 				case SDL_KEYDOWN, SDL_KEYUP:
 					foreach (ref bind; input_events_) {
-						if (ev.key.keysym.scancode == bind.key) {
+						if (ev.key.keysym.scancode == bind.key && (ev.key.keysym.mod & bind.mods) != 0) {
 							if (bind.state == ev.key.state) {
 								bind.func();
 							}

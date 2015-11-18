@@ -61,6 +61,10 @@ struct Engine {
 
 	double time_since_last_update_;
 
+	//update rate
+	int update_rate_ = 30;
+	int draw_rate_ = 60;
+
 	//external references
 	UpdateFunc update_function_;
 	DrawFunc draw_function_, after_draw_function_;
@@ -73,16 +77,6 @@ struct Engine {
 		import derelict.sdl2.types;
 		import smidig.memory : construct;
 		import smidig.defs : PushEvent;
-
-		//initialize memory handler, only on dmd for now
-		version(DigitalMars) {
-
-			import etc.linux.memoryerror;
-			static if (is(typeof(registerMemoryErrorHandler))) {
-				registerMemoryErrorHandler();
-			}
-
-		}
 
 		//initialize dynamic dependencies
 		import smidig.deps : initializeSystems;
@@ -195,6 +189,7 @@ struct Engine {
 
 		debug_context_.reset();
 
+
 	} //draw_debug
 
 	void run() {
@@ -205,9 +200,6 @@ struct Engine {
 		static long update_iter, draw_iter, last_update, last_render;
 		static long clock_ticks_per_second;
 
-		static int update_rate = 60;
-		static int draw_rate = 120;
-
 		clock_ticks_per_second = StopWatch.ticksPerSecond();
 
 		main_timer.start();
@@ -215,13 +207,12 @@ struct Engine {
 		draw_timer.start();
 		frame_timer.start();
 
-		//initial new frame
 		imgui_context_.newFrame((frame_time_) > 0 ? frame_time_ : 1.0);
 
 		while (window_.is_alive) {
 
-			update_iter = clock_ticks_per_second / update_rate;
-			draw_iter = clock_ticks_per_second / draw_rate;
+			update_iter = clock_ticks_per_second / update_rate_;
+			draw_iter = clock_ticks_per_second / draw_rate_;
 
 			if (main_timer.peek() - last_update > update_iter) {
 
@@ -233,8 +224,8 @@ struct Engine {
 				imgui_context_.newFrame((frame_time_) > 0 ? frame_time_ : 1.0);
 
 				import derelict.imgui.imgui : igSliderInt;
-				igSliderInt("update rate", &update_rate, 1, 800);
-				igSliderInt("draw rate", &draw_rate, 1, 800);
+				igSliderInt("update rate", &update_rate_, 1, 800);
+				igSliderInt("draw rate", &draw_rate_, 1, 800);
 
 				//handle input
 				this.input_handler_.handleEvents();

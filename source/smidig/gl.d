@@ -1107,9 +1107,7 @@ bool checkShaderError(GLuint shader, GLuint flag, bool is_program, in char[] sha
 
 GLuint compileShader(const(GLchar*)* shader_source, GLenum shader_type, in char[] shader_path) nothrow {
 
-	GLuint new_shader;
-	
-	new_shader = glCreateShader(shader_type);
+	GLuint new_shader = glCreateShader(shader_type);
 	glShaderSource(new_shader, 1, shader_source, null);
 	glCompileShader(new_shader);
 
