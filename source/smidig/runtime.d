@@ -2,7 +2,6 @@ module smidig.runtime;
 
 import smidig.window : Window;
 import smidig.input : InputHandler;
-import smidig.render : IRenderer, OpenGLRenderer;
 import smidig.net : initializeEnet, NetworkManager;
 import smidig.event : EventManager, EventMemory;
 import smidig.resource : ResourceManager;
@@ -40,16 +39,12 @@ struct Engine {
 	Window window_ = void;
 	InputHandler input_handler_ = void;
 
-	EventManager renderer_evman_ = void;
-	IRenderer renderer_;
-
 	EventManager network_evman_ = void;
 	NetworkManager network_manager_ = void;
 
 	SoundSystem sound_system_ = void;
 
 	FontAtlas debug_atlas_ = void;
-	Console console_ = void;
 
 	DebugContext debug_context_ = void;
 	ImguiContext imgui_context_ = void;
@@ -93,10 +88,6 @@ struct Engine {
 		this.input_handler_.construct(allocator_);
 		this.input_handler_.addListener(&window_.handleEvents, SDL_WINDOWEVENT, SDL_QUIT);
 
-		//initialize renderer and event manager for rendering events
-		this.renderer_evman_.construct(EventMemory, DrawEventType.max);
-		this.renderer_ = allocator_.make!OpenGLRenderer();
-
 		//initialize networking subsystem
 		this.network_evman_.construct(EventMemory, NetEventType.max);
 		this.network_manager_.construct(allocator_, &network_evman_);
@@ -106,16 +97,6 @@ struct Engine {
 		//initialize sound subsystem
 		this.sound_system_.construct(allocator_, MAX_SOUND_SOURCES);
 		this.sound_system_.initialize();
-
-		//initialize console subsystem
-		this.console_.construct(allocator_, &debug_atlas_, null);
-		this.input_handler_.addListener(&console_.handleEvent, SDL_TEXTINPUT)
-			.bindKeyEvent(SDL_SCANCODE_TAB, &console_.toggle)
-			.bindKeyEvent(SDL_SCANCODE_BACKSPACE, &console_.del)
-			.bindKeyEvent(SDL_SCANCODE_DELETE, &console_.del)
-			.bindKeyEvent(SDL_SCANCODE_RETURN, &console_.run)
-			.bindKeyEvent(SDL_SCANCODE_DOWN, &console_.getPrev)
-			.bindKeyEvent(SDL_SCANCODE_UP, &console_.getNext);
 
 		//initialize imgui context
 		this.imgui_context_.construct(allocator_, &window_, &input_handler_);
@@ -162,8 +143,6 @@ struct Engine {
 		window_.renderClear(0x428bca);
 
 		draw_function_(update_dt);
-		console_.draw(&window_);
-
 		draw_debug(update_dt);
 		imgui_context_.endFrame();
 		after_draw_function_(update_dt);
@@ -184,8 +163,7 @@ struct Engine {
 			.render_string!("last update deltatime: %f")(time_since_last_update_)
 			.render_string!("update deltatime: %f")(update_time_)
 			.render_string!("draw deltatime: %f")(draw_time_)
-			.render_string!("framerate: %f")(1.0 / frame_time_)
-			.render_string!("mouse x: %d, y: %d")(x, y);
+			.render_string!("framerate: %f")(1.0 / frame_time_);
 
 		debug_context_.reset();
 
