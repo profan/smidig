@@ -199,7 +199,7 @@ struct Engine {
 				mixin EventManager.doTick;
 
 				update_timer.start();
-				imgui_context_.newFrame((frame_time_) > 0 ? frame_time_ : 1.0);
+				imgui_context_.newFrame((update_time_) > 0 ? update_time_ : 1.0);
 
 				import derelict.imgui.imgui : igSliderInt;
 				igSliderInt("update rate", &update_rate_, 1, 800);

@@ -455,7 +455,7 @@ struct ArraySOA(T) {
 	static private string makeMemberArrays() pure {
 
 		import std.array : appender;
-		import std.format : format;
+		import std.string : format;
 
 		auto app = appender!string();
 
@@ -469,7 +469,7 @@ struct ArraySOA(T) {
 
 	private void initMemberArrays(Args...)(Args args) {
 
-		import std.format : format;
+		import std.string : format;
 
 		foreach (field; Fields) {
 			mixin(q{%s = typeof(%s)(%s);}.format(field, field, "args"));
