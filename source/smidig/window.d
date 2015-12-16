@@ -20,7 +20,11 @@ struct Window {
 
 		//info
 		String title_;
+		bool fullscreen_;
 		bool alive_;
+
+		//gl specific
+		GLenum polygon_mode_;
 
 		//window data
 		int window_width_, window_height_;
@@ -143,18 +147,15 @@ struct Window {
 
 	void toggleFullscreen() {
 
-		static bool is_fullscreen = false;
-
-		SDL_SetWindowFullscreen(window_, (is_fullscreen) ? 0 : SDL_WINDOW_FULLSCREEN);
-		is_fullscreen = !is_fullscreen;
+		SDL_SetWindowFullscreen(window_, (fullscreen_) ? 0 : SDL_WINDOW_FULLSCREEN);
+		fullscreen_ = !fullscreen_;
 
 	} //toggle_fullscreen
 
 	void toggleWireframe() {
 		
-		static GLenum current = GL_FILL;
-		current = (current == GL_FILL) ? GL_LINE : GL_FILL;
-		glPolygonMode(GL_FRONT_AND_BACK, current);
+		polygon_mode_ = (polygon_mode_ == GL_FILL) ? GL_LINE : GL_FILL;
+		glPolygonMode(GL_FRONT_AND_BACK, polygon_mode_);
 
 	} //toggleWireframe
 
