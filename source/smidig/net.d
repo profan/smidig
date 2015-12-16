@@ -41,9 +41,7 @@ void initializeEnet() {
 	import derelict.enet.enet;
 
 	if (auto err = enet_initialize() != 0) {
-
 		printf("[Net] An error occured on initialization: %d", err);
-
 	}
 
 } //initializeEnet

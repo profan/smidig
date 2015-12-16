@@ -78,15 +78,33 @@ struct Window {
 
 	} //this
 
-	this(SDL_Window* in_window) {
+	this(SDL_Window* in_window, int gl_major = 3, int gl_minor = 3) {
 
-		this.window_ = in_window;
-		assert(window_ != null);
+		assert(in_window != null);
+		assert(gl_major >= 3 && gl_minor >= 3, "desired OpenGL version needs to be at least 3.3!");
+
+		window_ = in_window;
 		SDL_GetWindowSize(window_, &window_width_, &window_height_);
+		createGLContext(gl_major, gl_minor); //DO EET
+
+		alive_ = true;
+
+		view_projection = Mat4f.orthographic(0.0f, width, height, 0.0f, 0.0f, 1.0f);
+
+	} //this
+
+	~this() {
+
+		SDL_GL_DeleteContext(glcontext_);
+		SDL_DestroyWindow(window_);
+
+	} //~this
+
+	void createGLContext(int gl_major, int gl_minor) {
 
 		// OpenGL related attributes
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, gl_major);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, gl_minor);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
@@ -104,20 +122,9 @@ struct Window {
 		printf("[OpenGL] version is: %s \n", sGLVersion_main);
 		printf("[OpenGL] GLSL version is: %s \n", sGLVersion_shader);
 		printf("[OpenGL] Loading GL Extensions. \n");
-
 		DerelictGL3.reload();
-		alive_ = true;
 
-		view_projection = Mat4f.orthographic(0.0f, width, height, 0.0f, 0.0f, 1.0f);
-
-	} //this
-
-	~this() {
-
-		SDL_GL_DeleteContext(glcontext_);
-		SDL_DestroyWindow(window_);
-
-	} //~this
+	} //createGLContext
 
 	void renderClear(int color) {
 

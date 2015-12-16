@@ -481,10 +481,10 @@ version(unittest) {
 		//create manager, system
 		em = new EntityManager(theAllocator);
 		em.addSystems(
-					  new SomeManager(),
-					  new OtherManager(),
-					  new DrawManager()
-						  );
+			new SomeManager(),
+			new OtherManager(),
+			new DrawManager()
+		);
 
 		//create entity and component, add to system
 		entity = em.createEntity();

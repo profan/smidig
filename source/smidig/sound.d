@@ -33,19 +33,23 @@ struct SoundSystem {
 
 	enum INITIAL_BUFFERS = 16;
 
-	//allocator yes
-	IAllocator allocator_;
+	private {
 
-	//audio device and context
-	ALCdevice* device_;
-	ALCcontext* context_;
+		//allocator yes
+		IAllocator allocator_;
 
-	//containers for references to buffers and sources
-	HashMap!(SoundID, SoundBuffer) buffers_;
-	ArraySOA!Source sources_;
+		//audio device and context
+		ALCdevice* device_;
+		ALCcontext* context_;
 
-	//counter for resource ids for loaded sounds
-	SoundID current_sound_id_;
+		//containers for references to buffers and sources
+		HashMap!(SoundID, SoundBuffer) buffers_;
+		ArraySOA!Source sources_;
+
+		//counter for resource ids for loaded sounds
+		SoundID current_sound_id_;
+
+	}
 
 	@disable this();
 	@disable this(this);
