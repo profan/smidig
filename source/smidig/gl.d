@@ -168,7 +168,7 @@ struct FontAtlas {
 		Shader* shader;
 		Texture atlas;
 
-		CharacterInfo[96] characters;
+		CharacterInfo[96] chars;
 		int atlas_width, atlas_height;
 		int char_width_, char_height_;
 
@@ -239,17 +239,17 @@ struct FontAtlas {
 			glTexSubImage2D(GL_TEXTURE_2D, 0, x, 0, glyph.bitmap.width, glyph.bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, glyph.bitmap.buffer);
 
 			int ci = i - 32;
-			this.characters[ci].advance_x = glyph.advance.x >> 6;
-			this.characters[ci].advance_y = glyph.advance.y >> 6;
+			this.chars[ci].advance_x = glyph.advance.x >> 6;
+			this.chars[ci].advance_y = glyph.advance.y >> 6;
 
-			this.characters[ci].bitmap_width = glyph.bitmap.width;
-			this.characters[ci].bitmap_height = glyph.bitmap.rows;
+			this.chars[ci].bitmap_width = glyph.bitmap.width;
+			this.chars[ci].bitmap_height = glyph.bitmap.rows;
 
-			this.characters[ci].bitmap_left = glyph.bitmap_left;
-			this.characters[ci].bitmap_top = glyph.bitmap_top;
+			this.chars[ci].bitmap_left = glyph.bitmap_left;
+			this.chars[ci].bitmap_top = glyph.bitmap_top;
 
-			this.characters[ci].tx_offset = cast(float)x / w;
-			this.characters[ci].tx_offset_y = (top_distance/64 - (face.glyph.metrics.height>>6));
+			this.chars[ci].tx_offset = cast(float)x / w;
+			this.chars[ci].tx_offset_y = (top_distance/64 - (face.glyph.metrics.height>>6));
 
 			x += glyph.bitmap.width;
 
@@ -286,31 +286,31 @@ struct FontAtlas {
 			}
 
 			int ci = ch - 32; //get char index
-			float x2 =  x + characters[ci].bitmap_left * sx;
-			float y2 = y + characters[ci].bitmap_top * sy;
+			float x2 =  x + chars[ci].bitmap_left * sx;
+			float y2 = y + chars[ci].bitmap_top * sy;
 
-			float w = characters[ci].bitmap_width * sx;
-			float h = characters[ci].bitmap_height * sy;
+			float w = chars[ci].bitmap_width * sx;
+			float h = chars[ci].bitmap_height * sy;
 
-			x += characters[ci].advance_x * sx;
-			y += characters[ci].advance_y * sy;
+			x += chars[ci].advance_x * sx;
+			y += chars[ci].advance_y * sy;
 
 			//adjust for hang
-			y2 -= (characters[ci].bitmap_top * sy);
-			y2 -= (characters[ci].tx_offset_y * sy);
+			y2 -= (chars[ci].bitmap_top * sy);
+			y2 -= (chars[ci].tx_offset_y * sy);
 
 			if (!w || !h) { //continue if no width or height, invisible character
 			 	continue;
 			}
 
-			coords[n++] = Point(x2, y2, characters[ci].tx_offset, characters[ci].bitmap_height / atlas_height); //top left?
-			coords[n++] = Point(x2, y2 - h, characters[ci].tx_offset, 0);
+			coords[n++] = Point(x2, y2, chars[ci].tx_offset, chars[ci].bitmap_height / atlas_height); //top left?
+			coords[n++] = Point(x2, y2 - h, chars[ci].tx_offset, 0);
 
-			coords[n++] = Point(x2 + w, y2, characters[ci].tx_offset + characters[ci].bitmap_width / atlas_width, characters[ci].bitmap_height / atlas_height);
-			coords[n++] = Point(x2 + w, y2, characters[ci].tx_offset + characters[ci].bitmap_width / atlas_width, characters[ci].bitmap_height / atlas_height);
+			coords[n++] = Point(x2 + w, y2, chars[ci].tx_offset + chars[ci].bitmap_width / atlas_width, chars[ci].bitmap_height / atlas_height);
+			coords[n++] = Point(x2 + w, y2, chars[ci].tx_offset + chars[ci].bitmap_width / atlas_width, chars[ci].bitmap_height / atlas_height);
 
-			coords[n++] = Point(x2, y2 - h, characters[ci].tx_offset, 0);
-			coords[n++] = Point(x2 + w, y2 - h, characters[ci].tx_offset + characters[ci].bitmap_width / atlas_width, 0);
+			coords[n++] = Point(x2, y2 - h, chars[ci].tx_offset, 0);
+			coords[n++] = Point(x2 + w, y2 - h, chars[ci].tx_offset + chars[ci].bitmap_width / atlas_width, 0);
 
 		}
 
