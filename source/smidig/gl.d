@@ -23,6 +23,7 @@ mixin template OpenGLError() {
 
 } //OpenGLError
 
+//TODO complete this so it can replace the "mesh" structure, as it is more generally useful.
 struct VertexArray {
 
 	GLuint vao_;
@@ -897,6 +898,16 @@ struct Texture {
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 	} //unbind
+
+	/**
+	 * updates the texture in place given the new texture buffer.
+	 * takes an optional offset to update only a part.
+	 **/
+	void update(void[] pixels, size_t offset = 0) {
+
+		glBufferSubData(GL_ARRAY_BUFFER, cast(GLintptr)offset, pixels.length, pixels.ptr);
+
+	} //update
 
 	mixin OpenGLError;
 
