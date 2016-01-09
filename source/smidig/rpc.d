@@ -1,5 +1,7 @@
 module smidig.rpc;
 
+import tested : name;
+
 struct RPC {
 
 	/* rpc, here to simplify implementing networking functionality. */
@@ -138,6 +140,7 @@ string generateWrappers(Funcs...)() {
 
 } //generateWrappers
 
+@name("RPC 1: test calling wrapped function")
 unittest {
 
 	bool equal(T)(T[] a1, T[] a2) {

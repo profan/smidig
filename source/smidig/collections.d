@@ -228,7 +228,7 @@ version(unittest) {
 
 }
 
-@name("array test 1")
+@name("Array 1")
 unittest {
 
 	auto free_list = FreeList!(Mallocator, 0, 128)();
@@ -243,7 +243,7 @@ unittest {
 
 }
 
-@name("array test 2: add/find")
+@name("Array 2: add/find")
 unittest {
 
 	auto array = Array!long(theAllocator, 4);
@@ -260,7 +260,7 @@ unittest {
 
 }
 
-@name("array test 3: reserve")
+@name("Array 3: reserve")
 unittest {
 
 	auto array = Array!int(theAllocator, 0);
@@ -411,7 +411,7 @@ struct SegmentedArray(T) {
 
 } //SegmentedArray
 
-@name("segmented array test 1: add/find")
+@name("SegmentedArray 1: add/find")
 unittest {
 
 	auto integers = SegmentedArray!int(theAllocator, 32);
@@ -562,7 +562,7 @@ version(unittest) {
 
 }
 
-@name("soa array test 1: layout confirmation")
+@name("ArraySOA 1: layout test")
 unittest {
 
 	auto array = ArraySOA!Floats(theAllocator, 32);
@@ -885,7 +885,7 @@ version(unittest) {
 
 }
 
-@name("hashmap test 1: add/in test")
+@name("HashMap 1: add/in test")
 unittest {
 
 	auto hash_map = HashMap!(HashThing, uint)(theAllocator, 32);
@@ -902,7 +902,7 @@ unittest {
 
 }
 
-@name("hashmap test 2: adding/finding/removing")
+@name("HashMap 2: adding/finding/removing")
 unittest {
 
 	import std.string : format;
@@ -938,7 +938,7 @@ unittest {
 
 }
 
-@name("hashmap test 3: rehashing")
+@name("HashMap 3: rehashing")
 unittest { //test expansion
 
 	enum initial_size = 4, rounds = 128;
@@ -1032,7 +1032,7 @@ struct MultiHashMap(K, V) {
 
 	bool remove(K key) {
 		return map_.remove(key);
-	} //remove
+	} //remov
 
 	ref Array!V get(in K key) @safe {
 		return map_.get(key);
@@ -1040,7 +1040,7 @@ struct MultiHashMap(K, V) {
 
 } //MultiHashMap
 
-@name("multihashmap test 1")
+@name("MultiHashMap 1")
 unittest {
 
 	auto map = MultiHashMap!(int, bool)(theAllocator, 16);
@@ -1138,7 +1138,7 @@ version(unittest) {
 
 }
 
-@name("linkedlist test 1")
+@name("LinkedList 1")
 unittest {
 
 	auto list = LinkedList!int(theAllocator);
@@ -1183,7 +1183,7 @@ version(unittest) {
 
 }
 
-@name("stack test 1")
+@name("Stack 1")
 unittest {
 
 	auto stack = Stack!int(theAllocator);
@@ -1424,7 +1424,7 @@ version (unittest) {
 
 } 
 
-@name("d-heap test 1")
+@name("DHeap 1")
 unittest {
 
 	import std.string : format;
@@ -1644,7 +1644,7 @@ struct String {
 
 } //String
 
-@name("string test 1")
+@name("String 1")
 unittest {
 
 	auto str = String("yes");
@@ -1718,7 +1718,7 @@ struct StringBuffer {
 
 } //StringBuffer
 
-@name("stringbuffer test 1")
+@name("StringBuffer 1")
 unittest {
 
 	import core.stdc.stdio : printf;
@@ -1829,7 +1829,7 @@ version (unittest) {
 
 }
 
-@name("scopedbuffer test 1: indexing")
+@name("ScopedBuffer 1: indexing")
 unittest {
 
 	import std.range : iota;
@@ -1848,7 +1848,7 @@ unittest {
 
 }
 
-@name("scopedbuffer test 2: destructors")
+@name("ScopedBuffer 2: destructors")
 unittest {
 
 	int testing_var = 256;
@@ -1949,7 +1949,7 @@ struct StaticArray(T, size_t size) {
 
 } //StaticArray
 
-@name("staticarray test 1")
+@name("StaticArray 1")
 unittest {
 
 	import std.conv : to;

@@ -1,5 +1,7 @@
 module smidig.event;
 
+import tested : name;
+
 alias EventID = uint;
 alias EventCast = Event!(255, uint);
 alias EventDelegate = void delegate(EventCast*);
@@ -211,6 +213,7 @@ version (unittest) {
 
 }
 
+@name("EventManager 1: test deferred sending and recieving with register+push")
 unittest {
 
 	auto evman = EventManager(EventMemory, TestEvent.max);
@@ -226,6 +229,7 @@ unittest {
 
 } //TODO write some tests up in this motherfucker
 
+@name("EventManager 2: test firing events and recieving with register+fire")
 unittest {
 
 	auto evman = EventManager(EventMemory, TestEvent.max);
@@ -239,6 +243,7 @@ unittest {
 
 }
 
+@name("EventManager 3: perf test for deferred events")
 unittest {
 
 	import std.datetime : StopWatch;
@@ -262,6 +267,7 @@ unittest {
 
 }
 
+@name("EventManager 4: perf test for fired events")
 unittest {
 
 	import std.datetime : StopWatch;

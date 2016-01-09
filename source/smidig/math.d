@@ -3,6 +3,8 @@ module smidig.math;
 import std.math;
 import gfm.math : Vector, Matrix;
 
+import tested : name;
+
 //OpenGL maths related
 alias Vec2i = Vector!(int, 2);
 alias Vec2f = Vector!(float, 2);
@@ -19,6 +21,7 @@ T normalize(T)(T val, T min, T max, T val_max) pure @nogc nothrow {
 	return (min + val) / (val_max / (max - min));
 } //normalize
 
+@name("normalize 1")
 unittest {
 
 	import std.string : format;

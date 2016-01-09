@@ -6,6 +6,8 @@ import std.typecons : Tuple;
 
 import smidig.memory : IAllocator, make, dispose;
 
+import tested : name;
+
 alias EntityID = uint;
 alias ComponentName = string;
 alias SystemType = int;
@@ -501,6 +503,7 @@ version(unittest) {
 
 }
 
+@name("ECS 1: test component update order")
 unittest {
 
 	mixin PreReq;
@@ -521,6 +524,7 @@ unittest {
 
 }
 
+@name("ECS 2: confirm deregister does not throw an exception")
 unittest {
 
 	import std.exception : assertNotThrown;
