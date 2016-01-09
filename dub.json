@@ -8,7 +8,8 @@
 		"derelict-imgui": "~>0.8.0",
 		"derelict-al": "~master",
 		"derelict-ft": "~>1.0.2",
-		"gfm:math": "~>2.0"
+		"gfm:math": "~>2.0",
+		"tested": "~>0.9.4"
 	},
 	"buildTypes": {
 		"debug-profile": {

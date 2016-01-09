@@ -5,6 +5,9 @@ import std.experimental.allocator : allocatorObject, IAllocator, theAllocator, m
 import std.experimental.allocator.building_blocks.free_list : FreeList;
 import std.experimental.allocator.mallocator : Mallocator;
 
+/* testulon */
+import tested : name;
+
 struct Array(T) {
 
 	import std.algorithm : move;
@@ -221,6 +224,7 @@ version(unittest) {
 
 }
 
+@name("array test 1")
 unittest {
 
 	auto free_list = FreeList!(Mallocator, 0, 128)();
@@ -235,6 +239,7 @@ unittest {
 
 }
 
+@name("array test 2: add/find")
 unittest {
 
 	auto array = Array!long(theAllocator, 4);
@@ -251,6 +256,7 @@ unittest {
 
 }
 
+@name("array test 3: reserve")
 unittest {
 
 	auto array = Array!int(theAllocator, 0);
@@ -401,6 +407,7 @@ struct SegmentedArray(T) {
 
 } //SegmentedArray
 
+@name("segmented array test 1: add/find")
 unittest {
 
 	auto integers = SegmentedArray!int(theAllocator, 32);
@@ -551,15 +558,16 @@ version(unittest) {
 
 }
 
+@name("soa array test 1: layout confirmation")
 unittest {
 
 	auto array = ArraySOA!Floats(theAllocator, 32);
 	auto added_thing = Floats(1.0, 2.0, 3.0);
 
 	array.add(added_thing);
-	assert(array.x[0] == 1.0);
-	assert(array.y[0] == 2.0);
-	assert(array.z[0] == 3.0);
+	assert(array.x[0] == added_thing.x);
+	assert(array.y[0] == added_thing.y);
+	assert(array.z[0] == added_thing.z);
 
 }
 
@@ -873,6 +881,7 @@ version(unittest) {
 
 }
 
+@name("hashmap test 1: add/in test")
 unittest {
 
 	auto hash_map = HashMap!(HashThing, uint)(theAllocator, 32);
@@ -889,6 +898,7 @@ unittest {
 
 }
 
+@name("hashmap test 2: adding/finding/removing")
 unittest {
 
 	import std.string : format;
@@ -924,6 +934,7 @@ unittest {
 
 }
 
+@name("hashmap test 3: rehashing")
 unittest { //test expansion
 
 	enum initial_size = 4, rounds = 128;
@@ -1025,6 +1036,7 @@ struct MultiHashMap(K, V) {
 
 } //MultiHashMap
 
+@name("multihashmap test 1")
 unittest {
 
 	auto map = MultiHashMap!(int, bool)(theAllocator, 16);
@@ -1122,6 +1134,7 @@ version(unittest) {
 
 }
 
+@name("linkedlist test 1")
 unittest {
 
 	auto list = LinkedList!int(theAllocator);
@@ -1166,6 +1179,7 @@ version(unittest) {
 
 }
 
+@name("stack test 1")
 unittest {
 
 	auto stack = Stack!int(theAllocator);
@@ -1406,6 +1420,7 @@ version (unittest) {
 
 } 
 
+@name("d-heap test 1")
 unittest {
 
 	import std.string : format;
@@ -1476,6 +1491,7 @@ struct HashSet(T) {
 
 } //HashSet
 
+@name("hashset test 1")
 unittest {
 
 	auto set = HashSet!int(theAllocator, 32);
@@ -1624,6 +1640,7 @@ struct String {
 
 } //String
 
+@name("string test 1")
 unittest {
 
 	auto str = String("yes");
@@ -1697,6 +1714,7 @@ struct StringBuffer {
 
 } //StringBuffer
 
+@name("stringbuffer test 1")
 unittest {
 
 	import core.stdc.stdio : printf;
@@ -1807,6 +1825,7 @@ version (unittest) {
 
 }
 
+@name("scopedbuffer test 1: indexing")
 unittest {
 
 	import std.range : iota;
@@ -1825,6 +1844,7 @@ unittest {
 
 }
 
+@name("scopedbuffer test 2: destructors")
 unittest {
 
 	int testing_var = 256;
@@ -1925,6 +1945,7 @@ struct StaticArray(T, size_t size) {
 
 } //StaticArray
 
+@name("staticarray test 1")
 unittest {
 
 	import std.conv : to;
