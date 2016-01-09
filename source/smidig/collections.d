@@ -27,6 +27,7 @@ struct Array(T) {
 
 	this(IAllocator allocator, size_t initial_size) @trusted {
 
+		assert(allocator, "array allocator was null?");
 		this.allocator_ = allocator;
 		this.array_ = allocator_.makeArray!T(initial_size);
 		this.capacity_ = initial_size;
@@ -218,9 +219,12 @@ struct Array(T) {
 
 } //Array
 
+/* set up allocator for tests */
 version(unittest) {
 
-	import std.stdio : writefln;
+	shared static this() {
+		theAllocator = allocatorObject(Mallocator.instance);
+	}
 
 }
 
