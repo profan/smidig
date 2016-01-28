@@ -1495,7 +1495,7 @@ struct HashSet(T) {
 
 } //HashSet
 
-@name("hashset test 1")
+@name("HashSet 1: add/exists test")
 unittest {
 
 	auto set = HashSet!int(theAllocator, 32);

@@ -4,6 +4,8 @@ import smidig.meta : hasMember;
 
 import std.stdio : writefln;
 
+import tested : name;
+
 /* in-place construction, it's a bit ergh. */
 void construct(T, Args...)(ref T thing, Args args)
 	if (is(T == struct))
@@ -136,6 +138,7 @@ version(unittest) {
 
 }
 
+@name("ObjectPool 1: simple creation test")
 unittest {
 
 	import std.range : iota;

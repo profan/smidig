@@ -3,6 +3,8 @@ module smidig.memory.allocator;
 import std.experimental.allocator;
 import std.traits : hasIndirections;
 
+import tested : name;
+
 /**
 $(D TrackingAllocator) is an allocator meant to keep track of delegates and pointers
 allocated through it, and reassign them when memory happens to move around, is required
@@ -182,6 +184,7 @@ struct TrackingAllocator(ParentAllocator) {
 
 } //TrackingAllocator
 
+@name("TrackingAllocator 1: reference test")
 unittest {
 
 	import std.stdio : writefln;
