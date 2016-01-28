@@ -29,4 +29,4 @@ Texture createFontTexture(in char* font_path, in char* font_text, int font_size,
 
 	return texture;
 
-}
+} //createFontTexture

@@ -2,6 +2,8 @@ module smidig.fsm;
 
 import std.typecons : Tuple;
 
+import tested : name;
+
 alias FStateID = int;
 alias FStateTuple = Tuple!(FStateID, FStateID);
 
@@ -128,11 +130,14 @@ version(unittest) {
 
 }
 
+@name("FSM 1 (unimplemented)")
 unittest {
 
 	import std.string : format;
 
 	auto fsm = FSMTest(10);
 	fsm.tick();
+
+	assert(0);
 
 }
