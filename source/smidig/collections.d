@@ -1061,17 +1061,6 @@ unittest {
 
 }
 
-struct SparseArray(T) {
-
-	struct Entry {
-		size_t index;
-	} //Entry
-
-	@disable this();
-	@disable this(this);
-
-} //SparseArray
-
 struct LinkedList(T) {
 
 	struct Node {
@@ -1467,10 +1456,6 @@ unittest {
 
 	}
 }
-
-struct MatrixGraph(T) {
-
-} //MatrixGraph
 
 /**
  * Set implementation ontop of a $(D HashMap).
