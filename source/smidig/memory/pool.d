@@ -295,9 +295,11 @@ version(unittest) {
 
 }
 
+@name("SmartPointer (allocator) 1: (unimplemented")
 unittest {
 
 	auto ptr_test = SmartPointer!Test(theAllocator);
+	assert(0);
 
 }
 

@@ -48,6 +48,7 @@ class EntityManager {
 
 	~this() {
 
+		printf("[EventManager] destroying.");
 		foreach (man; cms_) {
 			allocator_.dispose(man);
 		}
@@ -482,11 +483,9 @@ version(unittest) {
 
 		//create manager, system
 		em = new EntityManager(theAllocator);
-		em.addSystems(
-			new SomeManager(),
-			new OtherManager(),
-			new DrawManager()
-		);
+		em.registerSystem!SomeManager();
+		em.registerSystem!OtherManager();
+		em.registerSystem!DrawManager();
 
 		//create entity and component, add to system
 		entity = em.createEntity();
