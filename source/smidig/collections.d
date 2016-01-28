@@ -290,7 +290,10 @@ struct FixedArrayN(T, int N) {
 
 } //FixedArrayN
 
+@name("FixedArrayN 1 (unimplemented)")
 unittest {
+
+	assert(0);
 
 }
 
@@ -302,7 +305,10 @@ struct LazyArray(T) {
 
 } //LazyArray
 
+@name("LazyArray 1 (unimplemented)")
 unittest {
+
+	assert(0);
 
 }
 
@@ -350,6 +356,7 @@ struct FixedArray(T) {
 
 } //FixedArray
 
+@name("FixedArray 1 (unimplemented)")
 unittest {
 
 }
@@ -1199,7 +1206,10 @@ struct Queue(T) {
 
 } //Queue
 
+@name("Queue 1 (unimplemented)")
 unittest {
+
+	assert(0);
 
 }
 
@@ -1207,7 +1217,10 @@ struct AtomicQueue(T) {
 
 } //AtomicQueue
 
+@name("AtomicQueue 1 (unimplemented)")
 unittest {
+
+	assert(0);
 
 }
 
@@ -1266,6 +1279,7 @@ struct CircularBuffer(T) {
 
 } //CircularBuffer
 
+@name("CircularBuffer 1: circularity test")
 unittest {
 
 	auto c_buf = CircularBuffer!double(theAllocator, 32);
@@ -1276,6 +1290,8 @@ unittest {
 	foreach (sample; c_buf) {
 
 	}
+
+	assert(0); //TODO actually implement this
 
 }
 
@@ -1424,7 +1440,7 @@ version (unittest) {
 
 } 
 
-@name("DHeap 1")
+@name("DHeap 1: insert and deleteMin")
 unittest {
 
 	import std.string : format;
@@ -1526,7 +1542,10 @@ struct QuadTree {
 
 } //QuadTree
 
+@name("QuadTree 1 (unimplemented)")
 unittest {
+
+	assert(0);
 
 }
 
@@ -1777,7 +1796,10 @@ struct BKTree {
 
 }
 
+@name("BKTree 1 (unimplemented)")
 unittest {
+
+	assert(0);
 
 }
 

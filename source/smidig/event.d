@@ -49,6 +49,8 @@ struct EventManager {
 			events.add(allocator_.make!(Array!(EventCast*))(allocator_, 8));
 		}
 
+		assert(allocator_, "allocator was null?");
+
 	} //this
 
 	~this() {

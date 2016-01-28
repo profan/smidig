@@ -516,6 +516,7 @@ unittest {
 		auto val = em.getComponent!SomeComponent(entity).value;
 		assert(val == 2, format("expected val of SomeComponent to be 2, order of updating is incorrect, was :%d", val));
 	}
+
 	{
 		em.tick!TestDrawSystem(10); //one iteration, value should now be 10
 		auto val = em.getComponent!DrawComponent(entity).value;
