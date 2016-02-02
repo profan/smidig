@@ -58,6 +58,10 @@ template isPOD(T) {
 	enum isPOD = __traits(isPOD, T);
 } //isPOD
 
+template isPOD(alias T) {
+	enum isPOD = __traits(isPOD, T);
+} //isPOD
+
 template hasMember(alias obj, string Member) {
 	enum hasMember = __traits(hasMember, typeof(obj), Member);
 } //hasMember
@@ -65,3 +69,25 @@ template hasMember(alias obj, string Member) {
 template hasMember(T, string Member) {
 	enum hasMember = __traits(hasMember, T, Member);
 } //hasMember
+
+template Members(T) {
+	enum Members = __traits(allMembers, T);
+} //Members
+
+template PODMembers(T) {
+	alias PODMembers = GetPODMembers!T;
+} //PODMembers
+
+template GetPODMembers(T) {
+
+	enum m = T();
+
+	template isFieldPOD(string F) {
+		enum isFieldPOD = isPOD!(typeof(Symbol!(m, F)));
+	}
+
+	import std.traits : FieldNameTuple;
+	import std.meta : Filter, staticMap;
+	alias GetPODMembers = Filter!(isFieldPOD, FieldNameTuple!T);
+
+} //GetPODMembers

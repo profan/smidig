@@ -28,6 +28,7 @@ mixin template OpenGLError() {
 struct VertexArray {
 
 	GLuint vao_;
+	GLuint vbo_;
 	GLenum type_; //type of vertex data, GL_TRIANGLES etc
 	uint num_vertices_;
 
@@ -37,8 +38,35 @@ struct VertexArray {
 
 	this(VertexType)(in VertexType[] vertices) {
 
-		//generate calls depending on vertex specification
+		mixin("import " ~ VertexType.Imports ~ ";");
+        this.num_vertices_ = cast(uint)vertices.length;
 
+        glGenVertexArrays(1, &vao_);
+        glBindVertexArray(vao_);
+
+        glGenBuffers(1, &vbo_);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_STATIC_DRAW);
+
+		/* generate code from VertexSpec */
+		import smidig.meta : PODMembers;
+		foreach (i, m; PODMembers!VertexType) {
+
+			enum M = mixin(VertexType.stringof ~ "()." ~ m);
+			enum OffsetOf = mixin(VertexType.stringof ~ "." ~ m ~ ".offsetof");
+
+			glEnableVertexAttribArray(i); //every second attribute is the type actually
+			glVertexAttribPointer(i,
+					M.sizeof / float.sizeof,
+					GL_FLOAT, //hardcoded right now, maybe fix later
+					GL_FALSE, 
+					vertices[0].sizeof,
+					cast(const(void)*)OffsetOf);
+
+		}
+
+		glBindVertexArray(0);
+	
 	} //this
 
 	~this() {
@@ -66,6 +94,17 @@ struct VertexArray {
 	} //unbind
 
 } //VertexArray
+
+@name("VertexArray 1")
+unittest {
+
+	alias TestVertex = VertexSpec!("gfm.math : Vector", Vec2f, "pos", Vec3f, "normal");
+	TestVertex[] vertices;
+
+	auto verts = VertexArray(vertices);
+	assert(0);
+
+}
 
 struct VertexBuffer {
 
@@ -969,6 +1008,8 @@ struct Vertex {
 
 struct VertexSpec(string imprt, T...) {
 
+	alias Imports = imprt;
+	alias Members = T;
 	mixin("import " ~ imprt ~ ";"); 
 
 	static assert(T.length % 2 == 0, "length % 2 must be 0, arguments to come in pairs of member type, member name");
@@ -995,6 +1036,8 @@ unittest {
 	import smidig.math : Vec2f, Vec3f;
 
 	auto test_vertex = VertexSpec!("gfm.math : Vector", Vec2f, "pos", Vec3f, "normal")();
+	test_vertex.pos = Vec2f(5.0, 5.0);
+	test_vertex.normal = Vec3f(1.0, 2.0, 3.0);
 
 }
 
@@ -1025,7 +1068,7 @@ struct Shader {
 
 		assert(uniforms.length <= bound_uniforms.length);
 
-		char[256] fn_buff;
+		char[256] fn_buff; //FIXME: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
 		StringBuffer vs = loadShader(cformat(fn_buff, "%s.vs", file_name.ptr));
 		StringBuffer fs = loadShader(cformat(fn_buff, "%s.fs", file_name.ptr));
