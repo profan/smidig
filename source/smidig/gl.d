@@ -4,6 +4,7 @@ import core.stdc.stdio : printf;
 import std.stdio : writefln;
 
 import derelict.opengl3.gl3;
+import tested : name;
 
 import smidig.math : Vec2i, Vec2f, Vec3f, Mat3f, Mat4f;
 import smidig.collections : StringBuffer;
@@ -591,6 +592,11 @@ struct ParticleSystem(V) {
 
 	this(IAllocator allocator, Mesh* mesh, Shader* shader, Texture* texture, V origin, V orientation, size_t initial_size) {
 
+		assert(allocator, "allocator was null?");
+		assert(texture, "texture was null?");
+		assert(shader, "shader was null?");
+		assert(mesh, "mesh was null?");
+
 		this.mesh_ = mesh;
 		this.shader_ = shader;
 		this.texture_ = texture;
@@ -599,7 +605,7 @@ struct ParticleSystem(V) {
 		this.orientation_ = orientation;
 
 		this.allocator_ = allocator;
-		this.particles_ = typeof(particles_)(allocator, initial_size);
+		this.particles_ = typeof(particles_)(allocator_, initial_size);
 
 	} //this
 
@@ -637,6 +643,7 @@ struct ParticleSystem(V) {
 
 } //ParticleSystem
 
+@name("ParticleSystem 1")
 unittest {
 
 	import smidig.math : Vec2f;
@@ -669,6 +676,8 @@ struct TestParticleSystem {
 	@disable this(this);
 
 	this(IAllocator allocator, size_t initial_size = 32) {
+
+		assert(allocator, "allocator was null?");
 
 		lifetimes_ = typeof(lifetimes_)(allocator, initial_size);
 		velocities_ = typeof(velocities_)(allocator, initial_size);
@@ -980,6 +989,7 @@ struct VertexSpec(string imprt, T...) {
 
 } //VertexSpec
 
+@name("VertexSpec 1")
 unittest {
 
 	import smidig.math : Vec2f, Vec3f;

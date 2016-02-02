@@ -4,6 +4,8 @@ public import std.experimental.allocator : allocatorObject, IAllocator, processA
 public import std.experimental.allocator.building_blocks.region : Region;
 public import std.experimental.allocator.mallocator : Mallocator;
 
+import tested : name;
+
 void memmove(T)(auto ref T[] src, auto ref T[] target) {
 
 	import core.stdc.string : memmove;
@@ -12,6 +14,7 @@ void memmove(T)(auto ref T[] src, auto ref T[] target) {
 
 } //memmove
 
+@name("memmove - array 1")
 unittest {
 
 	import std.algorithm : equal;
@@ -33,7 +36,10 @@ void memmove(T)(T* src, T* target) {
 
 } //memmove
 
+@name("memmove 1 (unimplemented)")
 unittest {
+
+	assert(0);
 
 }
 
@@ -45,6 +51,7 @@ void memmove(T)(IAllocator allocator, T[] src, T[] target) {
 
 } //memmove
 
+@name("memmove - notifying 1 (unimplemented)")
 unittest {
 
 	import smidig.memory.pointer : Reference;
@@ -61,6 +68,8 @@ unittest {
 			(cast(int*)item1)[0..int.sizeof],
 			(cast(int*)item2)[0..int.sizeof]);
 
+	assert(0);
+
 }
 
 void memswap(T)(T* src, T* target) {
@@ -73,6 +82,11 @@ void memswap(T)(T* src, T* target) {
 	memmove(&tmp, src);
 
 } //memswap
+
+@name("memswap 1 (unimplemented)")
+unittest {
+
+}
 
 //returns an aligned offset in bytes from current to allocate from.
 private ptrdiff_t get_aligned(T = void)(void* current, size_t alignment = T.alignof) nothrow @nogc pure {

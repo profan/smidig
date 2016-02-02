@@ -29,6 +29,7 @@ void reinitialize(ClassName, CtorArgs...)(ClassName obj, CtorArgs args) {
 
 } //reinitialize (thanks Destructionator)
 
+@name("reinitialize 1 (unimplemented)")
 unittest {
 
 }
@@ -451,6 +452,7 @@ struct WeakPointer(SmartPtr) {
 
 } //WeakPointer
 
+@name("WeakPointer 1 (unimplemented)")
 unittest {
 
 }
@@ -522,6 +524,7 @@ struct UniquePointer(T, FreeFunc) {
 
 } //UniquePointer
 
+@name("UniquePointer 1 (unimplemented)")
 unittest {
-
+	assert(0);
 }

@@ -184,7 +184,7 @@ struct TrackingAllocator(ParentAllocator) {
 
 } //TrackingAllocator
 
-@name("TrackingAllocator 1: reference test")
+@name("TrackingAllocator 1: reference realloc test")
 unittest {
 
 	import std.stdio : writefln;
@@ -195,20 +195,22 @@ unittest {
 
 	auto allocator = TrackingAllocator!Mallocator(Mallocator.instance);
 	auto all_obj = allocatorObject(&allocator);
-
 	auto test_array = Array!int(all_obj, 1);
-	test_array.add(24);
+
+	int value_added = 24;
+	test_array.add(value_added);
 
 	auto reference = Reference!int(all_obj, test_array.ptr);
-	writefln("ptr: %s, value: %d", reference.get(), *reference.get());
+	int* first_address = reference.get();
 
-	test_array.add(72);
-	test_array.add(45);
-	test_array.add(65);
-	test_array.add(92);
-	test_array.add(112);
-
-	writefln("ptr: %s, value: %d", reference.get(), *reference.get());
-	assert(*reference.get() == 24);
+	foreach (i; 0..1000) {
+		test_array.add(72);
+		test_array.add(45);
+		test_array.add(65);
+		test_array.add(92);
+		test_array.add(112);
+	}
+	
+	assert(reference.get() != first_address && *reference.get() == value_added);
 
 }

@@ -32,6 +32,8 @@ struct RPC {
 
 	this(IAllocator allocator) {
 
+		assert(allocator, "allocator was null?");
+
 		this.allocator_ = allocator;
 		this.region_allocator_ = typeof(region_allocator_)(RegionSize);
 		this.functions_ = typeof(functions_)(allocator_, 16);
@@ -174,9 +176,12 @@ unittest {
 	rpc.call("hello_world", 1234, data);
 
 	// reads from the stream, reads function name first which uses hashmap to call wrapper func.
-	rpc.onPull(rpc.out_stream_[]);
+	assert(0);
 
+	/*
+	rpc.onPull(rpc.out_stream_[]);
 	assert(input_test == 1234);
 	assert(equal(data_test, data));
+	*/
 
 }

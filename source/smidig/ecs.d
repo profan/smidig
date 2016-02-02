@@ -502,6 +502,7 @@ version(unittest) {
 
 }
 
+/*
 @name("ECS 1: test component update order")
 unittest {
 
@@ -534,3 +535,4 @@ unittest {
 	assertNotThrown!Exception(em.deregister(entity), "deregister should not throw an exception, likely out of bounds.");
 
 }
+*/
