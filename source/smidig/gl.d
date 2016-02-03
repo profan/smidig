@@ -24,22 +24,29 @@ mixin template OpenGLError() {
 
 } //OpenGLError
 
-//TODO complete this so it can replace the "mesh" structure, as it is more generally useful.
 struct VertexArray {
 
-	GLuint vao_;
-	GLuint vbo_;
-	GLenum type_; //type of vertex data, GL_TRIANGLES etc
-	uint num_vertices_;
+	private {
+
+		GLuint vao_;
+		GLuint vbo_;
+		GLenum type_; //type of vertex data, GL_TRIANGLES etc
+		uint num_vertices_;
+
+	}
 
 	@property GLuint handle() {
 		return vao_;
 	} //handle
 
-	this(VertexType)(in VertexType[] vertices) {
+	//@disable this(); maybe?
+	@disable this(this);
+
+	this(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_STATIC_DRAW, GLenum type = GL_TRIANGLES) nothrow @nogc {
 
 		mixin("import " ~ VertexType.Imports ~ ";");
-        this.num_vertices_ = cast(uint)vertices.length;
+		this.num_vertices_ = cast(uint)vertices.length;
+		this.type_ = type; //holla holla constant dollar
 
         glGenVertexArrays(1, &vao_);
         glBindVertexArray(vao_);
@@ -69,25 +76,33 @@ struct VertexArray {
 	
 	} //this
 
-	~this() {
+	~this() nothrow @nogc {
 
 		glDeleteVertexArrays(1, &vao_);
 
 	} //~this
 
-	void bind() {
+	void bind() nothrow @nogc {
 
 		glBindVertexArray(vao_);
 
 	} //bind
 
-	void draw() {
+	void draw() nothrow @nogc {
 
 		glDrawArrays(type_, 0, num_vertices_);
 
 	} //draw
 
-	void unbind()  {
+	void send(VertexType)(in VertexType[] vertices) {
+
+		bind();
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_DYNAMIC_DRAW);
+		unbind();
+
+	} //update
+
+	void unbind() nothrow @nogc {
 
 		glBindVertexArray(0);
 
@@ -101,7 +116,7 @@ unittest {
 	alias TestVertex = VertexSpec!("gfm.math : Vector", Vec2f, "pos", Vec3f, "normal");
 	TestVertex[] vertices;
 
-	auto verts = VertexArray(vertices);
+	//auto verts = VertexArray(vertices);
 	assert(0);
 
 }
@@ -141,7 +156,7 @@ struct Camera {
 
 struct Cursor {
 
-	Mesh mesh;
+	VertexArray mesh;
 	Shader* shader;
 	Texture* texture;
 	
@@ -155,7 +170,7 @@ struct Cursor {
 
 		//cartesian coordinate system, inverted y component to not draw upside down.
 		Vertex[6] vertices = createRectangleVec3f2f(w, h);
-		this.mesh = Mesh(vertices);
+		this.mesh = VertexArray(vertices);
 		this.shader = cursor_shader;
 
 		import derelict.sdl2.sdl : SDL_ShowCursor, SDL_DISABLE;
@@ -167,12 +182,14 @@ struct Cursor {
 		
 		auto tf = Transform(position);
 
+		mesh.bind();
 		shader.bind();
 		texture.bind(0);
 		shader.update(projection, tf);
 		mesh.draw();
 		texture.unbind();
 		shader.unbind();
+		mesh.unbind();
 
 	} //draw
 
@@ -395,7 +412,7 @@ struct Text {
 		enum MAX_SIZE = 64;
 		char[MAX_SIZE] content;
 
-		Mesh mesh;
+		VertexArray mesh;
 		Texture texture;
 		Shader* shader;
 
@@ -419,7 +436,7 @@ struct Text {
 
 		//cartesian coordinate system, inverted y component to not draw upside down.
 		Vertex[6] vertices = createRectangleVec3f2f(w, h);
-		this.mesh = Mesh(vertices);
+		this.mesh = VertexArray(vertices);
 		this.shader = text_shader;
 	
 	} //this
@@ -432,12 +449,14 @@ struct Text {
 
 		auto tf = Transform(position);
 
+		mesh.bind();
 		shader.bind();
 		texture.bind(0);
 		shader.update(projection, tf);
 		mesh.draw();
 		texture.unbind();
 		shader.unbind();
+		mesh.unbind();
 
 	} //draw
 
@@ -707,7 +726,7 @@ struct TestParticleSystem {
 	Array!Vec2f positions_;
 	Texture* texture_;
 	Shader shader_;
-	Mesh mesh_;
+	VertexArray mesh_;
 
 	Vec2f origin_;
 
@@ -730,9 +749,9 @@ struct TestParticleSystem {
 		char[16][1] uniforms = ["view_projection"];
 		shader_ = Shader("shaders/particle", attributes, uniforms);
 
-		mesh_ = Mesh(createRectangleVec3f2f(32, 32));
+		mesh_ = VertexArray(createRectangleVec3f2f(32, 32), GL_DYNAMIC_DRAW);
 
-		glBindVertexArray(mesh_.vao);
+		glBindVertexArray(mesh_.vao_);
 
 		glGenBuffers(1, &vbo_);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
@@ -781,7 +800,7 @@ struct TestParticleSystem {
 			p = origin_;
 		}
 
-		glBindVertexArray(mesh_.vao);
+		glBindVertexArray(mesh_.vao_);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 		glBufferData(GL_ARRAY_BUFFER, positions_.length * positions_[0].sizeof, positions_.ptr, GL_DYNAMIC_DRAW);
 
@@ -820,7 +839,7 @@ struct TestParticleSystem {
 
 		}
 
-		glBindVertexArray(mesh_.vao);
+		glBindVertexArray(mesh_.vao_);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 		glBufferSubData(GL_ARRAY_BUFFER, cast(int*)0, positions_.length * positions_[0].sizeof, positions_.ptr);
 
@@ -832,10 +851,10 @@ struct TestParticleSystem {
 		texture_.bind(0);
 
 		glUniformMatrix4fv(shader_.bound_uniforms[0], 1, GL_TRUE, view_projection.ptr);
-		glBindVertexArray(mesh_.vao);
+		glBindVertexArray(mesh_.vao_);
 
 		glDrawArraysInstanced(
-			GL_TRIANGLES, 0, mesh_.draw_count, cast(int)positions_.length
+			GL_TRIANGLES, 0, mesh_.num_vertices_, cast(int)positions_.length
 		);
 
 		glBindVertexArray(0);
@@ -995,6 +1014,8 @@ struct Transform {
 } //Transform
 
 struct Vertex {
+
+	enum Imports = "gfm.math : Vector";
 
 	Vec3f pos;
 	Vec2f tex_coord;
