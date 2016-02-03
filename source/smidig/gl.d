@@ -108,6 +108,8 @@ struct VertexArray {
 
 	} //unbind
 
+	mixin OpenGLError;
+
 } //VertexArray
 
 @name("VertexArray 1")
@@ -214,7 +216,6 @@ private struct CharacterInfo {
 struct FontAtlas {
 
 	import std.algorithm : max;
-
 	import derelict.freetype.ft;
 
 	import smidig.window : Window;
@@ -320,8 +321,10 @@ struct FontAtlas {
 	} //this
 
 	~this() nothrow @nogc {
+
 		glDeleteBuffers(1, &vbo);
 		glDeleteVertexArrays(1, &vao);
+
 	} //~this
 
 	void renderText(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
@@ -401,7 +404,6 @@ struct FontAtlas {
 
 } //FontAtlas
 
-
 struct Text {
 
 	import derelict.sdl2.sdl;
@@ -463,68 +465,6 @@ struct Text {
 	mixin OpenGLError;
 
 } //Text
-
-struct Mesh {
-
-	enum {
-		POSITION_VB,
-		NUM_BUFFERS
-	}
-
-	GLuint vao; //vertex array object
-	GLuint[NUM_BUFFERS] vbo; //vertex array buffers
-	uint draw_count;
-
-	@disable this(this);
-
-	this(in Vertex[] vertices) nothrow @nogc {
-
-		this.draw_count = cast(uint)vertices.length;
-
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
-
-		//create NUM_BUFFERS
-		glGenBuffers(NUM_BUFFERS, vbo.ptr);
-
-		//vertex position buffer
-		glBindBuffer(GL_ARRAY_BUFFER, vbo[POSITION_VB]); //tells OpenGL to interpret this as an array 
-		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_STATIC_DRAW);
-		//upload to GPU, send size in bytes and pointer to array, also tell GPU it will never be modified
-
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertices[0].sizeof, cast(const(void)*)null);
-		//0 corresponds to previous attribarray, 3 is number of elements in vertex, set type to float (don't normalize(GL_FALSE))
-		// bytes to skip to find the next attribute, byte offset from beginning to find the first attribute
-		// use sizeof of tex_coord as stride
-
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, vertices[0].sizeof, cast(const(void)*)vertices[0].pos.sizeof);
-
-		//UNBIND
-		glBindVertexArray(0); //unbind
-
-	} //this
-
-	~this() nothrow @nogc {
-
-		glDeleteVertexArrays(1, &vao);
-
-	} //~this
-
-	void draw() nothrow @nogc {
-
-		glBindVertexArray(vao); //set vertex array to use
-
-		glDrawArrays(GL_TRIANGLES, 0, draw_count); //read from beginning (offset is 0), draw draw_count vertices
-
-		glBindVertexArray(0); //unbind
-
-	} //draw
-
-	mixin OpenGLError;
-
-} //Mesh
 
 struct FrameBuffer {
 
@@ -629,90 +569,6 @@ struct Particle(V) {
 	} //simulate
 
 } //Particle
-
-struct ParticleSystem(V) {
-
-	import smidig.memory : IAllocator;
-	import smidig.collections : Array;
-
-	Mesh* mesh_;
-	Shader* shader_;
-	Texture* texture_;
-
-	V origin_;
-	V orientation_;
-
-	IAllocator allocator_;
-	Array!(Particle!V) particles_;
-
-	@disable this();
-	@disable this(this);
-
-	this(IAllocator allocator, Mesh* mesh, Shader* shader, Texture* texture, V origin, V orientation, size_t initial_size) {
-
-		assert(allocator, "allocator was null?");
-		assert(texture, "texture was null?");
-		assert(shader, "shader was null?");
-		assert(mesh, "mesh was null?");
-
-		this.mesh_ = mesh;
-		this.shader_ = shader;
-		this.texture_ = texture;
-
-		this.origin_ = origin;
-		this.orientation_ = orientation;
-
-		this.allocator_ = allocator;
-		this.particles_ = typeof(particles_)(allocator_, initial_size);
-
-	} //this
-
-	void initialize() {
-
-	} //initialize
-
-	~this() {
-
-	} //~this
-
-	void fire(size_t particles) {
-
-	} //fire
-
-	void tick() {
-
-		enum drag = 32.0f;
-
-		foreach (ref p; particles_) {
-			p.tick(drag);
-		}
-
-	} //tick
-
-	void draw() {
-
-		shader_.bind();
-		texture_.bind(0);
-		//draw instanced shit here :))))
-
-	} //draw
-
-	mixin OpenGLError;
-
-} //ParticleSystem
-
-@name("ParticleSystem 1")
-unittest {
-
-	import smidig.math : Vec2f;
-	import smidig.memory : theAllocator;
-
-	auto origin = Vec2f(0, 0);
-	auto orientation = Vec2f(0, 1);
-
-	auto part_sys = ParticleSystem!Vec2f(theAllocator, null, null, null, origin, orientation, 32);
-
-}
 
 struct TestParticleSystem {
 
@@ -871,13 +727,13 @@ struct Texture {
 	import derelict.sdl2.sdl;
 	import derelict.sdl2.image;
 
-	GLuint texture; //OpenGL handle for texture
+	GLuint texture_; //OpenGL handle for texture
 	int width, height;
 
 	@disable this(this);
 
 	@property GLuint handle() {
-		return texture;
+		return texture_;
 	} //handle
 
 	this(in char[] file_name) {
@@ -902,8 +758,8 @@ struct Texture {
 		this.width = width;
 		this.height = height;
 
-		glGenTextures(1, &this.texture);
-		glBindTexture(GL_TEXTURE_2D, this.texture);
+		glGenTextures(1, &texture_);
+		glBindTexture(GL_TEXTURE_2D, texture_);
 		
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -924,10 +780,10 @@ struct Texture {
 		this.height = height;
 	
 		//generate single texture, put handle in texture
-		glGenTextures(1, &this.texture);
+		glGenTextures(1, &texture_);
 
 		//normal 2d texture, bind to our texture handle
-		glBindTexture(GL_TEXTURE_2D, this.texture);
+		glBindTexture(GL_TEXTURE_2D, texture_);
 
 		//set texture parameters in currently bound texture, controls texture wrapping (or GL_CLAMP?)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -947,7 +803,7 @@ struct Texture {
 
 	~this() nothrow @nogc {
 
-		glDeleteTextures(1, &texture);
+		glDeleteTextures(1, &texture_);
 
 	} //~this
 
@@ -956,7 +812,7 @@ struct Texture {
 
 		assert(unit >= 0 && unit <= 31);
 		glActiveTexture(GL_TEXTURE0 + unit); //since this is sequential, this works
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindTexture(GL_TEXTURE_2D, texture_);
 
 	} //bind
 
@@ -972,6 +828,7 @@ struct Texture {
 	 **/
 	void update(void[] pixels, size_t offset = 0) {
 
+		glBindTexture(GL_TEXTURE_2D, texture_);
 		glBufferSubData(GL_ARRAY_BUFFER, cast(GLintptr)offset, pixels.length, pixels.ptr);
 
 	} //update
