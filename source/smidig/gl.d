@@ -24,6 +24,22 @@ mixin template OpenGLError() {
 
 } //OpenGLError
 
+template TypeToGLenum(T) {
+	static if (is (T == float)) {
+		enum TypeToGLenum = GL_FLOAT;
+	} else static if (is (T == double)) {
+		enum TypeToGLenum = GL_DOUBLE;
+	} else static if (is (T == int)) {
+		enum TypeToGLenum = GL_INT;
+	} else static if (is (T == uint)) {
+		enum TypeToGLenum = GL_UNSIGNED_INT;
+	} else static if (is (T == ubyte) || is(T == void)) {
+		enum TypeToGLenum = GL_UNSIGNED_BYTE;
+	} else static if (is (T == byte)) {
+		enum TypeToGLenum = GL_BYTE;
+	}
+} //TypeToGLenum
+
 struct VertexArray {
 
 	private {
@@ -59,14 +75,15 @@ struct VertexArray {
 		import smidig.meta : PODMembers;
 		foreach (i, m; PODMembers!VertexType) {
 
-			enum M = mixin(VertexType.stringof ~ "()." ~ m);
+			enum Member = mixin(VertexType.stringof ~ "()." ~ m);
 			enum OffsetOf = mixin(VertexType.stringof ~ "." ~ m ~ ".offsetof");
+			alias ElementType = Member._T;
 
-			glEnableVertexAttribArray(i); //every second attribute is the type actually
+			glEnableVertexAttribArray(i);
 			glVertexAttribPointer(i,
-					M.sizeof / float.sizeof,
-					GL_FLOAT, //hardcoded right now, maybe fix later
-					GL_FALSE, 
+					Member.sizeof / ElementType.sizeof,
+					TypeToGLenum!ElementType,
+					GL_FALSE, //make possible too
 					vertices[0].sizeof,
 					cast(const(void)*)OffsetOf);
 
@@ -94,13 +111,11 @@ struct VertexArray {
 
 	} //draw
 
-	void send(VertexType)(in VertexType[] vertices) {
+	void send(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_DYNAMIC_DRAW) {
 
-		bind();
-		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_DYNAMIC_DRAW);
-		unbind();
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, draw_type);
 
-	} //update
+	} //send
 
 	void unbind() nothrow @nogc {
 
@@ -111,6 +126,36 @@ struct VertexArray {
 	mixin OpenGLError;
 
 } //VertexArray
+
+struct ElementBuffer {
+
+	GLuint ebo_;
+
+	this(bool f) nothrow @nogc {
+
+		glGenBuffers(1, &ebo_);
+
+	} //this
+
+	void bind() nothrow @nogc {
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo_);
+
+	} //bind
+
+	void send(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_DYNAMIC_DRAW) {
+
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, draw_type);
+
+	} //send
+
+	void unbind() nothrow @nogc {
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	} //unbind
+
+} //ElementBuffer
 
 @name("VertexArray 1")
 unittest {
