@@ -7,7 +7,7 @@ import std.stdio : writefln;
 import tested : name;
 
 /* in-place construction, it's a bit ergh. */
-void construct(T, Args...)(ref T thing, Args args)
+void construct(T, Args...)(ref T thing, auto ref Args args)
 	if (is(T == struct))
 {
 

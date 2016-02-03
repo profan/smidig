@@ -15,10 +15,10 @@ mixin template OpenGLError() {
 
 	invariant {
 
-		GLenum status = glGetError();
+		/*GLenum status = glGetError();
 		if (status != GL_NO_ERROR) {
-			writefln("[OpenGL : %s] Error: %d", typeof(this).stringof, status);
-		}
+			writefln("[OpenGL : %s] Error: 0x%X", typeof(this).stringof, status);
+		}*/
 
 	}
 
@@ -39,6 +39,10 @@ template TypeToGLenum(T) {
 		enum TypeToGLenum = GL_BYTE;
 	}
 } //TypeToGLenum
+
+template TypeToUniformFunction(T) {
+
+} //TypeToUniformFunction
 
 struct VertexArray {
 
@@ -516,10 +520,16 @@ struct FrameBuffer {
 	GLuint frame_buffer_;
 	GLenum bound_target_;
 
+	int width_;
+	int height_;
+
 	@disable this();
 	@disable this(this);
 
 	this(int width, int height) {
+
+		width_ = width;
+		height_ = height;
 
 		glGenFramebuffers(1, &frame_buffer_);
 		glFramebufferParameteri(bound_target_, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
@@ -537,20 +547,33 @@ struct FrameBuffer {
 	void attach_texbuffer(GLuint texture_handle, GLenum type) {
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, type, GL_TEXTURE_2D, texture_handle, 0);
+		glDrawBuffers(1, &type); //FIXME: move this later
 
 	} //attach_buffer
 
-	void bind(GLenum target) {
+	void attach_texbuffer(ref Texture tex, GLenum type = GL_COLOR_ATTACHMENT0) {
+
+		attach_texbuffer(tex.handle, type);
+
+	} //attach_texbuffer
+
+	void bind(GLenum target = GL_FRAMEBUFFER) {
 
 		bound_target_ = target;
 		glBindFramebuffer(bound_target_, frame_buffer_);
+		glViewport(0, 0, width_, height_);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	} //bind
 
+	GLuint check() {
+		return glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	} //check
+
 	void unbind() {
 
-		bound_target_ = 0;
 		glBindFramebuffer(bound_target_, 0);
+		bound_target_ = 0;
 
 	} //unbind
 
@@ -562,13 +585,15 @@ struct RenderBuffer {
 
 	GLuint render_buffer_;
 
-	@disable this();
+	//@disable this();
 	@disable this(this);
 
-	this(ref FrameBuffer fbo, GLsizei width, GLsizei height) {
+	this(ref FrameBuffer fbo) {
 
 		glGenRenderbuffers(1, &render_buffer_);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+		glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, fbo.width_, fbo.height_);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer_);
 
 	} //this
 
@@ -819,7 +844,7 @@ struct Texture {
 
 	} //this
 
-	this(void* pixels, int width, int height, GLenum input_format, GLenum output_format) nothrow @nogc {
+	this(void* pixels, int width, int height, GLenum input_format = GL_RGBA, GLenum output_format = GL_RGBA, GLenum data_type = GL_UNSIGNED_BYTE) nothrow @nogc {
 
 		this.width = width;
 		this.height = height;
@@ -839,7 +864,7 @@ struct Texture {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		//texture type, level, format to store as, width, height, border, format loaded in
-		glTexImage2D(GL_TEXTURE_2D, 0, input_format, width, height, 0, output_format, GL_UNSIGNED_BYTE, pixels);
+		glTexImage2D(GL_TEXTURE_2D, 0, input_format, width, height, 0, output_format, data_type, pixels);
 
 		//UNBIND
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -963,6 +988,19 @@ unittest {
 	test_vertex.normal = Vec3f(1.0, 2.0, 3.0);
 
 }
+
+struct SafeShader {
+
+	GLuint program_;
+
+	@disable this();
+	@disable this(this);
+
+	@property GLuint handle() {
+		return program_;
+	} //handle
+
+} //SafeShader
 
 struct Shader {
 
