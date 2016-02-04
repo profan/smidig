@@ -515,6 +515,94 @@ struct Text {
 
 } //Text
 
+/**
+  Encapsulates a FrameBuffer, RenderBuffer, VertexArray, Texture and Shader for rendering to.
+*/
+struct RenderTarget {
+
+	private {
+
+		FrameBuffer fbo_;
+		RenderBuffer rbo_;
+		VertexArray quad_;
+		Texture texture_;
+		Shader* shader_;
+
+		Transform transform_;
+
+	}
+
+	@property int width() const { return fbo_.width_; }
+	@property int height() const { return fbo_.height_; }
+
+	@disable this();
+	@disable this(this);
+
+	this(Shader* shader, int width, int height) {
+
+		fbo_ = FrameBuffer(width, height);
+		fbo_.bind(); //important
+
+		rbo_ = RenderBuffer(fbo_);
+		texture_ = Texture(null, width, height);
+		auto quad_data = createRectangleVec3f2f(width, height);
+		quad_ = VertexArray(quad_data);
+		fbo_.attach_texbuffer(texture_);
+
+		auto status = fbo_.check();
+		assert(status == GL_FRAMEBUFFER_COMPLETE);
+		shader_ = shader;
+
+		transform_ = Transform(Vec2f(0, 0));
+
+		fbo_.unbind();
+
+	} //this
+
+	void bind_fbo() {
+
+		fbo_.bind();
+
+	} //bind_fbo
+
+	void unbind_fbo() {
+
+		fbo_.unbind();
+
+	} //unbind_fbo
+
+	private {
+
+		void bind() {
+
+			quad_.bind();
+			shader_.bind();
+			texture_.bind(0);
+
+		} //bind
+
+		void unbind() {
+
+			texture_.unbind();
+			shader_.unbind();
+			quad_.unbind();
+
+		} //unbind
+
+	}
+
+	void draw(Mat4f view_projection) {
+
+		bind();
+		auto trans = transform_.transform;
+		shader_.update(view_projection, trans);
+		quad_.draw();
+		unbind();
+
+	} //draw
+
+} //RenderTarget
+
 struct FrameBuffer {
 
 	GLuint frame_buffer_;
@@ -561,8 +649,10 @@ struct FrameBuffer {
 
 		bound_target_ = target;
 		glBindFramebuffer(bound_target_, frame_buffer_);
-		glViewport(0, 0, width_, height_);
+		auto color = to!GLColor(0xffa500, 255);
+		glClearColor(color[0], color[1], color[2], color[3]);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glViewport(0, 0, width_, height_);
 
 	} //bind
 
