@@ -729,28 +729,20 @@ struct Graph {
 
 struct Particle(V) {
 
-	V position_;
-	V velocity_;
-
-	void tick(float drag) {
-
-		position_ += velocity_;
-		velocity_ -= drag;
-
-	} //simulate
+	float lifetimes_;
+	V velocities_;
+	V positions_;
 
 } //Particle
 
 struct TestParticleSystem {
 
-	import smidig.collections : Array;
+	import smidig.collections : ArraySOA;
 	import smidig.memory : IAllocator;
 	import smidig.math : Vec2f;
 
 	GLuint vbo_;
-	Array!float lifetimes_;
-	Array!Vec2f velocities_;
-	Array!Vec2f positions_;
+	ArraySOA!(Particle!Vec2f) particles_;
 	Texture* texture_;
 	Shader shader_;
 	VertexArray mesh_;
@@ -764,9 +756,7 @@ struct TestParticleSystem {
 
 		assert(allocator, "allocator was null?");
 
-		lifetimes_ = typeof(lifetimes_)(allocator, initial_size);
-		velocities_ = typeof(velocities_)(allocator, initial_size);
-		positions_ = typeof(positions_)(allocator, initial_size);
+		particles_ = typeof(particles_)(allocator, initial_size);
 
 		AttribLocation[3] attributes = [
 			AttribLocation(0, "position"),
@@ -782,7 +772,7 @@ struct TestParticleSystem {
 
 		glGenBuffers(1, &vbo_);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-		glBufferData(GL_ARRAY_BUFFER, positions_.length * positions_[0].sizeof, positions_.ptr, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, particles_.positions_.length * particles_.positions_[0].sizeof, particles_.positions_.ptr, GL_DYNAMIC_DRAW);
 
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, cast(GLvoid*)0);
@@ -802,34 +792,32 @@ struct TestParticleSystem {
 
 		origin_ = origin;
 
-		if (positions_.length != num_particles) {
+		if (particles_.length != num_particles) {
 
-			velocities_.reserve(num_particles);
-			velocities_.length = num_particles;
-
-			lifetimes_.reserve(num_particles);
-			lifetimes_.length = num_particles;
-
-			positions_.reserve(num_particles);
-			positions_.length = num_particles;
+			particles_.reserve(num_particles);
+			particles_.length = num_particles;
 
 		}
 
-		foreach (ref p; lifetimes_) {
-			p = lifetime;
-		}
+		with (particles_) {
 
-		foreach (ref p; velocities_) {
-			p = Vec2f(0, 0);
-		}
+			foreach (ref p; lifetimes_) {
+				p = lifetime;
+			}
 
-		foreach (ref p; positions_) {
-			p = origin_;
-		}
+			foreach (ref p; velocities_) {
+				p = Vec2f(0, 0);
+			}
 
-		glBindVertexArray(mesh_.vao_);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-		glBufferData(GL_ARRAY_BUFFER, positions_.length * positions_[0].sizeof, positions_.ptr, GL_DYNAMIC_DRAW);
+			foreach (ref p; positions_) {
+				p = origin_;
+			}
+
+			glBindVertexArray(mesh_.vao_);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+			glBufferData(GL_ARRAY_BUFFER, positions_.length * positions_[0].sizeof, positions_.ptr, GL_DYNAMIC_DRAW);
+
+		}
 
 	} //config
 
@@ -838,37 +826,41 @@ struct TestParticleSystem {
 		import std.random;
 		static Mt19937 gen;
 
-		foreach (i, ref p; lifetimes_) {
+		with (particles_) {
 
-			if (p <= 0.0f) {
-				positions_[i] = origin_;
-				velocities_[i] = Vec2f(1.0f, 1.0f);
-				p = 1.0f;
+			foreach (i, ref p; lifetimes_) {
+
+				if (p <= 0.0f) {
+					positions_[i] = origin_;
+					velocities_[i] = Vec2f(1.0f, 1.0f);
+					p = 1.0f;
+				}
+
+				p = p - 0.15;
+
 			}
 
-			p = p - 0.15;
+			foreach (i, ref p; velocities_) {
+
+				import smidig.math : normalize;
+
+				p.x += normalize(cast(float)gen.front, cast(float)int.min, cast(float)int.max, 1.0f);
+				p.y += normalize(cast(float)gen.front, cast(float)int.min, cast(float)int.max, 1.0f);
+				p = p + drag;
+
+			}
+
+			foreach (i, ref p; positions_) {
+
+				p = p + velocities_[i];
+
+			}
+
+			glBindVertexArray(mesh_.vao_);
+			glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+			glBufferSubData(GL_ARRAY_BUFFER, cast(int*)0, positions_.length * positions_[0].sizeof, positions_.ptr);
 
 		}
-
-		foreach (i, ref p; velocities_) {
-
-			import smidig.math : normalize;
-
-			p.x += normalize(cast(float)gen.front, cast(float)int.min, cast(float)int.max, 1.0f);
-			p.y += normalize(cast(float)gen.front, cast(float)int.min, cast(float)int.max, 1.0f);
-			p = p + drag;
-
-		}
-
-		foreach (i, ref p; positions_) {
-
-			p = p + velocities_[i];
-
-		}
-
-		glBindVertexArray(mesh_.vao_);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-		glBufferSubData(GL_ARRAY_BUFFER, cast(int*)0, positions_.length * positions_[0].sizeof, positions_.ptr);
 
 	} //tick
 
@@ -881,7 +873,7 @@ struct TestParticleSystem {
 		glBindVertexArray(mesh_.vao_);
 
 		glDrawArraysInstanced(
-			GL_TRIANGLES, 0, mesh_.num_vertices_, cast(int)positions_.length
+			GL_TRIANGLES, 0, mesh_.num_vertices_, cast(int)particles_.positions_.length
 		);
 
 		glBindVertexArray(0);
