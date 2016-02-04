@@ -15,10 +15,10 @@ mixin template OpenGLError() {
 
 	invariant {
 
-		/*GLenum status = glGetError();
+		GLenum status = glGetError();
 		if (status != GL_NO_ERROR) {
 			writefln("[OpenGL : %s] Error: 0x%X", typeof(this).stringof, status);
-		}*/
+		}
 
 	}
 
@@ -528,12 +528,15 @@ struct RenderTarget {
 		Texture texture_;
 		Shader* shader_;
 
+		Mat4f view_projection_;
 		Transform transform_;
 
 	}
 
 	@property int width() const { return fbo_.width_; }
 	@property int height() const { return fbo_.height_; }
+	@property ref Mat4f projection() { return view_projection_; }
+
 
 	@disable this();
 	@disable this(this);
@@ -553,6 +556,8 @@ struct RenderTarget {
 		assert(status == GL_FRAMEBUFFER_COMPLETE);
 		shader_ = shader;
 
+		//set up view projection and transform, height is flipped so tex coords make sense
+		view_projection_ = Mat4f.orthographic(0.0f, width, 0.0f, height, 0.0f, 1.0f);
 		transform_ = Transform(Vec2f(0, 0));
 
 		fbo_.unbind();
@@ -570,6 +575,12 @@ struct RenderTarget {
 		fbo_.unbind();
 
 	} //unbind_fbo
+
+	void position(int x, int y) {
+
+		transform_.position = Vec2f(x, y);
+
+	} //position
 
 	private {
 
