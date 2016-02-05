@@ -68,10 +68,10 @@ struct VertexArray {
 		this.num_vertices_ = cast(uint)vertices.length;
 		this.type_ = type; //holla holla constant dollar
 
-        glGenVertexArrays(1, &vao_);
-        glBindVertexArray(vao_);
+		glGenVertexArrays(1, &vao_);
+		glBindVertexArray(vao_);
 
-        glGenBuffers(1, &vbo_);
+		glGenBuffers(1, &vbo_);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_STATIC_DRAW);
 
@@ -94,7 +94,7 @@ struct VertexArray {
 		}
 
 		glBindVertexArray(0);
-	
+
 	} //this
 
 	~this() nothrow @nogc {
@@ -175,7 +175,7 @@ unittest {
 struct VertexBuffer {
 
 	GLuint vbo_;
-	
+
 	@property GLuint handle() {
 		return vbo_;
 	} //handle
@@ -210,7 +210,7 @@ struct Cursor {
 	VertexArray mesh;
 	Shader* shader;
 	Texture* texture;
-	
+
 	@disable this();
 	@disable this(this);
 
@@ -230,7 +230,7 @@ struct Cursor {
 	} //this
 
 	void draw(ref Mat4f projection, Vec2f position) nothrow @nogc {
-		
+
 		auto tf = Transform(position);
 
 		mesh.bind();
@@ -410,7 +410,7 @@ struct FontAtlas {
 			y2 -= (chars[ci].tx_offset_y * sy);
 
 			if (!w || !h) { //continue if no width or height, invisible character
-			 	continue;
+				continue;
 			}
 
 			coords[n++] = Point(x2, y2, chars[ci].tx_offset, chars[ci].bitmap_height / atlas_height); //top left?
@@ -436,7 +436,7 @@ struct FontAtlas {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
 		GLfloat[4] col = to!GLColor(color);
-		glUniform4fv(shader.bound_uniforms[0], 1, col.ptr);
+		glUniform4fv(0, 1, col.ptr);
 		shader.update(window.view_projection);
 
 		glBufferData(GL_ARRAY_BUFFER, coords[0].sizeof * coords.length, coords.ptr, GL_DYNAMIC_DRAW);
@@ -489,7 +489,7 @@ struct Text {
 		Vertex[6] vertices = createRectangleVec3f2f(w, h);
 		this.mesh = VertexArray(vertices);
 		this.shader = text_shader;
-	
+
 	} //this
 
 	~this() {
@@ -517,7 +517,7 @@ struct Text {
 
 /**
   Encapsulates a FrameBuffer, RenderBuffer, VertexArray, Texture and Shader for rendering to.
-*/
+ */
 struct RenderTarget {
 
 	private {
@@ -533,10 +533,14 @@ struct RenderTarget {
 
 	}
 
-	@property int width() const { return fbo_.width_; }
-	@property int height() const { return fbo_.height_; }
-	@property ref Mat4f projection() { return view_projection_; }
+	@property {
 
+		int width() const { return fbo_.width_; }
+		int height() const { return fbo_.height_; }
+		ref Mat4f projection() { return view_projection_; }
+		ref Transform transform() { return transform_; }
+
+	}
 
 	@disable this();
 	@disable this(this);
@@ -568,6 +572,12 @@ struct RenderTarget {
 
 		fbo_.bind();
 
+		//clear fbo before drawing
+		auto color = to!GLColor(0xffa500, 255);
+		glClearColor(color[0], color[1], color[2], color[3]);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glViewport(0, 0, fbo_.width_, fbo_.width_);
+
 	} //bind_fbo
 
 	void unbind_fbo() {
@@ -576,11 +586,22 @@ struct RenderTarget {
 
 	} //unbind_fbo
 
-	void position(int x, int y) {
+	void resize(int w, int h) {
 
-		transform_.position = Vec2f(x, y);
+		texture_.resize(w, h);
 
-	} //position
+	} //resize
+
+
+	void draw(Mat4f view_projection) {
+
+		bind();
+		auto trans = transform_.transform;
+		shader_.update(view_projection, trans);
+		quad_.draw();
+		unbind();
+
+	} //draw
 
 	private {
 
@@ -602,25 +623,19 @@ struct RenderTarget {
 
 	}
 
-	void draw(Mat4f view_projection) {
-
-		bind();
-		auto trans = transform_.transform;
-		shader_.update(view_projection, trans);
-		quad_.draw();
-		unbind();
-
-	} //draw
-
 } //RenderTarget
 
 struct FrameBuffer {
 
-	GLuint frame_buffer_;
-	GLenum bound_target_;
+	private {
 
-	int width_;
-	int height_;
+		GLuint frame_buffer_;
+		GLenum bound_target_;
+
+		int width_;
+		int height_;
+
+	}
 
 	@disable this();
 	@disable this(this);
@@ -660,16 +675,21 @@ struct FrameBuffer {
 
 		bound_target_ = target;
 		glBindFramebuffer(bound_target_, frame_buffer_);
-		auto color = to!GLColor(0xffa500, 255);
-		glClearColor(color[0], color[1], color[2], color[3]);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0, width_, height_);
 
 	} //bind
 
 	GLuint check() {
+
 		return glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
 	} //check
+
+	void resize(int w, int h) {
+
+		width_ = w;
+		height_ = h;
+
+	} //resize
 
 	void unbind() {
 
@@ -719,6 +739,64 @@ struct RenderBuffer {
 	mixin OpenGLError;
 
 } //RenderBuffer
+
+/**
+ * Used to represent a batch of things from the same texture that will be drawn together,
+ * for instance a texture-atlas backed tiled background, or a particle system.
+*/
+struct SpriteBatch(T) {
+
+	import blindfire.engine.collections : Array;
+
+	Array!T vertices_;
+	VertexArray vao_;
+
+	@disable this();
+	@disable this(this);
+
+	this(IAllocator allocator) {
+
+		vertices_ = typeof(vertices_)(allocator);
+		vao_ = VertexArray(vertices_, GL_DYNAMIC_DRAW);
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+	void add(T thing) {
+
+		vertices_ ~= thing;
+
+	} //add
+
+	void clear() {
+
+		vertices_.clear();
+		vao_.send(vertices_, GL_DYNAMIC_DRAW);
+
+	} //clear
+
+	void draw(ref RenderTarget rt) {
+
+		vao_.draw();
+
+	} //draw
+
+	void bind() {
+
+		vao_.bind();
+
+	} //bind
+
+	void unbind() {
+
+		vao_.unbind();
+
+	} //unbind
+
+} //SpriteBatch
 
 /* Graph Structure */
 /* - allows graphing a number of parameters over time, */
@@ -869,12 +947,12 @@ struct TestParticleSystem {
 		shader_.bind();
 		texture_.bind(0);
 
-		glUniformMatrix4fv(shader_.bound_uniforms[0], 1, GL_TRUE, view_projection.ptr);
+		glUniformMatrix4fv(0, 1, GL_TRUE, view_projection.ptr);
 		glBindVertexArray(mesh_.vao_);
 
 		glDrawArraysInstanced(
-			GL_TRIANGLES, 0, mesh_.num_vertices_, cast(int)particles_.positions_.length
-		);
+				GL_TRIANGLES, 0, mesh_.num_vertices_, cast(int)particles_.positions_.length
+				);
 
 		glBindVertexArray(0);
 
@@ -884,20 +962,32 @@ struct TestParticleSystem {
 
 } //TestParticleSystem
 
-//use SDL2 for loading textures, since we're already using it for windowing.
+/**
+ * Texture class, represents OpenGL textures in a easier to handle format.
+ * Also allows loading of textures from file, or from a given buffer.
+*/
 struct Texture {
 
 	import derelict.sdl2.sdl;
 	import derelict.sdl2.image;
 
-	GLuint texture_; //OpenGL handle for texture
-	int width, height;
+	private {
+
+		GLuint texture_; //OpenGL handle for texture
+		GLenum input_format_, output_format_, data_type_;
+		int width_, height_;
+
+	}
+
+	@property @nogc nothrow {
+
+		int width() const { return width_; }
+		int height() const { return height_; }
+		GLuint handle() { return texture_; }
+
+	}
 
 	@disable this(this);
-
-	@property GLuint handle() {
-		return texture_;
-	} //handle
 
 	this(in char[] file_name) {
 
@@ -918,12 +1008,15 @@ struct Texture {
 
 	this(int width, int height, GLenum input_format, GLenum output_format, GLenum unpack_alignment) nothrow @nogc {
 
-		this.width = width;
-		this.height = height;
+		width_ = width;
+		height_ = height;
+		input_format_ = input_format;
+		output_format_ = output_format;
+		data_type_ = GL_UNSIGNED_BYTE;
 
 		glGenTextures(1, &texture_);
 		glBindTexture(GL_TEXTURE_2D, texture_);
-		
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -931,7 +1024,7 @@ struct Texture {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, unpack_alignment);
-		glTexImage2D(GL_TEXTURE_2D, 0, input_format, width, height, 0, output_format, GL_UNSIGNED_BYTE, cast(void*)0);
+		glTexImage2D(GL_TEXTURE_2D, 0, input_format_, width_, height_, 0, output_format_, GL_UNSIGNED_BYTE, cast(void*)0);
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -939,9 +1032,12 @@ struct Texture {
 
 	this(void* pixels, int width, int height, GLenum input_format = GL_RGBA, GLenum output_format = GL_RGBA, GLenum data_type = GL_UNSIGNED_BYTE) nothrow @nogc {
 
-		this.width = width;
-		this.height = height;
-	
+		width_ = width;
+		height_ = height;
+		input_format_ = input_format;
+		output_format_ = output_format;
+		data_type_ = data_type;
+
 		//generate single texture, put handle in texture
 		glGenTextures(1, &texture_);
 
@@ -957,7 +1053,7 @@ struct Texture {
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		//texture type, level, format to store as, width, height, border, format loaded in
-		glTexImage2D(GL_TEXTURE_2D, 0, input_format, width, height, 0, output_format, data_type, pixels);
+		glTexImage2D(GL_TEXTURE_2D, 0, input_format_, width_, height_, 0, output_format_, data_type_, pixels);
 
 		//UNBIND
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -996,10 +1092,24 @@ struct Texture {
 
 	} //update
 
+	/**
+	 * Resizes the texture.
+	 **/
+	void resize(int x, int y, void* data = null) {
+
+		width_ = x;
+		height_ = y;
+		glTexImage2D(texture_, 0, input_format_, width, height, 0, output_format_, data_type_, data);
+
+	} //resize
+
 	mixin OpenGLError;
 
 } //Texture
 
+/**
+ * Represents a position, rotation and scale in space.
+*/
 struct Transform {
 
 	Vec2f position;
@@ -1024,7 +1134,7 @@ struct Transform {
 		Mat4f rotYMatrix = Mat4f.rotation(rotation.y, Vec3f(0, 1, 0));
 		Mat4f rotZMatrix = Mat4f.rotation(rotation.z, Vec3f(0, 0, 1));
 		Mat4f scaleMatrix = Mat4f.scaling(Vec3f(scale, 1.0f));
-		
+
 		Mat4f rotMatrix = rotXMatrix * rotYMatrix * rotZMatrix;
 
 		return posMatrix * rotMatrix * originMatrix * scaleMatrix;
@@ -1046,6 +1156,40 @@ struct Vertex {
 	}
 
 } //Vertex
+
+template isVertexType(T) {
+	enum isVertexType =  __traits(compiles, T.Imports);
+} //isVertexType
+
+/* UDA's for members in VertexSpecs */
+struct _AttribDivisor {
+
+	uint index;
+	uint divisor;
+
+} //_AttribDivisor
+
+@property divisor(uint index, uint divisor) {
+
+	return _AttribDivisor(index, divisor);
+
+} //divisor
+
+enum normalized = "normalized";
+
+version (unittest) {
+
+	struct TestVertex {
+
+		enum Imports = "gfm.math : Vector";
+
+		Vec3f position;
+		Vec2f tex_coord;
+		@divisor(2, 1) Vec2f offset;
+
+	}
+
+}
 
 struct VertexSpec(string imprt, T...) {
 
@@ -1082,7 +1226,20 @@ unittest {
 
 }
 
-struct SafeShader {
+/**
+ * OpenGL shader class meant to safely represent what
+ * attributes/uniforms it takes, so it can be verified
+ * at compile time that these are correct.
+*/
+struct SafeShader(AttribLocation[] attribs, string[] uniforms) {
+
+	static template makeAttribs() {
+
+	} //makeAttribs
+
+	static template makeUniforms() {
+
+	} //makeUniforms
 
 	GLuint program_;
 
@@ -1093,21 +1250,71 @@ struct SafeShader {
 		return program_;
 	} //handle
 
+	this(in char* file_name) {
+
+	} //this
+
+	~this() {
+
+	} //~this
+
+	/**
+	 * Reloads the shader from file and recompiles it.
+	*/
+	void reload() {
+
+	} //reload
+
+	/**
+	 * Reloads the shader, loading data from a given null-terminated char buffer instead,
+	 * then recompiles it.
+	*/
+	void reload(in char[] data) {
+
+	} //reload
+
+	void bind() {
+
+		glUseProgram(program_);
+
+	} //bind
+
+	void unbind() {
+
+		glUseProgram(0);
+
+	} //unbind
+
+	/**
+	 * Send data to given uniform for shader, if bound.
+	*/
+	void setUniform(U, T)(U uniform, in T value) {
+
+	} //setUniform
+
+	mixin OpenGLError;
+
 } //SafeShader
+
+version (unittest) {
+
+	alias BasicShader = SafeShader!(
+		[AttribLocation(0, "position"), 
+		AttribLocation(1, "tex_coord")],
+		["transform", "perspective"]);
+
+	//auto shader = BasicShader("shaders/basic");
+
+}
+
+unittest {
+
+}
 
 struct Shader {
 
 	//the shader program
 	GLuint program;
-
-	//attrib locations
-	GLuint[4] bound_attribs;
-
-	//bound uniforms
-	GLuint[4] bound_uniforms;
-
-	//alias this for implicit conversions
-	alias program this;
 
 	@disable this();
 	@disable this(this);
@@ -1119,8 +1326,6 @@ struct Shader {
 	this(in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
 
 		import smidig.util : cformat;
-
-		assert(uniforms.length <= bound_uniforms.length);
 
 		char[256] fn_buff; //FIXME: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
@@ -1137,7 +1342,8 @@ struct Shader {
 		program = createShaderProgram(shaders, attribs);
 
 		foreach (i, uniform; uniforms) {
-			bound_uniforms[i] = glGetUniformLocation(program, uniform.ptr);
+			//auto res = glGetUniformLocation(program, uniform.ptr);
+			//assert(res != -1, "tried using nonexistent uniform!");
 		}
 
 		glDetachShader(program, vshader);
@@ -1158,22 +1364,22 @@ struct Shader {
 		Mat4f model = transform.transform;
 
 		//transpose matrix, since row major, not column
-		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, model.ptr);
-		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
+		glUniformMatrix4fv(0, 1, GL_TRUE, model.ptr);
+		glUniformMatrix4fv(1, 1, GL_TRUE, projection.ptr);
 
 	} //update
 
 	void update(ref Mat4f projection, ref Mat4f transform) nothrow @nogc {
 
 		//transpose matrix, since row major, not column
-		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, transform.ptr);
-		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
+		glUniformMatrix4fv(0, 1, GL_TRUE, transform.ptr);
+		glUniformMatrix4fv(1, 1, GL_TRUE, projection.ptr);
 
 	} //update
 
 	void update(ref Mat4f projection) nothrow @nogc {
 
-		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
+		glUniformMatrix4fv(0, 1, GL_TRUE, projection.ptr);
 
 	} //update
 
@@ -1316,15 +1522,35 @@ auto createRectangleVec3f(float w, float h) nothrow @nogc pure {
 auto createRectangleVec3f2f(float w, float h) nothrow @nogc pure {
 
 	Vertex[6] vertices = [
-		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-		Vertex(Vec3f(w, 0, 0.0), Vec2f(1, 0)), // top right
-		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)), // bottom right
+		Vertex(Vec3f(0.0f, 0.0f, 0.0f), Vec2f(0.0f, 0.0f)), // top left
+		Vertex(Vec3f(w, 0.0f, 0.0f), Vec2f(1.1f, 0.0f)), // top right
+		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.1f, 1.1f)), // bottom right
 
-		Vertex(Vec3f(0, 0, 0.0), Vec2f(0, 0)), // top left
-		Vertex(Vec3f(0, h, 0.0), Vec2f(0, 1)), // bottom left
-		Vertex(Vec3f(w, h, 0.0), Vec2f(1, 1)) // bottom right
+		Vertex(Vec3f(0.0f, 0.0f, 0.0f), Vec2f(0.0f, 0.0f)), // top left
+		Vertex(Vec3f(0.0f, h, 0.0f), Vec2f(0.0f, 1.1f)), // bottom left
+		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.1f, 1.1f)) // bottom right
 	];
 
 	return vertices;
 
 } //createRectangleVec3f2f
+
+/**
+ * Draws a line, uses the shader from the RenderTarget currently, also
+ * creates a new buffer on every frame for whats to be drawn, probably
+ * not the greatest idea ever.
+*/
+void drawLine(T)(ref RenderTarget rt, in T[] positions) {
+
+	auto va = VertexArray(positions, GL_DYNAMIC_DRAW, GL_LINES);
+
+	va.bind();
+	rt.shader_.bind();
+
+	rt.shader_.update(rt.projection, rt.transform);
+	va.draw();
+
+	rt.shader_.unbind();
+	va.unbind();
+
+} //drawLine

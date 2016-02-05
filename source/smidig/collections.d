@@ -25,7 +25,7 @@ struct Array(T) {
 	//@disable this(); //TODO: take a look at why this was done
 	@disable this(this);
 
-	this(IAllocator allocator, size_t initial_size) @trusted {
+	this(IAllocator allocator, size_t initial_size = 1) @trusted {
 
 		assert(allocator, "array allocator was null?");
 		this.allocator_ = allocator;
