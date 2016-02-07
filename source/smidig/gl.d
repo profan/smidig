@@ -388,7 +388,7 @@ struct FontAtlas {
 		Point[] coords = region_allocator_.makeArray!Point(text.length * 6);
 		scope(exit) { region_allocator_.deallocateAll(); } //pop it
 
-		int n = 0; //how many to draw?
+		int n = 0; //used as the current index into coords
 		foreach (ch; text) {
 
 			if (ch < 32 || ch > 127) {
@@ -436,7 +436,7 @@ struct FontAtlas {
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
 		GLfloat[4] col = to!GLColor(color);
-		glUniform4fv(0, 1, col.ptr);
+		glUniform4fv(shader.bound_uniforms[0], 1, col.ptr);
 		shader.update(window.view_projection);
 
 		glBufferData(GL_ARRAY_BUFFER, coords[0].sizeof * coords.length, coords.ptr, GL_DYNAMIC_DRAW);
@@ -1316,6 +1316,9 @@ struct Shader {
 	//the shader program
 	GLuint program;
 
+	//uniforms
+	GLuint[4] bound_uniforms;
+
 	@disable this();
 	@disable this(this);
 
@@ -1324,6 +1327,8 @@ struct Shader {
 	} //handle
 
 	this(in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
+
+		assert(uniforms.length < bound_uniforms.length);
 
 		import smidig.util : cformat;
 
@@ -1342,8 +1347,9 @@ struct Shader {
 		program = createShaderProgram(shaders, attribs);
 
 		foreach (i, uniform; uniforms) {
-			//auto res = glGetUniformLocation(program, uniform.ptr);
-			//assert(res != -1, "tried using nonexistent uniform!");
+			auto res = glGetUniformLocation(program, uniform.ptr);
+			assert(res != -1, "tried using nonexistent uniform!");
+			bound_uniforms[i] = res;
 		}
 
 		glDetachShader(program, vshader);
@@ -1364,22 +1370,22 @@ struct Shader {
 		Mat4f model = transform.transform;
 
 		//transpose matrix, since row major, not column
-		glUniformMatrix4fv(0, 1, GL_TRUE, model.ptr);
-		glUniformMatrix4fv(1, 1, GL_TRUE, projection.ptr);
+		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, model.ptr);
+		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
 	} //update
 
 	void update(ref Mat4f projection, ref Mat4f transform) nothrow @nogc {
 
 		//transpose matrix, since row major, not column
-		glUniformMatrix4fv(0, 1, GL_TRUE, transform.ptr);
-		glUniformMatrix4fv(1, 1, GL_TRUE, projection.ptr);
+		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, transform.ptr);
+		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
 	} //update
 
 	void update(ref Mat4f projection) nothrow @nogc {
 
-		glUniformMatrix4fv(0, 1, GL_TRUE, projection.ptr);
+		glUniformMatrix4fv(bound_uniforms[1], 1, GL_TRUE, projection.ptr);
 
 	} //update
 
