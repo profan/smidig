@@ -31,6 +31,15 @@ const(char[]) cformat(Args...)(char[] buf, in char[] format, Args args) {
 
 } //cformat
 
+const(char[Size]) tempformat(size_t Size, Args...)(in char[] format, Args args) {
+
+	char[Size] temp_buf;
+	cformat(temp_buf, format, args);
+
+	return temp_buf;
+
+} //tempformat
+
 string makeFlagEnum(string EnumName, KeyType, ValueType, Args...)(Args args) {
 
 	import std.string : format;
