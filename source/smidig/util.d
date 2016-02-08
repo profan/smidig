@@ -20,6 +20,10 @@ ref FontAtlas render_string(string format, Args...)(ref FontAtlas atlas, Window*
 
 } //render_string
 
+/**
+ * A safer D interface to sprintf, uses a supplied char buffer for formatting,
+ * returns a slice.
+*/
 const(char[]) cformat(Args...)(char[] buf, in char[] format, Args args) {
 
 	import core.stdc.stdio : snprintf;
@@ -31,6 +35,10 @@ const(char[]) cformat(Args...)(char[] buf, in char[] format, Args args) {
 
 } //cformat
 
+/**
+ * convenience function which calls cformat on a temporary char buffer,
+ * which is then returned as a value.
+*/
 const(char[Size]) tempformat(size_t Size, Args...)(in char[] format, Args args) {
 
 	char[Size] temp_buf;
