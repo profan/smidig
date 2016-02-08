@@ -270,6 +270,9 @@ struct ImguiContext {
 
 	void setClipboardText(const(char)* text) nothrow {
 
+		import derelict.sdl2.functions : SDL_SetClipboardText;
+		SDL_SetClipboardText(text);
+
 	} //setClipboardText
 
 } //ImguiContext

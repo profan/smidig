@@ -1348,7 +1348,12 @@ struct Shader {
 
 		foreach (i, uniform; uniforms) {
 			auto res = glGetUniformLocation(program, uniform.ptr);
-			assert(res != -1, "tried using nonexistent uniform!");
+			if (res == -1) {
+				import smidig.util : cformat;
+				char[256] temp_buf;
+				auto str = cformat(temp_buf, "%s doesn't exist?", uniform.ptr);
+				assert(res != -1, str);
+			}
 			bound_uniforms[i] = res;
 		}
 
