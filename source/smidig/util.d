@@ -21,8 +21,7 @@ ref FontAtlas render_string(string format, Args...)(ref FontAtlas atlas, Window*
 } //render_string
 
 /**
- * A safer D interface to sprintf, uses a supplied char buffer for formatting,
- * returns a slice.
+ * A safer D interface to sprintf, uses a supplied char buffer for formatting, returns a slice.
 */
 const(char[]) cformat(Args...)(char[] buf, in char[] format, Args args) {
 
@@ -48,6 +47,10 @@ const(char[Size]) tempformat(size_t Size, Args...)(in char[] format, Args args) 
 
 } //tempformat
 
+/**
+ * Generates a compile time hashmap with a given name, key type and value type for up to $(D sizeof(ValueType.sizeof * 8)) elements.
+ * Maps keys given as args to values increasing by ^2, to create something which can be checked by bitwise and.
+*/
 string makeFlagEnum(string EnumName, KeyType, ValueType, Args...)(Args args) {
 
 	import std.string : format;
