@@ -72,7 +72,9 @@ bool pointInRect(T)(Vector!(T, 2) point, Vector!(T, 4) rect) nothrow @nogc pure 
 	return pointInRect(point.x, point.y, rect.x, rect.y, rect.z, rect.w);
 } //pointInRect
 
-/* vector related ufcs extensions */
+/**
+ * rotation transformation on a vector, takes vector and radians, returns new rotated vector
+*/
 T rotate(T)(ref T vec, double radians) nothrow @nogc pure {
 
 	auto ca = cos(radians);

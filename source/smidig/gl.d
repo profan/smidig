@@ -24,6 +24,10 @@ mixin template OpenGLError() {
 
 } //OpenGLError
 
+/**
+ * Used to convert types to the representation needed for OpenGL to interpret the data properly,
+ * for example when uploading data with a $(D VertexArray).
+*/
 template TypeToGLenum(T) {
 	static if (is (T == float)) {
 		enum TypeToGLenum = GL_FLOAT;
@@ -44,6 +48,9 @@ template TypeToUniformFunction(T) {
 
 } //TypeToUniformFunction
 
+/**
+ * Generic VertexArray structure, used to upload data of any given vertex type to the GPU.
+*/
 struct VertexArray {
 
 	private {
@@ -87,7 +94,7 @@ struct VertexArray {
 			glVertexAttribPointer(i,
 					Member.sizeof / ElementType.sizeof,
 					TypeToGLenum!ElementType,
-					GL_FALSE, //make possible too
+					GL_FALSE, //TODO: handle normalization
 					vertices[0].sizeof,
 					cast(const(void)*)OffsetOf);
 
@@ -516,7 +523,7 @@ struct Text {
 } //Text
 
 /**
-  Encapsulates a FrameBuffer, RenderBuffer, VertexArray, Texture and Shader for rendering to.
+ * Encapsulates a FrameBuffer, RenderBuffer, VertexArray, Texture and Shader for rendering to.
  */
 struct RenderTarget {
 
@@ -588,6 +595,7 @@ struct RenderTarget {
 
 	void resize(int w, int h) {
 
+		view_projection_ = Mat4f.orthographic(0.0f, w, 0.0f, h, 0.0f, 1.0f);
 		texture_.resize(w, h);
 
 	} //resize
