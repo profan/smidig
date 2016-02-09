@@ -19,6 +19,9 @@ auto to(T:ALboolean)(bool b) {
 
 struct SoundSystem {
 
+	//TODO: take a look at this later, should it be a constant?
+	enum INITIAL_BUFFERS = 16;
+
 	enum State {
 		Playing,
 		Looping,
@@ -27,11 +30,9 @@ struct SoundSystem {
 	} //State
 
 	static struct Source {
-		SoundSource source;
-		State state;
+		SoundSource sources;
+		State states;
 	} //Source
-
-	enum INITIAL_BUFFERS = 16;
 
 	private {
 
@@ -68,14 +69,14 @@ struct SoundSystem {
 		this.context_ = alcCreateContext(device_, null);
 		alcMakeContextCurrent(context_);
 
-		alGenSources(cast(int)sources_.capacity, sources_.source.ptr);
+		alGenSources(cast(int)sources_.capacity, sources_.sources.ptr);
 		sources_.length = sources_.capacity;
 
 	} //initialize
 
 	~this() {
 
-		alDeleteSources(cast(int)sources_.length, sources_.source.ptr);
+		alDeleteSources(cast(int)sources_.length, sources_.sources.ptr);
 		alDeleteBuffers(cast(int)buffers_.length, buffers_.values.ptr);
 		alcMakeContextCurrent(null);
 		alcDestroyContext(context_);
@@ -87,7 +88,7 @@ struct SoundSystem {
 
 		sources_.reserve(sources_.length + 16); //add 16 to sources capacity
 		sources_.length = sources_.capacity;
-		alGenSources(cast(int)sources_.capacity, sources_.source.ptr);
+		alGenSources(cast(int)sources_.capacity, sources_.sources.ptr);
 
 	} //expandSources
 
@@ -109,7 +110,7 @@ struct SoundSystem {
 
 		enum error = -1;
 
-		foreach (src_index, state; sources_.state) {
+		foreach (src_index, state; sources_.states) {
 			if (state == State.Free) {
 				return cast(ALint)src_index;
 			}
@@ -122,8 +123,8 @@ struct SoundSystem {
 	void playSound(SoundID sound_id, ALint source_id, SoundVolume volume, bool loop) {
 
 		auto sound_buffer = buffers_[sound_id];
-		auto sound_source = sources_.source[source_id];
-		sources_.state[source_id] = (loop) ? State.Looping : State.Playing;
+		auto sound_source = sources_.sources[source_id];
+		sources_.states[source_id] = (loop) ? State.Looping : State.Playing;
 
 		alSourcei(sound_source, AL_LOOPING, to!ALboolean(loop));
 		alSourcei(sound_source, AL_BUFFER, sound_buffer); //associate source with buffer
@@ -144,7 +145,7 @@ struct SoundSystem {
 
 	void pauseAllSounds() {
 
-		foreach (src_id, source; sources_.source) {
+		foreach (src_id, source; sources_.sources) {
 			alSourcePause(source);
 		}
 
@@ -152,8 +153,8 @@ struct SoundSystem {
 
 	void stopAllSounds() {
 
-		foreach (src_id, source; sources_.source) {
-			sources_.state[src_id] = State.Free;
+		foreach (src_id, source; sources_.sources) {
+			sources_.states[src_id] = State.Free;
 			alSourceStop(source);
 		}
 
@@ -162,10 +163,10 @@ struct SoundSystem {
 	void tick() {
 
 		ALint state;
-		foreach (i, src_id; sources_.source) {
+		foreach (i, src_id; sources_.sources) {
 			alGetSourcei(src_id, AL_SOURCE_STATE, &state);
-			if (state != AL_PLAYING && sources_.state[i] == State.Playing) {
-				sources_.state[i] = State.Free;
+			if (state != AL_PLAYING && sources_.states[i] == State.Playing) {
+				sources_.states[i] = State.Free;
 			}
 		}
 
@@ -175,7 +176,7 @@ struct SoundSystem {
 
 		auto free = 0;
 
-		foreach (i, ref state; sources_.state) {
+		foreach (i, ref state; sources_.states) {
 			free += (state == State.Free) ? 1 : 0;
 		}
 

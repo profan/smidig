@@ -80,14 +80,15 @@ template PODMembers(T) {
 
 template GetPODMembers(T) {
 
-	enum m = T();
+	import std.traits : FieldNameTuple;
+	import std.meta : Filter, staticMap;
+
+	enum m = T(); //will only work for types constructible at compile time
 
 	template isFieldPOD(string F) {
 		enum isFieldPOD = isPOD!(typeof(Symbol!(m, F)));
 	}
 
-	import std.traits : FieldNameTuple;
-	import std.meta : Filter, staticMap;
 	alias GetPODMembers = Filter!(isFieldPOD, FieldNameTuple!T);
 
 } //GetPODMembers
