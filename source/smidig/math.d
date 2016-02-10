@@ -83,9 +83,13 @@ T rotate(T)(ref T vec, double radians) nothrow @nogc pure {
 
 } //rotate
 
-auto angleToVec2(T)(float angle) nothrow @nogc pure {
+/**
+ * Accepts an angle in radians, returns a unit vector representing the heading,
+ * relative to a coordinate system with x+ = right and y+ = up.
+*/
+auto angleToVec2(T)(float radians) nothrow @nogc pure {
 
-	auto vec = Vector!(T, 2)(cos(angle), sin(angle));
+	auto vec = Vector!(T, 2)(cos(radians), sin(radians));
 	return vec;
 
 } //angleToVec2

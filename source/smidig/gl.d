@@ -29,6 +29,9 @@ mixin template OpenGLError() {
  * for example when uploading data with a $(D VertexArray).
 */
 template TypeToGLenum(T) {
+
+	import std.format : format;
+
 	static if (is (T == float)) {
 		enum TypeToGLenum = GL_FLOAT;
 	} else static if (is (T == double)) {
@@ -37,11 +40,18 @@ template TypeToGLenum(T) {
 		enum TypeToGLenum = GL_INT;
 	} else static if (is (T == uint)) {
 		enum TypeToGLenum = GL_UNSIGNED_INT;
-	} else static if (is (T == ubyte) || is(T == void)) {
-		enum TypeToGLenum = GL_UNSIGNED_BYTE;
+	} else static if (is (T == short)) {
+		enum TypeToGLenum = GL_SHORT;
+	} else static if (is (T == ushort)) {
+		enum TypeToGLenum = GL_UNSIGNED_SHORT;
 	} else static if (is (T == byte)) {
 		enum TypeToGLenum = GL_BYTE;
+	} else static if (is (T == ubyte) || is(T == void)) {
+		enum TypeToGLenum = GL_UNSIGNED_BYTE;
+	} else {
+		static assert (0, format("No type conversion found for: %s to GL equivalent", T.stringof));
 	}
+
 } //TypeToGLenum
 
 template TypeToUniformFunction(T) {
