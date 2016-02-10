@@ -48,7 +48,7 @@ struct Profiler {
 		auto callback = *(cast(Callback*) ptr);
 		return callback(idx);
 
-	} //doCallback;
+	} //doCallback
 
 	void push(in char[] name, long ticks) {
 

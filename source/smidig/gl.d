@@ -253,22 +253,6 @@ struct Cursor {
 
 } //Cursor
 
-private struct CharacterInfo {
-
-	float advance_x; // advance.x
-	float advance_y; // advance.y
-
-	float bitmap_width; // bitmap.width;
-	float bitmap_height; // bitmap.rows;
-
-	float bitmap_left; // bitmap_left;
-	float bitmap_top; // bitmap_top;
-
-	float tx_offset; // x offset of glyph in texture coordinates
-	float tx_offset_y;
-
-} //CharacterInfo
-
 struct FontAtlas {
 
 	import std.algorithm : max;
@@ -276,6 +260,22 @@ struct FontAtlas {
 
 	import smidig.window : Window;
 	import smidig.memory : Mallocator, Region, makeArray, dispose;
+
+	private struct CharacterInfo {
+
+		float advance_x; // advance.x
+		float advance_y; // advance.y
+
+		float bitmap_width; // bitmap.width;
+		float bitmap_height; // bitmap.rows;
+
+		float bitmap_left; // bitmap_left;
+		float bitmap_top; // bitmap_top;
+
+		float tx_offset; // x offset of glyph in texture coordinates
+		float tx_offset_y;
+
+	} //CharacterInfo
 
 	private {
 
@@ -291,8 +291,12 @@ struct FontAtlas {
 
 	}
 
-	@property int char_width() const { return char_width_; }
-	@property int char_height() const { return char_height_; }
+	@property {
+
+		int char_width() const { return char_width_; }
+		int char_height() const { return char_height_; }
+
+	}
 
 	@disable this(this);
 
@@ -342,7 +346,7 @@ struct FontAtlas {
 		this.atlas = Texture(w, h, GL_RED, GL_RED, 1);
 		this.atlas.bind(0);
 
-		int x = 0;
+		int x = 0; // current x position in the resulting texture to write to
 		for (uint i = 32; i < 128; ++i) {
 
 			if (FT_Load_Char(face, i, FT_LOAD_RENDER)) {
@@ -366,10 +370,11 @@ struct FontAtlas {
 			this.chars[ci].tx_offset = cast(float)x / w;
 			this.chars[ci].tx_offset_y = (top_distance/64 - (face.glyph.metrics.height>>6));
 
-			x += glyph.bitmap.width;
+			x += glyph.bitmap.width; // adjust x position by the width of the current bitmap
 
 		}
 
+		// TODO find out what the 6 bits we shift out are and why we don't need them
 		this.char_width_ = cast(typeof(char_width_))face.glyph.metrics.width >> 6;
 		this.char_height_ = cast(typeof(char_height_))face.glyph.metrics.height >> 6;
 		this.atlas.unbind();
@@ -862,7 +867,7 @@ struct TestParticleSystem {
 
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, cast(GLvoid*)0);
-		glVertexAttribDivisor(2, 1); //set first vertex attrib to change every time
+		glVertexAttribDivisor(2, 1); // set first vertex attrib to change every frame
 
 		glBindVertexArray(0);
 
@@ -1116,7 +1121,7 @@ struct Texture {
 } //Texture
 
 /**
- * Represents a position, rotation and scale in space.
+ * Represents a position, rotation and scale in space, with an optional origin modifier for rotations.
 */
 struct Transform {
 
@@ -1434,7 +1439,7 @@ bool checkShaderError(GLuint shader, GLuint flag, bool is_program, in char[] sha
 
 	if (result == GL_FALSE) {
 
-		GLchar[1024] log = void;
+		GLchar[1024] log = void; //FIXME this is potentially fatal
 		(is_program) ? glGetProgramInfoLog(shader, log.sizeof, null, log.ptr)
 			: glGetShaderInfoLog(shader, log.sizeof, null, log.ptr);
 
