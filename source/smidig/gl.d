@@ -134,7 +134,11 @@ struct VertexArray {
 
 	void send(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_DYNAMIC_DRAW) {
 
+		bind();
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, draw_type);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		unbind();
 
 	} //send
 
@@ -599,7 +603,7 @@ struct RenderTarget {
 		auto color = to!GLColor(0xffa500, 255);
 		glClearColor(color[0], color[1], color[2], color[3]);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0, fbo_.width_, fbo_.width_);
+		glViewport(0, 0, fbo_.width_, fbo_.height_);
 
 	} //bind_fbo
 
@@ -613,6 +617,8 @@ struct RenderTarget {
 
 		auto verts = createRectangleVec3f2f(w, h);
 		quad_.send(verts); //update mesh too!
+		rbo_.resize(w, h);
+
 		view_projection_ = Mat4f.orthographic(0.0f, w, 0.0f, h, 0.0f, 1.0f);
 		texture_.resize(w, h);
 		fbo_.resize(w, h);
@@ -623,7 +629,6 @@ struct RenderTarget {
 
 		bind();
 		auto trans = transform_.transform;
-		shader_.update(trans);
 		quad_.draw();
 		unbind();
 
@@ -633,7 +638,7 @@ struct RenderTarget {
 
 		bind();
 		auto trans = transform_.transform;
-		shader_.update(trans);
+		shader_.update(in_view_projection, trans);
 		quad_.draw();
 		unbind();
 
@@ -682,8 +687,6 @@ struct FrameBuffer {
 		height_ = height;
 
 		glGenFramebuffers(1, &frame_buffer_);
-		glFramebufferParameteri(bound_target_, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
-		glFramebufferParameteri(bound_target_, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
 
 	} //this
 
@@ -759,6 +762,14 @@ struct RenderBuffer {
 		glDeleteRenderbuffers(1, &render_buffer_);
 
 	} //~this
+
+	void resize(int w, int h) {
+
+		bind();
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, w, h);
+		unbind();
+
+	} //resize
 
 	void bind() {
 
@@ -1081,8 +1092,8 @@ struct Texture {
 		glBindTexture(GL_TEXTURE_2D, texture_);
 
 		//set texture parameters in currently bound texture, controls texture wrapping (or GL_CLAMP?)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 		//linearly interpolate between pixels, MIN if texture is too small for drawing area, MAG if drawing area is smaller than texture
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1589,12 +1600,12 @@ auto createRectangleVec3f2f(float w, float h) nothrow @nogc pure {
 
 	Vertex[6] vertices = [
 		Vertex(Vec3f(0.0f, 0.0f, 0.0f), Vec2f(0.0f, 0.0f)), // top left
-		Vertex(Vec3f(w, 0.0f, 0.0f), Vec2f(1.1f, 0.0f)), // top right
-		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.1f, 1.1f)), // bottom right
+		Vertex(Vec3f(w, 0.0f, 0.0f), Vec2f(1.0f, 0.0f)), // top right
+		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.0f, 1.0f)), // bottom right
 
 		Vertex(Vec3f(0.0f, 0.0f, 0.0f), Vec2f(0.0f, 0.0f)), // top left
-		Vertex(Vec3f(0.0f, h, 0.0f), Vec2f(0.0f, 1.1f)), // bottom left
-		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.1f, 1.1f)) // bottom right
+		Vertex(Vec3f(0.0f, h, 0.0f), Vec2f(0.0f, 1.0f)), // bottom left
+		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.0f, 1.0f)) // bottom right
 	];
 
 	return vertices;

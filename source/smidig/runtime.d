@@ -72,6 +72,7 @@ struct Engine {
 		import derelict.sdl2.types;
 		import std.conv : to;
 		import std.stdio : writefln;
+		import std.c.stdlib : exit;
 		import smidig.memory : construct;
 		import smidig.defs : PushEvent;
 		import smidig.types : visit, Nullable;
@@ -94,13 +95,12 @@ struct Engine {
 				return Nullable!Window(w);
 			},
 			(Window.WindowError err) {
-				writefln("got error on window creation: %s", to!string(err));
-				Nullable!Window n;
-				return n;
+				writefln("[Engine] got error on window creation: %s", err);
+				return Nullable!Window.init;
 			}
 		)();
 
-		// yay
+		// yay TODO return incomplete Result object to signify failure instead
 		if (!win.isNull) { this.window_ = win.get(); }
 
 		this.input_handler_.construct(allocator_);

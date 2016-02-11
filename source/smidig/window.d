@@ -49,8 +49,8 @@ struct Window {
 	import smidig.collections : String;
 
 	enum WindowError {
-		RendererCreationFailed,
-		ContextCreationFailed
+		RendererCreationFailed = "Failed to create window!",
+		ContextCreationFailed = "Failed to create OpenGL context of at least version 3.3!"
 	} //WindowError
 
 	private {
