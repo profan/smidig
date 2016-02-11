@@ -227,7 +227,7 @@ struct Window {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, width, height);
 
-		render_target_.bind_fbo();
+		render_target_.bind_fbo(color);
 
 	} //renderClear
 

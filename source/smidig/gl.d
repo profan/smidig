@@ -615,12 +615,12 @@ struct RenderTarget {
 
 	} //this
 
-	void bind_fbo() {
+	void bind_fbo(int clear_colour = 0x428bca) {
 
 		fbo_.bind();
 
 		//clear fbo before drawing
-		auto color = to!GLColor(0xffa500, 255);
+		auto color = to!GLColor(clear_colour, 255);
 		glClearColor(color[0], color[1], color[2], color[3]);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, fbo_.width_, fbo_.height_);
