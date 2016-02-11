@@ -565,7 +565,7 @@ struct RenderTarget {
 
 	}
 
-	//@disable this();
+	@disable this();
 	@disable this(this);
 
 	this(Shader* shader, int in_width, int in_height) {
@@ -742,7 +742,7 @@ struct RenderBuffer {
 
 	GLuint render_buffer_;
 
-	//@disable this();
+	@disable this();
 	@disable this(this);
 
 	this(ref FrameBuffer fbo) {
