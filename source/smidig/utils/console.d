@@ -6,8 +6,7 @@ import derelict.sdl2.functions : SDL_StartTextInput, SDL_StopTextInput;
 import smidig.memory : IAllocator;
 import smidig.collections : HashMap, StaticArray;
 import smidig.event : EventManager, EventCast;
-import smidig.window : Window;
-import smidig.gl : FontAtlas;
+import smidig.gl : FontAtlas, RenderTarget;
 
 enum ConsoleCommand {
 
@@ -182,7 +181,7 @@ struct Console {
 
 	} //shiftBuffer
 
-	void draw(Window* window) {
+	void draw(ref RenderTarget window) {
 
 		if (!enabled_) { return; }
 

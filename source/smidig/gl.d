@@ -268,7 +268,7 @@ struct FontAtlas {
 	import std.algorithm : max;
 	import derelict.freetype.ft;
 
-	import smidig.window : Window;
+	import smidig.gl : RenderTarget;
 	import smidig.memory : Mallocator, Region, makeArray, dispose;
 
 	private struct CharacterInfo {
@@ -398,7 +398,7 @@ struct FontAtlas {
 
 	} //~this
 
-	void renderText(Window* window, in char[] text, float x, float y, float sx, float sy, int color) {
+	void renderText(ref RenderTarget rt, in char[] text, float x, float y, float sx, float sy, int color) {
 
 		struct Point {
 			GLfloat x;
@@ -459,7 +459,7 @@ struct FontAtlas {
 
 		GLfloat[4] col = to!GLColor(color);
 		glUniform4fv(shader.bound_uniforms[0], 1, col.ptr);
-		shader.update(window.view_projection);
+		shader.update(rt.view_projection);
 
 		glBufferData(GL_ARRAY_BUFFER, coords[0].sizeof * coords.length, coords.ptr, GL_DYNAMIC_DRAW);
 		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, cast(void*)0);
@@ -555,11 +555,12 @@ struct RenderTarget {
 
 	}
 
-	@property {
+	@property nothrow @nogc {
 
 		int width() const { return fbo_.width_; }
 		int height() const { return fbo_.height_; }
 		ref Mat4f projection() { return view_projection_; }
+		ref Mat4f view_projection() { return view_projection_; }
 		ref Transform transform() { return transform_; }
 
 	}
@@ -567,14 +568,14 @@ struct RenderTarget {
 	@disable this();
 	@disable this(this);
 
-	this(Shader* shader, int width, int height) {
+	this(Shader* shader, int in_width, int in_height) {
 
-		fbo_ = FrameBuffer(width, height);
+		fbo_ = FrameBuffer(in_width, in_height);
 		fbo_.bind(); //important
 
 		rbo_ = RenderBuffer(fbo_);
-		texture_ = Texture(null, width, height);
-		auto quad_data = createRectangleVec3f2f(width, height);
+		texture_ = Texture(null, in_width, in_height);
+		auto quad_data = createRectangleVec3f2f(in_width, in_height);
 		quad_ = VertexArray(quad_data);
 		fbo_.attach_texbuffer(texture_);
 
@@ -583,7 +584,7 @@ struct RenderTarget {
 		shader_ = shader;
 
 		//set up view projection and transform, height is flipped so tex coords make sense
-		view_projection_ = Mat4f.orthographic(0.0f, width, 0.0f, height, 0.0f, 1.0f);
+		view_projection_ = Mat4f.orthographic(0.0f, in_width, 0.0f, in_height, 0.0f, 1.0f);
 		transform_ = Transform(Vec2f(0, 0));
 
 		fbo_.unbind();
@@ -610,17 +611,29 @@ struct RenderTarget {
 
 	void resize(int w, int h) {
 
+		auto verts = createRectangleVec3f2f(w, h);
+		quad_.send(verts); //update mesh too!
 		view_projection_ = Mat4f.orthographic(0.0f, w, 0.0f, h, 0.0f, 1.0f);
 		texture_.resize(w, h);
+		fbo_.resize(w, h);
 
 	} //resize
 
-
-	void draw(Mat4f view_projection) {
+	void draw() {
 
 		bind();
 		auto trans = transform_.transform;
-		shader_.update(view_projection, trans);
+		shader_.update(trans);
+		quad_.draw();
+		unbind();
+
+	} //draw
+
+	void draw(Mat4f in_view_projection) {
+
+		bind();
+		auto trans = transform_.transform;
+		shader_.update(trans);
 		quad_.draw();
 		unbind();
 
@@ -1108,21 +1121,25 @@ struct Texture {
 	 * updates the texture in place given the new texture buffer.
 	 * takes an optional offset to update only a part.
 	 **/
-	void update(void[] pixels, size_t offset = 0) {
+	void update(void[] pixels, size_t offset = 0) nothrow @nogc {
 
-		glBindTexture(GL_TEXTURE_2D, texture_);
+		bind(0);
 		glBufferSubData(GL_ARRAY_BUFFER, cast(GLintptr)offset, pixels.length, pixels.ptr);
+		unbind();
 
 	} //update
 
 	/**
 	 * Resizes the texture.
 	 **/
-	void resize(int x, int y, void* data = null) {
+	void resize(int w, int h, void* data = null) nothrow @nogc {
 
-		width_ = x;
-		height_ = y;
-		glTexImage2D(texture_, 0, input_format_, width, height, 0, output_format_, data_type_, data);
+		width_ = w;
+		height_ = h;
+
+		bind(0);
+		glTexImage2D(GL_TEXTURE_2D, 0, input_format_, width_, height_, 0, output_format_, data_type_, data);
+		unbind();
 
 	} //resize
 
@@ -1363,8 +1380,17 @@ struct Shader {
 		auto c_vs = vs.c_str();
 		auto c_fs = fs.c_str();
 
-		GLuint vshader = compileShader(&c_vs, GL_VERTEX_SHADER, file_name);
-		GLuint fshader = compileShader(&c_fs, GL_FRAGMENT_SHADER, file_name);
+		//delegate construction
+		this(&c_vs, &c_fs, file_name, attribs, uniforms);
+
+	} //this
+
+	this(in char** vs_data, in char** fs_data, in char[] file_name, in AttribLocation[] attribs, in char[16][] uniforms) {
+
+		assert(uniforms.length < bound_uniforms.length);
+
+		GLuint vshader = compileShader(vs_data, GL_VERTEX_SHADER, file_name);
+		GLuint fshader = compileShader(fs_data, GL_FRAGMENT_SHADER, file_name);
 
 		GLuint[2] shaders = [vshader, fshader];
 		program = createShaderProgram(shaders, attribs);
@@ -1416,6 +1442,13 @@ struct Shader {
 
 	} //update
 
+	void update(ref Transform trans) nothrow @nogc {
+
+		auto transf = trans.transform;
+		glUniformMatrix4fv(bound_uniforms[0], 1, GL_TRUE, transf.ptr);
+
+	} //update
+
 	void bind() nothrow @nogc {
 
 		glUseProgram(program);
@@ -1449,7 +1482,7 @@ bool checkShaderError(GLuint shader, GLuint flag, bool is_program, in char[] sha
 
 	if (result == GL_FALSE) {
 
-		GLchar[1024] log = void; //FIXME this is potentially fatal
+		GLchar[256] log; //FIXME this is potentially fatal
 		(is_program) ? glGetProgramInfoLog(shader, log.sizeof, null, log.ptr)
 			: glGetShaderInfoLog(shader, log.sizeof, null, log.ptr);
 

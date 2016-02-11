@@ -3,7 +3,7 @@ module smidig.dbg;
 ref DebugContext render_string(string format, Args...)(ref DebugContext ctx, Args args) {
 
 	import smidig.util : render_string;
-	render_string!(format)(ctx.atlas_, ctx.window_, ctx.offset_, args);
+	render_string!(format)(ctx.atlas_, *ctx.window_, ctx.offset_, args);
 
 	return ctx;
 

@@ -9,8 +9,42 @@ import derelict.opengl3.gl;
 import gfm.math : Matrix;
 alias Mat4f = Matrix!(float, 4, 4);
 
+/**
+ * Structure to represent the window, at present uses SDL2 and OpenGL directly.
+*/
 struct Window {
 
+	static const char* framebuffer_vs = "
+		#version 330 core
+
+		in vec3 position;
+		in vec2 tex_coord;
+
+		out vec2 tex_coord0;
+
+		uniform mat4 transform;
+		uniform mat4 perspective;
+
+		void main() {
+			gl_Position = perspective * transform * vec4(position, 1.0);
+			tex_coord0 = tex_coord;
+		}
+	";
+
+	static const char* framebuffer_fs = "
+		#version 330 core
+
+		in vec2 tex_coord0;
+
+		uniform sampler2D diffuse;
+
+		void main() {
+			gl_FragColor = texture2D(diffuse, tex_coord0);
+		}
+	";
+
+
+	import smidig.gl : AttribLocation, RenderTarget, Shader;
 	import smidig.collections : String;
 
 	private {
@@ -28,11 +62,15 @@ struct Window {
 
 		//window data
 		int window_width_, window_height_;
+		Mat4f view_projection_; //TODO ARH
 
 	}
 
-	//gl related data
-	Mat4f view_projection;
+	// holds texture buffer for screen, etc
+
+	Shader render_shader_;
+	RenderTarget render_target_;
+	alias render_target_ this;
 
 	@property {
 
@@ -88,12 +126,20 @@ struct Window {
 		assert(gl_major >= 3 && gl_minor >= 3, "desired OpenGL version needs to be at least 3.3!");
 
 		window_ = in_window;
-		SDL_GetWindowSize(window_, &window_width_, &window_height_);
-		createGLContext(gl_major, gl_minor); //DO EET
+		SDL_GetWindowSize(window_, &window_width_, &window_height_); //sets window width and height
 
+		int creation_result = -1;
+		while (creation_result != 0) {
+			//later, progressively try creating contexts of lower versions until a supported one is found
+			creation_result = createGLContext(gl_major, gl_minor);
+		}
+
+		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
+		char[16][2] uniforms = ["transform", "perspective"];
+		render_shader_ = Shader(&framebuffer_vs, &framebuffer_fs, "framebuffer", attributes[], uniforms[]);
+		render_target_ = RenderTarget(&render_shader_, window_width_, window_height_);
+		view_projection_ = Mat4f.orthographic(0.0f, window_width_, window_height_, 0.0f, 0.0f, 1.0f);
 		alive_ = true;
-
-		view_projection = Mat4f.orthographic(0.0f, width, height, 0.0f, 0.0f, 1.0f);
 
 	} //this
 
@@ -104,7 +150,7 @@ struct Window {
 
 	} //~this
 
-	void createGLContext(int gl_major, int gl_minor) {
+	int createGLContext(int gl_major, int gl_minor) {
 
 		// OpenGL related attributes
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, gl_major);
@@ -114,9 +160,14 @@ struct Window {
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
 
 		glcontext_ = SDL_GL_CreateContext(window_);
+
 		if (glcontext_ == null) {
+
 			GLenum glErr = glGetError();
 			printf("[OpenGL] Error: %d", glErr);
+
+			return glErr;
+
 		}
 
 		const GLchar* sGLVersion_ren = glGetString(GL_RENDERER);
@@ -127,6 +178,8 @@ struct Window {
 		printf("[OpenGL] GLSL version is: %s \n", sGLVersion_shader);
 		printf("[OpenGL] Loading GL Extensions. \n");
 		DerelictGL3.reload();
+
+		return 0; //all is well
 
 	} //createGLContext
 
@@ -140,18 +193,34 @@ struct Window {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, width, height);
 
+		render_target_.bind_fbo();
+
 	} //renderClear
 
 	void renderPresent() {
+
+		render_target_.unbind_fbo();
+		render_target_.draw(view_projection_);
 		SDL_GL_SwapWindow(window_);
+
 	} //renderPresent
+
+	void setViewport(int w, int h) {
+
+		window_width_ = w;
+		window_height_ = h;
+		render_target_.resize(window_width_, window_height_);
+		view_projection_ = Mat4f.orthographic(0.0f, window_width_, window_height_, 0.0f, 0.0f, 1.0f);
+		glViewport(0, 0, width, height);
+
+	} //setViewport
 
 	void toggleFullscreen() {
 
 		SDL_SetWindowFullscreen(window_, (fullscreen_) ? 0 : SDL_WINDOW_FULLSCREEN);
 		fullscreen_ = !fullscreen_;
 
-	} //toggle_fullscreen
+	} //toggleFullscreen
 
 	void toggleWireframe() {
 		
@@ -169,10 +238,7 @@ struct Window {
 			switch (ev.window.event) {
 
 				case SDL_WINDOWEVENT_SIZE_CHANGED:
-					window_width_ = ev.window.data1;
-					window_height_ = ev.window.data2;
-					glViewport(0, 0, window_width_, window_height_);
-					view_projection = Mat4f.orthographic(0.0f, window_width_, window_height_, 0.0f, 0.0f, 1.0f);
+					setViewport(ev.window.data1, ev.window.data2);
 					break;
 
 				case SDL_WINDOWEVENT_RESIZED:
@@ -190,24 +256,25 @@ struct Window {
 				case SDL_WINDOWEVENT_EXPOSED:
 					break;
 
+				//mouse inside window
 				case SDL_WINDOWEVENT_ENTER:
-					//mouse inside window
 					break;
 
+				//mouse outside window
 				case SDL_WINDOWEVENT_LEAVE:
-					//mouse outside window
 					break;
 
+				//got keyboard focus
 				case SDL_WINDOWEVENT_FOCUS_GAINED:
-					//got keyboard focus
 					break;
 
+				//lost keyboard focus
 				case SDL_WINDOWEVENT_FOCUS_LOST:
-					//lost keyboard focus
 					break;
 
 				default:
 					break;
+					//assert(false, "unhandled event!");
 
 			}
 		}
