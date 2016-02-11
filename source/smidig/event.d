@@ -26,11 +26,15 @@ struct EventManager {
 	import smidig.collections : Array;
 	import smidig.memory : IAllocator, Mallocator, theAllocator, Region, make, dispose;
 
-	IAllocator allocator_;
-	Region!Mallocator region_allocator_;
+	package {
 
-	Array!(Array!EventDelegate*) delegates_;
-	Array!(Array!(EventCast*)*) events;
+		IAllocator allocator_;
+		Region!Mallocator region_allocator_;
+
+		Array!(Array!EventDelegate*) delegates_;
+		Array!(Array!(EventCast*)*) events_;
+
+	}
 
 	@disable this();
 	@disable this(this);
@@ -42,11 +46,11 @@ struct EventManager {
 		this.allocator_ = theAllocator;
 		this.region_allocator_ = Region!Mallocator(to_allocate);
 		this.delegates_ = typeof(delegates_)(allocator_, num_to_alloc);
-		this.events = typeof(events)(allocator_, num_to_alloc);
+		this.events_ = typeof(events_)(allocator_, num_to_alloc);
 
 		foreach (i; 0..num_to_alloc) {
 			delegates_.add(allocator_.make!(Array!EventDelegate)(allocator_, 8));
-			events.add(allocator_.make!(Array!(EventCast*))(allocator_, 8));
+			events_.add(allocator_.make!(Array!(EventCast*))(allocator_, 8));
 		}
 
 		assert(allocator_, "allocator was null?");
@@ -59,27 +63,36 @@ struct EventManager {
 			this.allocator_.dispose(arr);
 		}
 
-		foreach (ref arr; events) {
+		foreach (ref arr; events_) {
 			this.allocator_.dispose(arr);
 		}
 
 	} //~this
 
+	/**
+	 * Instantiates a new $(D Event) of type $(D E) with the given arguments.
+	*/
 	void push(E, Args...)(Args args) {
 
 		auto thing = region_allocator_.make!(E)(args);
-		(*events[thing.message_id]) ~= cast(EventCast*)thing;
+		(*events_[thing.message_id]) ~= cast(EventCast*)thing;
 
 	} //push
 
+	/**
+	 * Pushes an event to the list of events, copying the event into the bump-allocated space.
+	*/
 	void push(E)(ref E e) {
 
 		auto allocated_thing = region_allocator_.make(E)();
 		*allocated_space = e;
-		(*events[e.message_id]) ~= cast(EventCast*)allocated_space;
+		(*events_[e.message_id]) ~= cast(EventCast*)allocated_space;
 
 	} //push
 
+	/**
+	 * Checks if passed delegate $(D ED) can be called with the given event $(D T) as a parameter.
+	*/
 	static mixin template checkValidity(T, ED) {
 
 		import std.traits : isImplicitlyConvertible, ParameterTypeTuple;
@@ -90,16 +103,25 @@ struct EventManager {
 
 	} //checkValidity
 
+	/**
+	 * Registers an event delegate for a given event type.
+	*/
 	void register(E, ED)(ED dele) {
 		mixin checkValidity!(E, ED);
 		(*delegates_[E.message_id]) ~= cast(EventDelegate)dele;
 	} //register
 
+	/**
+	 * Deregisters a given delegate from an event type handler.
+	*/
 	void unregister(E, ED)(ED base_dele) { //CAUUTIIOON
 		auto dele = cast(EventDelegate) base_dele;
 		delegates_[E.message_id].remove(dele);
 	} //unregister
 
+	/**
+	 * Directly calls the delegates registered for the given $(D Event).
+	*/
 	void fire(E, Args...)(Args args) {
 
 		alias ED = void delegate(ref E);
@@ -121,6 +143,10 @@ struct EventManager {
 
 	mixin template doTick() {
 
+		/**
+		 * Generates a switch over the given $(D Event) types to call the delegates through,
+		 * returns a string which is to be mixed in.
+		*/
 		static string doSwitchEntry(alias EventTypes)() {
 
 			import std.conv : to;
@@ -142,11 +168,15 @@ struct EventManager {
 
 		} //doSwitchEntry
 
+		/**
+		 * Dispatches all queued events for the given frame,
+		 * calling all the registered delegates for each $(D Event) type.
+		*/
 		static void tick(alias EvTypesMap)(ref EventManager ev_man) {
 
 			import core.stdc.stdio : printf;
 
-			foreach (id, ref ev_list; ev_man.events) {
+			foreach (id, ref ev_list; ev_man.events_) {
 
 				if (ev_list.length == 0) continue;
 				auto cur_dels = (*ev_man.delegates_[id])[];
@@ -166,6 +196,7 @@ struct EventManager {
 
 			}
 
+			// since it's a region allocator, its just a pointer bump
 			ev_man.region_allocator_.deallocateAll();
 
 		} //tick
