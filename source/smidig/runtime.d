@@ -72,7 +72,6 @@ struct Engine {
 		import derelict.sdl2.types;
 		import std.conv : to;
 		import std.stdio : writefln;
-		import std.c.stdlib : exit;
 		import smidig.memory : construct;
 		import smidig.defs : PushEvent;
 		import smidig.types : visit, Nullable;

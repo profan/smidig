@@ -5,11 +5,11 @@
 		"tested": "0.9.4",
 		"derelict-al": "~master",
 		"derelict-ft": "1.0.2",
-		"derelict-imgui": "0.8.0",
+		"derelict-imgui": "0.9.1",
 		"derelict-sdl2": "1.9.7",
 		"derelict-util": "2.0.4",
 		"derelict-alure": "1.0.0",
 		"gfm": "2.3.37",
-		"derelict-gl3": "1.0.15"
+		"derelict-gl3": "1.0.18"
 	}
 }

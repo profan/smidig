@@ -58,6 +58,26 @@ template TypeToUniformFunction(T) {
 
 } //TypeToUniformFunction
 
+enum DrawType {
+
+	Static,
+	Dynamic,
+	Stream
+
+} //DrawType
+
+enum Primitive {
+
+	Points = GL_POINTS,
+	Lines = GL_LINES,
+	LineStrip = GL_LINE_STRIP,
+	LineLoop = GL_LINE_LOOP,
+	Triangles = GL_TRIANGLES,
+	TriangleStrip = GL_TRIANGLE_STRIP,
+	TriangleFan = GL_TRIANGLE_FAN,
+
+} //Primitive
+
 /**
  * Generic VertexArray structure, used to upload data of any given vertex type to the GPU.
 */
@@ -79,7 +99,7 @@ struct VertexArray {
 	//@disable this(); maybe?
 	@disable this(this);
 
-	this(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_STATIC_DRAW, GLenum type = GL_TRIANGLES) nothrow @nogc {
+	this(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_STATIC_DRAW, Primitive type = Primitive.Triangles) nothrow @nogc {
 
 		mixin("import " ~ VertexType.Imports ~ ";");
 		this.num_vertices_ = cast(uint)vertices.length;
@@ -615,13 +635,14 @@ struct RenderTarget {
 
 	void resize(int w, int h) {
 
+
 		auto verts = createRectangleVec3f2f(w, h);
 		quad_.send(verts); //update mesh too!
 		rbo_.resize(w, h);
-
-		view_projection_ = Mat4f.orthographic(0.0f, w, 0.0f, h, 0.0f, 1.0f);
 		texture_.resize(w, h);
 		fbo_.resize(w, h);
+
+		view_projection_ = Mat4f.orthographic(0.0f, w, 0.0f, h, 0.0f, 1.0f);
 
 	} //resize
 
@@ -1562,6 +1583,41 @@ GLfloat[4] to(T : GLfloat[4])(int color, ubyte alpha = 255) nothrow @nogc pure {
 	return gl_color;
 
 } //to!GLfloat[4]
+
+const (char*) to(T : char*)(GLenum value) {
+
+	switch (value) {
+
+		// sources
+		case GL_DEBUG_SOURCE_API: return "API";
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "Window System";
+		case GL_DEBUG_SOURCE_SHADER_COMPILER: return "Shader Compiler";
+		case GL_DEBUG_SOURCE_THIRD_PARTY: return "Third Party";
+		case GL_DEBUG_SOURCE_APPLICATION: return "Application";
+		case GL_DEBUG_SOURCE_OTHER: return "Other";
+
+		// error types
+		case GL_DEBUG_TYPE_ERROR: return "Error";
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "Deprecated Behaviour";
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "Undefined Behaviour";
+		case GL_DEBUG_TYPE_PORTABILITY: return "Portability";
+		case GL_DEBUG_TYPE_PERFORMANCE: return "Performance";
+		case GL_DEBUG_TYPE_MARKER: return "Marker";
+		case GL_DEBUG_TYPE_PUSH_GROUP: return "Push Group";
+		case GL_DEBUG_TYPE_POP_GROUP: return "Pop Group";
+		case GL_DEBUG_TYPE_OTHER: return "Other";
+
+		// severity markers
+		case GL_DEBUG_SEVERITY_HIGH: return "High";
+		case GL_DEBUG_SEVERITY_MEDIUM: return "Medium";
+		case GL_DEBUG_SEVERITY_LOW: return "Low";
+		case GL_DEBUG_SEVERITY_NOTIFICATION: return "Notification";
+
+		default: return "(undefined)";
+
+	}
+
+} //to!string(GLenum)
 
 int darken(int color, uint percentage) nothrow @nogc pure {
 

@@ -239,6 +239,7 @@ struct ImguiContext {
 		int display_w = window_.width;
 		int display_h = window_.height;
 		io.DisplaySize = ImVec2(cast(float)display_w, cast(float)display_h);
+		io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 		io.DeltaTime = cast(float)dt;
 
 		int m_x, m_y;

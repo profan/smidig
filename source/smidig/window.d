@@ -134,6 +134,8 @@ struct Window {
 		int result = window.createGLContext(3, 3);
 		if (result == -1) { return typeof(return)(WindowError.ContextCreationFailed); }
 
+
+
 		// set up render target, view projection shit
 		with (window) {
 
@@ -150,6 +152,25 @@ struct Window {
 
 	} //create
 
+	extern(C) nothrow @nogc
+	static void openGLCallbackFunction(
+		GLenum source, GLenum type,
+		GLuint id, GLenum severity,
+		GLsizei length, const (GLchar)* message,
+		void* userParam)
+	{
+
+		import smidig.conv : to;
+
+		printf("Message: %s \nSource: %s \nType: %s \nID: %d \nSeverity: %s\n\n",
+			message, to!(char*)(source), to!(char*)(type), id, to!(char*)(severity));
+
+		if (severity == GL_DEBUG_SEVERITY_HIGH) {
+			printf("Aborting...\n");
+		}
+
+	} //openGLCallbackFunction
+
 	int createGLContext(int gl_major, int gl_minor) {
 
 		// OpenGL related attributes
@@ -158,6 +179,11 @@ struct Window {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
+
+		// debuggering!
+		SDL_GL_SetAttribute(
+			SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG
+		);
 
 		glcontext_ = SDL_GL_CreateContext(window_);
 
@@ -178,6 +204,14 @@ struct Window {
 		printf("[OpenGL] GLSL version is: %s \n", sGLVersion_shader);
 		printf("[OpenGL] Loading GL Extensions. \n");
 		DerelictGL3.reload();
+
+		// enable debuggering
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(&openGLCallbackFunction, null);
+		glDebugMessageControl(
+		  GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, null, true
+		);
 
 		return 0; //all is well
 
