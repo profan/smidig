@@ -1,14 +1,13 @@
 module smidig.util;
 
 import smidig.defs : Vec2i;
-import smidig.window : Window;
-import smidig.gl : FontAtlas;
+import smidig.gl : FontAtlas, RenderTarget;
 
-void render_string(string format, Args...)(FontAtlas* atlas, Window* window, ref Vec2i offset, Args args) {
+void render_string(string format, Args...)(FontAtlas* atlas, ref RenderTarget window, ref Vec2i offset, Args args) {
 	render_string!(format)(*atlas, window, offset, args);
 } //render_string
 
-ref FontAtlas render_string(string format, Args...)(ref FontAtlas atlas, Window* window, ref Vec2i offset, Args args) {
+ref FontAtlas render_string(string format, Args...)(ref FontAtlas atlas, ref RenderTarget window, ref Vec2i offset, Args args) {
 
 	char[format.length*2] buf;
 	const char[] str = cformat(buf[], format, args);

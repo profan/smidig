@@ -44,8 +44,14 @@ struct Window {
 	";
 
 
+	import smidig.types : Result;
 	import smidig.gl : AttribLocation, RenderTarget, Shader;
 	import smidig.collections : String;
+
+	enum WindowError {
+		RendererCreationFailed,
+		ContextCreationFailed
+	} //WindowError
 
 	private {
 
@@ -67,9 +73,8 @@ struct Window {
 	}
 
 	// holds texture buffer for screen, etc
-
-	Shader render_shader_;
-	RenderTarget render_target_;
+	static Shader render_shader_ = void;
+	RenderTarget render_target_ = void;
 	alias render_target_ this;
 
 	@property {
@@ -91,57 +96,7 @@ struct Window {
 
 	}
 
-	@disable this();
 	@disable this(this);
-
-	this(void* external_window) {
-		
-		SDL_Window* new_window = SDL_CreateWindowFrom(external_window);
-		this(new_window);
-
-	} //this
-
-	this(in char[] title, uint width, uint height) {
-
-		this.title_ = String(title);
-
-		uint flags = 0;
-		flags |= SDL_WINDOW_OPENGL;
-		flags |= SDL_WINDOW_RESIZABLE;
-
-		SDL_Window* new_window = SDL_CreateWindow(
-				title_.c_str,
-				SDL_WINDOWPOS_UNDEFINED,
-				SDL_WINDOWPOS_UNDEFINED,
-				width, height,
-				flags);
-
-		this(new_window);
-
-	} //this
-
-	this(SDL_Window* in_window, int gl_major = 3, int gl_minor = 3) {
-
-		assert(in_window != null);
-		assert(gl_major >= 3 && gl_minor >= 3, "desired OpenGL version needs to be at least 3.3!");
-
-		window_ = in_window;
-		SDL_GetWindowSize(window_, &window_width_, &window_height_); //sets window width and height
-
-		int creation_result = -1;
-		while (creation_result != 0) {
-			//later, progressively try creating contexts of lower versions until a supported one is found
-			creation_result = createGLContext(gl_major, gl_minor);
-		}
-
-		AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
-		char[16][2] uniforms = ["transform", "perspective"];
-		render_shader_ = Shader(&framebuffer_vs, &framebuffer_fs, "framebuffer", attributes[], uniforms[]);
-		render_target_ = RenderTarget(&render_shader_, window_width_, window_height_);
-		view_projection_ = Mat4f.orthographic(0.0f, window_width_, window_height_, 0.0f, 0.0f, 1.0f);
-		alive_ = true;
-
-	} //this
 
 	~this() {
 
@@ -149,6 +104,51 @@ struct Window {
 		SDL_DestroyWindow(window_);
 
 	} //~this
+
+	static Result!(Window, WindowError) create(in char[] title, uint width, uint height) {
+
+		import smidig.memory : construct; //FIXME abolish this part, more error handling
+
+		Window window;
+
+		window.title_ = String(title); //TODO also error handling? not sure if should have, prob not
+
+		uint flags = 0;
+		flags |= SDL_WINDOW_OPENGL;
+		flags |= SDL_WINDOW_RESIZABLE;
+
+		window.window_ = SDL_CreateWindow(
+			window.title_.c_str,
+			SDL_WINDOWPOS_UNDEFINED,
+			SDL_WINDOWPOS_UNDEFINED,
+			width, height,
+			flags);
+
+		// check if valid
+		if (!window.window_) { return typeof(return)(WindowError.RendererCreationFailed); }
+
+		// get window height and set vars in struct
+		SDL_GetWindowSize(window.window_, &window.window_width_, &window.window_height_);
+
+		// try creating context, TODO is setting a "min" version
+		int result = window.createGLContext(3, 3);
+		if (result == -1) { return typeof(return)(WindowError.ContextCreationFailed); }
+
+		// set up render target, view projection shit
+		with (window) {
+
+			AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
+			char[16][2] uniforms = ["transform", "perspective"];
+			render_shader_.construct(&framebuffer_vs, &framebuffer_fs, "framebuffer", attributes[], uniforms[]);
+			render_target_.construct(&render_shader_, window_width_, window_height_);
+			view_projection_ = Mat4f.orthographic(0.0f, window_width_, window_height_, 0.0f, 0.0f, 1.0f);
+			alive_ = true;
+
+		}
+
+		return typeof(return)(window);
+
+	} //create
 
 	int createGLContext(int gl_major, int gl_minor) {
 
@@ -161,7 +161,7 @@ struct Window {
 
 		glcontext_ = SDL_GL_CreateContext(window_);
 
-		if (glcontext_ == null) {
+		if (!glcontext_) {
 
 			GLenum glErr = glGetError();
 			printf("[OpenGL] Error: %d", glErr);

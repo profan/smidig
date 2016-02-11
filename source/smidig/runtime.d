@@ -70,8 +70,11 @@ struct Engine {
 	void initialize(in char[] title, UpdateFunc update_func, DrawFunc draw_func, DrawFunc after_draw_func) {
 
 		import derelict.sdl2.types;
+		import std.conv : to;
+		import std.stdio : writefln;
 		import smidig.memory : construct;
 		import smidig.defs : PushEvent;
+		import smidig.types : visit, Nullable;
 
 		//initialize dynamic dependencies
 		import smidig.deps : initializeSystems;
@@ -83,8 +86,23 @@ struct Engine {
 		//report supported cpu characteristics
 		CPU.report_supported();
 
+		import std.algorithm : move;
 		//initialize window and input handler
-		this.window_.construct(title, 640, 480);
+		auto result = Window.create(title, 640, 480);
+		auto win = result.visit!(typeof(result),
+			(ref Window w) {
+				return Nullable!Window(w);
+			},
+			(Window.WindowError err) {
+				writefln("got error on window creation: %s", to!string(err));
+				Nullable!Window n;
+				return n;
+			}
+		)();
+
+		// yay
+		if (!win.isNull) { this.window_ = win.get(); }
+
 		this.input_handler_.construct(allocator_);
 		this.input_handler_.addListener(&window_.handleEvents, SDL_WINDOWEVENT, SDL_QUIT);
 
