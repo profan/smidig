@@ -22,10 +22,9 @@ struct SoundSystem {
 	enum Error {
 		FailedOpeningDevice,
 		FailedCreatingContext,
-		FailedMakingContextCurrent
+		FailedMakingContextCurrent,
+		Success
 	} //Error
-
-	import smidig.types : Result;
 
 	//TODO: take a look at this later, should it be a constant?
 	enum INITIAL_BUFFERS = 16;
@@ -64,27 +63,27 @@ struct SoundSystem {
 		this.sources_ = typeof(sources_)(allocator, num_sources);
 	} //this
 
-	static Result!(SoundSystem, Error) create(IAllocator allocator, size_t num_sources) {
+	static Error create(ref SoundSystem system, IAllocator allocator, size_t num_sources) {
 
 		assert(allocator);
 
-		auto system = SoundSystem(allocator, num_sources);
+		system = SoundSystem(allocator, num_sources);
 
 		system.device_ = alcOpenDevice(null); //preferred device
-		if (!system.device_) { return typeof(return)(Error.FailedOpeningDevice); }
+		if (!system.device_) { return Error.FailedOpeningDevice; }
 
 		system.context_ = alcCreateContext(system.device_, null);
-		if (!system.context_) { return typeof(return)(Error.FailedCreatingContext); }
+		if (!system.context_) { return Error.FailedCreatingContext; }
 
 		auto result = alcMakeContextCurrent(system.context_); //is ok, try making current
-		if (result == ALC_FALSE) { return typeof(return)(Error.FailedMakingContextCurrent); }
+		if (result == ALC_FALSE) { return Error.FailedMakingContextCurrent; }
 
 		with (system) {
 			alGenSources(cast(int)sources_.capacity, sources_.sources.ptr);
 			sources_.length = sources_.capacity;
 		}
 
-		return typeof(return)(system);
+		return Error.Success;
 
 	} //create
 

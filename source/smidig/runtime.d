@@ -18,9 +18,17 @@ enum Resource {
 
 struct Engine {
 
+	enum Error {
+		WindowInitFailed,
+		SoundInitFailed,
+		NetInitFailed,
+		Success
+	} //Error
+
 	import smidig.cpu : CPU;
 	import smidig.memory : IAllocator, Mallocator, theAllocator, make;
 	import smidig.dbg : DebugContext, render_string;
+	import smidig.types : visit, Nullable, Result;
 	import smidig.imgui : ImguiContext;
 
 	alias UpdateFunc = void delegate();
@@ -67,75 +75,71 @@ struct Engine {
 
 	@disable this(this);
 
-	void initialize(in char[] title, UpdateFunc update_func, DrawFunc draw_func, DrawFunc after_draw_func) {
+	static Error create(ref Engine engine, in char[] title, UpdateFunc update_func, DrawFunc draw_func, DrawFunc after_draw_func) {
 
 		import derelict.sdl2.types;
 		import std.stdio : writefln;
 		import smidig.memory : construct;
 		import smidig.defs : PushEvent;
-		import smidig.types : visit, Nullable;
 
-		//initialize dynamic dependencies
-		import smidig.deps : initializeSystems;
-		initializeSystems();
+		with (engine) {
 
-		//allocator for shit
-		this.allocator_ = theAllocator;
+			//initialize dynamic dependencies
+			import smidig.deps : initializeSystems;
+			initializeSystems();
 
-		//report supported cpu characteristics
-		CPU.report_supported();
+			//allocator for shit
+			allocator_ = theAllocator;
 
-		import std.algorithm : move;
-		//initialize window and input handler
-		auto result = Window.create(title, 640, 480);
-		auto win = result.visit!(typeof(result),
-			(ref Window w) => Nullable!Window(w),
-			(Window.Error err) {
-				writefln("[Engine] got error on window creation: %s", err);
-				return Nullable!Window.init;
+			//report supported cpu characteristics
+			CPU.report_supported();
+
+			//initialize window and input handler
+			auto result = Window.create(window_, title, 640, 480);
+			final switch (result) with (Window.Error) {
+				case RendererCreationFailed, ContextCreationFailed:
+					return Error.WindowInitFailed;
+				case Success:
+					break;
 			}
-		)();
 
-		// yay TODO return incomplete Result object to signify failure instead
-		if (!win.isNull) { this.window_ = win.get(); }
+			input_handler_.construct(allocator_);
+			input_handler_.addListener(&window_.handleEvents, SDL_WINDOWEVENT, SDL_QUIT);
 
-		this.input_handler_.construct(allocator_);
-		this.input_handler_.addListener(&window_.handleEvents, SDL_WINDOWEVENT, SDL_QUIT);
+			//initialize networking subsystem
+			network_evman_.construct(EventMemory, NetEventType.max);
+			network_manager_.construct(allocator_, &network_evman_);
+			network_evman_.register!PushEvent(&network_manager_.onDataPush);
+			initializeEnet();
 
-		//initialize networking subsystem
-		this.network_evman_.construct(EventMemory, NetEventType.max);
-		this.network_manager_.construct(allocator_, &network_evman_);
-		this.network_evman_.register!PushEvent(&network_manager_.onDataPush);
-		initializeEnet();
-
-		//initialize sound subsystem
-		auto maybe_sound = SoundSystem.create(allocator_, MAX_SOUND_SOURCES);
-		auto sound = maybe_sound.visit!(typeof(maybe_sound),
-			(ref SoundSystem sys) => Nullable!SoundSystem(sys),
-			(SoundSystem.Error err) {
-				writefln("[Engine] got error on sound system init: %s", err);
-				return Nullable!SoundSystem.init;
+			//initialize sound subsystem
+			auto sound_result = SoundSystem.create(sound_system_, allocator_, MAX_SOUND_SOURCES);
+			final switch (sound_result) with (SoundSystem.Error) {
+				case FailedOpeningDevice, FailedCreatingContext, FailedMakingContextCurrent:
+					return Error.SoundInitFailed;
+				case Success:
+					break;
 			}
-		)();
 
-		// yes
-		if (!sound.isNull) { this.sound_system_ = sound.get(); }
+			//initialize imgui context
+			imgui_context_.construct(allocator_, &window_, &input_handler_);
+			imgui_context_.initialize();
 
-		//initialize imgui context
-		this.imgui_context_.construct(allocator_, &window_, &input_handler_);
-		this.imgui_context_.initialize();
+			//link up imgui context to event shite
+			input_handler_.addListener(&imgui_context_.onEvent,
+				SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL, SDL_TEXTINPUT);
 
-		//link up imgui context to event shite
-		this.input_handler_.addListener(&imgui_context_.onEvent,
-			SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL, SDL_TEXTINPUT);
+			//load engine-required resources
+			loadResources();
 
-		//load engine-required resources
-		this.loadResources();
+			//set userspace references
+			update_function_ = update_func;
+			draw_function_ = draw_func;
+			after_draw_function_ = after_draw_func;
 
-		//set userspace references
-		this.update_function_ = update_func;
-		this.draw_function_ = draw_func;
-		this.after_draw_function_ = after_draw_func;
+		} //with
+
+		return Error.Success;
 
 	} //initialize
 

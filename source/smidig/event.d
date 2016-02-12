@@ -55,12 +55,19 @@ struct EventManager {
 
 	~this() {
 
-		foreach (ref arr; delegates_) {
-			this.allocator_.dispose(arr);
-		}
+		if (allocator_) {
 
-		foreach (ref arr; events_) {
-			this.allocator_.dispose(arr);
+			import std.stdio : writefln;
+			debug writefln("Destroying EventManager");
+
+			foreach (ref arr; delegates_) {
+				this.allocator_.dispose(arr);
+			}
+
+			foreach (ref arr; events_) {
+				this.allocator_.dispose(arr);
+			}
+
 		}
 
 	} //~this

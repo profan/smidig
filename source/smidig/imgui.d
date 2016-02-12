@@ -60,9 +60,14 @@ struct ImguiContext {
 
 	~this() {
 
-		allocator_.dispose(shader_);
-		allocator_.dispose(font_texture_);
-		glDeleteVertexArrays(1, &vao);
+		import std.stdio : writefln;
+
+		if (allocator_) {
+			debug writefln("Destroying Imgui");
+			allocator_.dispose(shader_);
+			allocator_.dispose(font_texture_);
+			glDeleteVertexArrays(1, &vao);
+		}
 
 	} //~this
 
