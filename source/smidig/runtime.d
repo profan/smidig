@@ -70,7 +70,6 @@ struct Engine {
 	void initialize(in char[] title, UpdateFunc update_func, DrawFunc draw_func, DrawFunc after_draw_func) {
 
 		import derelict.sdl2.types;
-		import std.conv : to;
 		import std.stdio : writefln;
 		import smidig.memory : construct;
 		import smidig.defs : PushEvent;
@@ -90,9 +89,7 @@ struct Engine {
 		//initialize window and input handler
 		auto result = Window.create(title, 640, 480);
 		auto win = result.visit!(typeof(result),
-			(ref Window w) {
-				return Nullable!Window(w);
-			},
+			(ref Window w) => Nullable!Window(w),
 			(Window.Error err) {
 				writefln("[Engine] got error on window creation: %s", err);
 				return Nullable!Window.init;
@@ -114,12 +111,9 @@ struct Engine {
 		//initialize sound subsystem
 		auto maybe_sound = SoundSystem.create(allocator_, MAX_SOUND_SOURCES);
 		auto sound = maybe_sound.visit!(typeof(maybe_sound),
-			(ref SoundSystem sys) {
-				writefln("[Engine] sound system constructed successfully.");
-				return Nullable!SoundSystem(sys);
-			},
+			(ref SoundSystem sys) => Nullable!SoundSystem(sys),
 			(SoundSystem.Error err) {
-				writefln("[Engine] got error on window creation: %s", err);
+				writefln("[Engine] got error on sound system init: %s", err);
 				return Nullable!SoundSystem.init;
 			}
 		)();
