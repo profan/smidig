@@ -26,15 +26,11 @@ struct EventManager {
 	import smidig.collections : Array;
 	import smidig.memory : IAllocator, Mallocator, theAllocator, Region, make, dispose;
 
-	package {
+	IAllocator allocator_;
+	Region!Mallocator region_allocator_;
 
-		IAllocator allocator_;
-		Region!Mallocator region_allocator_;
-
-		Array!(Array!EventDelegate*) delegates_;
-		Array!(Array!(EventCast*)*) events_;
-
-	}
+	Array!(Array!EventDelegate*) delegates_;
+	Array!(Array!(EventCast*)*) events_;
 
 	@disable this();
 	@disable this(this);
@@ -137,6 +133,9 @@ struct EventManager {
 
 	} //fire
 
+	/**
+	 * Schedules an event to be fired off in x number of ticks.
+	*/
 	void schedule(size_t in_ticks) { //TODO implement
 
 	} //schedule
