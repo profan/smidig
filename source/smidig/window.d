@@ -48,10 +48,10 @@ struct Window {
 	import smidig.gl : AttribLocation, RenderTarget, Shader;
 	import smidig.collections : String;
 
-	enum WindowError {
+	enum Error {
 		RendererCreationFailed = "Failed to create window!",
 		ContextCreationFailed = "Failed to create OpenGL context of at least version 3.3!"
-	} //WindowError
+	} //Error
 
 	private {
 
@@ -105,7 +105,7 @@ struct Window {
 
 	} //~this
 
-	static Result!(Window, WindowError) create(in char[] title, uint width, uint height) {
+	static Result!(Window, Error) create(in char[] title, uint width, uint height) {
 
 		import smidig.memory : construct; //FIXME abolish this part, more error handling
 
@@ -125,16 +125,14 @@ struct Window {
 			flags);
 
 		// check if valid
-		if (!window.window_) { return typeof(return)(WindowError.RendererCreationFailed); }
+		if (!window.window_) { return typeof(return)(Error.RendererCreationFailed); }
 
 		// get window height and set vars in struct
 		SDL_GetWindowSize(window.window_, &window.window_width_, &window.window_height_);
 
 		// try creating context, TODO is setting a "min" version
 		int result = window.createGLContext(3, 3);
-		if (result == -1) { return typeof(return)(WindowError.ContextCreationFailed); }
-
-
+		if (result == -1) { return typeof(return)(Error.ContextCreationFailed); }
 
 		// set up render target, view projection shit
 		with (window) {
@@ -181,9 +179,7 @@ struct Window {
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
 
 		// debuggering!
-		SDL_GL_SetAttribute(
-			SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG
-		);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
 		glcontext_ = SDL_GL_CreateContext(window_);
 

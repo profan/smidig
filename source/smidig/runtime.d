@@ -93,7 +93,7 @@ struct Engine {
 			(ref Window w) {
 				return Nullable!Window(w);
 			},
-			(Window.WindowError err) {
+			(Window.Error err) {
 				writefln("[Engine] got error on window creation: %s", err);
 				return Nullable!Window.init;
 			}
@@ -112,8 +112,20 @@ struct Engine {
 		initializeEnet();
 
 		//initialize sound subsystem
-		this.sound_system_.construct(allocator_, MAX_SOUND_SOURCES);
-		this.sound_system_.initialize();
+		auto maybe_sound = SoundSystem.create(allocator_, MAX_SOUND_SOURCES);
+		auto sound = maybe_sound.visit!(typeof(maybe_sound),
+			(ref SoundSystem sys) {
+				writefln("[Engine] sound system constructed successfully.");
+				return Nullable!SoundSystem(sys);
+			},
+			(SoundSystem.Error err) {
+				writefln("[Engine] got error on window creation: %s", err);
+				return Nullable!SoundSystem.init;
+			}
+		)();
+
+		// yes
+		if (!sound.isNull) { this.sound_system_ = sound.get(); }
 
 		//initialize imgui context
 		this.imgui_context_.construct(allocator_, &window_, &input_handler_);
