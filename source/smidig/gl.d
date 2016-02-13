@@ -345,7 +345,7 @@ struct FontAtlas {
 		FT_Library ft;
 		FT_Face face;
 
-		if (FT_Init_FreeType(&ft)) {
+		if (FT_Init_FreeType(&ft)) { //TODO move this
 			printf("[FontAtlas] Could not init freetype.");
 		}
 
@@ -1134,7 +1134,9 @@ struct Texture {
 
 	} //~this
 
-	//since OpenGL lets you bind multiple textures at once, maximum(32?)
+	/**
+	 * Binds the texture handle, takes an argument for which texture unit to use.
+	*/
 	void bind(int unit) nothrow @nogc {
 
 		assert(unit >= 0 && unit <= 31);

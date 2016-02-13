@@ -107,6 +107,9 @@ struct SoundSystem {
 
 	} //expandSources
 
+	/**
+	 * Reads a file from disk given a path, adding it to the list of sound buffers, returning the ID assigned.
+	*/
 	auto loadSoundFile(char* path) {
 		
 		import std.string : format, fromStringz;

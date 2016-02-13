@@ -80,6 +80,9 @@ struct EventSpec {
 enum AnyKey = -1;
 alias EventMask = ulong;
 
+/**
+ * Used to generate the bitmask enum for event handling.
+*/
 immutable SDL_EventType[45] sdl_events = [
 	SDL_FIRSTEVENT,
 	SDL_QUIT,
