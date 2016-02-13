@@ -35,13 +35,13 @@ mixin template FSM(StateFunc, in_states...) {
 
 		} //generateTick
 
-		static string generateSwitch(string cond, string data) {
+		static string generateSwitch(string cond, string data, string pre = "") {
 
 			import std.array : appender;
 			import std.format : format;
 
 			auto app = appender!string();
-			app ~= q{ final switch (%s) { %s }}.format(cond, data);
+			app ~= q{ %s final switch (%s) { %s }}.format(pre, cond, data);
 
 			return app.data();
 
@@ -75,7 +75,6 @@ mixin template FSM(StateFunc, in_states...) {
 			auto app = appender!string();
 
 			//only run leave if its in a valid state
-			app ~= q{ if (current_state_ != 1) };
 			foreach (state; in_states_str) {
 				app ~= q{
 					case %s.id:
@@ -100,7 +99,7 @@ mixin template FSM(StateFunc, in_states...) {
 	} //tick
 
 	void transitionTo(FStateID new_state) {
-		mixin(generateSwitch(new_state.stringof, generateLeaving(new_state.stringof)));
+		mixin(generateSwitch(current_state_.stringof, generateLeaving(new_state.stringof), q{if (current_state_ != 1)}));
 		mixin(generateSwitch(new_state.stringof, generateTransitionTo(new_state.stringof)));
 	} //transitionTo
 
@@ -149,13 +148,16 @@ version(unittest) {
 
 			} //enter
 
-			void execute(ref FSMTest fsm) {
+			void execute(ref FSMTest fsm, int v) {
 
+				writefln("walking got value: %d", v);
 				fsm.transitionTo(State.Running);
 
 			} //execute
 
 			void leave(FStateID to) {
+
+				writefln("left walking for: %d", to);
 
 			} //leave
 
@@ -167,9 +169,11 @@ version(unittest) {
 
 			void enter(FStateID from) {
 
+				writefln("entered running from: %d", from);
+
 			} //enter
 
-			void execute(ref FSMTest fsm) {
+			void execute(ref FSMTest fsm, int v) {
 
 				fsm.transitionTo(State.Walking);
 
@@ -191,7 +195,7 @@ unittest {
 	import std.string : format;
 
 	auto fsm = FSMTest(10);
-	fsm.tick();
+	fsm.tick(10);
 
 	assert(0);
 
