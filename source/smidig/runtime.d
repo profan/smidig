@@ -8,8 +8,8 @@ import smidig.resource : ResourceManager;
 import smidig.sound : SoundSystem;
 
 //probably belongs in the renderer itself later?
+import smidig.defs : NetEventType;
 import smidig.gl : Cursor, FontAtlas;
-import smidig.defs : DrawEventType, NetEventType;
 import smidig.utils.console : Console;
 
 enum Resource {

@@ -200,7 +200,10 @@ struct InputHandler {
 
 	} //this
 
-	void initializeMask() {
+	/**
+	 * Initializes the bitmask used for filtering against event types.
+	*/
+	private void initializeMask() {
 
 		foreach (i, e; sdl_events) {
 			EventMask n = i ^ 2;
@@ -209,6 +212,9 @@ struct InputHandler {
 
 	} //initializeMask
 
+	/**
+	 * Adds a delegate for receiving all input events.
+	*/
 	ref typeof(this) addListener(EventDelegate ed) {
 
 		delegates_ ~= EventSpec(ed, EventMask.max);
@@ -217,7 +223,10 @@ struct InputHandler {
 
 	} //addListener
 
-	/* filtering addListener, combines all types sent in to form single mask */
+	/**
+	 * Adds a listener for a number of $(D SDL_EventType), essentially acting as a filter,
+	 * only forwarding events which match the filter to the passed delegate.
+	*/
 	ref typeof(this) addListener(SDL_EventType...)(EventDelegate ed, SDL_EventType types) {
 
 		auto mask = 0;
@@ -231,6 +240,9 @@ struct InputHandler {
 
 	} //addListener
 
+	/**
+	 * Binds a delegate to a given key press event, with optional modifiers (Shift, Ctrl, etc)
+	*/
 	ref typeof(this) bindKeyEvent(SDL_Scancode key, KeyDelegate kd, int modifiers = 0) {
 
 		KeyBind kb = {key: key, func: kd, mods: modifiers};
@@ -258,6 +270,9 @@ struct InputHandler {
 
 	} //bindControllerAxis
 
+	/**
+	 * Binds a delegate to a given mouse button, in either the pressed or (just released) state.
+	*/
 	ref typeof(this) bindMouseBtn(Uint8 button, MouseDelegate md, KeyState state) {
 
 		MouseBind mb = {mousebtn: button, func: md, state: to!MouseKeyState(state)};
@@ -267,6 +282,10 @@ struct InputHandler {
 
 	} //bindMouseBtn
 
+	/**
+	 * Binds a delegate to a given key, calling the delegate on each frame it is pressed,
+	 * as opposed to the event-based version which would activate on each state change.
+	*/
 	ref typeof(this) bindKey(SDL_Scancode key, KeyDelegate kd) {
 
 		KeyBind kb = {key: key, func: kd};
@@ -285,6 +304,9 @@ struct InputHandler {
 
 	} //bindMouseMov
 
+	/**
+	 * Processes all SDL2 events that have come in, calling attached delegates.
+	*/
 	void handleEvents() {
 
 		while(SDL_PollEvent(&ev)) {

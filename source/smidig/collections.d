@@ -687,7 +687,7 @@ struct HashMap(K, V) {
 	} //length
 
 	/* move other instance into self */
-	void moveFrom(ref typeof(this) other) {
+	private void moveFrom(ref typeof(this) other) {
 
 		this.free();
 		this.array_ = move(other.array_);
