@@ -30,6 +30,7 @@ struct Engine {
 	import smidig.dbg : DebugContext, render_string;
 	import smidig.types : visit, Nullable, Result;
 	import smidig.imgui : ImguiContext;
+	import smidig.gl : RenderTarget;
 
 	alias UpdateFunc = void delegate();
 	alias DrawFunc = void delegate(double);
@@ -74,6 +75,19 @@ struct Engine {
 	RunFunc run_function_;
 
 	@disable this(this);
+
+	@property {
+
+		ref FontAtlas atlas() { return debug_atlas_; }
+		ref RenderTarget view() { return window_.render_target_; }
+
+		int update_rate(int new_update_rate) { return update_rate_ = new_update_rate; }
+		int update_rate() const { return update_rate_; }
+
+		int draw_rate(int new_draw_rate) { return draw_rate_ = new_draw_rate; }
+		int draw_rate() const { return draw_rate_; }
+
+	}
 
 	static Error create(ref Engine engine, in char[] title, UpdateFunc update_func, DrawFunc draw_func, DrawFunc after_draw_func) {
 
