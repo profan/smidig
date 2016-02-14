@@ -21,6 +21,7 @@ ref FontAtlas render_string(string format, Args...)(ref FontAtlas atlas, ref Ren
 
 /**
  * A safer D interface to sprintf, uses a supplied char buffer for formatting, returns a slice.
+ * You will most definitely die a fiery death if the format string doesn't have a null terminator.
 */
 const(char[]) cformat(Args...)(char[] buf, in char[] format, Args args) {
 
@@ -34,7 +35,7 @@ const(char[]) cformat(Args...)(char[] buf, in char[] format, Args args) {
 } //cformat
 
 /**
- * convenience function which calls cformat on a temporary char buffer,
+ * Convenience function which calls cformat on a temporary char buffer,
  * which is then returned as a value.
 */
 const(char[Size]) tempformat(size_t Size, Args...)(in char[] format, Args args) {
