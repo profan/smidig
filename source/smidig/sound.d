@@ -19,6 +19,13 @@ auto to(T:ALboolean)(bool b) {
 
 struct SoundSystem {
 
+	enum Error {
+		FailedOpeningDevice,
+		FailedCreatingContext,
+		FailedMakingContextCurrent,
+		Success
+	} //Error
+
 	//TODO: take a look at this later, should it be a constant?
 	enum INITIAL_BUFFERS = 16;
 
@@ -36,9 +43,6 @@ struct SoundSystem {
 
 	private {
 
-		//allocator yes
-		IAllocator allocator_;
-
 		//audio device and context
 		ALCdevice* device_;
 		ALCcontext* context_;
@@ -52,35 +56,46 @@ struct SoundSystem {
 
 	}
 
-	@disable this();
 	@disable this(this);
 
-	this(IAllocator allocator, size_t num_sources) {
-		this.allocator_ = allocator;
-		this.buffers_ = typeof(buffers_)(allocator_, INITIAL_BUFFERS);
-		this.sources_ = typeof(sources_)(allocator_, num_sources);
+	private this(IAllocator allocator, size_t num_sources) {
+		this.buffers_ = typeof(buffers_)(allocator, INITIAL_BUFFERS);
+		this.sources_ = typeof(sources_)(allocator, num_sources);
 	} //this
 
-	void initialize() {
+	static Error create(ref SoundSystem system, IAllocator allocator, size_t num_sources) {
 
-		//TODO handle and check errors upon initialization
+		assert(allocator);
 
-		this.device_ = alcOpenDevice(null); //preferred device
-		this.context_ = alcCreateContext(device_, null);
-		alcMakeContextCurrent(context_);
+		system = SoundSystem(allocator, num_sources);
 
-		alGenSources(cast(int)sources_.capacity, sources_.sources.ptr);
-		sources_.length = sources_.capacity;
+		system.device_ = alcOpenDevice(null); //preferred device
+		if (!system.device_) { return Error.FailedOpeningDevice; }
 
-	} //initialize
+		system.context_ = alcCreateContext(system.device_, null);
+		if (!system.context_) { return Error.FailedCreatingContext; }
+
+		auto result = alcMakeContextCurrent(system.context_); //is ok, try making current
+		if (result == ALC_FALSE) { return Error.FailedMakingContextCurrent; }
+
+		with (system) {
+			alGenSources(cast(int)sources_.capacity, sources_.sources.ptr);
+			sources_.length = sources_.capacity;
+		}
+
+		return Error.Success;
+
+	} //create
 
 	~this() {
 
-		alDeleteSources(cast(int)sources_.length, sources_.sources.ptr);
-		alDeleteBuffers(cast(int)buffers_.length, buffers_.values.ptr);
-		alcMakeContextCurrent(null);
-		alcDestroyContext(context_);
-		alcCloseDevice(device_);
+		if (device_ && context_ ) { //FUCKING WOW? ughhhhh
+			alDeleteSources(cast(int)sources_.length, sources_.sources.ptr);
+			alDeleteBuffers(cast(int)buffers_.length, buffers_.values.ptr);
+			alcMakeContextCurrent(null);
+			alcDestroyContext(context_);
+			alcCloseDevice(device_);
+		}
 
 	} //~this
 
@@ -92,6 +107,9 @@ struct SoundSystem {
 
 	} //expandSources
 
+	/**
+	 * Reads a file from disk given a path, adding it to the list of sound buffers, returning the ID assigned.
+	*/
 	auto loadSoundFile(char* path) {
 		
 		import std.string : format, fromStringz;

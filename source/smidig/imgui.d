@@ -60,9 +60,14 @@ struct ImguiContext {
 
 	~this() {
 
-		allocator_.dispose(shader_);
-		allocator_.dispose(font_texture_);
-		glDeleteVertexArrays(1, &vao);
+		import std.stdio : writefln;
+
+		if (allocator_) {
+			debug writefln("Destroying Imgui");
+			allocator_.dispose(shader_);
+			allocator_.dispose(font_texture_);
+			glDeleteVertexArrays(1, &vao);
+		}
 
 	} //~this
 
@@ -239,6 +244,7 @@ struct ImguiContext {
 		int display_w = window_.width;
 		int display_h = window_.height;
 		io.DisplaySize = ImVec2(cast(float)display_w, cast(float)display_h);
+		io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 		io.DeltaTime = cast(float)dt;
 
 		int m_x, m_y;

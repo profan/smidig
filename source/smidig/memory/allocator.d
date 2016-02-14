@@ -72,12 +72,13 @@ struct TrackingAllocator(ParentAllocator) {
 
 		import std.algorithm : filter;
 
+		// scope delegate to avoid any allocation of any kind, safe as long as isnt escaped!
 		auto scope filter_ptrs = (void** p) {
 			return p >= old_ptr && p <= old_ptr + size || *p >= old_ptr && *p <= old_ptr + size;
 		};
 
 		auto ptr_list = filter!filter_ptrs(registry_[]);
-		auto new_ptr = b.ptr; //new offset in memory for block
+		auto new_ptr = b.ptr; // new offset in memory for block
 
 		if (!ptr_list.empty && new_ptr != old_ptr) {
 
@@ -95,9 +96,9 @@ struct TrackingAllocator(ParentAllocator) {
 					p = moved_ptr; //set by reference ;D
 					*moved_ptr += offset_diff;
 
-				} else { //pointer resides outside block, points into it
+				} else { // pointer resides outside block, points into it
 
-					//  dereference pointer and set new pointing location.
+					// dereference pointer and set new pointing location.
 					*p += offset_diff;
 
 				}

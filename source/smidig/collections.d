@@ -531,6 +531,8 @@ struct ArraySOA(T) {
 
 	}
 
+	@disable this(this);
+
 	this(IAllocator allocator, size_t initial_size) {
 
 		initMemberArrays(allocator, initial_size);

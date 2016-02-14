@@ -18,14 +18,6 @@ struct DebugContext {
 	import smidig.gl : FontAtlas;
 	import smidig.defs : Vec2i;
 
-	struct Option {
-
-		enum Type {
-			Int
-		}
-
-	} //Option
-
 	/* allocator */
 	IAllocator allocator_;
 
@@ -38,7 +30,6 @@ struct DebugContext {
 
 	/* imgui related state */
 	ImguiContext* context_;
-	Option* option_root_;
 
 	this(IAllocator allocator, ImguiContext* context, FontAtlas* atlas, Window* window, Vec2i initial_offset) {
 		this.allocator_ = allocator;

@@ -44,14 +44,14 @@ struct Window {
 	";
 
 
-	import smidig.types : Result;
 	import smidig.gl : AttribLocation, RenderTarget, Shader;
 	import smidig.collections : String;
 
-	enum WindowError {
-		RendererCreationFailed,
-		ContextCreationFailed
-	} //WindowError
+	enum Error {
+		RendererCreationFailed = "Failed to create window!",
+		ContextCreationFailed = "Failed to create OpenGL context of at least version 3.3!",
+		Success = "Window Creation Succeeded!"
+	} //Error
 
 	private {
 
@@ -100,16 +100,19 @@ struct Window {
 
 	~this() {
 
-		SDL_GL_DeleteContext(glcontext_);
-		SDL_DestroyWindow(window_);
+		import std.stdio : writefln;
+
+		if (window_) {
+			debug writefln("Destroying Window");
+			SDL_GL_DeleteContext(glcontext_);
+			SDL_DestroyWindow(window_);
+		}
 
 	} //~this
 
-	static Result!(Window, WindowError) create(in char[] title, uint width, uint height) {
+	static Error create(ref Window window, in char[] title, uint width, uint height) {
 
 		import smidig.memory : construct; //FIXME abolish this part, more error handling
-
-		Window window;
 
 		window.title_ = String(title); //TODO also error handling? not sure if should have, prob not
 
@@ -125,14 +128,14 @@ struct Window {
 			flags);
 
 		// check if valid
-		if (!window.window_) { return typeof(return)(WindowError.RendererCreationFailed); }
+		if (!window.window_) { return Error.RendererCreationFailed; }
 
 		// get window height and set vars in struct
 		SDL_GetWindowSize(window.window_, &window.window_width_, &window.window_height_);
 
 		// try creating context, TODO is setting a "min" version
 		int result = window.createGLContext(3, 3);
-		if (result == -1) { return typeof(return)(WindowError.ContextCreationFailed); }
+		if (result == -1) { return Error.ContextCreationFailed; }
 
 		// set up render target, view projection shit
 		with (window) {
@@ -146,9 +149,28 @@ struct Window {
 
 		}
 
-		return typeof(return)(window);
+		return Error.Success;
 
 	} //create
+
+	extern(C) nothrow @nogc
+	static void openGLCallbackFunction(
+		GLenum source, GLenum type,
+		GLuint id, GLenum severity,
+		GLsizei length, const (GLchar)* message,
+		void* userParam)
+	{
+
+		import smidig.conv : to;
+
+		printf("Message: %s \nSource: %s \nType: %s \nID: %d \nSeverity: %s\n\n",
+			message, to!(char*)(source), to!(char*)(type), id, to!(char*)(severity));
+
+		if (severity == GL_DEBUG_SEVERITY_HIGH) {
+			printf("Aborting...\n");
+		}
+
+	} //openGLCallbackFunction
 
 	int createGLContext(int gl_major, int gl_minor) {
 
@@ -158,6 +180,9 @@ struct Window {
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
+
+		// debuggering!
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 
 		glcontext_ = SDL_GL_CreateContext(window_);
 
@@ -179,6 +204,21 @@ struct Window {
 		printf("[OpenGL] Loading GL Extensions. \n");
 		DerelictGL3.reload();
 
+		// enable debuggering
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+		glDebugMessageCallback(&openGLCallbackFunction, null);
+
+		//enable all
+		glDebugMessageControl(
+			GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, null, true
+		);
+
+		//disable notification messages
+		glDebugMessageControl(
+			GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, null, false
+		);
+
 		return 0; //all is well
 
 	} //createGLContext
@@ -193,7 +233,7 @@ struct Window {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glViewport(0, 0, width, height);
 
-		render_target_.bind_fbo();
+		render_target_.bind_fbo(color);
 
 	} //renderClear
 

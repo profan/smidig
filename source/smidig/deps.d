@@ -39,7 +39,12 @@ ShouldThrow missingSymFunc( string symName ) {
         if (symName == sym) return ShouldThrow.No;
     }
 
+	import std.stdio : writefln;
     // Any other missing symbol should throw.
+	writefln("missing: %s", symName);
+
+	if (symName == "igColor" || symName == "igColor2") return ShouldThrow.No;
+
     return ShouldThrow.Yes;
 
 } //missingSymFunc

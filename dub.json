@@ -5,7 +5,7 @@
 		"derelict-gl3": "~>1.0.12",
 		"derelict-enet": "~>2.0.0",
 		"derelict-alure": "~>1.0.0",
-		"derelict-imgui": "~>0.8.0",
+		"derelict-imgui": "~>0.9.1",
 		"derelict-al": "~master",
 		"derelict-ft": "~>1.0.2",
 		"gfm:math": "~>2.0",

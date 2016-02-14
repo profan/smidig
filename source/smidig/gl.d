@@ -58,6 +58,26 @@ template TypeToUniformFunction(T) {
 
 } //TypeToUniformFunction
 
+enum DrawType {
+
+	Static,
+	Dynamic,
+	Stream
+
+} //DrawType
+
+enum Primitive {
+
+	Points = GL_POINTS,
+	Lines = GL_LINES,
+	LineStrip = GL_LINE_STRIP,
+	LineLoop = GL_LINE_LOOP,
+	Triangles = GL_TRIANGLES,
+	TriangleStrip = GL_TRIANGLE_STRIP,
+	TriangleFan = GL_TRIANGLE_FAN,
+
+} //Primitive
+
 /**
  * Generic VertexArray structure, used to upload data of any given vertex type to the GPU.
 */
@@ -79,7 +99,7 @@ struct VertexArray {
 	//@disable this(); maybe?
 	@disable this(this);
 
-	this(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_STATIC_DRAW, GLenum type = GL_TRIANGLES) nothrow @nogc {
+	this(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_STATIC_DRAW, Primitive type = Primitive.Triangles) nothrow @nogc {
 
 		mixin("import " ~ VertexType.Imports ~ ";");
 		this.num_vertices_ = cast(uint)vertices.length;
@@ -134,7 +154,11 @@ struct VertexArray {
 
 	void send(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_DYNAMIC_DRAW) {
 
+		bind();
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, draw_type);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		unbind();
 
 	} //send
 
@@ -321,7 +345,7 @@ struct FontAtlas {
 		FT_Library ft;
 		FT_Face face;
 
-		if (FT_Init_FreeType(&ft)) {
+		if (FT_Init_FreeType(&ft)) { //TODO move this
 			printf("[FontAtlas] Could not init freetype.");
 		}
 
@@ -591,15 +615,15 @@ struct RenderTarget {
 
 	} //this
 
-	void bind_fbo() {
+	void bind_fbo(int clear_colour = 0x428bca) {
 
 		fbo_.bind();
 
 		//clear fbo before drawing
-		auto color = to!GLColor(0xffa500, 255);
+		auto color = to!GLColor(clear_colour, 255);
 		glClearColor(color[0], color[1], color[2], color[3]);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glViewport(0, 0, fbo_.width_, fbo_.width_);
+		glViewport(0, 0, fbo_.width_, fbo_.height_);
 
 	} //bind_fbo
 
@@ -611,11 +635,14 @@ struct RenderTarget {
 
 	void resize(int w, int h) {
 
+
 		auto verts = createRectangleVec3f2f(w, h);
 		quad_.send(verts); //update mesh too!
-		view_projection_ = Mat4f.orthographic(0.0f, w, 0.0f, h, 0.0f, 1.0f);
+		rbo_.resize(w, h);
 		texture_.resize(w, h);
 		fbo_.resize(w, h);
+
+		view_projection_ = Mat4f.orthographic(0.0f, w, 0.0f, h, 0.0f, 1.0f);
 
 	} //resize
 
@@ -623,7 +650,6 @@ struct RenderTarget {
 
 		bind();
 		auto trans = transform_.transform;
-		shader_.update(trans);
 		quad_.draw();
 		unbind();
 
@@ -633,7 +659,7 @@ struct RenderTarget {
 
 		bind();
 		auto trans = transform_.transform;
-		shader_.update(trans);
+		shader_.update(in_view_projection, trans);
 		quad_.draw();
 		unbind();
 
@@ -682,8 +708,6 @@ struct FrameBuffer {
 		height_ = height;
 
 		glGenFramebuffers(1, &frame_buffer_);
-		glFramebufferParameteri(bound_target_, GL_FRAMEBUFFER_DEFAULT_WIDTH, width);
-		glFramebufferParameteri(bound_target_, GL_FRAMEBUFFER_DEFAULT_HEIGHT, height);
 
 	} //this
 
@@ -759,6 +783,14 @@ struct RenderBuffer {
 		glDeleteRenderbuffers(1, &render_buffer_);
 
 	} //~this
+
+	void resize(int w, int h) {
+
+		bind();
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, w, h);
+		unbind();
+
+	} //resize
 
 	void bind() {
 
@@ -1081,8 +1113,8 @@ struct Texture {
 		glBindTexture(GL_TEXTURE_2D, texture_);
 
 		//set texture parameters in currently bound texture, controls texture wrapping (or GL_CLAMP?)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 		//linearly interpolate between pixels, MIN if texture is too small for drawing area, MAG if drawing area is smaller than texture
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1102,7 +1134,9 @@ struct Texture {
 
 	} //~this
 
-	//since OpenGL lets you bind multiple textures at once, maximum(32?)
+	/**
+	 * Binds the texture handle, takes an argument for which texture unit to use.
+	*/
 	void bind(int unit) nothrow @nogc {
 
 		assert(unit >= 0 && unit <= 31);
@@ -1552,6 +1586,41 @@ GLfloat[4] to(T : GLfloat[4])(int color, ubyte alpha = 255) nothrow @nogc pure {
 
 } //to!GLfloat[4]
 
+const (char*) to(T : char*)(GLenum value) {
+
+	switch (value) {
+
+		// sources
+		case GL_DEBUG_SOURCE_API: return "API";
+		case GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "Window System";
+		case GL_DEBUG_SOURCE_SHADER_COMPILER: return "Shader Compiler";
+		case GL_DEBUG_SOURCE_THIRD_PARTY: return "Third Party";
+		case GL_DEBUG_SOURCE_APPLICATION: return "Application";
+		case GL_DEBUG_SOURCE_OTHER: return "Other";
+
+		// error types
+		case GL_DEBUG_TYPE_ERROR: return "Error";
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "Deprecated Behaviour";
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "Undefined Behaviour";
+		case GL_DEBUG_TYPE_PORTABILITY: return "Portability";
+		case GL_DEBUG_TYPE_PERFORMANCE: return "Performance";
+		case GL_DEBUG_TYPE_MARKER: return "Marker";
+		case GL_DEBUG_TYPE_PUSH_GROUP: return "Push Group";
+		case GL_DEBUG_TYPE_POP_GROUP: return "Pop Group";
+		case GL_DEBUG_TYPE_OTHER: return "Other";
+
+		// severity markers
+		case GL_DEBUG_SEVERITY_HIGH: return "High";
+		case GL_DEBUG_SEVERITY_MEDIUM: return "Medium";
+		case GL_DEBUG_SEVERITY_LOW: return "Low";
+		case GL_DEBUG_SEVERITY_NOTIFICATION: return "Notification";
+
+		default: return "(undefined)";
+
+	}
+
+} //to!string(GLenum)
+
 int darken(int color, uint percentage) nothrow @nogc pure {
 
 	uint adjustment = 255 / percentage;
@@ -1589,12 +1658,12 @@ auto createRectangleVec3f2f(float w, float h) nothrow @nogc pure {
 
 	Vertex[6] vertices = [
 		Vertex(Vec3f(0.0f, 0.0f, 0.0f), Vec2f(0.0f, 0.0f)), // top left
-		Vertex(Vec3f(w, 0.0f, 0.0f), Vec2f(1.1f, 0.0f)), // top right
-		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.1f, 1.1f)), // bottom right
+		Vertex(Vec3f(w, 0.0f, 0.0f), Vec2f(1.0f, 0.0f)), // top right
+		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.0f, 1.0f)), // bottom right
 
 		Vertex(Vec3f(0.0f, 0.0f, 0.0f), Vec2f(0.0f, 0.0f)), // top left
-		Vertex(Vec3f(0.0f, h, 0.0f), Vec2f(0.0f, 1.1f)), // bottom left
-		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.1f, 1.1f)) // bottom right
+		Vertex(Vec3f(0.0f, h, 0.0f), Vec2f(0.0f, 1.0f)), // bottom left
+		Vertex(Vec3f(w, h, 0.0f), Vec2f(1.0f, 1.0f)) // bottom right
 	];
 
 	return vertices;

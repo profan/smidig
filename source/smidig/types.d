@@ -123,7 +123,7 @@ auto visit(ST, F...)(auto ref ST thing) {
 
 	}
 
-	assert(false); //FIXME look at this later :I
+	assert(false, "no function matched!"); //FIXME look at this later :I
 
 } //visit
 

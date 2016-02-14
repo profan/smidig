@@ -1,5 +1,6 @@
 module smidig.net;
 
+//TODO maybe remove this?
 struct NetVar(T) {
 
 	alias variable this;
@@ -35,14 +36,17 @@ struct NetVar(T) {
 
 } //NetVar
 
-void initializeEnet() {
+int initializeEnet() {
 
 	import core.stdc.stdio : printf;
 	import derelict.enet.enet;
 
-	if (auto err = enet_initialize() != 0) {
+	int err;
+	if ((err = enet_initialize()) != 0) {
 		printf("[Net] An error occured on initialization: %d", err);
 	}
+
+	return err;
 
 } //initializeEnet
 
@@ -56,10 +60,11 @@ struct NetworkManager {
 	import smidig.memory : IAllocator;
 	import smidig.defs : ConnectionEvent, DisconnectionEvent, UpdateEvent, PushEvent, Update;
 
-	enum num_channels = 2;
+	enum num_channels = 2; //TODO take a look at this later, maybe allow adjustment?
 
 	private {
 
+		// used for passing data back
 		EventManager* ev_man_;
 
 		ENetHost* host_;
@@ -98,7 +103,7 @@ struct NetworkManager {
 
 	bool createServer(ushort binding_port, ubyte max_connections) {
 
-		assert(!host_, "host was not null on create server!");
+		if (host_) return false;
 
 		ENetAddress address;
 		address.host = ENET_HOST_ANY;
@@ -156,7 +161,7 @@ struct NetworkManager {
 			peers_ ~= new_peer;
 		}
 
-		ENetEvent event;
+		ENetEvent event; //TODO move timeout into variable/parameter somewhere
 		if (enet_host_service(host_, &event, 5000) > 0 &&
 			event.type == ENET_EVENT_TYPE_CONNECT)
 		{
@@ -184,6 +189,9 @@ struct NetworkManager {
 
 	} //disconnect
 
+	/**
+	 * Called whenever an Event containing network data to be sent comes in.
+	*/
 	void onDataPush(ref PushEvent ev) {
 
 		printf("[Net] sending packet of size: %u \n", typeof(ev.payload[0]).sizeof * ev.payload.length);
@@ -195,6 +203,10 @@ struct NetworkManager {
 
 	} //onDataPush
 
+	/**
+	 * Polls ENet for new messages, iterating until all have been processed.
+	 * Messages are then forwarded to any receivers through the $(D EventManager) member.
+	*/
 	void poll() {
 
 		if (!host_) return;
@@ -245,6 +257,9 @@ struct NetworkManager {
 
 	} //poll
 
+	/**
+	 * Draws a simple ImGui based UI for the server, mainly used for debugging purposes.
+	*/
 	void draw() {
 
 		import derelict.imgui.imgui;
