@@ -18,9 +18,6 @@ enum Resource {
 
 struct Engine {
 
-	/**
-	 * Type returned on creation.
-	*/
 	enum Error {
 		WindowInitFailed,
 		SoundInitFailed,

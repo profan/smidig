@@ -2,9 +2,12 @@ module smidig.rpc;
 
 import tested : name;
 
+/**
+ * Structure used to register functions which are meant to able to be called
+ * over the network, as well as "call" functions on other hosts, by serializing
+ * the function name passed, as well as the arguments.
+*/
 struct RPC {
-
-	/* rpc, here to simplify implementing networking functionality. */
 
 	import smidig.collections : HashMap;
 	import smidig.memory : IAllocator, Region, Mallocator, makeArray;
@@ -42,6 +45,10 @@ struct RPC {
 
 	} //this
 
+	/**
+	 * Given the function name and arguments, serializes the arguments
+	 * and writes them to the structure's attached output stream.
+	*/
 	void call(Args...)(string name, Args args) {
 
 		out_stream_.write(name);
@@ -52,6 +59,9 @@ struct RPC {
 
 	} //call
 
+	/**
+	 * Registers a function with the $(D RPC) struct.
+	*/
 	ref typeof(this) register(string name, WrapperFunction func) {
 
 		functions_[name] = func;
@@ -60,6 +70,10 @@ struct RPC {
 
 	} //register
 
+	/**
+	 * Reads from a given byte buffer, parsing the name and then calling the
+	 * corresponding function with the rest of the stream contents.
+	*/
 	void onPull(in ubyte[] data) {
 
 		auto stream = InputStream(data);
