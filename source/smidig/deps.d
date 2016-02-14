@@ -51,6 +51,9 @@ ShouldThrow missingSymFunc( string symName ) {
 
 void initializeSystems() {
 
+	import gcarena;
+	import trackallocs;
+
     alias libs = AliasSeq!(
         DerelictSDL2, DerelictSDL2Image,
         DerelictSDL2ttf, DerelictFT,
@@ -58,15 +61,25 @@ void initializeSystems() {
         DerelictALURE, DerelictImgui,
         DerelictENet);
 
-    foreach (T; libs) {
-        T.missingSymbolCallback = &missingSymFunc;
-        T.load();
-    }
+	{
+		//use gc arena inside block to load libs
+		auto ar = useCleanArena();
 
-    if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
-        printf("[GAME] SDL_Init, could not initialize: %s", SDL_GetError());
-        exit(2);
-    }
+		foreach (T; libs) {
+			T.missingSymbolCallback = &missingSymFunc;
+			T.load();
+		}
+
+		if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
+			printf("[GAME] SDL_Init, could not initialize: %s", SDL_GetError());
+			exit(2);
+		}
+
+	}
+
+    //track allocs yes
+	import trackallocs;
+	auto tracker = allocsTracker();
 
     //initiate SDL2 ttf
     if (TTF_Init() == -1) {

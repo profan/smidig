@@ -12,7 +12,7 @@ struct Event(EventID ID, T) {
 	alias payload this;
 	T payload;
 
-	@property OT* extract(OT)() {
+	@property OT* extract(OT)() { //TODO check if this still is necessary, probably not?
 		return cast(OT*)(&this);
 	} //extract
 
@@ -22,7 +22,6 @@ struct Event(EventID ID, T) {
 
 struct EventManager {
 
-	import core.stdc.stdio : printf;
 	import smidig.collections : Array;
 	import smidig.memory : IAllocator, Mallocator, theAllocator, Region, make, dispose;
 
