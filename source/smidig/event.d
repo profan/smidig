@@ -35,7 +35,7 @@ struct EventManager {
 	IAllocator allocator_;
 	Region!Mallocator region_allocator_;
 
-	Array!(Array!EventDelegate*) delegates_;
+	Array!(Array!EventDelegate) delegates_;
 	Array!(ILinkedList!EventCast) events_;
 
 	@disable this();
@@ -43,16 +43,21 @@ struct EventManager {
 
 	this(size_t to_allocate, EventID number_types) {
 
+		import smidig.memory : construct;
+
 		auto num_to_alloc = number_types + 1;
 
 		this.allocator_ = theAllocator;
 		this.region_allocator_ = Region!Mallocator(to_allocate);
+
 		this.delegates_ = typeof(delegates_)(allocator_, num_to_alloc);
+		this.delegates_.length = this.delegates_.capacity;
+
 		this.events_ = typeof(events_)(allocator_, num_to_alloc);
 		this.events_.length = this.events_.capacity;
 
-		foreach (i; 0..num_to_alloc) {
-			delegates_.add(allocator_.make!(Array!EventDelegate)(allocator_, 8));
+		foreach (i, ref arr; delegates_) {
+			arr.construct(allocator_, 8);
 		}
 
 		assert(allocator_, "allocator was null?");
@@ -65,10 +70,6 @@ struct EventManager {
 
 			import std.stdio : writefln;
 			debug writefln("Destroying EventManager");
-
-			foreach (ref arr; delegates_) {
-				this.allocator_.dispose(arr);
-			}
 
 		}
 
@@ -113,7 +114,7 @@ struct EventManager {
 	*/
 	void register(E, ED)(ED dele) {
 		mixin checkValidity!(E, ED);
-		(*delegates_[E.message_id]) ~= cast(EventDelegate)dele;
+		delegates_[E.message_id] ~= cast(EventDelegate)dele;
 	} //register
 
 	/**
@@ -133,7 +134,7 @@ struct EventManager {
 		mixin checkValidity!(E, ED);
 
 		auto event = E(args);
-		auto cur_dels = (*delegates_[E.message_id])[];
+		auto cur_dels = delegates_[E.message_id][];
 
 		foreach (key, ref del_func; cur_dels) {
 			auto casted_func = cast(ED) del_func;
@@ -187,7 +188,7 @@ struct EventManager {
 			foreach (id, ref ev_list; ev_man.events_) {
 
 				if (ev_list.empty) continue;
-				auto cur_dels = (*ev_man.delegates_[id])[];
+				auto cur_dels = ev_man.delegates_[id][];
 
 				if (cur_dels.length > 0) {
 					foreach (ev; ev_list) {
