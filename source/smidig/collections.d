@@ -157,12 +157,24 @@ struct Array(T) {
 
 	void expand(size_t extra_size) @trusted {
 
-		bool success = allocator_.expandArray!T(array_, extra_size);
+		bool success = allocator_.expandArray(array_, extra_size);
 		capacity_ += extra_size;
 
 		assert(success, "failed to expand array!");
 
 	} //expand
+
+	/*
+	void shrink() @trusted {
+
+		auto shrinkage = capacity_ - length_;
+		bool success = allocator_.shrinkArray(array_, shrinkage);
+		capacity_ = length_;
+
+		assert(success, "failed to shrink array!");
+
+	} //shrink
+	*/
 
 	void add(T item) @trusted {
 
@@ -1146,6 +1158,81 @@ unittest {
 
 }
 
+/**
+ * Intrusive single linked list, uses next pointer already present in the type
+ * to avoid extra dynamic memory allocation.
+*/
+struct ILinkedList(T) {
+
+	T* head_;
+
+	void add(T* item) {
+
+		this.add(&head_, item);
+
+	} //add
+
+	private void add(T** node, T* new_node) {
+
+		new_node.next = *node;
+		*node = new_node;
+
+	} //add
+
+    void opOpAssign(string op: "~")(T* item) {
+		this.add(&head_, item);
+	} //opOpAssign
+
+	int opApply(scope int delegate(T*) dg) {
+
+		int result = 0;
+
+		for (auto cur = head_; cur != null; cur = cur.next) {
+			result = dg(cur);
+			if (result) break;
+		}
+
+		return result;
+
+	} //opApply
+
+	/**
+	 * Unlinks the head of the linked list, making the next element
+	 * the new head of the list. (1, 2, 3, 4) -> (2, 3, 4)
+	*/
+	void poll() {
+
+		head_ = head_.next;
+
+	} //poll
+
+	T* head() {
+
+		return head_;
+
+	} //head
+
+	void clear() {
+
+		head_ = null;
+
+	} //clear
+
+	@property bool empty() {
+
+		return head_ == null;
+
+	} //empty
+
+} //ILinkedList
+
+@name("ILinkedList 1 (unimplemented)")
+unittest {
+
+	assert(0);
+
+}
+
 struct Stack(T) {
 
 	private LinkedList!T list_;
@@ -1737,7 +1824,7 @@ unittest {
 
 }
 
-version(DigitalMars) {
+version(GDC) {
 
 struct BKTree {
 

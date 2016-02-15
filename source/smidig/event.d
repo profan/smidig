@@ -12,6 +12,8 @@ struct Event(EventID ID, T) {
 	alias payload this;
 	T payload;
 
+	EventCast* next; // for intrusive container purposes
+
 	@property OT* extract(OT)() { //TODO check if this still is necessary, probably not?
 		return cast(OT*)(&this);
 	} //extract
@@ -22,14 +24,14 @@ struct Event(EventID ID, T) {
 
 struct EventManager {
 
-	import smidig.collections : Array;
+	import smidig.collections : Array, ILinkedList;
 	import smidig.memory : IAllocator, Mallocator, theAllocator, Region, make, dispose;
 
 	IAllocator allocator_;
 	Region!Mallocator region_allocator_;
 
 	Array!(Array!EventDelegate*) delegates_;
-	Array!(Array!(EventCast*)*) events_;
+	Array!(ILinkedList!EventCast) events_;
 
 	@disable this();
 	@disable this(this);
@@ -45,7 +47,6 @@ struct EventManager {
 
 		foreach (i; 0..num_to_alloc) {
 			delegates_.add(allocator_.make!(Array!EventDelegate)(allocator_, 8));
-			events_.add(allocator_.make!(Array!(EventCast*))(allocator_, 8));
 		}
 
 		assert(allocator_, "allocator was null?");
@@ -63,10 +64,6 @@ struct EventManager {
 				this.allocator_.dispose(arr);
 			}
 
-			foreach (ref arr; events_) {
-				this.allocator_.dispose(arr);
-			}
-
 		}
 
 	} //~this
@@ -77,7 +74,7 @@ struct EventManager {
 	void push(E, Args...)(Args args) {
 
 		auto thing = region_allocator_.make!(E)(args);
-		(*events_[thing.message_id]) ~= cast(EventCast*)thing;
+		events_[thing.message_id] ~= cast(EventCast*)thing;
 
 	} //push
 
@@ -86,9 +83,9 @@ struct EventManager {
 	*/
 	void push(E)(ref E e) {
 
-		auto allocated_thing = region_allocator_.make(E)();
+		auto allocated_space = region_allocator_.make(E)();
 		*allocated_space = e;
-		(*events_[e.message_id]) ~= cast(EventCast*)allocated_space;
+		events_[e.message_id] ~= cast(EventCast*)allocated_space;
 
 	} //push
 
@@ -183,11 +180,11 @@ struct EventManager {
 
 			foreach (id, ref ev_list; ev_man.events_) {
 
-				if (ev_list.length == 0) continue;
+				if (ev_list.empty) continue;
 				auto cur_dels = (*ev_man.delegates_[id])[];
 
 				if (cur_dels.length > 0) {
-					foreach (ref ev; *ev_list) {
+					foreach (ev; ev_list) {
 						foreach (key, ref del_func; cur_dels) {
 							switch (id) {
 								mixin(doSwitchEntry!EvTypesMap());
@@ -206,7 +203,7 @@ struct EventManager {
 
 		} //tick
 
-	} //do_tick
+	} //doTick
 
 } //EventManager
 
@@ -297,8 +294,8 @@ unittest {
 	sw.start();
 	foreach (i; 0..rounds) {
 		evman.push!FooEvent(true);
-		tick!TestEventIdentifier(evman);
 	}
+	tick!TestEventIdentifier(evman);
 	sw.stop();
 
 	writefln("[EventManager] took %s ms to push/tick %s events.", sw.peek().msecs, rounds);
@@ -325,5 +322,12 @@ unittest {
 	sw.stop();
 
 	writefln("[EventManager] took %s ms to fire %s events.", sw.peek().msecs, rounds);
+
+}
+
+@name("EventManager 5: perf test for several event types")
+unittest {
+
+	import std.datetime : StopWatch;
 
 }
