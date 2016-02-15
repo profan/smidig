@@ -8,11 +8,16 @@ alias EventDelegate = void delegate(EventCast*);
 enum EventMemory = 1024 * 1024 * 2; //allocate two megabytes
 
 struct Event(EventID ID, T) {
+
+	EventCast* next; // for intrusive container purposes
+
+	this(T t) {
+		payload = t;
+	} //this
+
 	enum message_id = ID;
 	alias payload this;
 	T payload;
-
-	EventCast* next; // for intrusive container purposes
 
 	@property OT* extract(OT)() { //TODO check if this still is necessary, probably not?
 		return cast(OT*)(&this);
@@ -44,6 +49,7 @@ struct EventManager {
 		this.region_allocator_ = Region!Mallocator(to_allocate);
 		this.delegates_ = typeof(delegates_)(allocator_, num_to_alloc);
 		this.events_ = typeof(events_)(allocator_, num_to_alloc);
+		this.events_.length = this.events_.capacity;
 
 		foreach (i; 0..num_to_alloc) {
 			delegates_.add(allocator_.make!(Array!EventDelegate)(allocator_, 8));
@@ -259,8 +265,7 @@ unittest {
 	evman.push!FooEvent(true);
 
 	tick!TestEventIdentifier(evman);
-	assert(received_result == true, 
-		   format("received_result wasn't %s, event not received properly?", true));
+	assert(received_result, format("received_result wasn't %s, event not received properly?", true));
 
 } //TODO write some tests up in this motherfucker
 

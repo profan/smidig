@@ -16,6 +16,9 @@
 			"dflags": ["-vgc"],
 			"buildOptions": ["debugMode", "debugInfo", "profile"]
 		},
+		"release-test": {
+			"buildOptions": ["releaseMode", "inline", "unittests"]
+		},
 		"ddox": {
 			"dflags": ["-D", "-X", "-Xfdocs.json"]
 		}

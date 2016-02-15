@@ -1179,7 +1179,7 @@ struct ILinkedList(T) {
 
 	} //add
 
-    void opOpAssign(string op: "~")(T* item) {
+	void opOpAssign(string op: "~")(T* item) {
 		this.add(&head_, item);
 	} //opOpAssign
 
