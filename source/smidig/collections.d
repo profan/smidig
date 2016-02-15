@@ -1202,7 +1202,9 @@ struct ILinkedList(T) {
 	*/
 	void poll() {
 
-		head_ = head_.next;
+		if (head_) {
+			head_ = head_.next;
+		}
 
 	} //poll
 
@@ -1225,6 +1227,10 @@ struct ILinkedList(T) {
 	} //empty
 
 } //ILinkedList
+
+version(unittest) {
+
+}
 
 @name("ILinkedList 1 (unimplemented)")
 unittest {
