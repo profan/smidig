@@ -1,6 +1,6 @@
 module smidig.defs.net;
 
-import smidig.event : Event, EventID, expandEventsToMap;
+import smidig.event : Event, EventID;
 import smidig.ecs : EntityID;
 import smidig.math : Vec2i;
 
@@ -31,8 +31,5 @@ alias DisconnectionEvent = Event!(NetEventType.Disconnection, ENetPeer*);
 alias UpdateEvent = Event!(NetEventType.Update, Update);
 alias PushEvent = Event!(NetEventType.Push, const(void[]));
 
-mixin(expandEventsToMap!("NetEventIdentifier",
-	ConnectionEvent,
-	DisconnectionEvent,
-	UpdateEvent,
-	PushEvent));
+import std.meta : AliasSeq;
+alias NetEventTypes = AliasSeq!(ConnectionEvent, DisconnectionEvent, UpdateEvent, PushEvent);

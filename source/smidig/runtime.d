@@ -257,7 +257,7 @@ struct Engine {
 
 				//poll for network updates
 				this.network_manager_.poll();
-				tick!NetEventIdentifier(network_evman_);
+				tick!NetEventTypes(network_evman_);
 
 				update_time_ = cast(double)update_timer.peek() / cast(double)clock_ticks_per_second;
 				last_update = main_timer.peek();

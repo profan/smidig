@@ -25,6 +25,7 @@ struct Event(EventID ID, T) {
 
 	import std.string : format;
 	static assert(this.sizeof <= 32u, format("Event: %s too big: %d", typeof(this).stringof, this.sizeof));
+
 } //Event
 
 struct EventManager {
@@ -60,6 +61,8 @@ struct EventManager {
 			arr.construct(allocator_, 8);
 		}
 
+		assert(events_.length != 0);
+		assert(delegates_.length != 0);
 		assert(allocator_, "allocator was null?");
 
 	} //this
@@ -113,16 +116,20 @@ struct EventManager {
 	 * Registers an event delegate for a given event type.
 	*/
 	void register(E, ED)(ED dele) {
+
 		mixin checkValidity!(E, ED);
 		delegates_[E.message_id] ~= cast(EventDelegate)dele;
+
 	} //register
 
 	/**
 	 * Deregisters a given delegate from an event type handler.
 	*/
 	void unregister(E, ED)(ED base_dele) { //CAUUTIIOON
+
 		auto dele = cast(EventDelegate) base_dele;
 		delegates_[E.message_id].remove(dele);
+
 	} //unregister
 
 	/**
@@ -153,35 +160,10 @@ struct EventManager {
 	mixin template doTick() {
 
 		/**
-		 * Generates a switch over the given $(D Event) types to call the delegates through,
-		 * returns a string which is to be mixed in.
-		*/
-		static string doSwitchEntry(alias EventTypes)() {
-
-			import std.conv : to;
-			import std.string : format;
-
-			auto str = "";
-			foreach (type, id; EventTypes) {
-
-				str ~= format(
-					q{case %d:
-						auto casted_func = cast(void delegate(ref %s)) del_func;
-						auto event = ev.extract!(%s); casted_func(*event);
-						break;
-					}, id, type, type);
-
-			}
-
-			return str;
-
-		} //doSwitchEntry
-
-		/**
 		 * Dispatches all queued events for the given frame,
 		 * calling all the registered delegates for each $(D Event) type.
 		*/
-		static void tick(alias EvTypesMap)(ref EventManager ev_man) {
+		static void tick(EventTypes...)(ref EventManager ev_man) {
 
 			import core.stdc.stdio : printf;
 
@@ -193,9 +175,19 @@ struct EventManager {
 				if (cur_dels.length > 0) {
 					foreach (ev; ev_list) {
 						foreach (key, ref del_func; cur_dels) {
-							switch (id) {
-								mixin(doSwitchEntry!EvTypesMap());
+							event_switch: switch (id) {
+
+								//generate cases for event dispatching
+								foreach (type; EventTypes) {
+									case type.message_id:
+										auto casted_func = cast(void delegate(ref type)) del_func;
+										auto event = ev.extract!type;
+										casted_func(*event);
+										break event_switch;
+								}
+
 								default: printf("unhandled event type: %d", id);
+
 							}
 						}
 					}
@@ -214,30 +206,11 @@ struct EventManager {
 
 } //EventManager
 
-template expandEventsToMap(string name, Events...) {
-	enum expandEventsToMap =
-		"enum : int[string] {
-			" ~ name ~ " = [" ~ expandEvents!Events ~ "]
-		}";
-} //expandEventsToMap
-
-template expandEvents(Events...) {
-	import std.conv : to;
-	static if (Events.length > 1) {
-		enum expandEvents = expandEvents!(Events[0..1]) ~ ", "
-			~ expandEvents!(Events[1..$]);
-	} else static if (Events.length > 0) {
-		enum expandEvents = "\"" ~ Events[0].stringof ~ "\" : " ~ to!string(Events[0].message_id)
-			~ expandEvents!(Events[1..$]);
-	} else {
-		enum expandEvents = "";
-	}
-} //expandEvents
-
 version (unittest) {
 
 	import std.stdio : writefln;
-	import std.string : format;
+	import std.meta : AliasSeq;
+	import std.format : format;
 
 	enum TestEvent : EventID {
 		Foo,
@@ -247,10 +220,7 @@ version (unittest) {
 	alias FooEvent = Event!(TestEvent.Foo, bool);
 	alias BarEvent = Event!(TestEvent.Bar, long);
 
-	mixin (expandEventsToMap!("TestEventIdentifier",
-				  FooEvent,
-				  BarEvent));
-
+	alias TestEventTypes = AliasSeq!(FooEvent, BarEvent);
 	mixin EventManager.doTick;
 
 }
@@ -265,7 +235,7 @@ unittest {
 	evman.register!FooEvent(func);
 	evman.push!FooEvent(true);
 
-	tick!TestEventIdentifier(evman);
+	tick!TestEventTypes(evman);
 	assert(received_result, format("received_result wasn't %s, event not received properly?", true));
 
 } //TODO write some tests up in this motherfucker
@@ -301,7 +271,7 @@ unittest {
 	foreach (i; 0..rounds) {
 		evman.push!FooEvent(true);
 	}
-	tick!TestEventIdentifier(evman);
+	tick!TestEventTypes(evman);
 	sw.stop();
 
 	writefln("[EventManager] took %s ms to push/tick %s events.", sw.peek().msecs, rounds);
