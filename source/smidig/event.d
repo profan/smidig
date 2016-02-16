@@ -169,7 +169,7 @@ struct EventManager {
 
 			foreach (id, ref ev_list; ev_man.events_) {
 
-				if (ev_list.empty) continue;
+				if (ev_list.empty) { continue; }
 				auto cur_dels = ev_man.delegates_[id][];
 				if (cur_dels.length == 0) {
 					ev_list.clear();
