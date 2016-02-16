@@ -79,7 +79,7 @@ struct Engine {
 	@property {
 
 		ref FontAtlas atlas() { return debug_atlas_; }
-		ref RenderTarget view() { return window_.render_target_; }
+		ref RenderTarget view() { return window_.render_target; }
 
 		int update_rate(int new_update_rate) { return update_rate_ = new_update_rate; }
 		int update_rate() const { return update_rate_; }

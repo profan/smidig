@@ -70,12 +70,13 @@ struct Window {
 		int window_width_, window_height_;
 		Mat4f view_projection_; //TODO ARH
 
+		// holds texture buffer for screen, etc
+		static Shader render_shader_ = void;
+		RenderTarget render_target_ = void;
+
 	}
 
-	// holds texture buffer for screen, etc
-	static Shader render_shader_ = void;
-	RenderTarget render_target_ = void;
-	alias render_target_ this;
+	alias render_target this;
 
 	@property {
 
@@ -93,6 +94,8 @@ struct Window {
 
 		bool is_alive() const nothrow @nogc { return alive_; }
 		void is_alive(bool status) nothrow @nogc { alive_ = status; }
+
+		ref RenderTarget render_target() nothrow @nogc { return render_target_; }
 
 	}
 
@@ -140,6 +143,7 @@ struct Window {
 		// set up render target, view projection shit
 		with (window) {
 
+			// FIXME setup shader and render target with factory constructors, so errors can be checked
 			AttribLocation[2] attributes = [AttribLocation(0, "position"), AttribLocation(1, "tex_coord")];
 			char[16][2] uniforms = ["transform", "perspective"];
 			render_shader_.construct(&framebuffer_vs, &framebuffer_fs, "framebuffer", attributes[], uniforms[]);
