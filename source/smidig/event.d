@@ -171,24 +171,23 @@ struct EventManager {
 
 				if (ev_list.empty) continue;
 				auto cur_dels = ev_man.delegates_[id][];
+				if (cur_dels.length == 0) continue;
 
-				if (cur_dels.length > 0) {
-					foreach (ev; ev_list) {
-						foreach (key, ref del_func; cur_dels) {
-							event_switch: switch (id) {
+				foreach (ev; ev_list) {
+					foreach (key, ref del_func; cur_dels) {
+						event_switch: switch (id) {
 
-								//generate cases for event dispatching
-								foreach (type; EventTypes) {
-									case type.message_id:
-										auto casted_func = cast(void delegate(ref type)) del_func;
-										auto event = ev.extract!type;
-										casted_func(*event);
-										break event_switch;
-								}
-
-								default: printf("unhandled event type: %d", id);
-
+							//static foreach, generates code for each event type
+							foreach (type; EventTypes) {
+								case type.message_id:
+									auto casted_func = cast(void delegate(ref type)) del_func;
+									auto event = ev.extract!type;
+									casted_func(*event);
+									break event_switch;
 							}
+
+							default: printf("unhandled event type: %d", id);
+
 						}
 					}
 				}
@@ -301,9 +300,17 @@ unittest {
 
 }
 
-@name("EventManager 5: perf test for several event types")
+@name("EventManager 5: perf test for several event types (unimplemented)")
 unittest {
 
 	import std.datetime : StopWatch;
+	assert(0);
+
+}
+
+@name("EventManager 6: perf test of many delegates (unimplemented)")
+unittest {
+
+	assert(0);
 
 }
