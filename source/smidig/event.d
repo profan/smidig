@@ -171,12 +171,15 @@ struct EventManager {
 
 				if (ev_list.empty) continue;
 				auto cur_dels = ev_man.delegates_[id][];
-				if (cur_dels.length == 0) continue;
+				if (cur_dels.length == 0) {
+					ev_list.clear();
+					continue;
+				}
 
 				foreach (ev; ev_list) {
 					foreach (key, ref del_func; cur_dels) {
-						event_switch: switch (id) {
 
+						event_switch: switch (id) {
 							//static foreach, generates code for each event type
 							foreach (type; EventTypes) {
 								case type.message_id:
@@ -185,10 +188,9 @@ struct EventManager {
 									casted_func(*event);
 									break event_switch;
 							}
-
 							default: printf("unhandled event type: %d", id);
-
 						}
+
 					}
 				}
 
