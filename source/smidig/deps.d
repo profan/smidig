@@ -79,7 +79,7 @@ void initializeSystems() {
 
     //track allocs yes
 	import trackallocs;
-	auto tracker = allocsTracker();
+	startTrackingAllocs();
 
     //initiate SDL2 ttf
     if (TTF_Init() == -1) {

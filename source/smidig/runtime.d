@@ -78,6 +78,11 @@ struct Engine {
 
 	@property {
 
+		//modules
+		ref Window window() { return window_; }
+		ref InputHandler input() { return input_handler_; }
+		ref SoundSystem sound() { return sound_system_; }
+
 		ref FontAtlas atlas() { return debug_atlas_; }
 		ref RenderTarget view() { return window_.render_target; }
 

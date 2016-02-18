@@ -206,7 +206,13 @@ struct Window {
 		printf("[OpenGL] version is: %s \n", sGLVersion_main);
 		printf("[OpenGL] GLSL version is: %s \n", sGLVersion_shader);
 		printf("[OpenGL] Loading GL Extensions. \n");
-		DerelictGL3.reload();
+
+		import gcarena, trackallocs;
+		{
+			auto ar = useCleanArena();
+			DerelictGL3.reload();
+		}
+		startTrackingAllocs();
 
 		// enable debuggering
 		glEnable(GL_DEBUG_OUTPUT);
