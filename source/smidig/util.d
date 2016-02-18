@@ -82,3 +82,19 @@ string makeFlagEnum(string EnumName, KeyType, ValueType, Args...)(Args args) {
 	return str;
 
 } //makeFlagEnum
+
+RT withGCArena(RT)(RT delegate() func, void delegate() after_func) {
+
+	import gcarena : useCleanArena;
+	RT rt;
+
+	{
+		auto ar = useCleanArena();
+		rt = func();
+	}
+
+	after_func();
+
+	return rt;
+
+} //withGCArena

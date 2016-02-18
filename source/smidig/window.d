@@ -207,12 +207,12 @@ struct Window {
 		printf("[OpenGL] GLSL version is: %s \n", sGLVersion_shader);
 		printf("[OpenGL] Loading GL Extensions. \n");
 
-		import gcarena, trackallocs;
-		{
-			auto ar = useCleanArena();
-			DerelictGL3.reload();
-		}
-		startTrackingAllocs();
+		import trackallocs;
+		import smidig.util : withGCArena;
+		auto gl_version = withGCArena(
+			() => DerelictGL3.reload(),
+			() => startTrackingAllocs()
+		);
 
 		// enable debuggering
 		glEnable(GL_DEBUG_OUTPUT);
