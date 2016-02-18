@@ -83,6 +83,12 @@ string makeFlagEnum(string EnumName, KeyType, ValueType, Args...)(Args args) {
 
 } //makeFlagEnum
 
+/**
+ * Runs first given delegate inside an arena where all GC allocations
+ * are captured whilst running the function, after which what the first function returns
+ * is returned, and the second function is run (outside of the arena block).
+ * Currently assumes first delegate returns *something*, doesn't work with a void return type.
+*/
 RT withGCArena(RT)(RT delegate() func, void delegate() after_func) {
 
 	import gcarena : useCleanArena;

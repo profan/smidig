@@ -54,10 +54,18 @@ template TypeToGLenum(T) {
 
 } //TypeToGLenum
 
+/**
+ * Converts passed type to given GL uniform function equivalent, returning an alias to it.
+*/
 template TypeToUniformFunction(T) {
 
 } //TypeToUniformFunction
 
+/**
+ * Represents Vertex Buffer hints to the GPU, Static meaning it should never change,
+ * Dynamic for when it changes now and then, Stream for when it may change every single frame.
+ * The GPU *may* place it accordingly in memory given these hints.
+*/
 enum DrawType {
 
 	Static,
@@ -152,6 +160,9 @@ struct VertexArray {
 
 	} //draw
 
+	/**
+	 * Updates the vertex buffer's contents on the GPU side.
+	*/
 	void send(VertexType)(in VertexType[] vertices, GLenum draw_type = GL_DYNAMIC_DRAW) {
 
 		bind();
@@ -246,6 +257,9 @@ struct Camera {
 
 } //Camera
 
+/**
+ * Structure representing a custom cursor.
+*/
 struct Cursor {
 
 	VertexArray mesh;
@@ -265,6 +279,7 @@ struct Cursor {
 		this.mesh = VertexArray(vertices);
 		this.shader = cursor_shader;
 
+		//TODO move this part of the code out somewhere more logical
 		import derelict.sdl2.sdl : SDL_ShowCursor, SDL_DISABLE;
 		SDL_ShowCursor(SDL_DISABLE); //make sure to disable default cursor
 
@@ -287,6 +302,9 @@ struct Cursor {
 
 } //Cursor
 
+/**
+ * Represents an atlas for a given font, is also used to render text on screen.
+*/
 struct FontAtlas {
 
 	import std.algorithm : max;
@@ -1152,8 +1170,8 @@ struct Texture {
 	} //unbind
 
 	/**
-	 * updates the texture in place given the new texture buffer.
-	 * takes an optional offset to update only a part.
+	 * Updates the texture in place given the new texture buffer.
+	 * Takes an optional offset to update only a part of the texture.
 	 **/
 	void update(void[] pixels, size_t offset = 0) nothrow @nogc {
 
@@ -1572,7 +1590,10 @@ GLuint createShaderProgram(in GLuint[] shaders, in AttribLocation[] attribs) not
 
 } //createShaderProgram
 
-/* OpenGL color related functions, darkening and stuff. */
+/**
+ * Converts an integer representing a colour, for example 0x428bca into a 4 element
+ * int array for passing to OpenGL.
+*/
 GLfloat[4] to(T : GLfloat[4])(int color, ubyte alpha = 255) nothrow @nogc pure {
 
 	GLfloat[4] gl_color = [ //mask out r, g, b components from int
@@ -1586,6 +1607,10 @@ GLfloat[4] to(T : GLfloat[4])(int color, ubyte alpha = 255) nothrow @nogc pure {
 
 } //to!GLfloat[4]
 
+/**
+ * Converts a GLenum representation of a value to a c string representation,
+ * for use with debug printing of OpenGL info, from debug callbacks for example.
+*/
 const (char*) to(T : char*)(GLenum value) {
 
 	switch (value) {
