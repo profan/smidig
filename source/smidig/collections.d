@@ -1970,8 +1970,7 @@ unittest {
 
 /**
  * Stack allocated array implementation, used when a heap allocation isn't desirable, or the size of the data
- * is known and is small enough to fit on the stack.
- * Tries to behave largely like the built in arrays.
+ * is known and is small enough to fit on the stack. Tries to behave largely like the built in arrays.
 */
 struct StaticArray(T, size_t size) {
 
@@ -2000,6 +1999,12 @@ struct StaticArray(T, size_t size) {
 		return array.ptr;
 	} //ptr
 
+	/**
+	 * Adjusts the buffer's length var to where the null-terminator is (if any).
+	 * Used when the buffer has a null-terminator and it is manipulated by a C function,
+	 * so that the length var has not changed, but the buffer contents have, requiring
+	 * a manual adjustment. (only applies if buffer data is of type char)
+	*/
 	static if (is(T == char)) {
 		void scanToNull() {
 

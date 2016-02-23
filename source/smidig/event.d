@@ -23,7 +23,7 @@ struct Event(EventID ID, T) {
 		return cast(OT*)(&this);
 	} //extract
 
-	import std.string : format;
+	import std.string : format; //FIXME this is a relic from how the code used to look, probably remove?
 	static assert(this.sizeof <= 32u, format("Event: %s too big: %d", typeof(this).stringof, this.sizeof));
 
 } //Event

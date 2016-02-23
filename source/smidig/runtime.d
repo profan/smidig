@@ -281,8 +281,8 @@ struct Engine {
 			draw_timer.reset();
 
 			import smidig.timer : delayMs;
-			uint frame_ms = cast(uint)((cast(real)frame_timer.peek() / cast(real)clock_ticks_per_second) * 1000);
-			uint wanted_time = cast(uint)((cast(real)draw_iter / cast(real)clock_ticks_per_second) * 1000);
+			uint frame_ms = cast(uint)((frame_timer.peek() / clock_ticks_per_second) * 1000);
+			uint wanted_time = cast(uint)((draw_iter / clock_ticks_per_second) * 1000);
 			uint wait_time = wanted_time - frame_ms;
 
 			auto t = (wait_time < wanted_time) ? wait_time : wanted_time;

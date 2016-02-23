@@ -25,7 +25,7 @@ struct StopWatch {
 
 	}
 
-	@property auto currTicks() {
+	static @property auto currTicks() {
 
 		version(DigitalMars) {
 			return Clock.currTime.ticks;
