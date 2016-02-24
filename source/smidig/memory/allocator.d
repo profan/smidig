@@ -127,7 +127,12 @@ struct TrackingAllocator(ParentAllocator) {
 	static if (hasMember!(ParentAllocator, "alignedReallocate")) {
 		bool alignedReallocate(ref void[] b, size_t new_size, uint alignment) {
 
-			return parent_.alignedReallocate(b, new_size, alignment);
+			auto old_ptr = b.ptr, old_size = b.length;
+			bool result = (cast(shared)parent_).alignedReallocate(b, new_size);
+
+			if (result) {
+				notifyMove(b, old_ptr, old_size);
+			}
 
 		} //alignedReallocate
 	}
