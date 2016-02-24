@@ -504,6 +504,8 @@ unittest {
 struct UniquePointer(T, FreeFunc) {
 
 	private T data;
+
+	@disable this();
 	@disable this(this); //no copying, only moving!
 
 	this(T in_data) {
@@ -528,3 +530,21 @@ struct UniquePointer(T, FreeFunc) {
 unittest {
 	assert(0);
 }
+
+/**
+ * Equivalent to the C++ make_shared, returns a smart pointer created 
+ * with the given allocator and the carried object is instantiated with the args.
+*/
+auto make_shared(T, Args...)(IAllocator allocator, Args args) {
+
+	return SmartPointer(allocator, args);
+
+} //make_shared
+
+/**
+ * Equivalent to the C++ make_unique, returns a smart pointer created 
+ * with the given allocator and the carried object is instantiated with the args.
+*/
+auto make_unique(T, Args...)(IAllocator allocator, Args args) {
+
+} //make_unique

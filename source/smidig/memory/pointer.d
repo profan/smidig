@@ -4,8 +4,6 @@ import std.experimental.allocator.common : Ternary;
 
 import smidig.memory;
 
-/* will hold moving allocator aware pointers, and a registry for them. */
-
 struct Delegate(T) {
 
 	import std.traits : isDelegate;
