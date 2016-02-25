@@ -89,8 +89,46 @@ ulong ticksPerSecond() {
 
 } //ticksPerSecond
 
+/**
+ * Sleep/Wait function which understands the granularity of the OS sleep function, so it
+ * uses a busy-wait function when the time to wait is too short for the thread sleep
+ * functionality to be accurate enough, often 1-2ms is the limit, after which point the 
+ * busy wait will kick in and be used instead, without the user needing to worry.
+*/
+void waitUntil(ref StopWatch sw, long ticks_per_frame) {
+
+	long clock_ticks_per_second = sw.ticksPerSecond();
+
+	//calculate milliseconds current frame has taken
+	uint frame_ms = cast(uint)((sw.peek() / clock_ticks_per_second) * 1000);
+
+	//calculate milliseconds for a normal frame
+	uint wanted_time = cast(uint)((ticks_per_frame / clock_ticks_per_second) * 1000);
+
+	//calculate time to wait in milliseconds
+	uint wait_time = wanted_time - frame_ms;
+
+	if (wait_time > 2) {
+		//account for granularity when waiting, min 1ms wait
+		delayMs(wait_time - 2);
+	}
+
+	// do the busywait!
+	busyWaitTicks(sw, ticks_per_frame);
+
+} //waitUntil
+
 void delayMs(uint ms) {
 
 	SDL_Delay(ms);
 
 } //delayMs
+
+void busyWaitTicks(ref StopWatch sw, size_t total_ticks) {
+
+	auto ticks_left = total_ticks - sw.peek();
+	while (ticks_left > 0) {
+		ticks_left = total_ticks - sw.peek();
+	}
+
+} //busyWaitTicks

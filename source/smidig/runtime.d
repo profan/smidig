@@ -280,13 +280,10 @@ struct Engine {
 			last_render = draw_timer.peek();
 			draw_timer.reset();
 
-			import smidig.timer : delayMs;
-			uint frame_ms = cast(uint)((frame_timer.peek() / clock_ticks_per_second) * 1000);
-			uint wanted_time = cast(uint)((draw_iter / clock_ticks_per_second) * 1000);
-			uint wait_time = wanted_time - frame_ms;
+			/* calls routine which is aware of scheduler granularity, uses sleep and then busy waits the rest. */
+			import smidig.timer : waitUntil;
+			waitUntil(frame_timer, draw_iter);
 
-			auto t = (wait_time < wanted_time) ? wait_time : wanted_time;
-			delayMs((t > 0) ? t-1 : 0);
 			frame_time_ = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
 			frame_timer.reset();
 

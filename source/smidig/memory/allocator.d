@@ -72,7 +72,7 @@ struct TrackingAllocator(ParentAllocator) {
 
 		import std.algorithm : filter;
 
-		// scope delegate to avoid any allocation of any kind, safe as long as isnt escaped!
+		// scope delegate to avoid any heap allocation, safe as long as isnt escaped!
 		auto scope filter_ptrs = (void** p) {
 			return p >= old_ptr && p <= old_ptr + size || *p >= old_ptr && *p <= old_ptr + size;
 		};
