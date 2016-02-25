@@ -121,11 +121,13 @@ struct VertexArray {
 		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_STATIC_DRAW);
 
 		/* generate code from VertexSpec */
-		import smidig.meta : PODMembers;
+		import smidig.meta : PODMembers, MemberOffset, Symbol;
+
+		enum V = VertexType();
 		foreach (i, m; PODMembers!VertexType) {
 
-			enum Member = mixin(VertexType.stringof ~ "()." ~ m);
-			enum OffsetOf = mixin(VertexType.stringof ~ "." ~ m ~ ".offsetof");
+			enum Member = Symbol!(V, m);
+			enum OffsetOf = MemberOffset!(V, m);
 			alias ElementType = Member._T;
 
 			glEnableVertexAttribArray(i);

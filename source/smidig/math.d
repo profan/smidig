@@ -101,10 +101,10 @@ T._T squaredDistanceTo(T)(ref T vec, ref T other_vec) nothrow @nogc pure if (is(
 
 } //squaredDistanceTo
 
-float deg2Rad(float degrees) {
+float deg2Rad(float degrees) pure {
 	return degrees * (PI/180);
 } //deg2Rad
 
-float rad2Deg(float radians) {
+float rad2Deg(float radians) pure {
 	return radians * (180/PI);
 } //rad2Deg

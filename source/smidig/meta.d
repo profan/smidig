@@ -46,6 +46,10 @@ template StringIdentifier(alias T, alias Member) {
 	enum StringIdentifier = typeof(Symbol!(T, Member)).stringof;
 } //StringIdentifier
 
+template MemberOffset(alias T, alias Member) {
+	enum MemberOffset = __traits(getMember, T, Member).offsetof;
+} //MemberOffset
+
 template Symbol(alias T, alias Member) {
 	enum Symbol = __traits(getMember, T, Member);
 } //Symbol
