@@ -126,7 +126,7 @@ void delayMs(uint ms) {
 
 void busyWaitTicks(ref StopWatch sw, size_t total_ticks) {
 
-	auto ticks_left = total_ticks - sw.peek();
+	long ticks_left = total_ticks - sw.peek();
 	while (ticks_left > 0) {
 		ticks_left = total_ticks - sw.peek();
 	}
