@@ -48,9 +48,13 @@ struct InputStream {
 	enum ReadMode {
 		Read,
 		Peek
-	}
+	} //ReadMode
 
 	mixin StreamImpl;
+
+	@property size_t remaining() const {
+		return size_ - offset_;
+	} //remaining
 
 	T read(T, ReadMode mode = ReadMode.Read)() nothrow @nogc {
 

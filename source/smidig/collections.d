@@ -43,7 +43,9 @@ struct Array(T) {
 	} //~this
 
 	void free() {
+
 		this.allocator_.dispose(array_);
+
 	} //free
 
 	void clear() @safe nothrow @nogc { //note, does not run destructors!
@@ -212,9 +214,9 @@ struct Array(T) {
 			   format("removal index was greater or equal to length of array, cap/len was: %d:%d", capacity_, length_));
 
 		// [0, 1, 2, 3, 4, 5] -- remove 3, need to shift 4 and 5 one position down
+		//FIXME maybe.. not do this, because it is potentially an *awful* idea.
 		memmove(array_[index+1..length_], array_[index..length_-1]);
-		length_--;
-
+		length_--; 
 	} //remove
 
 	bool remove(ref T thing) @trusted {
@@ -1833,58 +1835,16 @@ unittest {
 
 }
 
-version(GDC) {
+/**
+ * Buffer based on an Array, meant to be an output stream for data.
+*/
+struct ByteBuffer {
 
-struct BKTree {
+	private {
+		Array!ubyte buffer_;
+	}
 
-	/* hey look, we don't need to write it ourselves :U~ */
-	import std.algorithm : levenshteinDistance;
-	import std.typecons : Nullable;
-	import std.algorithm : move;
-
-	struct Node {
-
-		enum prealloc_size = 5;
-
-		String word;
-		Array!Node children;
-
-		this(ref BKTree tree, String str) {
-			this.children = typeof(children)(tree.allocator_, prealloc_size);
-			this.word = move(str);
-		}
-
-	} //Node
-
-	IAllocator allocator_;
-	Node root_;
-
-	this(IAllocator allocator) {
-		this.allocator_ = allocator;
-	} //this
-
-	~this() {
-
-	} //~this
-
-	void insert(String string) {
-
-	} //insert
-
-	string query(in char[] str_view, int max_distance) {
-		return root_.word.d_str;
-	} //query
-
-} //BKTree
-
-}
-
-@name("BKTree 1 (unimplemented)")
-unittest {
-
-	assert(0);
-
-}
+} //ByteBuffer
 
 struct ScopedBuffer(T) {
 
