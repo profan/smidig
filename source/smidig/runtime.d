@@ -281,8 +281,8 @@ struct Engine {
 			draw_timer.reset();
 
 			/* calls routine which is aware of scheduler granularity, uses sleep and then busy waits the rest. */
-			import smidig.timer : waitUntil;
-			waitUntil(frame_timer, draw_iter);
+			import smidig.timer : waitUntilTick;
+			frame_timer.waitUntilTick(draw_iter);
 
 			frame_time_ = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
 			frame_timer.reset();

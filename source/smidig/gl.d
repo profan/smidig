@@ -11,19 +11,6 @@ import smidig.collections : StringBuffer;
 
 alias GLColor = GLfloat[4];
 
-mixin template OpenGLError() {
-
-	invariant {
-
-		GLenum status = glGetError();
-		if (status != GL_NO_ERROR) {
-			writefln("[OpenGL : %s] Error: 0x%X", typeof(this).stringof, status);
-		}
-
-	}
-
-} //OpenGLError
-
 /**
  * Used to convert types to the representation needed for OpenGL to interpret the data properly,
  * for example when uploading data with a $(D VertexArray).
@@ -180,8 +167,6 @@ struct VertexArray {
 		glBindVertexArray(0);
 
 	} //unbind
-
-	mixin OpenGLError;
 
 } //VertexArray
 
@@ -515,8 +500,6 @@ struct FontAtlas {
 
 	} //renderText
 
-	mixin OpenGLError;
-
 } //FontAtlas
 
 struct Text {
@@ -576,8 +559,6 @@ struct Text {
 		mesh.unbind();
 
 	} //draw
-
-	mixin OpenGLError;
 
 } //Text
 
@@ -778,8 +759,6 @@ struct FrameBuffer {
 
 	} //unbind
 
-	mixin OpenGLError;
-
 } //FrameBuffer
 
 struct RenderBuffer {
@@ -823,8 +802,6 @@ struct RenderBuffer {
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 	} //unbind
-
-	mixin OpenGLError;
 
 } //RenderBuffer
 
@@ -1046,8 +1023,6 @@ struct TestParticleSystem {
 
 	} //draw
 
-	mixin OpenGLError;
-
 } //TestParticleSystem
 
 /**
@@ -1196,8 +1171,6 @@ struct Texture {
 		unbind();
 
 	} //resize
-
-	mixin OpenGLError;
 
 } //Texture
 
@@ -1386,8 +1359,6 @@ struct SafeShader(AttribLocation[] attribs, string[] uniforms) {
 
 	} //setUniform
 
-	mixin OpenGLError;
-
 } //SafeShader
 
 version (unittest) {
@@ -1514,8 +1485,6 @@ struct Shader {
 		glUseProgram(0);
 
 	} //unbind
-
-	mixin OpenGLError;
 
 } //Shader
 
