@@ -50,6 +50,10 @@ template MemberOffset(alias T, alias Member) {
 	enum MemberOffset = __traits(getMember, T, Member).offsetof;
 } //MemberOffset
 
+template MemberType(T, alias Member) {
+	alias MemberType = typeof(__traits(getMember, T, Member));
+} //MemberType
+
 template Symbol(alias T, alias Member) {
 	enum Symbol = __traits(getMember, T, Member);
 } //Symbol
