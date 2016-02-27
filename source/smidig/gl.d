@@ -55,9 +55,9 @@ template TypeToUniformFunction(T) {
 */
 enum DrawType {
 
-	Static,
-	Dynamic,
-	Stream
+	Static = GL_STATIC_DRAW,
+	Dynamic = GL_DYNAMIC_DRAW,
+	Stream = GL_STREAM_DRAW
 
 } //DrawType
 
@@ -105,7 +105,7 @@ struct VertexArray {
 
 		glGenBuffers(1, &vbo_);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
-		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, draw_type);
 
 		/* generate code from VertexSpec */
 		import smidig.meta : PODMembers, MemberOffset, MemberType;
@@ -210,19 +210,115 @@ unittest {
 
 }
 
+struct VertexArrayObject {
+
+	private {
+
+		GLuint vao_;
+
+	}
+
+	this(bool do_bind) {
+
+		glGenVertexArrays(1, &vao_);
+
+		if (do_bind) {
+			bind();
+		}
+
+	} //this
+
+	void bind() {
+
+		glBindVertexArray(vao_);
+
+	} //bind
+
+	void unbind() {
+
+		glBindVertexArray(0);
+
+	} //unbind
+
+} //VertexArrayObject
+
 struct VertexBuffer {
 
-	GLuint vbo_;
+	private {
+
+		GLuint vbo_;
+		GLenum type_;
+		uint num_vertices_;
+
+	}
 
 	@property GLuint handle() {
 		return vbo_;
 	} //handle
 
-	~this() {
+	nothrow @nogc
+	this(VertexType)(ref VertexArrayObject vao, in VertexType[] vertices, DrawType draw_type = DrawType.Static, Primitive type = Primitive.Triangles) {
 
-	} //~this
+		mixin("import " ~ VertexType.Imports ~ ";");
+		this.num_vertices_ = cast(uint)vertices.length;
+		this.type_ = type; //holla holla constant dollar
+
+		//bind passed vao
+		vao.bind();
+
+		glGenBuffers(1, &vbo_);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * vertices[0].sizeof, vertices.ptr, draw_type);
+
+		/* generate code from VertexSpec */
+		import smidig.meta : PODMembers, MemberOffset, MemberType;
+
+		foreach (i, m; PODMembers!VertexType) {
+
+			alias MemberType = typeof(__traits(getMember, VType, m));
+			enum MemberOffset = __traits(getMember, VType, m).offsetof;
+			alias ElementType = MemberType._T;
+
+			glEnableVertexAttribArray(i);
+			glVertexAttribPointer(i,
+					MemberType.sizeof / ElementType.sizeof,
+					TypeToGLenum!ElementType,
+					GL_FALSE, //TODO: handle normalization
+					vertices[0].sizeof,
+					cast(const(void)*)MemberOffset);
+
+		}
+
+		vao.unbind();
+
+	}
+
+	void bind() {
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_);
+
+	} //bind
+
+	void unbind() {
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	} //unbind
+
+	void draw() {
+
+		glDrawArrays(type_, 0, num_vertices_);
+
+	} //draw
 
 } //VertexBuffer
+
+unittest {
+
+	alias TestVertex = VertexSpec!("gfm.math : Vector", Vec2f, "pos", Vec3f, "normal");
+	TestVertex[] vertices;
+
+}
 
 struct AttribLocation {
 
@@ -1230,18 +1326,37 @@ template isVertexType(T) {
 /* UDA's for members in VertexSpecs */
 struct _AttribDivisor {
 
-	uint index;
 	uint divisor;
 
 } //_AttribDivisor
 
-@property divisor(uint index, uint divisor) {
+@property divisor(uint divisor) {
 
-	return _AttribDivisor(index, divisor);
+	return _AttribDivisor(divisor);
 
 } //divisor
 
-enum normalized = "normalized";
+struct _Buffer {
+
+	uint index;
+
+} //_Buffer
+
+@property buffer(uint index) {
+
+	return _Buffer(index);
+
+} //buffer
+
+struct _Normalized {
+
+} //_Normalized
+
+@property normalized() {
+
+	return _Normalized();
+
+} //normalized
 
 version (unittest) {
 
@@ -1249,9 +1364,14 @@ version (unittest) {
 
 		enum Imports = "gfm.math : Vector";
 
-		Vec3f position;
-		Vec2f tex_coord;
-		@divisor(2, 1) Vec2f offset;
+		@buffer(0) {
+			Vec3f position;
+			Vec2f tex_coord;
+		}
+
+		@buffer(1)
+		@divisor(1)
+		Vec2f offset; /* changes every frame, belongs to buffer 2 (index 1)  */
 
 	}
 
