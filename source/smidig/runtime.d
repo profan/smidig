@@ -220,11 +220,17 @@ struct Engine {
 
 		import smidig.timer : StopWatch;
 
-		static StopWatch main_timer, update_timer, draw_timer, frame_timer;
-		static long update_iter, draw_iter, last_update, last_render;
-		static long clock_ticks_per_second;
+		StopWatch main_timer;
+		StopWatch update_timer;
+		StopWatch draw_timer;
+		StopWatch frame_timer;
 
-		clock_ticks_per_second = StopWatch.ticksPerSecond();
+		long update_iter;
+		long draw_iter;
+		long last_update;
+		long last_render;
+
+		long clock_ticks_per_second = StopWatch.ticksPerSecond();
 
 		main_timer.start();
 		update_timer.start();
