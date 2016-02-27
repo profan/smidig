@@ -779,10 +779,19 @@ struct HashMap(K, V) {
 
 	} //rehash
 
+	/**
+	 * Returns a reference to the value to which the key corresponds, if any,
+	 * else it returns a default-constructed value, essentially $(D V.init).
+	*/
 	ref V get(in K key) @safe nothrow {
 		return get_(key);
 	} //get
 
+	/*
+	 * Finds the index for a given key, if any.
+	 * Best Case: O(1)
+	 * Worst Case: O(N)
+	*/
 	private size_t findIndex(in K key, out bool found) @safe nothrow {
 
 		auto index = key.toHash() % capacity_;
@@ -823,6 +832,14 @@ struct HashMap(K, V) {
 
 	} //get
 
+	/**
+	 * Inserts a given value at the position to which the key corresponds, if the spot is free,
+	 * else it searches linearly forwards until a free spot is found and it is placed there.
+	 * If the number of slots free in the $(D HashMap) is found to be less than the $(D LOAD_FACTOR_THRESHOLD)
+	 * then a $(D rehash) operation is performed.
+	 * Best Case: O(1)
+	 * Worst Case: O(N)?
+	*/
 	void put(ref K key, V value) @trusted {
 
 		import std.algorithm : move;
