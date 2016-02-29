@@ -249,6 +249,7 @@ struct VertexBuffer {
 		GLuint vbo_;
 		GLenum type_;
 		uint num_vertices_;
+		bool instanced_ = false;
 
 	}
 
@@ -310,6 +311,12 @@ struct VertexBuffer {
 		glDrawArrays(type_, 0, num_vertices_);
 
 	} //draw
+
+	void drawInstanced(ref VertexBuffer base) {
+
+		glDrawArraysInstanced(type_, 0, base.num_vertices_, num_vertices_);
+
+	} //drawInstanced
 
 } //VertexBuffer
 
@@ -1112,7 +1119,7 @@ struct TestParticleSystem {
 
 		glDrawArraysInstanced(
 				GL_TRIANGLES, 0, mesh_.num_vertices_, cast(int)particles_.positions_.length
-				);
+		);
 
 		glBindVertexArray(0);
 
