@@ -160,7 +160,7 @@ struct Engine {
 
 		return Error.Success;
 
-	} //initialize
+	} //create
 
 	void loadResources() {
 
