@@ -100,17 +100,17 @@ void waitUntilTick(ref StopWatch sw, long ticks_per_frame) {
 	long clock_ticks_per_second = sw.ticksPerSecond();
 
 	//calculate milliseconds current frame has taken
-	uint frame_ms = cast(uint)((sw.peek() / clock_ticks_per_second) * 1000);
+	int frame_ms = cast(int)((cast(double)sw.peek() / cast(double)clock_ticks_per_second) * 1000.0);
 
 	//calculate milliseconds for a normal frame
-	uint wanted_time = cast(uint)((ticks_per_frame / clock_ticks_per_second) * 1000);
+	int wanted_time = cast(int)((cast(double)ticks_per_frame / cast(double)clock_ticks_per_second) * 1000.0);
 
 	//calculate time to wait in milliseconds
-	uint wait_time = wanted_time - frame_ms;
+	int wait_time = wanted_time - frame_ms;
 
 	if (wait_time > 2) {
 		//account for granularity when waiting, min 1ms wait
-		delayMs(wait_time - 2);
+		delayMs(cast(uint)wait_time - 2U);
 	}
 
 	// do the busywait!
