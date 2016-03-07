@@ -18,7 +18,7 @@ alias Mat4f = Matrix!(float, 4, 4);
 */
 struct Window {
 
-	static const char* framebuffer_vs = "
+	static immutable char* framebuffer_vs = "
 		#version 330 core
 
 		in vec3 position;
@@ -35,7 +35,7 @@ struct Window {
 		}
 	";
 
-	static const char* framebuffer_fs = "
+	static immutable char* framebuffer_fs = "
 		#version 330 core
 
 		in vec2 tex_coord0;

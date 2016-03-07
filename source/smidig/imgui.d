@@ -18,7 +18,7 @@ auto bindDelegate(T, string file = __FILE__, size_t line = __LINE__)(T t) if(isD
 
 struct ImguiContext {
 
-	static const char* imgui_vs = "
+	static immutable char* imgui_vs = "
 		#version 330 core
 		uniform mat4 ProjMtx;
 
@@ -37,7 +37,7 @@ struct ImguiContext {
 		}
 	";
 
-	static const char* imgui_fs = "
+	static immutable char* imgui_fs = "
 		#version 330 core
 		uniform sampler2D Texture;
 
