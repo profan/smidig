@@ -1,55 +1,5 @@
 module smidig.net;
 
-//TODO maybe remove this?
-struct NetVar(T) {
-
-	alias variable this;
-	bool changed = false;
-	
-	union {
-		T variable;
-		ubyte[T.sizeof] bytes;
-	}
-
-	this(T var) {
-		this.variable = var;
-	} //this
-
-	T opUnary(string op)() if (s == "++" || s == "--") {
-		changed = true;
-		mixin("return " ~ op ~ " variable;");
-	} //opUnary
-
-	void opAssign(T rhs) {
-		changed = true;
-		variable = rhs;
-	} //opAssign
-
-	void opOpAssign(string op)(T rhs) {
-		changed = true;
-		mixin("variable " ~ op ~ "= rhs;");
-	} //opOpAssign
-
-	T opBinary(string op)(T rhs) {
-		mixin("return variable " ~ op ~ " rhs;");
-	} //opBinary
-
-} //NetVar
-
-int initializeEnet() {
-
-	import core.stdc.stdio : printf;
-	import derelict.enet.enet;
-
-	int err;
-	if ((err = enet_initialize()) != 0) {
-		printf("[Net] An error occured on initialization: %d", err);
-	}
-
-	return err;
-
-} //initializeEnet
-
 struct NetworkManager {
 
 	import core.stdc.stdio : printf;
@@ -107,6 +57,12 @@ struct NetworkManager {
 		import gcarena;
 		auto ar = useCleanArena();
 		DerelictENet.load();
+
+		int err;
+		if ((err = enet_initialize()) != 0) {
+			printf("[Net] An error occured on initialization: %d", err);
+			return;
+		}
 
 		is_initialized = true;
 

@@ -125,7 +125,6 @@ struct Engine {
 			network_evman_.construct(EventMemory, NetEventType.max);
 			network_manager_.construct(allocator_, &network_evman_);
 			network_evman_.register!PushEvent(&network_manager_.onDataPush);
-			initializeEnet();
 
 			//initialize sound subsystem
 			auto sound_result = SoundSystem.create(sound_system_, allocator_, MAX_SOUND_SOURCES);
