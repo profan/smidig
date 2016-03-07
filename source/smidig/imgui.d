@@ -71,7 +71,36 @@ struct ImguiContext {
 
 	} //~this
 
+	static initialize_libs() {
+
+		import derelict.util.exception;
+
+		shared static bool is_initialized = false;
+		if (is_initialized) return;
+
+		ShouldThrow missingSymFunc (string symName) {
+
+			if (symName == "igColor" || symName == "igColor2") {
+				return ShouldThrow.No;
+			}
+
+			return ShouldThrow.Yes;
+
+		}
+
+		import gcarena;
+		auto ar = useCleanArena();
+		DerelictImgui.missingSymbolCallback = &missingSymFunc;
+		DerelictImgui.load();
+
+		is_initialized = true;
+
+	} //initialize_libs
+
 	void initialize() {
+
+		//load if not already loaded
+		initialize_libs();
 
 		ImGuiIO* io = igGetIO();
 

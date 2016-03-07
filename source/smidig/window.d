@@ -3,6 +3,10 @@ module smidig.window;
 import core.stdc.stdio;
 
 import derelict.sdl2.sdl;
+import derelict.sdl2.image;
+import derelict.sdl2.ttf;
+
+import derelict.freetype.ft;
 import derelict.opengl3.gl3;
 import derelict.opengl3.gl;
 
@@ -117,6 +121,8 @@ struct Window {
 
 		import smidig.memory : construct; //FIXME abolish this part, more error handling
 
+		initialize(); //load libs if not already loaded
+
 		window.title_ = String(title); //TODO also error handling? not sure if should have, prob not
 
 		uint flags = 0;
@@ -156,6 +162,66 @@ struct Window {
 		return Error.Success;
 
 	} //create
+
+	static void initialize() {
+
+		import std.meta : AliasSeq;
+		import derelict.util.exception;
+
+		shared static bool is_initialized;
+		if (is_initialized) return;
+
+		ShouldThrow missingSymFunc(string symName) {
+
+			alias symbols = AliasSeq!(
+				"FT_Gzip_Uncompress",
+				"SDL_QueueAudio",
+				"SDL_GetQueuedAudioSize",
+				"SDL_ClearQueuedAudio",
+				"SDL_HasAVX2",
+				"SDL_GetGlobalMouseState",
+				"SDL_WarpMouseGlobal",
+				"SDL_CaptureMouse",
+				"SDL_RenderIsClipEnabled",
+				"SDL_SetWindowHitTest"
+			);
+
+			foreach (sym; symbols) {
+				if (symName == sym) return ShouldThrow.No;
+			}
+
+			return ShouldThrow.Yes;
+
+		} //missingSymFunc
+
+		import gcarena;
+
+		alias libs = AliasSeq!(
+			DerelictSDL2, DerelictSDL2Image,
+			DerelictSDL2ttf, DerelictFT,
+			DerelictGL
+		);
+
+		auto ar = useCleanArena();
+
+		foreach (T; libs) {
+			T.missingSymbolCallback = &missingSymFunc;
+			T.load();
+		}
+
+		if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) < 0) {
+			printf("[Engine] SDL_Init, could not initialize: %s", SDL_GetError());
+			assert(0);
+		}
+
+		if (TTF_Init() == -1) {
+			printf("[Engine] TTF_Init: %s\n", TTF_GetError());
+			assert(0);
+		}
+
+		is_initialized = true;
+
+	} //initialize
 
 	extern(C) nothrow @nogc
 	static void openGLCallbackFunction(

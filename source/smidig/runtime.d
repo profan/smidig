@@ -103,17 +103,13 @@ struct Engine {
 
 		with (engine) {
 
-			//initialize dynamic dependencies
-			import smidig.deps : initializeSystems;
-			initializeSystems();
-
 			//allocator for shit
 			allocator_ = theAllocator;
 
 			//report supported cpu characteristics
 			CPU.report_supported();
 
-			//initialize window and input handler
+			//initialize window and input handler, loads libs if not already loaded
 			auto result = Window.create(window_, title, 640, 480);
 			final switch (result) with (Window.Error) {
 				case RendererCreationFailed, ContextCreationFailed:

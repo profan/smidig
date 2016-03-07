@@ -1798,6 +1798,13 @@ struct StringBuffer {
 
 	} //this
 
+	@property size_t length(size_t new_len) @nogc {
+		if (new_len > 0 && new_len < array_.capacity) {
+			return array_.length = new_len;
+		}
+		return array_.length;
+	} //length
+
 	@property size_t length() const @nogc {
 		return array_.length;
 	} //length

@@ -83,6 +83,8 @@ struct NetworkManager {
 
 	this(IAllocator allocator, EventManager* ev_man) {
 
+		initialize(); //load libs!
+
 		this.ev_man_ = ev_man;
 		this.peers_ = typeof(peers_)(allocator, 1);
 
@@ -97,7 +99,16 @@ struct NetworkManager {
 
 	} //~this
 
-	void initialize() {
+	static void initialize() {
+
+		shared static bool is_initialized;
+		if (is_initialized) return;
+
+		import gcarena;
+		auto ar = useCleanArena();
+		DerelictENet.load();
+
+		is_initialized = true;
 
 	} //initialize
 

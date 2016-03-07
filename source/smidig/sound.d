@@ -67,6 +67,8 @@ struct SoundSystem {
 
 		assert(allocator);
 
+		initialize(); //load libs if not loaded
+
 		system = SoundSystem(allocator, num_sources);
 
 		system.device_ = alcOpenDevice(null); //preferred device
@@ -86,6 +88,21 @@ struct SoundSystem {
 		return Error.Success;
 
 	} //create
+
+	static void initialize() {
+
+		shared static bool is_initialized = false;
+		if (is_initialized) return;
+
+		import gcarena;
+		auto ar = useCleanArena();
+
+		DerelictAL.load();
+		DerelictALURE.load();
+
+		is_initialized = true;
+
+	} //initialize
 
 	~this() {
 
