@@ -18,6 +18,40 @@ auto bindDelegate(T, string file = __FILE__, size_t line = __LINE__)(T t) if(isD
 
 struct ImguiContext {
 
+	static const char* imgui_vs = "
+		#version 330 core
+		uniform mat4 ProjMtx;
+
+		in vec2 Position;
+		in vec2 UV;
+		in vec4 Color;
+
+		out vec2 Frag_UV;
+		out vec4 Frag_Color;
+
+		void main()
+		{
+			Frag_UV = UV;
+			Frag_Color = Color;
+			gl_Position = ProjMtx * vec4(Position.xy,0,1);
+		}
+	";
+
+	static const char* imgui_fs = "
+		#version 330 core
+		uniform sampler2D Texture;
+
+		in vec2 Frag_UV;
+		in vec4 Frag_Color;
+
+		out vec4 Out_Color;
+
+		void main()
+		{
+				Out_Color = Frag_Color * texture( Texture, Frag_UV.st);
+		}
+	";
+
 	import derelict.sdl2.types;
 	import derelict.imgui.imgui;
 	import derelict.opengl3.gl;
@@ -180,7 +214,7 @@ struct ImguiContext {
 			AttribLocation(2, "Color")];
 
 		char[16][2] uniforms = ["Texture", "ProjMtx"];
-		shader_ = allocator_.make!Shader("shaders/imgui", attrs, uniforms);
+		shader_ = allocator_.make!Shader(&imgui_vs, &imgui_fs, "imgui", attrs, uniforms);
 
 		glGenBuffers(1, &vbo);
 		glGenBuffers(1, &elements);

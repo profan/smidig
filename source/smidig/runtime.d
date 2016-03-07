@@ -2,7 +2,7 @@ module smidig.runtime;
 
 import smidig.window : Window;
 import smidig.input : InputHandler;
-import smidig.net : initializeEnet, NetworkManager;
+import smidig.net : NetworkManager;
 import smidig.event : EventManager, EventMemory;
 import smidig.resource : ResourceManager;
 import smidig.sound : SoundSystem;
