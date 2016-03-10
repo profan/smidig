@@ -397,8 +397,6 @@ struct Window {
 
 	} //handleEvents
 
-	mixin WindowModule;
-
 } //Window
 
 mixin template WindowModule() {

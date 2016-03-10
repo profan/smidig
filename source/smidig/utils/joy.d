@@ -2,9 +2,9 @@ module smidig.utils.joy;
 
 struct JoyVisualizer {
 
-	import smidig.input : InputHandler;
+	import smidig.input : Input;
 
-	this(InputHandler* handler) {
+	this(Input* handler) {
 
 		import derelict.sdl2.types;
 

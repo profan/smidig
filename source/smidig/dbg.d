@@ -13,7 +13,7 @@ struct DebugContext {
 
 	import smidig.collections : Array, HashMap;
 	import smidig.memory : IAllocator;
-	import smidig.imgui : ImguiContext;
+	import smidig.imgui : Imgui;
 	import smidig.window : Window;
 	import smidig.gl : FontAtlas;
 	import smidig.defs : Vec2i;
@@ -29,9 +29,9 @@ struct DebugContext {
 	Vec2i initial_offset_;
 
 	/* imgui related state */
-	ImguiContext* context_;
+	Imgui* context_;
 
-	this(IAllocator allocator, ImguiContext* context, FontAtlas* atlas, Window* window, Vec2i initial_offset) {
+	this(IAllocator allocator, Imgui* context, FontAtlas* atlas, Window* window, Vec2i initial_offset) {
 		this.allocator_ = allocator;
 		this.context_ = context;
 		this.atlas_ = atlas;

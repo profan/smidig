@@ -1,6 +1,6 @@
 module smidig.net;
 
-struct NetworkManager {
+struct Network {
 
 	import core.stdc.stdio : printf;
 	import derelict.enet.enet;
@@ -273,9 +273,7 @@ struct NetworkManager {
 
 	} //draw
 
-	mixin NetworkModule;
-
-} //NetworkManager
+} //Network
 
 mixin template NetworkModule() {
 

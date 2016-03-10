@@ -16,7 +16,7 @@ auto bindDelegate(T, string file = __FILE__, size_t line = __LINE__)(T t) if(isD
 
 } //bindDelegate (thanks Destructionator)
 
-struct ImguiContext {
+struct Imgui {
 
 	static immutable char* imgui_vs = "
 		#version 330 core
@@ -58,7 +58,7 @@ struct ImguiContext {
 
 	import smidig.gl : AttribLocation, Shader, Texture;
 	import smidig.memory : theAllocator, IAllocator, make, dispose;
-	import smidig.input : AnyKey, InputHandler;
+	import smidig.input : AnyKey, Input;
 	import smidig.window : Window;
 
 	private {
@@ -77,14 +77,14 @@ struct ImguiContext {
 
 		//external state
 		Window* window_;
-		InputHandler* input_handler_;
+		Input* input_handler_;
 
 	}
 
 	@disable this();
 	@disable this(this);
 
-	this(IAllocator allocator, Window* window, InputHandler* input_handler) {
+	this(IAllocator allocator, Window* window, Input* input_handler) {
 
 		this.allocator_ = allocator;
 		this.window_ = window;
@@ -343,9 +343,7 @@ struct ImguiContext {
 
 	} //setClipboardText
 
-	mixin ImguiModule;
-
-} //ImguiContext
+} //Imgui
 
 mixin template ImguiModule() {
 

@@ -1,27 +1,9 @@
 module smidig.runtime;
 
-import smidig.window : Window;
-import smidig.input : InputHandler;
-import smidig.net : NetworkManager;
-import smidig.event : EventManager, EventMemory;
-import smidig.resource : ResourceManager;
-import smidig.sound : SoundSystem;
-import smidig.imgui : ImguiContext;
+import smidig.memory : IAllocator;
+import smidig.modules;
 
-//probably belongs in the renderer itself later?
-import smidig.defs : NetEventType;
-import smidig.gl : Cursor, FontAtlas;
-import smidig.utils.console : Console;
-
-enum Resource {
-	TextShader
-} //Resource
-
-alias Engine = EngineT!(Window, InputHandler, NetworkManager, SoundSystem, ImguiContext);
-
-struct EngineT(S...) {
-
-	alias Systems = S;
+struct Engine {
 
 	enum Error {
 		WindowInitFailed,
@@ -30,244 +12,160 @@ struct EngineT(S...) {
 		Success
 	} //Error
 
-	import smidig.cpu : CPU;
-	import smidig.memory : IAllocator, Mallocator, theAllocator, make;
-	import smidig.dbg : DebugContext, render_string;
-	import smidig.gl : RenderTarget;
-
 	alias UpdateFunc = void delegate();
 	alias DrawFunc = void delegate(double);
 	alias RunFunc = void delegate();
 
-	//default allocator
+	/* is running flag */
+	bool is_alive_ = true;
+
+	/* engine allocator */
 	IAllocator allocator_;
 
-	//common subsystems
-	Window window_ = void;
-	InputHandler input_handler_ = void;
+	/* allocate subsystems somewhere here? */
 
-	EventManager network_evman_ = void;
-	NetworkManager network_manager_ = void;
-
-	SoundSystem sound_system_ = void;
-
-	FontAtlas debug_atlas_ = void;
-
-	DebugContext debug_context_ = void;
-	ImguiContext imgui_context_ = void;
-
-	//time-related metrics
+	/* run loop counters */
 	double update_time_;
 	double frame_time_;
 	double draw_time_;
 
+	//TODO: find out what time unit?
 	double time_since_last_update_;
 
-	//update rate
+	/* controls tick/draw speed */
+	/* both are in ticks/sec */
 	int update_rate_ = 30;
 	int draw_rate_ = 60;
 
-	//external references
+	/* runs on every update tick. */
 	UpdateFunc update_function_;
-	DrawFunc draw_function_, after_draw_function_;
-	RunFunc run_function_;
 
+	/* runs before anything else draws in the engine. */
+	DrawFunc draw_function_;
+
+	/* runs after engine has drawn everything else. */
+	DrawFunc post_draw_function_;
+
+	/* no copying. */
 	@disable this(this);
 
 	@property {
 
-		//modules
-		ref Window window() { return window_; }
-		ref InputHandler input() { return input_handler_; }
-		ref SoundSystem sound() { return sound_system_; }
+		int update_rate(int new_update_rate) {
 
-		ref FontAtlas atlas() { return debug_atlas_; }
-		ref RenderTarget view() { return window_.render_target; }
+			if (new_update_rate > 0) {
+				return update_rate_ = new_update_rate;
+			}
 
-		int update_rate(int new_update_rate) { return update_rate_ = new_update_rate; }
-		int update_rate() const { return update_rate_; }
+			return update_rate_;
 
-		int draw_rate(int new_draw_rate) { return draw_rate_ = new_draw_rate; }
-		int draw_rate() const { return draw_rate_; }
+		} //update_rate
+
+		int update_rate() const {
+			return update_rate_;
+		} //update_rate
+
+		int draw_rate(int new_draw_rate) {
+
+			if (new_draw_rate > 0) {
+				return draw_rate_ = new_draw_rate;
+			}
+
+			return draw_rate_;
+
+		} //draw_rate
+
+		int draw_rate() const {
+			return draw_rate_;
+		} //draw_rate
+
+		void quit() {
+			is_alive_ = false;
+		} //quit
 
 	}
 
-	static Error create(ref Engine engine, in char[] title, UpdateFunc update_func, DrawFunc draw_func, DrawFunc after_draw_func) {
-
-		import derelict.sdl2.types;
-		import std.stdio : writefln;
-		import smidig.memory : construct;
-		import smidig.defs : PushEvent;
+	static Error create(ref Engine engine, in char[] title, UpdateFunc update_func, DrawFunc draw_func, DrawFunc post_draw_func) {
 
 		with (engine) {
 
-			//allocator for shit
-			allocator_ = theAllocator;
+			/* for every dependency, initialize. */
 
-			//report supported cpu characteristics
-			CPU.report_supported();
+			/* for every dependency, perform linking to eachother. */
 
-			/* initialize necessary systems. */
-			foreach (Sys; Systems) {
-
-				auto result = Sys.onInit(engine);
-				if (!result) return Error.WindowInitFailed;
-
-			}
-
-			/* now that all things are initialized, link necessary dependencies. */
-			foreach (Sys; Systems) {
-				Sys.linkDependencies(engine);
-			}
-
-			//load engine-required resources
-			loadResources();
-
-			//set userspace references
+			/* refs into userspace */
 			update_function_ = update_func;
 			draw_function_ = draw_func;
-			after_draw_function_ = after_draw_func;
+			post_draw_function_ = post_draw_func;
 
-		} //with
+		}
 
 		return Error.Success;
 
 	} //create
 
-	void loadResources() {
-
-		import smidig.gl : AttribLocation, Shader, Texture;
-		import smidig.memory : construct;
-		import smidig.defs : Vec2i;
-
-		auto rm = ResourceManager.get();
-
-		//text shader
-		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
-		char[16][2] text_uniforms = ["color", "projection"];
-		auto text_shader = allocator_.make!Shader("shaders/text", text_attribs[], text_uniforms[]); 
-		rm.setResource(text_shader, Resource.TextShader);
-
-		//text atlases
-		this.debug_atlas_.construct("fonts/OpenSans-Regular.ttf", 12, text_shader);
-		this.debug_context_.construct(allocator_, &imgui_context_, &debug_atlas_, &window_, Vec2i(16, 32));
-
-	} //loadResources
-
-	void draw(double delta_time, double update_dt) {
-
-		import smidig.math : Vec2f;
-
-		window_.renderClear(0x428bca);
-
-		draw_function_(update_dt);
-		draw_debug(update_dt);
-		imgui_context_.endFrame();
-		after_draw_function_(update_dt);
-
-		window_.renderPresent();
+	void draw(double dt, double update_dt) {
 
 	} //draw
 
-	void draw_debug(double delta_time) {
+	void debug_draw(double dt) {
 
-		import smidig.defs : Vec2i;
-		import smidig.dbg : render_string;
-
-		int x, y;
-		input_handler_.mouse_pos(x, y);
-
-		debug_context_
-			.render_string!("last update deltatime: %f")(time_since_last_update_)
-			.render_string!("update deltatime: %f")(update_time_)
-			.render_string!("draw deltatime: %f")(draw_time_)
-			.render_string!("framerate: %f")(1.0 / frame_time_);
-
-		debug_context_.reset();
-
-	} //draw_debug
+	} //debug_draw
 
 	void run() {
 
 		import smidig.timer : StopWatch;
 
-		StopWatch main_timer;
-		StopWatch update_timer;
-		StopWatch draw_timer;
-		StopWatch frame_timer;
+		/* keeps track of total runtime. */
+		StopWatch main_timer; 
 
-		long update_iter;
-		long draw_iter;
-		long last_update;
-		long last_render;
+		/* tracks update, draw and total frame runtimes respectively. */
+		StopWatch update_timer, draw_timer, frame_timer;
 
-		long clock_ticks_per_second = StopWatch.ticksPerSecond();
+		/* stores ticks/iteration for update and draw. */
+		long update_iter, draw_iter;
 
+		/* stores tick when last update and draw happened. */
+		long last_update, last_render;
+
+		/* stopwatch clock ticks per second. */
+		long ticks_per_second = StopWatch.ticksPerSecond();
+
+		/* start all. */
 		main_timer.start();
 		update_timer.start();
 		draw_timer.start();
 		frame_timer.start();
 
-		imgui_context_.newFrame((frame_time_) > 0 ? frame_time_ : 1.0);
+		while (is_alive_) {
 
-		while (window_.is_alive) {
+			/* recalculate every iteration because it may change. */
+			/* TODO: put in setters instead? */
+			update_iter = ticks_per_second / update_rate_;
+			draw_iter = ticks_per_second / draw_rate_;
 
-			update_iter = clock_ticks_per_second / update_rate_;
-			draw_iter = clock_ticks_per_second / draw_rate_;
-
+			/* check if it's time to do an update tick. */
 			if (main_timer.peek() - last_update > update_iter) {
 
-				import smidig.event : Event;
-				import smidig.defs;
-				mixin EventManager.doTick;
-
-				// (Window, InputHandler, NetworkManager, SoundSystem, ImguiContext)
-
 				update_timer.start();
-				imgui_context_.newFrame((update_time_) > 0 ? update_time_ : 1.0);
 
-				import derelict.imgui.imgui : igSliderInt;
-				igSliderInt("update rate", &update_rate_, 1, 800);
-				igSliderInt("draw rate", &draw_rate_, 1, 800);
-
-				//handle input
-				this.input_handler_.handleEvents();
-
-				//update sound system
-				this.sound_system_.tick();
-
-				//update game and draw
+				/* delegate by user. */
 				this.update_function_();
 
-				//poll for network updates
-				this.network_manager_.poll();
-				tick!NetEventTypes(network_evman_);
-
-				update_time_ = cast(double)update_timer.peek() / cast(double)clock_ticks_per_second;
+				/* calc update time in seconds. */
+				update_time_ = cast(double)update_timer.peek() / cast(double)ticks_per_second;
 				last_update = main_timer.peek();
 				update_timer.reset();
 
 			}
 
-			auto ticks_since_last_update = main_timer.peek() - last_update;
-			time_since_last_update_ = (cast(double)ticks_since_last_update / cast(double)clock_ticks_per_second)
-				/ (cast(double)update_iter / cast(double)clock_ticks_per_second);
-
 			draw_timer.start();
-			this.draw((draw_time_ > 0) ? draw_time_ : 1.0, time_since_last_update_);
-			draw_time_ = cast(double)draw_timer.peek() / cast(double)clock_ticks_per_second;
-			last_render = draw_timer.peek();
+
 			draw_timer.reset();
 
-			/* calls routine which is aware of scheduler granularity, uses sleep and then busy waits the rest. */
-			import smidig.timer : waitUntilTick;
-			frame_timer.waitUntilTick(draw_iter);
-
-			frame_time_ = cast(double)frame_timer.peek() / cast(double)clock_ticks_per_second;
 			frame_timer.reset();
 
 		}
-
 
 	} //run
 

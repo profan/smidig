@@ -131,7 +131,7 @@ immutable SDL_EventType[45] sdl_events = [
 	SDL_LASTEVENT
 ];
 
-struct InputHandler {
+struct Input {
 
 	import core.stdc.stdio : printf;
 	import smidig.collections : Array, HashMap;
@@ -413,9 +413,7 @@ struct InputHandler {
 
 	} //handleEvents
 
-	mixin InputModule;
-
-} //InputHandler
+} //Input
 
 mixin template InputModule() {
 

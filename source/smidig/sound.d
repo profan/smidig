@@ -1,7 +1,5 @@
 module smidig.sound;
 
-import core.stdc.stdio : printf;
-
 import derelict.openal.al;
 import derelict.alure.alure;
 
@@ -17,7 +15,7 @@ auto to(T:ALboolean)(bool b) {
 	return (b) ? AL_TRUE : AL_FALSE;
 } //to
 
-struct SoundSystem {
+struct Sound {
 
 	enum Error {
 		FailedOpeningDevice,
@@ -63,13 +61,13 @@ struct SoundSystem {
 		this.sources_ = typeof(sources_)(allocator, num_sources);
 	} //this
 
-	static Error create(ref SoundSystem system, IAllocator allocator, size_t num_sources = 32) {
+	static Error create(ref Sound system, IAllocator allocator, size_t num_sources = 32) {
 
 		assert(allocator);
 
 		initialize(); //load libs if not loaded
 
-		system = SoundSystem(allocator, num_sources);
+		system = Sound(allocator, num_sources);
 
 		system.device_ = alcOpenDevice(null); //preferred device
 		if (!system.device_) { return Error.FailedOpeningDevice; }
@@ -219,9 +217,7 @@ struct SoundSystem {
 
 	} //numFreeSources
 
-	mixin SoundModule;
-
-} //SoundSystem
+} //Sound
 
 mixin template SoundModule() {
 
@@ -232,8 +228,8 @@ mixin template SoundModule() {
 
 		with (engine) {
 
-			auto sound_result = SoundSystem.create(sound_system_, allocator_);
-			final switch (sound_result) with (SoundSystem.Error) {
+			auto sound_result = Sound.create(sound_system_, allocator_);
+			final switch (sound_result) with (Sound.Error) {
 				case FailedOpeningDevice, FailedCreatingContext, FailedMakingContextCurrent:
 					return false;
 				case Success:
