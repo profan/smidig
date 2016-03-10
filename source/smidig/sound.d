@@ -63,7 +63,7 @@ struct SoundSystem {
 		this.sources_ = typeof(sources_)(allocator, num_sources);
 	} //this
 
-	static Error create(ref SoundSystem system, IAllocator allocator, size_t num_sources) {
+	static Error create(ref SoundSystem system, IAllocator allocator, size_t num_sources = 32) {
 
 		assert(allocator);
 
@@ -219,4 +219,35 @@ struct SoundSystem {
 
 	} //numFreeSources
 
+	mixin SoundModule;
+
 } //SoundSystem
+
+mixin template SoundModule() {
+
+	enum name = "SoundModule";
+	enum identifier = "sound_system_";
+
+	static bool onInit(E)(ref E engine) {
+
+		with (engine) {
+
+			auto sound_result = SoundSystem.create(sound_system_, allocator_);
+			final switch (sound_result) with (SoundSystem.Error) {
+				case FailedOpeningDevice, FailedCreatingContext, FailedMakingContextCurrent:
+					return false;
+				case Success:
+					break;
+			}
+
+		}
+
+		return true;
+
+	} //onInit
+
+	static void linkDependencies(E)(ref E engine) {
+
+	} //linkDependencies
+
+} //SoundModule

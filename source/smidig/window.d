@@ -117,7 +117,7 @@ struct Window {
 
 	} //~this
 
-	static Error create(ref Window window, in char[] title, uint width, uint height) {
+	static Error create(ref Window window, in char[] title = "Default Window", uint width = 640, uint height = 480) {
 
 		import smidig.memory : construct; //FIXME abolish this part, more error handling
 
@@ -397,4 +397,34 @@ struct Window {
 
 	} //handleEvents
 
+	mixin WindowModule;
+
 } //Window
+
+mixin template WindowModule() {
+
+	enum name = "WindowModule";
+	enum identifier = "window_";
+
+	static bool onInit(E)(ref E engine) {
+
+		auto result = Window.create(engine.window_);
+
+		final switch (result) with (Window.Error) {
+			case RendererCreationFailed, ContextCreationFailed:
+				return false;
+			case Success:
+				break;
+		}
+
+		return true;
+
+	} //onInit
+
+	static void linkDependencies(E)(ref E engine) {
+
+		engine.input_handler_.addListener(&engine.window_.handleEvents, SDL_WINDOWEVENT, SDL_QUIT);
+
+	} //linkDependencies
+
+} //WindowModule

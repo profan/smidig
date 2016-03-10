@@ -731,7 +731,6 @@ struct RenderTarget {
 
 	void resize(int w, int h) {
 
-
 		auto verts = createRectangleVec3f2f(w, h);
 		quad_.send(verts); //update mesh too!
 		rbo_.resize(w, h);
@@ -1112,7 +1111,7 @@ struct TestParticleSystem {
 
 		glDrawArraysInstanced(
 				GL_TRIANGLES, 0, mesh_.num_vertices_, cast(int)particles_.positions_.length
-				);
+		);
 
 		glBindVertexArray(0);
 
@@ -1243,12 +1242,11 @@ struct Texture {
 
 	/**
 	 * Updates the texture in place given the new texture buffer.
-	 * Takes an optional offset to update only a part of the texture.
 	 **/
-	void update(void[] pixels, size_t offset = 0) nothrow @nogc {
+	void update(void[] pixels) nothrow @nogc {
 
 		bind(0);
-		glBufferSubData(GL_ARRAY_BUFFER, cast(GLintptr)offset, pixels.length, pixels.ptr);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width_, height_, output_format_, data_type_, pixels.ptr);
 		unbind();
 
 	} //update

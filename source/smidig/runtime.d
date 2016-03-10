@@ -6,6 +6,7 @@ import smidig.net : NetworkManager;
 import smidig.event : EventManager, EventMemory;
 import smidig.resource : ResourceManager;
 import smidig.sound : SoundSystem;
+import smidig.imgui : ImguiContext;
 
 //probably belongs in the renderer itself later?
 import smidig.defs : NetEventType;
@@ -16,7 +17,11 @@ enum Resource {
 	TextShader
 } //Resource
 
-struct Engine {
+alias Engine = EngineT!(Window, InputHandler, NetworkManager, SoundSystem, ImguiContext);
+
+struct EngineT(S...) {
+
+	alias Systems = S;
 
 	enum Error {
 		WindowInitFailed,
@@ -28,18 +33,11 @@ struct Engine {
 	import smidig.cpu : CPU;
 	import smidig.memory : IAllocator, Mallocator, theAllocator, make;
 	import smidig.dbg : DebugContext, render_string;
-	import smidig.types : visit, Nullable, Result;
-	import smidig.imgui : ImguiContext;
 	import smidig.gl : RenderTarget;
 
 	alias UpdateFunc = void delegate();
 	alias DrawFunc = void delegate(double);
 	alias RunFunc = void delegate();
-
-	//defaults
-	enum DEFAULT_WINDOW_WIDTH = 640;
-	enum DEFAULT_WINDOW_HEIGHT = 480;
-	enum MAX_SOUND_SOURCES = 32;
 
 	//default allocator
 	IAllocator allocator_;
@@ -109,39 +107,18 @@ struct Engine {
 			//report supported cpu characteristics
 			CPU.report_supported();
 
-			//initialize window and input handler, loads libs if not already loaded
-			auto result = Window.create(window_, title, 640, 480);
-			final switch (result) with (Window.Error) {
-				case RendererCreationFailed, ContextCreationFailed:
-					return Error.WindowInitFailed;
-				case Success:
-					break;
+			/* initialize necessary systems. */
+			foreach (Sys; Systems) {
+
+				auto result = Sys.onInit(engine);
+				if (!result) return Error.WindowInitFailed;
+
 			}
 
-			input_handler_.construct(allocator_);
-			input_handler_.addListener(&window_.handleEvents, SDL_WINDOWEVENT, SDL_QUIT);
-
-			//initialize networking subsystem
-			network_evman_.construct(EventMemory, NetEventType.max);
-			network_manager_.construct(allocator_, &network_evman_);
-			network_evman_.register!PushEvent(&network_manager_.onDataPush);
-
-			//initialize sound subsystem
-			auto sound_result = SoundSystem.create(sound_system_, allocator_, MAX_SOUND_SOURCES);
-			final switch (sound_result) with (SoundSystem.Error) {
-				case FailedOpeningDevice, FailedCreatingContext, FailedMakingContextCurrent:
-					return Error.SoundInitFailed;
-				case Success:
-					break;
+			/* now that all things are initialized, link necessary dependencies. */
+			foreach (Sys; Systems) {
+				Sys.linkDependencies(engine);
 			}
-
-			//initialize imgui context
-			imgui_context_.construct(allocator_, &window_, &input_handler_);
-			imgui_context_.initialize();
-
-			//link up imgui context to event shite
-			input_handler_.addListener(&imgui_context_.onEvent,
-				SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL, SDL_TEXTINPUT);
 
 			//load engine-required resources
 			loadResources();
@@ -208,7 +185,6 @@ struct Engine {
 
 		debug_context_.reset();
 
-
 	} //draw_debug
 
 	void run() {
@@ -244,6 +220,8 @@ struct Engine {
 				import smidig.event : Event;
 				import smidig.defs;
 				mixin EventManager.doTick;
+
+				// (Window, InputHandler, NetworkManager, SoundSystem, ImguiContext)
 
 				update_timer.start();
 				imgui_context_.newFrame((update_time_) > 0 ? update_time_ : 1.0);

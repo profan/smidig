@@ -273,12 +273,41 @@ struct NetworkManager {
 
 	} //draw
 
+	mixin NetworkModule;
+
 } //NetworkManager
 
-struct NetworkServer {
+mixin template NetworkModule() {
 
-} //NetworkServer
+	import smidig.defs : NetEventType;
+	import smidig.event : EventMemory;
+	import smidig.memory : construct;
 
-struct NetworkClient {
+	enum name = "NetworkModule";
+	enum identifier = "input_system_";
 
-} //NetworkClient
+	static bool onInit(E)(ref E engine) {
+
+		with (engine) {
+
+			construct(network_evman_, EventMemory, NetEventType.max);
+			construct(network_manager_, allocator_, &network_evman_);
+
+		}
+
+		return true;
+
+	} //onInit
+
+	//tick and draw functions, draw already defined here
+	alias tick = poll;
+
+	static void linkDependencies(E)(ref E engine) {
+
+		with (engine) {
+			network_evman_.register!PushEvent(&network_manager_.onDataPush);
+		}
+
+	} //linkDependencies
+
+} //NetworkModule

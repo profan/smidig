@@ -413,4 +413,27 @@ struct InputHandler {
 
 	} //handleEvents
 
+	mixin InputModule;
+
 } //InputHandler
+
+mixin template InputModule() {
+
+	enum name = "InputModule";
+	enum identifier = "input_system_";
+
+	static bool onInit(E)(ref E engine) {
+
+		import smidig.memory : construct;
+
+		engine.input_handler_.construct(engine.allocator_);
+
+		return true;
+
+	} //onInit
+
+	static void linkDependencies(E)(ref E engine) {
+
+	} //linkDependencies
+
+} //InputModule

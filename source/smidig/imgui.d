@@ -288,7 +288,7 @@ struct ImguiContext {
 					pcmd.UserCallback(cmd_list, pcmd);
 				} else {
 					glBindTexture(GL_TEXTURE_2D, cast(GLuint)pcmd.TextureId);
-					glScissor(cast(int)pcmd.ClipRect.x, cast(int)(height - pcmd.ClipRect.w), cast(int)(pcmd.ClipRect.z - pcmd.ClipRect.x), cast(int)(pcmd.ClipRect.w - pcmd.ClipRect.y));
+					//glScissor(cast(int)pcmd.ClipRect.x, cast(int)(height - pcmd.ClipRect.w), cast(int)(pcmd.ClipRect.z - pcmd.ClipRect.x), cast(int)(pcmd.ClipRect.w - pcmd.ClipRect.y));
 					glDrawElements(GL_TRIANGLES, pcmd.ElemCount, GL_UNSIGNED_SHORT, idx_buffer_offset);
 				}
 
@@ -307,7 +307,6 @@ struct ImguiContext {
 		int display_w = window_.width;
 		int display_h = window_.height;
 		io.DisplaySize = ImVec2(cast(float)display_w, cast(float)display_h);
-		io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 		io.DeltaTime = cast(float)dt;
 
 		int m_x, m_y;
@@ -344,4 +343,40 @@ struct ImguiContext {
 
 	} //setClipboardText
 
+	mixin ImguiModule;
+
 } //ImguiContext
+
+mixin template ImguiModule() {
+
+	import smidig.memory : construct;
+
+	enum name = "ImguiModule";
+	enum identifier = "imgui_context_";
+
+	static bool onInit(E)(ref E engine) {
+
+		with (engine) {
+
+			//initialize imgui context
+			construct(imgui_context_, allocator_, &window_, &input_handler_);
+			imgui_context_.initialize();
+
+		}
+
+		return true;
+
+	} //onInit
+
+	static void linkDependencies(E)(ref E engine) {
+
+		with (engine) {
+
+			input_handler_.addListener(&imgui_context_.onEvent,
+				SDL_KEYDOWN, SDL_KEYUP, SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP, SDL_MOUSEWHEEL, SDL_TEXTINPUT);
+
+		}
+
+	} //linkDependencies
+
+} //ImguiModule
