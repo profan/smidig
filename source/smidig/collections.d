@@ -619,6 +619,13 @@ template isCopyable(T) {
  * HashMap implementation which uses open addressing rather than separate chaining for
  * cache-efficiency and memory usage reasons, currently linear probing. Currently uses a 
  * fixed load factor threshold of 0.75 as the signal for when to rehash the hashmap.
+ * Complexity:
+ * * Insertion:
+ *    * Best Case: O(1)
+ *    * Worst Case: O(N)
+ * * Deletion:
+ *    * Best Case: O(1)
+ *    * Worst Case: O(N)
 */
 struct HashMap(K, V) {
 
@@ -789,8 +796,6 @@ struct HashMap(K, V) {
 
 	/*
 	 * Finds the index for a given key, if any.
-	 * Best Case: O(1)
-	 * Worst Case: O(N)
 	*/
 	private size_t findIndex(in K key, out bool found) @safe nothrow {
 
@@ -837,8 +842,6 @@ struct HashMap(K, V) {
 	 * else it searches linearly forwards until a free spot is found and it is placed there.
 	 * If the number of slots free in the $(D HashMap) is found to be less than the $(D LOAD_FACTOR_THRESHOLD)
 	 * then a $(D rehash) operation is performed.
-	 * Best Case: O(1)
-	 * Worst Case: O(N)?
 	*/
 	void put(ref K key, V value) @trusted {
 
