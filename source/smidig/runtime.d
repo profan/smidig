@@ -4,7 +4,6 @@ import smidig.window : Window;
 import smidig.input : InputHandler;
 import smidig.net : initializeEnet, NetworkManager;
 import smidig.event : EventManager, EventMemory;
-import smidig.resource : ResourceManager;
 import smidig.sound : SoundSystem;
 
 //probably belongs in the renderer itself later?
@@ -68,6 +67,10 @@ struct Engine {
 	//update rate
 	int update_rate_ = 30;
 	int draw_rate_ = 60;
+
+	//temp resources
+	import smidig.gl : Shader;
+	Shader* text_shader_;
 
 	//external references
 	UpdateFunc update_function_;
@@ -168,16 +171,13 @@ struct Engine {
 		import smidig.memory : construct;
 		import smidig.defs : Vec2i;
 
-		auto rm = ResourceManager.get();
-
 		//text shader
 		AttribLocation[1] text_attribs = [AttribLocation(0, "coord")];
 		char[16][2] text_uniforms = ["color", "projection"];
-		auto text_shader = allocator_.make!Shader("shaders/text", text_attribs[], text_uniforms[]); 
-		rm.setResource(text_shader, Resource.TextShader);
+		text_shader_ = allocator_.make!Shader("shaders/text", text_attribs[], text_uniforms[]);
 
 		//text atlases
-		this.debug_atlas_.construct("fonts/OpenSans-Regular.ttf", 12, text_shader);
+		this.debug_atlas_.construct("fonts/OpenSans-Regular.ttf", 12, text_shader_);
 		this.debug_context_.construct(allocator_, &imgui_context_, &debug_atlas_, &window_, Vec2i(16, 32));
 
 	} //loadResources
